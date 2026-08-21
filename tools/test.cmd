@@ -1,0 +1,13 @@
+@echo off
+setlocal
+if "%GODOT_BIN%"=="" set GODOT_BIN=godot
+for %%I in ("%~dp0..") do set ROOT=%%~fI
+set ARGS=
+:loop
+if "%~1"=="" goto run
+set ARGS=%ARGS% -a %~1
+shift
+goto loop
+:run
+"%GODOT_BIN%" --headless --path "%ROOT%" -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -c %ARGS%
+exit /b %ERRORLEVEL%
