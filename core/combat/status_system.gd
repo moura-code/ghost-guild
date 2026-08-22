@@ -64,8 +64,9 @@ static func enemy_turn_start(s: FightState, index: int) -> void:
 	var regen := e.status("regen")
 	if regen > 0:
 		s.emit({"type": "status_tick", "target": "enemy", "index": index, "status": "regen", "amount": regen})
+		var before := e.hp
 		e.hp = mini(e.max_hp, e.hp + regen)
-		s.emit({"type": "heal", "target": "enemy", "index": index, "amount": regen, "hp": e.hp})
+		s.emit({"type": "heal", "target": "enemy", "index": index, "amount": e.hp - before, "hp": e.hp})
 		decay(e.statuses, "regen")
 
 

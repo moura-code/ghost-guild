@@ -111,3 +111,15 @@ func test_decay_helper() -> void:
 	StatusSystem.decay(d, "missing")
 	assert_bool(d.has("weak")).is_false()
 	assert_int(d["burn"]).is_equal(2)
+
+
+func test_enemy_regen_heal_event_reports_actual_amount() -> void:
+	var s := TestFixtures.bare_state(["shambler"])
+	var e := s.enemies[0]
+	e.hp = e.max_hp - 2
+	e.statuses = {"regen": 5}
+	StatusSystem.enemy_turn_start(s, 0)
+	assert_int(e.hp).is_equal(e.max_hp)
+	var heals := TestFixtures.events_of(s, "heal")
+	assert_array(heals).has_size(1)
+	assert_int(heals[0]["amount"]).is_equal(2)
