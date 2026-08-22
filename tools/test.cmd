@@ -9,5 +9,6 @@ set ARGS=%ARGS% -a %~1
 shift
 goto loop
 :run
+"%GODOT_BIN%" --headless --path "%ROOT%" --import >nul 2>&1
 "%GODOT_BIN%" --headless --path "%ROOT%" -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -c %ARGS%
 exit /b %ERRORLEVEL%
