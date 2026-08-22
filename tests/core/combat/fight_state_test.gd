@@ -107,6 +107,7 @@ func test_clone_is_independent() -> void:
 	var s := TestFixtures.bare_state(["bone_rat"], 1, 5)
 	TestFixtures.give_hand(s, ["strike", "brace"])
 	s.statuses["weak"] = 1
+	s.emit({"type": "probe"})
 	var c := s.clone()
 	c.hand.clear()
 	c.enemies[0].hp -= 5
@@ -118,5 +119,6 @@ func test_clone_is_independent() -> void:
 	assert_int(s.enemies[0].status("vulnerable")).is_equal(0)
 	assert_int(s.hero_status("weak")).is_equal(1)
 	assert_int(s.stats["might"]).is_equal(0)
+	assert_array(s.events).has_size(1)
 	assert_array(c.events).is_empty()
 	assert_int(s.rng.randi_range("deck", 0, 100000)).is_equal(c.rng.randi_range("deck", 0, 100000))
