@@ -1,0 +1,14 @@
+[
+  {
+    "id": "fx_biome",
+    "name": "biome.fx_biome.name",
+    "floors": [1, 10],
+    "card_pool": "fx_biome",
+    "encounters": [
+      {"floors": [1, 9], "groups": [["fx_rat"], ["fx_rat", "fx_rat"]]}
+    ],
+    "elites": [["fx_boss"]],
+    "boss": ["fx_boss"],
+    "node_patterns": [["fight", "fight", "rest"], ["fight", "event", "fight"]]
+  }
+]

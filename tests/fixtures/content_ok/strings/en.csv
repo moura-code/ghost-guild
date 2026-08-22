@@ -1,0 +1,13 @@
+key,text
+card.fx_strike.name,Strike
+card.fx_strike.text,Deal 6 damage.
+card.fx_brace.name,Brace
+card.fx_brace.text,Gain 5 Block.
+card.fx_surge.name,Surge
+card.fx_surge.text,Draw X cards. Exhaust.
+enemy.fx_rat.name,Fixture Rat
+enemy.fx_boss.name,Fixture Boss
+relic.fx_lantern.name,Fixture Lantern
+relic.fx_lantern.text,Start each fight with 3 Block.
+class.fx_class.name,Fixture Class
+biome.fx_biome.name,Fixture Biome

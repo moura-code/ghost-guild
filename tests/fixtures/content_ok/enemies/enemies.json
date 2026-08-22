@@ -1,0 +1,28 @@
+[
+  {
+    "id": "fx_rat",
+    "name": "enemy.fx_rat.name",
+    "biome": "fx_biome",
+    "tags": ["undead"],
+    "hp": 14,
+    "kind": "regular",
+    "moves": [
+      {"id": "bite", "intent": "attack", "damage": 5, "hits": 1},
+      {"id": "hide", "intent": "block", "block": 4}
+    ],
+    "pattern": {"kind": "sequence", "moves": ["bite", "bite", "hide"]}
+  },
+  {
+    "id": "fx_boss",
+    "name": "enemy.fx_boss.name",
+    "biome": "fx_biome",
+    "tags": ["undead"],
+    "hp": 60,
+    "kind": "boss",
+    "moves": [
+      {"id": "crush", "intent": "attack", "damage": 12, "hits": 1},
+      {"id": "call", "intent": "summon", "enemy": "fx_rat"}
+    ],
+    "pattern": {"kind": "weighted", "moves": [{"move": "crush", "weight": 2}, {"move": "call", "weight": 1}], "no_repeat": true}
+  }
+]

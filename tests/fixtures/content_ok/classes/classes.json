@@ -1,0 +1,11 @@
+[
+  {
+    "id": "fx_class",
+    "name": "class.fx_class.name",
+    "base_hp": 70,
+    "stats": {"might": 0, "wit": 0, "vigor": 0, "focus": 0},
+    "starting_deck": ["fx_strike", "fx_strike", "fx_brace"],
+    "relic": "fx_lantern",
+    "pool": "fx_class"
+  }
+]

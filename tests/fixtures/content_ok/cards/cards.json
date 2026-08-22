@@ -1,0 +1,47 @@
+[
+  {
+    "id": "fx_strike",
+    "name": "card.fx_strike.name",
+    "text": "card.fx_strike.text",
+    "pool": "fx_class",
+    "type": "attack",
+    "cost": 1,
+    "rarity": "basic",
+    "tags": ["bone"],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [{"op": "damage", "amount": 6, "scale": "might"}],
+    "upgrade": {"effects": [{"op": "damage", "amount": 9, "scale": "might"}]},
+    "ai_value": 6
+  },
+  {
+    "id": "fx_brace",
+    "name": "card.fx_brace.name",
+    "text": "card.fx_brace.text",
+    "pool": "fx_class",
+    "type": "skill",
+    "cost": 1,
+    "rarity": "basic",
+    "tags": ["shield"],
+    "keywords": [],
+    "target": "self",
+    "effects": [{"op": "block", "amount": 5, "scale": "wit"}],
+    "upgrade": {"effects": [{"op": "block", "amount": 8, "scale": "wit"}]},
+    "ai_value": 5
+  },
+  {
+    "id": "fx_surge",
+    "name": "card.fx_surge.name",
+    "text": "card.fx_surge.text",
+    "pool": "fx_class",
+    "type": "skill",
+    "cost": "x",
+    "rarity": "rare",
+    "tags": ["draw"],
+    "keywords": ["exhaust"],
+    "target": "none",
+    "effects": [{"op": "draw", "amount": "x"}],
+    "upgrade": {"cost": 0},
+    "ai_value": 4
+  }
+]

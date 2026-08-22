@@ -1,0 +1,8 @@
+[
+  {
+    "id": "fx_lantern",
+    "name": "relic.fx_lantern.name",
+    "text": "relic.fx_lantern.text",
+    "hooks": {"on_fight_start": [{"op": "block", "amount": 3}]}
+  }
+]
