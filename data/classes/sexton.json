@@ -1,0 +1,6 @@
+[
+  {"id": "sexton", "name": "class.sexton.name", "base_hp": 70,
+   "stats": {"might": 0, "wit": 0, "vigor": 0, "focus": 0},
+   "starting_deck": ["strike", "strike", "strike", "strike", "strike", "brace", "brace", "brace", "brace", "last_rites"],
+   "relic": "sextons_lantern", "pool": "sexton"}
+]

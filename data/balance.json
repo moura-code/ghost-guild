@@ -1,0 +1,12 @@
+{
+  "enemy_hp_growth": 1.06,
+  "enemy_damage_growth": 1.04,
+  "base_energy": 3,
+  "base_draw": 5,
+  "hand_limit": 10,
+  "turn_cap": 30,
+  "focus_draw_thresholds": [3, 9],
+  "focus_energy_thresholds": [6, 12],
+  "weak_multiplier": 0.75,
+  "vulnerable_multiplier": 1.5
+}

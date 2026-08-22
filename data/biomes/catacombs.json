@@ -1,0 +1,11 @@
+[
+  {"id": "catacombs", "name": "biome.catacombs.name", "floors": [1, 10], "card_pool": "catacombs",
+   "encounters": [
+     {"floors": [1, 3], "groups": [["bone_rat"], ["bone_rat", "bone_rat"], ["grave_wisp"], ["shambler"]]},
+     {"floors": [4, 6], "groups": [["shambler", "bone_rat"], ["skull_stack"], ["bone_archer", "grave_wisp"], ["crypt_spider"]]},
+     {"floors": [7, 10], "groups": [["hollow_knight"], ["plague_bearer", "bone_archer"], ["skull_stack", "crypt_spider"], ["shambler", "shambler", "bone_rat"]]}
+   ],
+   "elites": [["ossuary_warden"]],
+   "boss": ["mother_of_bones"],
+   "node_patterns": [["fight", "fight", "rest"], ["fight", "event", "fight"], ["fight", "shop", "fight"], ["fight", "fight", "elite"], ["event", "fight", "rest"], ["fight", "elite", "shop"]]}
+]

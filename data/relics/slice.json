@@ -1,0 +1,8 @@
+[
+  {"id": "sextons_lantern", "name": "relic.sextons_lantern.name", "text": "relic.sextons_lantern.text", "hooks": {"on_fight_start": [{"op": "block", "amount": 3}]}},
+  {"id": "bone_charm", "name": "relic.bone_charm.name", "text": "relic.bone_charm.text", "hooks": {"on_fight_start": [{"op": "apply_status", "status": "might_buff", "stacks": 1, "target": "self"}]}},
+  {"id": "cracked_hourglass", "name": "relic.cracked_hourglass.name", "text": "relic.cracked_hourglass.text", "hooks": {"on_fight_start": [{"op": "draw", "amount": 1}]}},
+  {"id": "ossuary_key", "name": "relic.ossuary_key.name", "text": "relic.ossuary_key.text", "hooks": {"on_fight_end": [{"op": "heal", "amount": 4}]}},
+  {"id": "lead_censer", "name": "relic.lead_censer.name", "text": "relic.lead_censer.text", "hooks": {"on_fight_start": [{"op": "apply_status", "status": "weak", "stacks": 1, "target": "all_enemies"}]}},
+  {"id": "grave_coin", "name": "relic.grave_coin.name", "text": "relic.grave_coin.text", "hooks": {"on_fight_end": [{"op": "coin", "amount": 10}]}}
+]

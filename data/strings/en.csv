@@ -1,0 +1,85 @@
+key,text
+class.sexton.name,Sexton
+biome.catacombs.name,Catacombs
+card.strike.name,Strike
+card.strike.text,Deal 6 damage.
+card.brace.name,Brace
+card.brace.text,Gain 5 Block.
+card.last_rites.name,Last Rites
+card.last_rites.text,Deal 4 damage. Apply 2 Weak.
+card.shovel_swing.name,Shovel Swing
+card.shovel_swing.text,Deal 8 damage.
+card.bone_wall.name,Bone Wall
+card.bone_wall.text,Gain 11 Block.
+card.grave_dust.name,Grave Dust
+card.grave_dust.text,Apply 1 Vulnerable. Draw 1 card.
+card.reaping.name,Reaping
+card.reaping.text,Deal 4 damage 3 times.
+card.vigil.name,Vigil
+card.vigil.text,At the start of each turn gain 3 Block.
+card.censer_smoke.name,Censer Smoke
+card.censer_smoke.text,Gain 4 Block. Apply 1 Weak to all enemies.
+card.exhume.name,Exhume
+card.exhume.text,Draw 2 cards. Exhaust.
+card.lantern_oil.name,Lantern Oil
+card.lantern_oil.text,Gain 1 Energy. Draw 1 card. Exhaust.
+card.bone_shard.name,Bone Shard
+card.bone_shard.text,Deal 3 damage.
+card.sanctify.name,Sanctify
+card.sanctify.text,Gain 8 Block. Heal 3.
+card.hallowed_strike.name,Hallowed Strike
+card.hallowed_strike.text,Deal 12 damage. Holy: 50% more against the undead.
+card.bulwark.name,Bulwark
+card.bulwark.text,Gain 3 Thorns.
+card.requiem.name,Requiem
+card.requiem.text,Deal 20 damage to all enemies.
+card.second_wind.name,Second Wind
+card.second_wind.text,Heal 6. Exhaust.
+card.dig_in.name,Dig In
+card.dig_in.text,Gain 3 Block. Gain 1 Wit this fight.
+card.sharpen_spade.name,Sharpen Spade
+card.sharpen_spade.text,Gain 2 Might this fight. Exhaust.
+card.tolling_bell.name,Tolling Bell
+card.tolling_bell.text,Apply 2 Vulnerable to all enemies.
+card.rat_swarm.name,Rat Swarm
+card.rat_swarm.text,Deal 2 damage 4 times.
+card.cold_iron.name,Cold Iron
+card.cold_iron.text,Deal 7 damage. Apply 1 Weak.
+card.shroud.name,Shroud
+card.shroud.text,Gain 6 Block. Retain.
+card.grave_moss.name,Grave Moss
+card.grave_moss.text,Gain 3 Regen.
+card.tomb_lantern.name,Tomb Lantern
+card.tomb_lantern.text,Draw 2 cards.
+card.bone_spear.name,Bone Spear
+card.bone_spear.text,Deal 14 damage.
+card.plague_vial.name,Plague Vial
+card.plague_vial.text,Apply 4 Poison.
+card.death_knell.name,Death Knell
+card.death_knell.text,At the start of each turn deal 4 damage to all enemies.
+card.cairn.name,Cairn
+card.cairn.text,Gain 14 Block. Gain 2 Thorns.
+card.ashes.name,Ashes
+card.ashes.text,Deal 3 damage to all enemies. Apply 2 Burn to all enemies.
+enemy.bone_rat.name,Bone Rat
+enemy.shambler.name,Shambler
+enemy.grave_wisp.name,Grave Wisp
+enemy.skull_stack.name,Skull Stack
+enemy.bone_archer.name,Bone Archer
+enemy.crypt_spider.name,Crypt Spider
+enemy.hollow_knight.name,Hollow Knight
+enemy.plague_bearer.name,Plague Bearer
+enemy.ossuary_warden.name,Ossuary Warden
+enemy.mother_of_bones.name,Mother of Bones
+relic.sextons_lantern.name,Sexton's Lantern
+relic.sextons_lantern.text,Start each fight with 3 Block.
+relic.bone_charm.name,Bone Charm
+relic.bone_charm.text,Start each fight with 1 Might.
+relic.cracked_hourglass.name,Cracked Hourglass
+relic.cracked_hourglass.text,Draw 1 extra card at the start of each fight.
+relic.ossuary_key.name,Ossuary Key
+relic.ossuary_key.text,Heal 4 after each fight.
+relic.lead_censer.name,Lead Censer
+relic.lead_censer.text,Enemies start each fight with 1 Weak.
+relic.grave_coin.name,Grave Coin
+relic.grave_coin.text,Gain 10 Coin after each fight.
