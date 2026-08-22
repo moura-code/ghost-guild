@@ -66,7 +66,7 @@ static func intent_of(s: FightState, index: int) -> Dictionary:
 			out["block"] = int(move.get("block", 0))
 		"buff", "debuff":
 			out["status"] = String(move.get("status", ""))
-			out["stacks"] = int(move.get("stacks", 0))
+			out["stacks"] = int(move.get("stacks", 1))
 		"summon":
 			out["enemy"] = String(move.get("enemy", ""))
 	return out
