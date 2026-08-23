@@ -36,9 +36,12 @@ static func reach(c: Campaign) -> int:
 
 
 static func start_run(c: Campaign, entry_floor: int, now: int) -> RunState:
-	if c.run != null and not c.run.is_over():
-		push_error("start_run: a run is already in progress")
-		return c.run
+	if c.run != null:
+		if not c.run.is_over():
+			push_error("start_run: a run is already in progress")
+			return c.run
+		push_error("start_run: the previous run has not been banked; call finish_run first")
+		return null
 	var deepest := mini(reach(c), c.biome().last_floor)
 	if entry_floor < 1 or entry_floor > deepest:
 		push_error("start_run: entry floor %d outside 1..%d" % [entry_floor, deepest])

@@ -142,3 +142,17 @@ func test_finish_run_accrues_the_run_time_at_the_old_rate() -> void:
 	var result := CampaignEngine.finish_run(c, 1000 + 3600)
 	assert_int(c.last_tick).is_equal(1000 + 3600)
 	assert_float(c.soul).is_equal_approx(52.0 + float(result["soul"]), 0.0001)
+
+
+func test_start_run_refuses_an_unbanked_finished_run() -> void:
+	var c := TestFixtures.campaign(10, 1000)
+	var run := CampaignEngine.start_run(c, 1, 1000)
+	run.hero.hp = 1
+	TestFixtures.set_nodes(run, [{"kind": "fight", "enemies": ["shambler", "shambler", "shambler"]}])
+	RunEngine.apply(run, {"kind": "enter"})
+	TestFixtures.autofight(run)
+	assert_bool(run.is_over()).is_true()
+	assert_object(CampaignEngine.start_run(c, 1, 2000)).is_null()
+	assert_object(c.run).is_same(run)
+	CampaignEngine.finish_run(c, 2000)
+	assert_object(CampaignEngine.start_run(c, 1, 2001)).is_not_null()
