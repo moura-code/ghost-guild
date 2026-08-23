@@ -1411,7 +1411,7 @@ func test_same_seed_same_campaign() -> void:
 	var a := TestFixtures.campaign(7)
 	var b := TestFixtures.campaign(7)
 	assert_str(a.hero.name).is_equal(b.hero.name)
-	assert_str(TestFixtures.campaign(8).hero.name + "x").is_not_equal(a.hero.name)
+	assert_int(a.ladder.ghosts[0].created_at).is_equal(b.ladder.ghosts[0].created_at)
 
 
 func test_start_run_validates_entry_and_uses_watch_flag() -> void:
@@ -1429,7 +1429,6 @@ func test_start_run_validates_entry_and_uses_watch_flag() -> void:
 func test_death_places_a_restless_ghost_and_replaces_the_hero() -> void:
 	var c := TestFixtures.campaign(3, 1000)
 	var old_name := c.hero.name
-	c.run = null
 	var result := TestFixtures.die_on_floor(c, 1, 2000)
 	assert_str(result["kind"]).is_equal("death")
 	assert_int(result["floor"]).is_equal(1)
@@ -1757,7 +1756,7 @@ static func buy_upgrade(c: Campaign, id: String) -> Dictionary:
 - [ ] **Step 7: Run to verify they pass**
 
 Run: `tools\test.cmd tests/core/campaign_test.gd`
-Expected: PASS — 8 test cases, 0 failures (each death/watch computes a 4-fight strength simulation). Then `tools\test.cmd tests` — 221 test cases, 0 failures.
+Expected: PASS — 8 test cases, 0 failures (each death/watch computes a 4-fight strength simulation). Then `tools\test.cmd tests` — 224 test cases, 0 failures.
 
 - [ ] **Step 8: Commit**
 
@@ -2413,7 +2412,7 @@ static func _rotate(path: String) -> void:
 - [ ] **Step 5: Run to verify they pass**
 
 Run: `tools\test.cmd tests/core/save`
-Expected: PASS — 6 test cases, 0 failures. Then `tools\test.cmd tests` — 241 test cases, 0 failures. If `test_save_writes_file_and_rotates_backups` cannot find `.bak1`, check that `_rotate` runs before the new file is opened and that `DirAccess.rename` is given file names relative to the opened directory, not `user://` paths.
+Expected: PASS — 6 test cases, 0 failures. Then `tools\test.cmd tests` — 239 test cases, 0 failures. If `test_save_writes_file_and_rotates_backups` cannot find `.bak1`, check that `_rotate` runs before the new file is opened and that `DirAccess.rename` is given file names relative to the opened directory, not `user://` paths.
 
 - [ ] **Step 6: Commit**
 
@@ -2467,7 +2466,8 @@ func test_small_simulation_reports_every_section() -> void:
 		assert_bool(report["invariants"][key].has("ok")).is_true()
 		assert_str(report["invariants"][key]["detail"]).is_not_empty()
 	assert_str(report["retreat_note"]).is_not_empty()
-	assert_bool(sim.all_ok(report) == bool(report["invariants"]["deeper_pays"]["ok"]) or not sim.all_ok(report)).is_true()
+	var every_ok := bool(report["invariants"]["deeper_pays"]["ok"]) and bool(report["invariants"]["watch_beats_corpse"]["ok"]) and bool(report["invariants"]["first_purchase_early"]["ok"])
+	assert_bool(sim.all_ok(report) == every_ok).is_true()
 
 
 func test_sampling_is_deterministic() -> void:
@@ -2777,7 +2777,7 @@ Replace the `core/run/` bullet under Content with:
 
 - [ ] **Step 3: Run everything**
 
-Run: `tools\test.cmd tests` — expect 244 test cases, 0 failures.
+Run: `tools\test.cmd tests` — expect 242 test cases, 0 failures.
 Run: `& $env:GODOT_BIN --headless --path . -s tools/campaign_demo.gd -- 1 3` — three run lines with epitaphs, ladder summaries, and a final `save OK, reload ok, soul …` line; exit 0.
 
 - [ ] **Step 4: Commit**
@@ -2797,4 +2797,4 @@ git commit -m "feat(tools): headless campaign demo; CLAUDE.md covers the idle la
 
 **Placeholder scan.** Every step has its code; no TBD/TODO; every referenced function exists in this plan or in M1-A/M1-B1 (`RunEngine.start_run/apply/exit_summary/can_push`, `RunState.hero_snapshot/stats/outcome/to_dict/from_dict`, `RunAutopilot.choose/fight_ap`, `Hero.create/generate_name/recompute_max_hp/to_dict/from_dict`, `FightSimulator.simulate_table`, `Rewards.soul_for`, `Content.normalize_json`, `TestFixtures.hero/set_nodes/autofight/content`).
 
-**Type consistency.** `Ghost.measured` keys `fights/wins/win_rate/avg_turns` match `RunStats.measured`; `Strength.simulate` returns the same four keys; the modifiers dictionary shape is produced by `Upgrades.modifiers` and read by `Ladder`, `Production`, `Seance`, `CampaignEngine`; `Seance`/`CampaignEngine` mutators all return `{ok, cost, reason}` (+ `ghost_id`); `Campaign.sim_fights` flows into `Strength.simulate`'s `fights` parameter (−1 = balance); `SaveGame.load_and_catch_up` returns `{"campaign", "offline"}` with `Production.accrue`'s keys. Expected counts assume the suite starts at 188: content 31 after Task 1; ghosts 5/10/17/20 after Tasks 2/3/4/9; economy 4/8/14/17 after Tasks 5/6/8/11; campaign 8; save 6; the whole tree 244 after Task 12.
+**Type consistency.** `Ghost.measured` keys `fights/wins/win_rate/avg_turns` match `RunStats.measured`; `Strength.simulate` returns the same four keys; the modifiers dictionary shape is produced by `Upgrades.modifiers` and read by `Ladder`, `Production`, `Seance`, `CampaignEngine`; `Seance`/`CampaignEngine` mutators all return `{ok, cost, reason}` (+ `ghost_id`); `Campaign.sim_fights` flows into `Strength.simulate`'s `fights` parameter (−1 = balance); `SaveGame.load_and_catch_up` returns `{"campaign", "offline"}` with `Production.accrue`'s keys. Expected counts assume the suite starts at 188: content 31 after Task 1; ghosts 5/10/17/20 after Tasks 2/3/4/9; economy 4/8/14/17 after Tasks 5/6/8/11; campaign 8; save 6; the whole tree 242 after Task 12.
