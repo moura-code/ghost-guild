@@ -88,3 +88,16 @@ func test_pending_offers_and_shop_survive() -> void:
 	assert_array(shop_back.shop["cards"]).is_equal(shop_run.shop["cards"])
 	RunEngine.apply(shop_back, {"kind": "buy_card", "card": shop_back.shop["cards"][0]})
 	assert_int(shop_back.coin).is_equal(50)
+
+
+func test_outcome_round_trip_keeps_ints() -> void:
+	var run := TestFixtures.new_run(1, 3)
+	TestFixtures.set_nodes(run, [{"kind": "rest"}])
+	RunEngine.apply(run, {"kind": "enter"})
+	RunEngine.apply(run, {"kind": "rest_heal"})
+	RunEngine.apply(run, {"kind": "watch"})
+	var back := _round_trip(run)
+	assert_str(back.outcome["kind"]).is_equal("watch")
+	assert_int(back.outcome["floor"]).is_equal(1)
+	assert_int(back.outcome["hero_hp"]).is_equal(70)
+	assert_int(back.outcome["coin"]).is_equal(0)

@@ -136,7 +136,7 @@ static func from_dict(p_content: Content, d: Dictionary) -> RunState:
 	run.watch_unlocked = bool(d.get("watch_unlocked", false))
 	var outcome_raw: Dictionary = d.get("outcome", {})
 	run.outcome = outcome_raw.duplicate(true)
-	for key in ["floor", "coin"]:
+	for key in ["floor", "coin", "hero_hp"]:
 		if run.outcome.has(key):
 			run.outcome[key] = int(run.outcome[key])
 	return run
