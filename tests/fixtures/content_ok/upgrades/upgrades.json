@@ -1,0 +1,4 @@
+[
+  {"id": "fx_might", "name": "upgrade.fx_might.name", "text": "upgrade.fx_might.text", "group": "hero",
+   "effect": {"kind": "stat", "stat": "might", "amount": 1}, "max_level": 3, "base_cost": 25}
+]

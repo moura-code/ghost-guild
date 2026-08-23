@@ -10,6 +10,7 @@ var relics: Dictionary = {}
 var classes: Dictionary = {}
 var biomes: Dictionary = {}
 var events: Dictionary = {}
+var upgrades: Dictionary = {}
 var affinity: Dictionary = {}
 var balance: Dictionary = {}
 var strings: Dictionary = {}
@@ -27,6 +28,7 @@ static func load_from(root: String) -> Content:
 	c._load_dir(root.path_join("classes"), func(d: Dictionary) -> void: c.classes[d["id"]] = ClassDef.from_dict(d))
 	c._load_dir(root.path_join("biomes"), func(d: Dictionary) -> void: c.biomes[d["id"]] = BiomeDef.from_dict(d))
 	c._load_dir(root.path_join("events"), func(d: Dictionary) -> void: c.events[d["id"]] = EventDef.from_dict(d))
+	c._load_dir(root.path_join("upgrades"), func(d: Dictionary) -> void: c.upgrades[d["id"]] = UpgradeDef.from_dict(d))
 	c.affinity = c._load_object(root.path_join("affinity.json"))
 	c.balance = c._load_object(root.path_join("balance.json"))
 	c._load_strings(root.path_join("strings").path_join("en.csv"))

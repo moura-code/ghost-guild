@@ -97,3 +97,28 @@ event.lost_lantern.name,Lost Lantern
 event.lost_lantern.text,A lantern still burns beside a dead gravedigger. Its glass is cracked.
 event.lost_lantern.take,Take it. Gain the Cracked Hourglass.
 event.lost_lantern.sell,Strip the brass. Gain 40 Coin.
+upgrade.might.name,Grave Strength
+upgrade.might.text,+1 Might for every new hero.
+upgrade.wit.name,Old Rites
+upgrade.wit.text,+1 Wit for every new hero.
+upgrade.vigor.name,Hardy Stock
+upgrade.vigor.text,+1 Vigor for every new hero.
+upgrade.focus.name,Lantern Discipline
+upgrade.focus.text,+1 Focus for every new hero.
+upgrade.resolve.name,Second Thoughts
+upgrade.resolve.text,+1 max Resolve. Retreat twice per hero.
+upgrade.mend_discount.name,Guild Surgeon
+upgrade.mend_discount.text,Mend costs 15% less per level.
+upgrade.ghost_strength.name,Restless Vigour
+upgrade.ghost_strength.text,All ghosts are 10% stronger per level.
+upgrade.ghost_spawn.name,Deeper Burrows
+upgrade.ghost_spawn.text,Every floor spawns 10% more per level.
+upgrade.offline_cap.name,Night Watch
+upgrade.offline_cap.text,Ghosts keep farming for 24 hours while you are away.
+upgrade.restless_relief.name,Kind Words
+upgrade.restless_relief.text,Restless ghosts lose 10% less per level.
+epitaph.watch,{name} took the watch on Floor {floor}
+epitaph.death,{name} fell to {killer} on Floor {floor}
+epitaph.death_unknown,{name} fell on Floor {floor}
+epitaph.founder,{name} founded the guild and holds Floor {floor}
+ghost.founder.name,Ilse

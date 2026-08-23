@@ -15,6 +15,7 @@ func test_slice_content_volume() -> void:
 	assert_int(c.classes.size()).is_equal(1)
 	assert_int(c.biomes.size()).is_equal(1)
 	assert_int(c.events.size()).is_equal(3)
+	assert_int(c.upgrades.size()).is_equal(10)
 	var sexton: ClassDef = c.classes["sexton"]
 	assert_array(sexton.starting_deck).has_size(10)
 	var elites := 0

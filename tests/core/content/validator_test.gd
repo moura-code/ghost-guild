@@ -137,3 +137,20 @@ func test_event_biome_must_exist_and_amounts_must_be_numbers() -> void:
 	ev.biome = "moon"
 	ev.choices[0]["effects"] = [{"op": "heal", "amount": "lots"}]
 	assert_int(ContentValidator.validate(c).size()).is_equal(2)
+
+
+func test_upgrade_rules() -> void:
+	var c := _ok()
+	var up: UpgradeDef = c.upgrades["fx_might"]
+	up.group = "cosmic"
+	up.effect = {"kind": "teleport", "amount": 1}
+	up.max_level = 0
+	up.base_cost = 0.0
+	assert_int(ContentValidator.validate(c).size()).is_equal(4)
+
+
+func test_upgrade_stat_effect_needs_a_known_stat() -> void:
+	var c := _ok()
+	var up: UpgradeDef = c.upgrades["fx_might"]
+	up.effect = {"kind": "stat", "stat": "luck", "amount": "lots"}
+	assert_int(ContentValidator.validate(c).size()).is_equal(2)

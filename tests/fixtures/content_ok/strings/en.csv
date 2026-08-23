@@ -15,3 +15,5 @@ event.fx_well.name,Fixture Well
 event.fx_well.text,A well.
 event.fx_well.drink,Drink.
 event.fx_well.leave,Leave.
+upgrade.fx_might.name,Fixture Might
+upgrade.fx_might.text,+1 Might.

@@ -1,0 +1,22 @@
+[
+  {"id": "might", "name": "upgrade.might.name", "text": "upgrade.might.text", "group": "hero",
+   "effect": {"kind": "stat", "stat": "might", "amount": 1}, "max_level": 3, "base_cost": 25},
+  {"id": "wit", "name": "upgrade.wit.name", "text": "upgrade.wit.text", "group": "hero",
+   "effect": {"kind": "stat", "stat": "wit", "amount": 1}, "max_level": 3, "base_cost": 25},
+  {"id": "vigor", "name": "upgrade.vigor.name", "text": "upgrade.vigor.text", "group": "hero",
+   "effect": {"kind": "stat", "stat": "vigor", "amount": 1}, "max_level": 3, "base_cost": 20},
+  {"id": "focus", "name": "upgrade.focus.name", "text": "upgrade.focus.text", "group": "hero",
+   "effect": {"kind": "stat", "stat": "focus", "amount": 1}, "max_level": 3, "base_cost": 40},
+  {"id": "resolve", "name": "upgrade.resolve.name", "text": "upgrade.resolve.text", "group": "hero",
+   "effect": {"kind": "max_resolve", "amount": 1}, "max_level": 1, "base_cost": 60},
+  {"id": "mend_discount", "name": "upgrade.mend_discount.name", "text": "upgrade.mend_discount.text", "group": "hero",
+   "effect": {"kind": "mend_discount", "amount": 0.15}, "max_level": 3, "base_cost": 30},
+  {"id": "ghost_strength", "name": "upgrade.ghost_strength.name", "text": "upgrade.ghost_strength.text", "group": "ghosts",
+   "effect": {"kind": "global_strength", "amount": 0.1}, "max_level": 5, "base_cost": 40},
+  {"id": "ghost_spawn", "name": "upgrade.ghost_spawn.name", "text": "upgrade.ghost_spawn.text", "group": "ghosts",
+   "effect": {"kind": "global_spawn", "amount": 0.1}, "max_level": 5, "base_cost": 40},
+  {"id": "offline_cap", "name": "upgrade.offline_cap.name", "text": "upgrade.offline_cap.text", "group": "ghosts",
+   "effect": {"kind": "offline_cap", "amount": 16}, "max_level": 1, "base_cost": 120},
+  {"id": "restless_relief", "name": "upgrade.restless_relief.name", "text": "upgrade.restless_relief.text", "group": "ghosts",
+   "effect": {"kind": "restless_penalty", "amount": 0.1}, "max_level": 2, "base_cost": 35}
+]

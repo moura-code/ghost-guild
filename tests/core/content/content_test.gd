@@ -12,6 +12,7 @@ func test_loads_all_types_without_errors() -> void:
 	assert_int(c.classes.size()).is_equal(1)
 	assert_int(c.biomes.size()).is_equal(1)
 	assert_int(c.events.size()).is_equal(1)
+	assert_int(c.upgrades.size()).is_equal(1)
 
 
 func test_card_def_fields() -> void:
@@ -102,3 +103,15 @@ func test_event_def_fields() -> void:
 	assert_str(ev.choices[0]["text"]).is_equal("event.fx_well.drink")
 	assert_int(ev.choices[0]["effects"][0]["amount"]).is_equal(10)
 	assert_array(ev.choices[1]["effects"]).is_empty()
+
+
+func test_upgrade_def_fields() -> void:
+	var c := Content.load_from(ROOT)
+	var up: UpgradeDef = c.upgrades["fx_might"]
+	assert_str(up.group).is_equal("hero")
+	assert_str(up.effect["kind"]).is_equal("stat")
+	assert_str(up.effect["stat"]).is_equal("might")
+	assert_int(up.effect["amount"]).is_equal(1)
+	assert_int(up.max_level).is_equal(3)
+	assert_float(up.base_cost).is_equal(25.0)
+	assert_float(up.cost_growth).is_equal(1.6)

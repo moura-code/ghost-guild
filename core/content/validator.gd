@@ -18,6 +18,8 @@ const PATTERN_KINDS: Array[String] = ["sequence", "weighted"]
 const ADD_CARD_WHERE: Array[String] = ["hand", "discard", "draw"]
 const RUN_OPS: Array[String] = ["heal", "heal_percent", "damage", "coin", "soul", "add_card", "relic", "stat", "max_hp"]
 const STATS: Array[String] = ["might", "wit", "vigor", "focus"]
+const UPGRADE_GROUPS: Array[String] = ["hero", "ghosts", "descent", "seance"]
+const UPGRADE_EFFECTS: Array[String] = ["stat", "max_resolve", "mend_discount", "global_strength", "global_spawn", "offline_cap", "restless_penalty"]
 
 
 static func validate(c: Content) -> Array[String]:
@@ -35,6 +37,8 @@ static func validate(c: Content) -> Array[String]:
 		_biome(c, c.biomes[id], errors)
 	for id in c.events:
 		_event(c, c.events[id], errors)
+	for id in c.upgrades:
+		_upgrade(c, c.upgrades[id], errors)
 	return errors
 
 
@@ -253,3 +257,22 @@ static func _event(c: Content, ev: EventDef, errors: Array[String]) -> void:
 		_run_effects(c, cwhere, choice.get("effects", []), errors)
 	_key(c, where, ev.name_key, errors)
 	_key(c, where, ev.text_key, errors)
+
+
+static func _upgrade(c: Content, up: UpgradeDef, errors: Array[String]) -> void:
+	var where := "upgrade " + up.id
+	if not UPGRADE_GROUPS.has(up.group):
+		errors.append("%s: bad group '%s'" % [where, up.group])
+	var kind := String(up.effect.get("kind", ""))
+	if not UPGRADE_EFFECTS.has(kind):
+		errors.append("%s: unknown effect kind '%s'" % [where, kind])
+	elif kind == "stat" and not STATS.has(String(up.effect.get("stat", ""))):
+		errors.append("%s: unknown stat '%s'" % [where, String(up.effect.get("stat", ""))])
+	if not _number(up.effect.get("amount")):
+		errors.append("%s: effect needs a numeric amount" % where)
+	if up.max_level < 1:
+		errors.append("%s: max_level must be at least 1" % where)
+	if up.base_cost <= 0.0:
+		errors.append("%s: base_cost must be positive" % where)
+	_key(c, where, up.name_key, errors)
+	_key(c, where, up.text_key, errors)
