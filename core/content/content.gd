@@ -66,6 +66,7 @@ func _load_dir(dir: String, add: Callable) -> void:
 		return
 	var files := Array(da.get_files())
 	files.sort()
+	var seen: Dictionary = {}
 	for f in files:
 		var file_name := String(f)
 		if not file_name.ends_with(".json"):
@@ -81,6 +82,11 @@ func _load_dir(dir: String, add: Callable) -> void:
 			if not (item is Dictionary) or not item.has("id"):
 				load_errors.append("entry without id in " + path)
 				continue
+			var id := String(item["id"])
+			if seen.has(id):
+				load_errors.append("duplicate id '%s' in %s" % [id, path])
+				continue
+			seen[id] = true
 			add.call(item)
 
 

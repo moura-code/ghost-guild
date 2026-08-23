@@ -79,3 +79,13 @@ func test_affinity_balance_and_strings() -> void:
 func test_missing_root_reports_errors() -> void:
 	var c := Content.load_from("res://tests/fixtures/does_not_exist")
 	assert_array(c.load_errors).is_not_empty()
+
+
+func test_duplicate_ids_are_load_errors() -> void:
+	var c := Content.load_from("res://tests/fixtures/content_dup")
+	var found := false
+	for e in c.load_errors:
+		if String(e).begins_with("duplicate id 'fx_dup'"):
+			found = true
+	assert_bool(found).is_true()
+	assert_int(c.cards.size()).is_equal(1)
