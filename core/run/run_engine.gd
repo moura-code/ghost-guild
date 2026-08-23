@@ -117,6 +117,14 @@ static func killer_of(f: FightState) -> String:
 	return ""
 
 
+static func loss_cause_of(f: FightState) -> String:
+	for i in range(f.events.size() - 1, -1, -1):
+		var ev: Dictionary = f.events[i]
+		if ev["type"] == "fight_lost":
+			return String(ev.get("reason", ""))
+	return ""
+
+
 static func _apply_descent(run: RunState, kind: String, action: Dictionary) -> void:
 	var offer: Dictionary = run.descent_offers[0]
 	var offer_floor := int(offer["floor"])
@@ -184,9 +192,11 @@ static func _finish_fight(run: RunState) -> void:
 	var won := f.phase == "won"
 	run.stats.record(run.floor, won, f.turn)
 	run.hero.hp = maxi(0, f.hero_hp) if won else 0
-	run.emit({"type": "fight_result", "won": won, "turns": f.turn, "hp": run.hero.hp, "floor": run.floor, "kind": kind})
+	var cause := "" if won else loss_cause_of(f)
+	run.emit({"type": "fight_result", "won": won, "turns": f.turn, "hp": run.hero.hp, "floor": run.floor, "kind": kind, "cause": cause})
 	if not won:
-		_end_run(run, "death", killer_of(f))
+		var killer := killer_of(f) if cause == "hero_died" else ""
+		_end_run(run, "death", killer, cause)
 		return
 	var coin := Rewards.coin_for(kind, run.floor, run.content.balance)
 	for ev in f.events:
@@ -236,7 +246,7 @@ static func _advance(run: RunState) -> void:
 		run.emit({"type": "floor_cleared", "floor": run.floor})
 
 
-static func _end_run(run: RunState, kind: String, killer: String = "") -> void:
+static func _end_run(run: RunState, kind: String, killer: String = "", cause: String = "") -> void:
 	run.stat_bonus.clear()
 	var rate := float(run.content.balance.get("coin_to_soul", 0.1))
 	var soul_from_coin := run.coin * rate
@@ -244,6 +254,7 @@ static func _end_run(run: RunState, kind: String, killer: String = "") -> void:
 		"kind": kind,
 		"floor": run.floor,
 		"killer": killer,
+		"cause": cause,
 		"coin": run.coin,
 		"soul_from_coin": soul_from_coin,
 		"soul": run.soul + soul_from_coin,
@@ -251,7 +262,7 @@ static func _end_run(run: RunState, kind: String, killer: String = "") -> void:
 	}
 	run.fight = null
 	run.phase = "ended"
-	run.emit({"type": "run_end", "kind": kind, "floor": run.floor, "killer": killer, "soul": run.outcome["soul"]})
+	run.emit({"type": "run_end", "kind": kind, "floor": run.floor, "killer": killer, "cause": cause, "soul": run.outcome["soul"]})
 
 
 static func _apply_event(run: RunState, kind: String, action: Dictionary) -> void:

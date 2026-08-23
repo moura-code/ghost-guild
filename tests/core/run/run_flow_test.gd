@@ -152,6 +152,7 @@ func test_losing_a_fight_ends_the_run_in_death() -> void:
 	assert_array(RunEngine.legal_actions(run)).is_empty()
 	assert_array(RunEngine.apply(run, {"kind": "enter"})).is_empty()
 	assert_object(run.fight).is_null()
+	assert_str(run.outcome["cause"]).is_equal("hero_died")
 
 
 func test_killer_of_reads_the_last_hero_damage() -> void:
@@ -179,3 +180,5 @@ func test_turn_cap_loss_is_a_death_with_zero_hp() -> void:
 	assert_int(run.hero.hp).is_equal(0)
 	assert_int(run.outcome["hero_hp"]).is_equal(0)
 	assert_dict(run.stats.measured(1)).contains_key_value("fights", 1)
+	assert_str(run.outcome["cause"]).is_equal("turn_cap")
+	assert_str(run.outcome["killer"]).is_equal("")
