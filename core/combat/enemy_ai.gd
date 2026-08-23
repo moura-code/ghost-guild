@@ -88,6 +88,8 @@ static func execute_move(s: FightState, index: int) -> void:
 			var dmg := scaled_damage(s, index, move)
 			for i in int(move.get("hits", 1)):
 				EffectResolver.hit_hero(s, dmg, index, true)
+				if s.hero_hp <= 0:
+					break
 			if e.alive and e.status("bleed") > 0:
 				EffectResolver.direct_damage_enemy(s, index, e.status("bleed"), "bleed")
 			if move.has("status"):

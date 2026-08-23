@@ -145,7 +145,7 @@ static func hit_hero(s: FightState, base: int, attacker_index: int, is_attack: b
 	var blocked := mini(s.hero_block, amount)
 	s.hero_block -= blocked
 	var dealt := amount - blocked
-	s.hero_hp -= dealt
+	s.hero_hp = maxi(0, s.hero_hp - dealt)
 	s.emit({"type": "damage", "target": "hero", "amount": dealt, "blocked": blocked, "hp": s.hero_hp, "source": attacker_index})
 	if is_attack and s.hero_status("thorns") > 0:
 		direct_damage_enemy(s, attacker_index, s.hero_status("thorns"), "thorns")
@@ -153,7 +153,7 @@ static func hit_hero(s: FightState, base: int, attacker_index: int, is_attack: b
 
 
 static func direct_damage_hero(s: FightState, amount: int, cause: String) -> void:
-	s.hero_hp -= amount
+	s.hero_hp = maxi(0, s.hero_hp - amount)
 	s.emit({"type": "damage", "target": "hero", "amount": amount, "blocked": 0, "hp": s.hero_hp, "direct": true, "cause": cause})
 
 
