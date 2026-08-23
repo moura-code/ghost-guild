@@ -13,6 +13,9 @@ the roguelite, dead heroes become idle-farming ghosts.
 - Demo: `"$GODOT_BIN" --headless --path . -s tools/fight_demo.gd -- <enemy_id ...>`.
   Runs one narrated autopilot fight plus a 50-fight simulation summary.
   Exit 0 on success; exit 1 on content validation errors or an unknown enemy id.
+- Run demo: `"$GODOT_BIN" --headless --path . -s tools/run_demo.gd -- [entry_floor] [seed]`.
+  Plays one autopilot run and prints its event log plus an `OUTCOME` line.
+  Exit 1 on content validation errors or an entry floor outside 1..10.
 
 ## core/ rules
 
@@ -23,6 +26,9 @@ the roguelite, dead heroes become idle-farming ghosts.
   `apply(state, action) -> events`. Events are `Dictionary` values with a
   `"type"` key, appended via `state.emit(...)`.
 - Static typing everywhere; `Variant` only where JSON parsing forces it.
+- Event payloads are immutable snapshots: copy (`duplicate()`) any array or
+  dictionary you put in an event or keep as live state, because Godot's
+  `Array(from)` returns the same array, not a copy.
 
 ## Sidecars
 
@@ -34,10 +40,13 @@ the roguelite, dead heroes become idle-farming ghosts.
 ## Content
 
 - Game data lives under `data/` (cards, enemies, relics, classes, biomes,
-  affinity, balance) loaded by `Content.load_from`. Player-facing strings are
-  keys resolved against `data/strings/en.csv`.
+  affinity, balance, events) loaded by `Content.load_from`. Player-facing
+  strings are keys resolved against `data/strings/en.csv`.
 - The shipped slice content is validated by
   `tests/core/content/slice_content_test.gd`.
+- `core/run/` is the roguelite layer: Hero, RunState + RunEngine state
+  machine, FloorGenerator, Rewards, RunProjection, RunAutopilot; a run saved
+  between nodes resumes identically from its seed.
 
 ## Docs
 
