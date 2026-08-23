@@ -1,0 +1,12 @@
+[
+  {
+    "id": "fx_well",
+    "name": "event.fx_well.name",
+    "text": "event.fx_well.text",
+    "biome": "fx_biome",
+    "choices": [
+      {"id": "drink", "text": "event.fx_well.drink", "effects": [{"op": "heal", "amount": 10}]},
+      {"id": "leave", "text": "event.fx_well.leave", "effects": []}
+    ]
+  }
+]

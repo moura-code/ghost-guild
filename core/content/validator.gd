@@ -16,6 +16,8 @@ const NODE_KINDS: Array[String] = ["fight", "elite", "event", "rest", "shop"]
 const ENEMY_KINDS: Array[String] = ["regular", "elite", "boss"]
 const PATTERN_KINDS: Array[String] = ["sequence", "weighted"]
 const ADD_CARD_WHERE: Array[String] = ["hand", "discard", "draw"]
+const RUN_OPS: Array[String] = ["heal", "heal_percent", "damage", "coin", "soul", "add_card", "relic", "stat", "max_hp"]
+const STATS: Array[String] = ["might", "wit", "vigor", "focus"]
 
 
 static func validate(c: Content) -> Array[String]:
@@ -31,6 +33,8 @@ static func validate(c: Content) -> Array[String]:
 		_class(c, c.classes[id], errors)
 	for id in c.biomes:
 		_biome(c, c.biomes[id], errors)
+	for id in c.events:
+		_event(c, c.events[id], errors)
 	return errors
 
 
@@ -197,3 +201,55 @@ static func _biome(c: Content, biome: BiomeDef, errors: Array[String]) -> void:
 			if not NODE_KINDS.has(String(node)):
 				errors.append("%s: bad node kind '%s'" % [where, String(node)])
 	_key(c, where, biome.name_key, errors)
+
+
+static func _number(value: Variant) -> bool:
+	return value is float or value is int
+
+
+static func _run_effects(c: Content, where: String, effects: Array, errors: Array[String]) -> void:
+	for raw in effects:
+		if not (raw is Dictionary) or not raw.has("op"):
+			errors.append("%s: effect without op" % where)
+			continue
+		var e: Dictionary = raw
+		var op := String(e["op"])
+		if not RUN_OPS.has(op):
+			errors.append("%s: unknown run op '%s'" % [where, op])
+			continue
+		match op:
+			"heal", "heal_percent", "damage", "coin", "soul", "max_hp":
+				if not _number(e.get("amount")):
+					errors.append("%s: op '%s' needs a numeric amount" % [where, op])
+			"add_card":
+				if not c.cards.has(String(e.get("card", ""))):
+					errors.append("%s: add_card references missing card '%s'" % [where, String(e.get("card", ""))])
+			"relic":
+				if not c.relics.has(String(e.get("relic", ""))):
+					errors.append("%s: relic references missing relic '%s'" % [where, String(e.get("relic", ""))])
+			"stat":
+				if not STATS.has(String(e.get("stat", ""))):
+					errors.append("%s: unknown stat '%s'" % [where, String(e.get("stat", ""))])
+				if not _number(e.get("amount")):
+					errors.append("%s: stat needs a numeric amount" % where)
+
+
+static func _event(c: Content, ev: EventDef, errors: Array[String]) -> void:
+	var where := "event " + ev.id
+	if ev.biome != "" and not c.biomes.has(ev.biome):
+		errors.append("%s: unknown biome '%s'" % [where, ev.biome])
+	if ev.choices.size() < 2 or ev.choices.size() > 3:
+		errors.append("%s: needs 2 or 3 choices" % where)
+	for raw in ev.choices:
+		if not (raw is Dictionary):
+			errors.append("%s: choice is not an object" % where)
+			continue
+		var choice: Dictionary = raw
+		var choice_id := String(choice.get("id", ""))
+		var cwhere := "%s choice '%s'" % [where, choice_id]
+		if choice_id == "":
+			errors.append("%s: choice without id" % where)
+		_key(c, cwhere, String(choice.get("text", "")), errors)
+		_run_effects(c, cwhere, choice.get("effects", []), errors)
+	_key(c, where, ev.name_key, errors)
+	_key(c, where, ev.text_key, errors)

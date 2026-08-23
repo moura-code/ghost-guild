@@ -83,3 +83,17 @@ relic.lead_censer.name,Lead Censer
 relic.lead_censer.text,Enemies start each fight with 1 Weak.
 relic.grave_coin.name,Grave Coin
 relic.grave_coin.text,Gain 10 Coin after each fight.
+event.whispering_well.name,Whispering Well
+event.whispering_well.text,A well breathes cold air. Something below knows your name.
+event.whispering_well.drink,Drink. Heal 12.
+event.whispering_well.offer,Offer blood. Lose 7 HP. Gain 1 Wit this run.
+event.whispering_well.leave,Walk on.
+event.collapsed_crypt.name,Collapsed Crypt
+event.collapsed_crypt.text,Fallen stone blocks a side passage. Bones glint in the rubble.
+event.collapsed_crypt.dig,Dig through. Lose 8 HP. Gain a Bone Spear.
+event.collapsed_crypt.pray,Say the rites. Heal 5. Gain 2 Soul.
+event.collapsed_crypt.leave,Leave it buried.
+event.lost_lantern.name,Lost Lantern
+event.lost_lantern.text,A lantern still burns beside a dead gravedigger. Its glass is cracked.
+event.lost_lantern.take,Take it. Gain the Cracked Hourglass.
+event.lost_lantern.sell,Strip the brass. Gain 40 Coin.

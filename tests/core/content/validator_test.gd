@@ -117,3 +117,23 @@ func test_empty_collections_are_errors() -> void:
 	biome.node_patterns = []
 	biome.elites = []
 	assert_int(ContentValidator.validate(c).size()).is_equal(3)
+
+
+func test_event_rules() -> void:
+	var c := _ok()
+	var ev: EventDef = c.events["fx_well"]
+	ev.choices = [
+		{"id": "a", "text": "event.fx_well.drink", "effects": [{"op": "teleport"}]},
+		{"id": "b", "text": "event.fx_well.leave", "effects": [{"op": "add_card", "card": "nope"}, {"op": "stat", "stat": "luck", "amount": 1}]},
+		{"id": "", "text": "missing.key", "effects": [{"op": "relic", "relic": "nope"}]},
+		{"id": "d", "text": "event.fx_well.leave", "effects": []},
+	]
+	assert_int(ContentValidator.validate(c).size()).is_equal(7)
+
+
+func test_event_biome_must_exist_and_amounts_must_be_numbers() -> void:
+	var c := _ok()
+	var ev: EventDef = c.events["fx_well"]
+	ev.biome = "moon"
+	ev.choices[0]["effects"] = [{"op": "heal", "amount": "lots"}]
+	assert_int(ContentValidator.validate(c).size()).is_equal(2)

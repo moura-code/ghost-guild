@@ -1,0 +1,19 @@
+[
+  {"id": "whispering_well", "name": "event.whispering_well.name", "text": "event.whispering_well.text", "biome": "catacombs",
+   "choices": [
+     {"id": "drink", "text": "event.whispering_well.drink", "effects": [{"op": "heal", "amount": 12}]},
+     {"id": "offer", "text": "event.whispering_well.offer", "effects": [{"op": "damage", "amount": 7}, {"op": "stat", "stat": "wit", "amount": 1}]},
+     {"id": "leave", "text": "event.whispering_well.leave", "effects": []}
+   ]},
+  {"id": "collapsed_crypt", "name": "event.collapsed_crypt.name", "text": "event.collapsed_crypt.text", "biome": "catacombs",
+   "choices": [
+     {"id": "dig", "text": "event.collapsed_crypt.dig", "effects": [{"op": "damage", "amount": 8}, {"op": "add_card", "card": "bone_spear"}]},
+     {"id": "pray", "text": "event.collapsed_crypt.pray", "effects": [{"op": "heal", "amount": 5}, {"op": "soul", "amount": 2}]},
+     {"id": "leave", "text": "event.collapsed_crypt.leave", "effects": []}
+   ]},
+  {"id": "lost_lantern", "name": "event.lost_lantern.name", "text": "event.lost_lantern.text", "biome": "catacombs",
+   "choices": [
+     {"id": "take", "text": "event.lost_lantern.take", "effects": [{"op": "relic", "relic": "cracked_hourglass"}]},
+     {"id": "sell", "text": "event.lost_lantern.sell", "effects": [{"op": "coin", "amount": 40}]}
+   ]}
+]

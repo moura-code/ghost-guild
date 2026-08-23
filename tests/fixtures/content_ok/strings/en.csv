@@ -11,3 +11,7 @@ relic.fx_lantern.name,Fixture Lantern
 relic.fx_lantern.text,Start each fight with 3 Block.
 class.fx_class.name,Fixture Class
 biome.fx_biome.name,Fixture Biome
+event.fx_well.name,Fixture Well
+event.fx_well.text,A well.
+event.fx_well.drink,Drink.
+event.fx_well.leave,Leave.

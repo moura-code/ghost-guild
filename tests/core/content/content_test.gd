@@ -11,6 +11,7 @@ func test_loads_all_types_without_errors() -> void:
 	assert_int(c.relics.size()).is_equal(1)
 	assert_int(c.classes.size()).is_equal(1)
 	assert_int(c.biomes.size()).is_equal(1)
+	assert_int(c.events.size()).is_equal(1)
 
 
 func test_card_def_fields() -> void:
@@ -89,3 +90,15 @@ func test_duplicate_ids_are_load_errors() -> void:
 			found = true
 	assert_bool(found).is_true()
 	assert_int(c.cards.size()).is_equal(1)
+
+
+func test_event_def_fields() -> void:
+	var c := Content.load_from(ROOT)
+	var ev: EventDef = c.events["fx_well"]
+	assert_str(ev.name_key).is_equal("event.fx_well.name")
+	assert_str(ev.biome).is_equal("fx_biome")
+	assert_int(ev.choices.size()).is_equal(2)
+	assert_str(ev.choices[0]["id"]).is_equal("drink")
+	assert_str(ev.choices[0]["text"]).is_equal("event.fx_well.drink")
+	assert_int(ev.choices[0]["effects"][0]["amount"]).is_equal(10)
+	assert_array(ev.choices[1]["effects"]).is_empty()
