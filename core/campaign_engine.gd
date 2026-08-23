@@ -73,7 +73,7 @@ static func finish_run(c: Campaign, now: int) -> Dictionary:
 		c.emit({"type": "ghost_placed", "id": ghost.id, "floor": ghost.floor, "strength": ghost.strength, "epitaph": result["epitaph"], "cause": ghost.cause})
 		var rite := c.onboarding.on_run_end(outcome)
 		for ev in rite:
-			c.emit(ev)
+			c.emit(ev.duplicate())
 		result["rite_events"] = rite
 		new_hero(c, now)
 		result["new_hero"] = true

@@ -51,7 +51,7 @@ func test_death_places_a_restless_ghost_and_replaces_the_hero() -> void:
 	assert_bool(ghost.restless).is_true()
 	assert_str(ghost.killer).is_equal("shambler")
 	assert_str(result["epitaph"]).is_equal("%s fell to Shambler on Floor 1" % old_name)
-	assert_float(ghost.strength).is_greater_equal(0.0)
+	assert_float(ghost.strength).is_greater(0.0)
 	assert_int(c.hero.id).is_equal(2)
 	assert_int(c.hero.hp).is_equal(70)
 	assert_bool(c.onboarding.first_death_seen).is_true()
