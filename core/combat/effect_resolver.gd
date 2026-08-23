@@ -98,7 +98,7 @@ static func _add_card(s: FightState, e: Dictionary) -> void:
 			s.discard_pile.append(card)
 		"draw":
 			s.draw_pile.append(card)
-	s.emit({"type": "card_added", "card": card.def_id, "where": where})
+	s.emit({"type": "card_added", "uid": card.uid, "card": card.def_id, "where": where})
 
 
 static func affinity_multiplier(s: FightState, tags: Array, enemy: EnemyState) -> float:
@@ -178,7 +178,7 @@ static func kill_enemy(s: FightState, index: int) -> void:
 static func heal_hero(s: FightState, amount: int) -> void:
 	var before := s.hero_hp
 	s.hero_hp = mini(s.hero_max_hp, s.hero_hp + amount)
-	s.emit({"type": "heal", "amount": s.hero_hp - before, "hp": s.hero_hp})
+	s.emit({"type": "heal", "target": "hero", "amount": s.hero_hp - before, "hp": s.hero_hp})
 
 
 static func apply_status(s: FightState, who: Dictionary, status: String, stacks: int) -> void:

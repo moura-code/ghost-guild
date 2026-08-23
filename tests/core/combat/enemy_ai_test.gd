@@ -109,3 +109,12 @@ func test_bleeding_enemy_hurts_itself_when_attacking() -> void:
 	s.enemies[0].next_move = "gnaw"
 	EnemyAI.execute_move(s, 0)
 	assert_int(s.enemies[0].hp).is_equal(12)
+
+
+func test_enemy_move_intent_has_the_same_shape_as_enemy_intent() -> void:
+	var s := TestFixtures.bare_state(["bone_rat"])
+	EnemyAI.choose_next_move(s, 0)
+	var telegraphed: Dictionary = TestFixtures.events_of(s, "enemy_intent")[0]["intent"]
+	EnemyAI.execute_move(s, 0)
+	var executed: Dictionary = TestFixtures.events_of(s, "enemy_move")[0]["intent"]
+	assert_dict(executed).is_equal(telegraphed)

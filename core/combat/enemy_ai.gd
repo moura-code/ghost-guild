@@ -82,7 +82,7 @@ static func execute_move(s: FightState, index: int) -> void:
 	var move: Dictionary = def.moves[e.next_move]
 	var intent := String(move.get("intent", ""))
 	var hp_before := s.hero_hp
-	s.emit({"type": "enemy_move", "index": index, "move": e.next_move, "intent": intent})
+	s.emit({"type": "enemy_move", "index": index, "move": e.next_move, "intent": intent_of(s, index)})
 	match intent:
 		"attack":
 			var dmg := scaled_damage(s, index, move)
