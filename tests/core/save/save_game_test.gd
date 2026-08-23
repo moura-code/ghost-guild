@@ -109,6 +109,7 @@ func test_load_and_catch_up_banks_offline_soul() -> void:
 	assert_float(r["offline"]["soul"]).is_equal_approx(104.0, 0.0001)
 	assert_float(loaded.soul).is_equal_approx(104.0, 0.0001)
 	assert_int(loaded.last_tick).is_equal(1000 + 2 * 3600)
+	assert_float(loaded.rate_per_hour).is_equal_approx(52.0, 0.0001)
 	var capped := SaveGame.load_and_catch_up(TestFixtures.content(), 1000 + 100 * 3600, PATH)
 	assert_bool(capped["offline"]["capped"]).is_true()
 	assert_float(capped["offline"]["soul"]).is_equal_approx(52.0 * 8.0, 0.0001)

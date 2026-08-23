@@ -67,6 +67,7 @@ static func load_and_catch_up(content: Content, now: int, path: String = DEFAULT
 	if c == null:
 		return {"campaign": null, "offline": {"elapsed": 0, "counted": 0, "capped": false, "soul": 0.0}}
 	var offline := CampaignEngine.tick(c, now)
+	CampaignEngine.refresh_rate(c)
 	return {"campaign": c, "offline": offline}
 
 
