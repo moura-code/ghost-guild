@@ -140,3 +140,15 @@ ui.free,Free
 ui.restless,Restless
 ui.floor_short,Fl
 ui.strength,str
+ui.hero,Hero
+ui.hp,HP
+ui.resolve,Resolve
+ui.camp,camp
+ui.deck,Deck
+ui.relics,Relics
+ui.none,None
+ui.upgraded,+
+stat.might.name,Might
+stat.wit.name,Wit
+stat.vigor.name,Vigor
+stat.focus.name,Focus
