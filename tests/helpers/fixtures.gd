@@ -50,3 +50,37 @@ static func events_of(s: FightState, type: String) -> Array:
 		if ev["type"] == type:
 			out.append(ev)
 	return out
+
+
+static func hero(hero_name: String = "Tester") -> Hero:
+	return Hero.create(content(), "sexton", hero_name)
+
+
+static func new_run(entry_floor: int = 1, run_seed: int = 1, watch_unlocked: bool = true, h: Hero = null) -> RunState:
+	var the_hero := h if h != null else hero()
+	return RunEngine.start_run(content(), the_hero, "catacombs", entry_floor, run_seed, watch_unlocked)
+
+
+static func autofight(run: RunState) -> void:
+	var ap := Autopilot.new()
+	var guard := 0
+	while run.phase == "fight" and guard < 200:
+		guard += 1
+		for action in ap.choose_turn(run.fight):
+			if run.phase != "fight":
+				break
+			RunEngine.apply(run, action)
+
+
+static func set_nodes(run: RunState, nodes: Array) -> void:
+	run.nodes = nodes
+	run.node_index = 0
+	run.phase = "node"
+
+
+static func run_events_of(run: RunState, type: String) -> Array:
+	var out: Array = []
+	for ev in run.events:
+		if ev["type"] == type:
+			out.append(ev)
+	return out
