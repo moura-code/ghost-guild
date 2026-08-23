@@ -15,7 +15,7 @@ static func apply(run: RunState, effects: Array) -> void:
 			"heal_percent":
 				heal(run, int(round(run.hero.max_hp * float(e.get("amount", 0)) / 100.0)))
 			"damage":
-				run.hero.hp = maxi(0, run.hero.hp - amount)
+				run.hero.hp = clampi(run.hero.hp - amount, 0, run.hero.max_hp)
 				run.emit({"type": "hero_damaged", "amount": amount, "hp": run.hero.hp})
 			"coin":
 				run.add_coin(amount)
@@ -40,5 +40,5 @@ static func apply(run: RunState, effects: Array) -> void:
 
 static func heal(run: RunState, amount: int) -> void:
 	var before := run.hero.hp
-	run.hero.hp = mini(run.hero.max_hp, run.hero.hp + amount)
+	run.hero.hp = clampi(run.hero.hp + amount, 0, run.hero.max_hp)
 	run.emit({"type": "hero_healed", "amount": run.hero.hp - before, "hp": run.hero.hp})

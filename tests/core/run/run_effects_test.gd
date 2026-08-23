@@ -72,3 +72,12 @@ func test_state_helpers() -> void:
 	assert_bool(run.is_over()).is_false()
 	run.phase = "ended"
 	assert_bool(run.is_over()).is_true()
+
+
+func test_hp_stays_within_range_for_signed_amounts() -> void:
+	var run := _run()
+	run.hero.hp = 65
+	RunEffects.apply(run, [{"op": "damage", "amount": -50}])
+	assert_int(run.hero.hp).is_equal(70)
+	RunEffects.apply(run, [{"op": "heal", "amount": -500}])
+	assert_int(run.hero.hp).is_equal(0)
