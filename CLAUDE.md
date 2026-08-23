@@ -16,6 +16,10 @@ the roguelite, dead heroes become idle-farming ghosts.
 - Run demo: `"$GODOT_BIN" --headless --path . -s tools/run_demo.gd -- [entry_floor] [seed]`.
   Plays one autopilot run and prints its event log plus an `OUTCOME` line.
   Exit 1 on content validation errors or an entry floor outside 1..10.
+- Campaign demo: `"$GODOT_BIN" --headless --path . -s tools/campaign_demo.gd -- [seed] [runs]`.
+  Plays autopilot runs with the ghost economy between them and a save/load round trip.
+- Balance sim: `"$GODOT_BIN" --headless --path . -s tools/balance_sim.gd -- [runs] [sim_fights]`.
+  Prints typical-deck yield per floor and the spec §12 invariants; exit 1 when one fails.
 
 ## core/ rules
 
@@ -44,9 +48,12 @@ the roguelite, dead heroes become idle-farming ghosts.
   strings are keys resolved against `data/strings/en.csv`.
 - The shipped slice content is validated by
   `tests/core/content/slice_content_test.gd`.
-- `core/run/` is the roguelite layer: Hero, RunState + RunEngine state
-  machine, FloorGenerator, Rewards, RunProjection, RunAutopilot; a run saved
-  between nodes resumes identically from its seed.
+- `core/run/` is the roguelite layer (Hero, RunState + RunEngine, FloorGenerator,
+  Rewards, RunProjection, RunAutopilot); `core/ghosts/` (Ghost, Strength, Ladder,
+  YieldSimulator), `core/economy/` (Upgrades, Production, Seance, BalanceSim),
+  `core/onboarding/` and `core/save/` form the idle layer; `Campaign` +
+  `CampaignEngine` are the aggregate the UI observes and the save file stores.
+  Nothing in `core/` reads the clock: every time-dependent function takes `now`.
 
 ## Docs
 
