@@ -61,6 +61,13 @@ static func legal_actions(run: RunState) -> Array:
 				for card in run.hero.deck:
 					out.append({"kind": "remove_card", "uid": card.uid})
 			out.append({"kind": "leave"})
+		"exit":
+			if can_push(run):
+				out.append({"kind": "push"})
+			if run.hero.resolve > 0:
+				out.append({"kind": "retreat"})
+			if can_watch(run):
+				out.append({"kind": "watch"})
 	return out
 
 
@@ -90,6 +97,8 @@ static func apply(run: RunState, action: Dictionary) -> Array:
 			_apply_rest(run, kind, action)
 		"shop":
 			_apply_shop(run, kind, action)
+		"exit":
+			_apply_exit(run, kind)
 		_:
 			push_error("run: no handler for phase " + run.phase)
 	var out: Array = combat_events.duplicate()
@@ -332,3 +341,54 @@ static func _apply_shop(run: RunState, kind: String, action: Dictionary) -> void
 			_advance(run)
 		_:
 			push_error("run: unknown shop action " + kind)
+
+
+static func can_push(run: RunState) -> bool:
+	return run.floor < run.biome().last_floor
+
+
+static func can_watch(run: RunState) -> bool:
+	return run.watch_unlocked or not can_push(run)
+
+
+static func exit_summary(run: RunState, samples: int = -1) -> Dictionary:
+	var n := samples if samples >= 0 else int(run.content.balance.get("survival_samples", 20))
+	var survival := -1.0
+	if can_push(run):
+		survival = RunProjection.survival_chance(run.content, run.hero_snapshot(), run.biome(), run.floor + 1, run.run_seed, n)
+	return {
+		"floor": run.floor,
+		"measured": run.stats.measured(run.floor),
+		"next_floor": run.floor + 1,
+		"survival": survival,
+		"can_push": can_push(run),
+		"can_retreat": run.hero.resolve > 0,
+		"can_watch": can_watch(run),
+	}
+
+
+static func _apply_exit(run: RunState, kind: String) -> void:
+	match kind:
+		"push":
+			if not can_push(run):
+				push_error("push: no deeper floor in this biome")
+				return
+			run.emit({"type": "exit_decision", "floor": run.floor, "choice": "push"})
+			run.floor += 1
+			_enter_floor(run)
+		"retreat":
+			if run.hero.resolve <= 0:
+				push_error("retreat: no Resolve left")
+				return
+			run.hero.resolve -= 1
+			run.hero.camp = run.floor
+			run.emit({"type": "exit_decision", "floor": run.floor, "choice": "retreat", "resolve": run.hero.resolve})
+			_end_run(run, "retreat")
+		"watch":
+			if not can_watch(run):
+				push_error("watch: locked until the first death")
+				return
+			run.emit({"type": "exit_decision", "floor": run.floor, "choice": "watch"})
+			_end_run(run, "watch")
+		_:
+			push_error("run: unknown exit action " + kind)
