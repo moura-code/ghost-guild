@@ -49,3 +49,48 @@ func spend(cost: float) -> bool:
 	soul -= cost
 	emit({"type": "soul_spent", "amount": cost, "total": soul})
 	return true
+
+
+func to_dict() -> Dictionary:
+	return {
+		"version": 1,
+		"campaign_seed": campaign_seed,
+		"biome_id": biome_id,
+		"ladder": ladder.to_dict(),
+		"upgrades": upgrades.to_dict(),
+		"onboarding": onboarding.to_dict(),
+		"hero": hero.to_dict() if hero != null else {},
+		"run": run.to_dict() if run != null else {},
+		"soul": soul,
+		"record_depth": record_depth,
+		"hero_counter": hero_counter,
+		"run_counter": run_counter,
+		"created_at": created_at,
+		"last_tick": last_tick,
+		"rate_per_hour": rate_per_hour,
+	}
+
+
+static func from_dict(p_content: Content, d: Dictionary) -> Campaign:
+	var c := Campaign.new()
+	c.content = p_content
+	c.campaign_seed = int(d.get("campaign_seed", 0))
+	c.biome_id = String(d.get("biome_id", "catacombs"))
+	c.ladder = Ladder.from_dict(d.get("ladder", {}))
+	c.upgrades = Upgrades.from_dict(d.get("upgrades", {}))
+	c.onboarding = Onboarding.from_dict(d.get("onboarding", {}))
+	var hero_raw: Dictionary = d.get("hero", {})
+	if not hero_raw.is_empty():
+		c.hero = Hero.from_dict(hero_raw)
+	var run_raw: Dictionary = d.get("run", {})
+	if not run_raw.is_empty():
+		c.run = RunState.from_dict(p_content, run_raw)
+		c.hero = c.run.hero
+	c.soul = float(d.get("soul", 0.0))
+	c.record_depth = int(d.get("record_depth", 0))
+	c.hero_counter = int(d.get("hero_counter", 0))
+	c.run_counter = int(d.get("run_counter", 0))
+	c.created_at = int(d.get("created_at", 0))
+	c.last_tick = int(d.get("last_tick", 0))
+	c.rate_per_hour = float(d.get("rate_per_hour", 0.0))
+	return c
