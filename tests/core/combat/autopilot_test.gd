@@ -98,3 +98,15 @@ func test_play_fight_always_terminates() -> void:
 		var result := Autopilot.new().play_fight(s)
 		assert_bool(s.is_over()).is_true()
 		assert_int(result["turns"]).is_less_equal(30)
+
+
+func test_does_not_suicide_on_mutual_kill() -> void:
+	var s := _start(["bone_rat"])
+	s.hero_hp = 3
+	s.enemies[0].hp = 6
+	s.enemies[0].statuses["thorns"] = 3
+	TestFixtures.give_hand(s, ["strike", "brace"])
+	var ap := Autopilot.new()
+	_run_turn(ap, s)
+	assert_str(s.phase).is_not_equal("lost")
+	assert_int(s.hero_hp).is_greater(0)

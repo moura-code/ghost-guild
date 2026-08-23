@@ -8,6 +8,7 @@ const MAX_SEQUENCES := 200
 
 var weights: Dictionary = {
 	"lethal": 1000.0,
+	"death": -10000.0,
 	"damage": 1.0,
 	"kill": 25.0,
 	"block_useful": 1.2,
@@ -86,6 +87,8 @@ func _explore(start: FightState, s: FightState, seq: Array, ai_sum: float, incom
 
 func _score(start: FightState, s: FightState, incoming: int, ai_sum: float) -> float:
 	var w := weights
+	if s.phase == "lost":
+		return float(w["death"])
 	var score := 0.0
 	if s.all_enemies_dead():
 		score += float(w["lethal"])
