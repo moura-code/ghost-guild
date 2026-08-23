@@ -197,3 +197,8 @@ func test_dead_target_falls_back_to_living_enemy() -> void:
 	s.enemies[0].alive = false
 	_play(s, "strike", 0)
 	assert_int(s.enemies[1].hp).is_equal(8)
+
+
+func test_fight_start_is_the_first_event() -> void:
+	var s := _start(["bone_rat", "shambler"])
+	assert_str(s.events[0]["type"]).is_equal("fight_start")

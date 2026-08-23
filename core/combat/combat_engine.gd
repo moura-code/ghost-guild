@@ -23,9 +23,9 @@ static func start_fight(content: Content, hero: HeroSnapshot, enemy_ids: Array, 
 		max_uid = maxi(max_uid, card.uid)
 	s.next_uid = max_uid + 1000
 	s.rng.shuffle("deck", s.draw_pile)
+	s.emit({"type": "fight_start", "floor": floor})
 	for enemy_id in enemy_ids:
 		EnemyAI.spawn(s, String(enemy_id))
-	s.emit({"type": "fight_start", "floor": floor})
 	Relics.fire(s, "on_fight_start")
 	_begin_player_turn(s)
 	return s
