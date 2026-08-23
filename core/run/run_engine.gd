@@ -42,6 +42,25 @@ static func legal_actions(run: RunState) -> Array:
 			for card_id in run.reward.get("cards", []):
 				out.append({"kind": "take_card", "card": card_id})
 			out.append({"kind": "skip_card"})
+		"event":
+			var ev: EventDef = run.content.events[run.event_id]
+			for i in ev.choices.size():
+				out.append({"kind": "choose", "index": i})
+		"rest":
+			out.append({"kind": "rest_heal"})
+			for card in run.hero.deck:
+				if not card.upgraded:
+					out.append({"kind": "rest_upgrade", "uid": card.uid})
+		"shop":
+			for card_id in run.shop.get("cards", []):
+				if run.coin >= int(run.shop["card_price"]):
+					out.append({"kind": "buy_card", "card": card_id})
+			if String(run.shop.get("relic", "")) != "" and run.coin >= int(run.shop["relic_price"]):
+				out.append({"kind": "buy_relic"})
+			if not bool(run.shop.get("removed", false)) and run.coin >= int(run.shop["removal_price"]):
+				for card in run.hero.deck:
+					out.append({"kind": "remove_card", "uid": card.uid})
+			out.append({"kind": "leave"})
 	return out
 
 
@@ -65,6 +84,12 @@ static func apply(run: RunState, action: Dictionary) -> Array:
 				_finish_fight(run)
 		"reward":
 			_apply_reward(run, kind, action)
+		"event":
+			_apply_event(run, kind, action)
+		"rest":
+			_apply_rest(run, kind, action)
+		"shop":
+			_apply_shop(run, kind, action)
 		_:
 			push_error("run: no handler for phase " + run.phase)
 	var out: Array = combat_events.duplicate()
@@ -126,8 +151,10 @@ static func _enter_node(run: RunState) -> void:
 		"event":
 			run.event_id = String(node["event"])
 			run.phase = "event"
-		"rest", "shop":
-			run.phase = kind
+		"rest":
+			run.phase = "rest"
+		"shop":
+			_open_shop(run)
 		_:
 			push_error("unknown node kind: " + kind)
 			_advance(run)
@@ -216,3 +243,92 @@ static func _end_run(run: RunState, kind: String, killer: String = "") -> void:
 	run.fight = null
 	run.phase = "ended"
 	run.emit({"type": "run_end", "kind": kind, "floor": run.floor, "killer": killer, "soul": run.outcome["soul"]})
+
+
+static func _apply_event(run: RunState, kind: String, action: Dictionary) -> void:
+	if kind != "choose":
+		push_error("run: expected choose, got " + kind)
+		return
+	var ev: EventDef = run.content.events[run.event_id]
+	var index := int(action.get("index", -1))
+	if index < 0 or index >= ev.choices.size():
+		push_error("choose: bad index %d" % index)
+		return
+	var choice: Dictionary = ev.choices[index]
+	run.emit({"type": "event_choice", "event": run.event_id, "choice": String(choice.get("id", ""))})
+	RunEffects.apply(run, choice.get("effects", []))
+	run.event_id = ""
+	_advance(run)
+
+
+static func _apply_rest(run: RunState, kind: String, action: Dictionary) -> void:
+	if kind == "rest_heal":
+		var amount := int(round(run.hero.max_hp * float(run.content.balance.get("rest_heal_percent", 0.3))))
+		RunEffects.heal(run, amount)
+		run.emit({"type": "rest", "choice": "heal"})
+	elif kind == "rest_upgrade":
+		var uid := int(action.get("uid", -1))
+		if not run.hero.upgrade_card(uid):
+			push_error("rest_upgrade: cannot upgrade uid %d" % uid)
+			return
+		run.emit({"type": "rest", "choice": "upgrade", "uid": uid})
+	else:
+		push_error("run: expected rest_heal or rest_upgrade, got " + kind)
+		return
+	_advance(run)
+
+
+static func _open_shop(run: RunState) -> void:
+	var balance := run.content.balance
+	var rng := run.sub_rng("shop", run.floor)
+	var cards := Rewards.card_offer(run.content, _pools(run), rng, balance, int(balance.get("shop_card_count", 3)))
+	run.shop = {
+		"cards": Array(cards),
+		"relic": Rewards.relic_offer(run.content, run.hero.relics, rng),
+		"card_price": int(balance.get("shop_card_price", 50)),
+		"relic_price": int(balance.get("shop_relic_price", 150)),
+		"removal_price": int(balance.get("shop_removal_price", 75)),
+		"removed": false,
+	}
+	run.phase = "shop"
+	run.emit({"type": "shop_open", "cards": Array(cards), "relic": run.shop["relic"]})
+
+
+static func _apply_shop(run: RunState, kind: String, action: Dictionary) -> void:
+	match kind:
+		"buy_card":
+			var card_id := String(action.get("card", ""))
+			var price := int(run.shop["card_price"])
+			if not run.shop["cards"].has(card_id) or run.coin < price:
+				push_error("buy_card: cannot buy " + card_id)
+				return
+			run.add_coin(-price)
+			run.shop["cards"].erase(card_id)
+			var card := run.hero.add_card(card_id)
+			run.emit({"type": "shop_buy", "item": "card", "card": card_id, "uid": card.uid, "price": price})
+		"buy_relic":
+			var relic_id := String(run.shop.get("relic", ""))
+			var price := int(run.shop["relic_price"])
+			if relic_id == "" or run.coin < price:
+				push_error("buy_relic: cannot buy")
+				return
+			run.add_coin(-price)
+			run.shop["relic"] = ""
+			run.grant_relic(relic_id)
+			run.emit({"type": "shop_buy", "item": "relic", "relic": relic_id, "price": price})
+		"remove_card":
+			var uid := int(action.get("uid", -1))
+			var price := int(run.shop["removal_price"])
+			if bool(run.shop["removed"]) or run.coin < price or run.hero.find_card(uid) == null:
+				push_error("remove_card: cannot remove uid %d" % uid)
+				return
+			run.hero.remove_card(uid)
+			run.add_coin(-price)
+			run.shop["removed"] = true
+			run.emit({"type": "shop_buy", "item": "removal", "uid": uid, "price": price})
+		"leave":
+			run.shop = {}
+			run.emit({"type": "shop_leave"})
+			_advance(run)
+		_:
+			push_error("run: unknown shop action " + kind)
