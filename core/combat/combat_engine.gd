@@ -149,9 +149,9 @@ static func _begin_player_turn(s: FightState) -> void:
 	StatusSystem.hero_turn_start(s, s.turn > 1)
 	if _check_end(s):
 		return
-	Relics.fire(s, "on_turn_start")
 	s.energy = s.max_energy
 	s.emit({"type": "energy_changed", "energy": s.energy})
+	Relics.fire(s, "on_turn_start")
 	s.draw(s.draw_per_turn)
 
 

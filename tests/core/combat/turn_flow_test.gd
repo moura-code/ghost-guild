@@ -213,3 +213,14 @@ func test_summoned_enemy_is_announced_before_its_intent() -> void:
 			order.append(ev["type"])
 	assert_array(order).is_equal(["enemy_spawned", "enemy_intent", "summon"])
 	assert_str(s.events[1]["type"]).is_equal("enemy_spawned")
+
+
+func test_turn_start_relic_energy_survives_the_refill() -> void:
+	var content := Content.load_from("res://data")
+	content.relics["fx_tempo"] = RelicDef.from_dict({"id": "fx_tempo", "name": "x", "text": "x", "hooks": {"on_turn_start": [{"op": "energy", "amount": 1}]}})
+	var hero := HeroSnapshot.starter(content, "sexton")
+	hero.relics = ["fx_tempo"] as Array[String]
+	var s := CombatEngine.start_fight(content, hero, ["bone_rat"], 1, Rng.new(1))
+	assert_int(s.energy).is_equal(4)
+	_end(s)
+	assert_int(s.energy).is_equal(4)
