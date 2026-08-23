@@ -133,5 +133,11 @@ func _on_mend() -> void:
 		refresh()
 
 
-func _on_soul_changed(_soul: float, _rate_per_hour: float) -> void:
-	refresh()
+func _on_soul_changed(soul: float, _rate_per_hour: float) -> void:
+	if game == null or game.campaign == null:
+		return
+	var hero := game.campaign.hero
+	if hero != null:
+		_mend_button.disabled = hero.hp >= hero.max_hp or soul < Seance.mend_cost(game.campaign)
+	for id in lines:
+		(lines[id] as GhostLine).set_affordability(soul)

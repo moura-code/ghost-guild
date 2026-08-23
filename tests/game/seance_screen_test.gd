@@ -194,6 +194,20 @@ func test_binding_connects_soul_changed() -> void:
 	assert_int(g.soul_changed.get_connections().size()).is_equal(1)
 
 
+func test_soul_ticking_updates_affordability_without_rebinding_a_line() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	var founder := g.campaign.ladder.ghosts[0]
+	var line: GhostLine = s.lines[founder.id]
+	assert_bool(line._echo.disabled).is_true()
+	line._detail.text = "sentinel"
+	g.campaign.soul = 500.0
+	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
+	assert_bool(line._echo.disabled).is_false()
+	assert_str(line._detail.text).is_equal("sentinel")
+
+
 func test_a_ghost_line_reuses_its_widget_across_refreshes() -> void:
 	var g := _game()
 	var s := _screen(g)

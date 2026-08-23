@@ -18,6 +18,9 @@ var _floor_seeded: bool = false
 var _echo: Button
 var _call: Button
 var _tend: Button
+var _echo_cost: float = 0.0
+var _call_cost: float = 0.0
+var _tend_cost: float = 0.0
 
 
 func _init() -> void:
@@ -93,15 +96,24 @@ func bind(content: Content, ghost: Ghost, ctx: Dictionary) -> void:
 	_floor.visible = true
 
 	if is_true:
-		var echo_cost := float(ctx["echo_cost"])
-		_echo.text = Num.short(echo_cost)
-		_echo.disabled = soul < echo_cost
+		_echo_cost = float(ctx["echo_cost"])
+		_echo.text = Num.short(_echo_cost)
 	else:
-		var call_cost := float(ctx["call_cost"])
-		_call.text = Num.short(call_cost)
-		_call.disabled = soul < call_cost
+		_call_cost = float(ctx["call_cost"])
+		_call.text = Num.short(_call_cost)
 
 	if _tend.visible:
-		var tend_cost := float(ctx["tend_cost"])
-		_tend.text = content.text("ui.free") if tend_cost <= 0.0 else Num.short(tend_cost)
-		_tend.disabled = tend_cost > 0.0 and soul < tend_cost
+		_tend_cost = float(ctx["tend_cost"])
+		_tend.text = content.text("ui.free") if _tend_cost <= 0.0 else Num.short(_tend_cost)
+
+	set_affordability(soul)
+
+
+## The 10 Hz path: affordability only, never a rebind.
+func set_affordability(soul: float) -> void:
+	if _echo.visible:
+		_echo.disabled = soul < _echo_cost
+	if _call.visible:
+		_call.disabled = soul < _call_cost
+	if _tend.visible:
+		_tend.disabled = _tend_cost > 0.0 and soul < _tend_cost
