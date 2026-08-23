@@ -161,3 +161,21 @@ func test_killer_of_reads_the_last_hero_damage() -> void:
 	EffectResolver.direct_damage_hero(s, 3, "poison")
 	assert_str(RunEngine.killer_of(s)).is_equal("poison")
 	assert_str(RunEngine.killer_of(TestFixtures.bare_state())).is_equal("")
+
+
+func test_turn_cap_loss_is_a_death_with_zero_hp() -> void:
+	var run := TestFixtures.new_run(1, 1)
+	run.hero.hp = 100000
+	run.hero.max_hp = 100000
+	TestFixtures.set_nodes(run, [{"kind": "fight", "enemies": ["bone_rat"]}])
+	RunEngine.apply(run, {"kind": "enter"})
+	run.fight.enemies[0].hp = 1000000
+	for i in 40:
+		if run.phase != "fight":
+			break
+		RunEngine.apply(run, {"kind": "end_turn"})
+	assert_str(run.phase).is_equal("ended")
+	assert_str(run.outcome["kind"]).is_equal("death")
+	assert_int(run.hero.hp).is_equal(0)
+	assert_int(run.outcome["hero_hp"]).is_equal(0)
+	assert_dict(run.stats.measured(1)).contains_key_value("fights", 1)

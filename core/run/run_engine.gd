@@ -147,7 +147,7 @@ static func _finish_fight(run: RunState) -> void:
 	var kind := String(node.get("kind", "fight"))
 	var won := f.phase == "won"
 	run.stats.record(run.floor, won, f.turn)
-	run.hero.hp = maxi(0, f.hero_hp)
+	run.hero.hp = maxi(0, f.hero_hp) if won else 0
 	run.emit({"type": "fight_result", "won": won, "turns": f.turn, "hp": run.hero.hp, "floor": run.floor, "kind": kind})
 	if not won:
 		_end_run(run, "death", killer_of(f))
