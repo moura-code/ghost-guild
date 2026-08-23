@@ -13,7 +13,7 @@ static func generate(content: Content, biome: BiomeDef, floor: int, rng: Rng, us
 	for i in pattern.size():
 		var kind := String(pattern[i])
 		if floor == biome.last_floor and i == pattern.size() - 1:
-			nodes.append({"kind": "boss", "enemies": Array(biome.boss)})
+			nodes.append({"kind": "boss", "enemies": biome.boss.duplicate()})
 			continue
 		match kind:
 			"fight":

@@ -12,5 +12,6 @@ static func offers(content: Content, hero: Hero, biome: BiomeDef, entry_floor: i
 		if hero.picks_taken.has(f):
 			continue
 		var rng := Rng.new(hash([run_seed, "draft", f]))
-		out.append({"floor": f, "cards": Array(Rewards.card_offer(content, pools, rng, content.balance))})
+		var cards := Rewards.card_offer(content, pools, rng, content.balance)
+		out.append({"floor": f, "cards": cards.duplicate()})
 	return out

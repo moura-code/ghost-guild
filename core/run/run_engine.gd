@@ -200,9 +200,9 @@ static func _finish_fight(run: RunState) -> void:
 		if relic_id != "":
 			run.grant_relic(relic_id)
 	var cards := Rewards.card_offer(run.content, _pools(run), rng, run.content.balance, Rewards.OFFER_SIZE, kind == "boss")
-	run.reward = {"cards": Array(cards)}
+	run.reward = {"cards": cards.duplicate()}
 	run.phase = "reward"
-	run.emit({"type": "reward_offer", "cards": Array(cards)})
+	run.emit({"type": "reward_offer", "cards": cards.duplicate()})
 
 
 static func _pools(run: RunState) -> Array:
@@ -292,7 +292,7 @@ static func _open_shop(run: RunState) -> void:
 	var rng := run.sub_rng("shop", run.floor)
 	var cards := Rewards.card_offer(run.content, _pools(run), rng, balance, int(balance.get("shop_card_count", 3)))
 	run.shop = {
-		"cards": Array(cards),
+		"cards": cards.duplicate(),
 		"relic": Rewards.relic_offer(run.content, run.hero.relics, rng),
 		"card_price": int(balance.get("shop_card_price", 50)),
 		"relic_price": int(balance.get("shop_relic_price", 150)),
@@ -300,7 +300,7 @@ static func _open_shop(run: RunState) -> void:
 		"removed": false,
 	}
 	run.phase = "shop"
-	run.emit({"type": "shop_open", "cards": Array(cards), "relic": run.shop["relic"]})
+	run.emit({"type": "shop_open", "cards": cards.duplicate(), "relic": run.shop["relic"]})
 
 
 static func _apply_shop(run: RunState, kind: String, action: Dictionary) -> void:

@@ -103,6 +103,7 @@ func test_shop_stock_prices_and_purchases() -> void:
 	RunEngine.apply(run, {"kind": "leave"})
 	assert_str(run.phase).is_equal("exit")
 	assert_dict(run.shop).is_empty()
+	assert_array(TestFixtures.run_events_of(run, "shop_open")[0]["cards"]).has_size(3)
 
 
 func test_shop_relic_purchase_and_determinism() -> void:
