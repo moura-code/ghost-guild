@@ -26,6 +26,8 @@ func bind(g: GameRoot) -> void:
 		g.ladder_changed.connect(refresh)
 	if not g.hero_changed.is_connected(refresh):
 		g.hero_changed.connect(refresh)
+	if not g.soul_changed.is_connected(_on_soul_changed):
+		g.soul_changed.connect(_on_soul_changed)
 	refresh()
 
 
@@ -129,3 +131,7 @@ func _on_tend(ghost_id: int) -> void:
 func _on_mend() -> void:
 	if not bool(game.mend()["ok"]):
 		refresh()
+
+
+func _on_soul_changed(_soul: float, _rate_per_hour: float) -> void:
+	refresh()

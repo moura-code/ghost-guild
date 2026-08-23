@@ -76,6 +76,19 @@ func test_the_floor_picker_is_capped_at_the_waypoint() -> void:
 	assert_float(line._floor.max_value).is_equal(float(g.campaign.ladder.waypoint()))
 
 
+func test_a_fresh_line_seeds_the_floor_picker_to_the_ghosts_own_floor() -> void:
+	var g := _game()
+	g.campaign.soul = 5000.0
+	# A true ghost on floor 3, so a fresh line must not default to floor 1.
+	TestFixtures.end_at_exit(g.campaign, 3, "watch", 1000)
+	g.campaign.soul = 5000.0
+	var s := _screen(g)
+	await await_idle_frame()
+	var deep := g.campaign.ladder.ghosts[1]
+	var line: GhostLine = s.lines[deep.id]
+	assert_float(line._floor.value).is_equal(3.0)
+
+
 func test_tend_only_appears_for_a_restless_ghost_and_the_first_one_is_free() -> void:
 	var g := _game()
 	var founder := g.campaign.ladder.ghosts[0]
@@ -172,6 +185,13 @@ func test_binding_twice_does_not_connect_the_signals_twice() -> void:
 	s.bind(g)
 	await await_idle_frame()
 	assert_int(g.ladder_changed.get_connections().size()).is_equal(1)
+
+
+func test_binding_connects_soul_changed() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	assert_int(g.soul_changed.get_connections().size()).is_equal(1)
 
 
 func test_a_ghost_line_reuses_its_widget_across_refreshes() -> void:

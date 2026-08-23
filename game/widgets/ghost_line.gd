@@ -14,6 +14,7 @@ var _mark: GhostMark
 var _name: Label
 var _detail: Label
 var _floor: SpinBox
+var _floor_seeded: bool = false
 var _echo: Button
 var _call: Button
 var _tend: Button
@@ -81,8 +82,9 @@ func bind(content: Content, ghost: Ghost, ctx: Dictionary) -> void:
 	var soul := float(ctx["soul"])
 	# Keep the player's chosen floor when it is still legal.
 	_floor.max_value = float(waypoint)
-	if _floor.value < 1.0 or _floor.value > float(waypoint):
+	if not _floor_seeded or _floor.value < 1.0 or _floor.value > float(waypoint):
 		_floor.value = float(ghost.floor)
+		_floor_seeded = true
 
 	var is_true := ghost.kind == "true"
 	_echo.visible = is_true
