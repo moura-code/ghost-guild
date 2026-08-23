@@ -33,8 +33,9 @@ func _init() -> void:
 	var path := "user://saves/demo.json"
 	var err := SaveGame.save(c, path)
 	var back := SaveGame.load_campaign(content, path)
-	print("save %s, reload %s, soul %.1f" % [error_string(err), "ok" if back != null and is_equal_approx(back.soul, c.soul) else "FAILED", c.soul])
-	quit(0 if err == OK and back != null else 1)
+	var reload_ok := back != null and is_equal_approx(back.soul, c.soul)
+	print("save %s, reload %s, soul %.1f" % [error_string(err), "ok" if reload_ok else "FAILED", c.soul])
+	quit(0 if err == OK and reload_ok else 1)
 
 
 func _buy_cheapest(c: Campaign) -> void:
