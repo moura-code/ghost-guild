@@ -84,3 +84,38 @@ static func run_events_of(run: RunState, type: String) -> Array:
 		if ev["type"] == type:
 			out.append(ev)
 	return out
+
+
+static func campaign(campaign_seed: int = 1, now: int = 1000) -> Campaign:
+	var c := CampaignEngine.new_campaign(content(), campaign_seed, now)
+	c.sim_fights = 4
+	return c
+
+
+static func die_on_floor(c: Campaign, floor: int, now: int) -> Dictionary:
+	var run := CampaignEngine.start_run(c, 1, now)
+	run.floor = floor
+	run.hero.hp = 1
+	set_nodes(run, [{"kind": "fight", "enemies": ["shambler", "shambler", "shambler"]}])
+	RunEngine.apply(run, {"kind": "enter"})
+	autofight(run)
+	return CampaignEngine.finish_run(c, now)
+
+
+static func end_at_exit(c: Campaign, floor: int, choice: String, now: int) -> Dictionary:
+	var run := CampaignEngine.start_run(c, 1, now)
+	run.floor = floor
+	run.watch_unlocked = true
+	set_nodes(run, [{"kind": "rest"}])
+	RunEngine.apply(run, {"kind": "enter"})
+	RunEngine.apply(run, {"kind": "rest_heal"})
+	RunEngine.apply(run, {"kind": choice})
+	return CampaignEngine.finish_run(c, now)
+
+
+static func campaign_events_of(c: Campaign, type: String) -> Array:
+	var out: Array = []
+	for ev in c.events:
+		if ev["type"] == type:
+			out.append(ev)
+	return out
