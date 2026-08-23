@@ -122,3 +122,7 @@ epitaph.death,{name} fell to {killer} on Floor {floor}
 epitaph.death_unknown,{name} fell on Floor {floor}
 epitaph.founder,{name} founded the guild and holds Floor {floor}
 ghost.founder.name,Ilse
+ui.soul,Soul
+ui.per_hour,per hour
+ui.reach,reach
+ui.farmed,farmed

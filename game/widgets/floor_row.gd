@@ -69,7 +69,8 @@ func bind(campaign: Campaign, p_floor: int) -> void:
 	_number.text = str(p_floor)
 	_number.add_theme_color_override("font_color", Palette.BONE if is_waypoint else Palette.BONE_DIM)
 	_output.text = Num.rate(output_per_hour) if output_per_hour > 0.0 else ""
-	_farmed.text = "%s farmed" % Num.percent(saturation) if saturation > 0.0 else ""
+	var farmed_word := campaign.content.text("ui.farmed")
+	_farmed.text = "%s %s" % [Num.percent(saturation), farmed_word] if saturation > 0.0 else ""
 
 	var ghosts := campaign.ladder.on_floor(p_floor)
 	_rebuild_marks(ghosts)
