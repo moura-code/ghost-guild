@@ -47,6 +47,31 @@ deliberately failing so the numbers cannot quietly ship wrong.
 - `BalanceSim`: `ap.survival_samples = 1` is dead configuration in
   `sample_runs`; `deeper_pays` runs over sampled floors only.
 
+## Game feel — a scoped deliverable, not polish (added 2026-08-24)
+
+The art direction is icon-and-typography by necessity (spec 2: solo dev, no
+art skills), which means **motion carries the entire feel of the game**. This
+is not a polish pass to fit in if there is time; it is the difference between
+a spreadsheet and Balatro. Budget it explicitly.
+
+- **Fight screen (M1-C2).** The combat engine already emits every event as
+  `{type, target, amount, source}` specifically so the UI can animate from the
+  stream. Use it: floating damage numbers, hit-stop on a big hit, screen shake
+  scaled to damage, card tween into and out of the hand, `CPUParticles2D` on
+  impact, block shimmering as it absorbs.
+- **Numbers count, never snap.** Soul, HP, block and yield all tween to their
+  new value. A number that jumps reads as a spreadsheet; a number that climbs
+  reads as a game.
+- **The epitaph beat (M1-C2).** Spec 9 calls this the emotional centre and the
+  trailer opening. Give it real time: the name, the floor, the ghost sliding
+  into its row, and the ladder's number starting to tick. Do not let it be a
+  dialog box with an OK button.
+- **The Ladder is the Steam capsule.** Ghosts drift on their own phase (built),
+  but the tower also wants: a soft glow on a saturated floor, the waypoint
+  marker animating when it moves, and a new ghost easing into place.
+- **Sound.** Not yet scoped anywhere. Free CC0 libraries (freesound, Kenney)
+  cover the whole slice. A game with this look lives or dies on audio feedback.
+
 ## Recommendations carried into M1-C / M2
 
 - **Accrue-then-mutate rule.** Anything that changes the production rate must
