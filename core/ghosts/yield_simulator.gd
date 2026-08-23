@@ -1,18 +1,23 @@
 class_name YieldSimulator
 extends RefCounted
 ## The exit screen's numbers (spec §3.2): the marginal yield of a prepared
-## ghost with this deck here (measured this run, blended with a simulation),
-## the same simulated for the next floor, and the survival chance.
+## ghost with this deck here (measured this run, blended with a simulation)
+## and the same simulated for the next floor preview the ghost at full HP
+## (ghosts fight rested); the survival chance keeps the hero's current HP.
 
 
 static func strength_here(c: Campaign, run: RunState) -> float:
 	var measured := run.stats.measured(run.floor)
-	var sim := Strength.simulate(c.content, run.hero_snapshot(), c.biome(), run.floor, hash([c.campaign_seed, "yield", c.run_counter, run.floor]), c.sim_fights)
+	var snap := run.hero_snapshot()
+	snap.hp = snap.max_hp
+	var sim := Strength.simulate(c.content, snap, c.biome(), run.floor, hash([c.campaign_seed, "yield", c.run_counter, run.floor]), c.sim_fights)
 	return Strength.of_ghost_stats(measured, sim, c.balance())
 
 
 static func strength_at(c: Campaign, run: RunState, floor: int) -> float:
-	var sim := Strength.simulate(c.content, run.hero_snapshot(), c.biome(), floor, hash([c.campaign_seed, "yield", c.run_counter, floor]), c.sim_fights)
+	var snap := run.hero_snapshot()
+	snap.hp = snap.max_hp
+	var sim := Strength.simulate(c.content, snap, c.biome(), floor, hash([c.campaign_seed, "yield", c.run_counter, floor]), c.sim_fights)
 	return Strength.from_stats(float(sim["win_rate"]), float(sim["avg_turns"]), c.balance())
 
 

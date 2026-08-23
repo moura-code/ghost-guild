@@ -39,7 +39,9 @@ func sample_runs() -> Dictionary:
 						break
 					RunEngine.apply(run, action)
 			elif run.phase == "exit":
-				samples.append({"run": i, "floor": run.floor, "snapshot": run.hero_snapshot(), "measured": run.stats.measured(run.floor)})
+				var snap := run.hero_snapshot()
+				snap.hp = snap.max_hp
+				samples.append({"run": i, "floor": run.floor, "snapshot": snap, "measured": run.stats.measured(run.floor)})
 				RunEngine.apply(run, {"kind": "push" if RunEngine.can_push(run) else "watch"})
 			else:
 				RunEngine.apply(run, ap.choose(run))

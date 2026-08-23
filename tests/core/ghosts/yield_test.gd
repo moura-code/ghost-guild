@@ -42,3 +42,12 @@ func test_no_next_floor_past_the_slice() -> void:
 	assert_bool(n["can_push"]).is_false()
 	assert_float(n["yield_next"]).is_equal(-1.0)
 	assert_float(n["strength_next"]).is_equal(-1.0)
+
+
+func test_preview_strength_ignores_current_hp() -> void:
+	var c := TestFixtures.campaign(1, 1000)
+	var run := _run_at_exit(c, 2)
+	var rested := YieldSimulator.strength_here(c, run)
+	run.hero.hp = 5
+	assert_float(YieldSimulator.strength_here(c, run)).is_equal(rested)
+	assert_float(YieldSimulator.strength_at(c, run, 3)).is_equal(YieldSimulator.strength_at(c, run, 3))
