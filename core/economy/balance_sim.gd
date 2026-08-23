@@ -3,7 +3,10 @@ extends RefCounted
 ## The balance simulator (spec §10, §12): plays autopilot runs that always
 ## push, measures the deck a hero typically has at each floor, and checks
 ## the M1 invariants — deeper pays, watch beats the corpse, first purchase
-## early. Retreat-vs-push is reported, not asserted (no EV model in M1).
+## early. Watch vs. corpse+echo is evaluated as marginal yields on a
+## Founder-seeded ladder, with the corpse's echo placed on its best floor
+## ≤ f (shallower floors assumed no harder than f). Retreat-vs-push is
+## reported, not asserted (no EV model in M1).
 
 var content: Content
 var runs: int = 4
@@ -60,12 +63,24 @@ func floor_table(sampled: Dictionary) -> Dictionary:
 	var prepared := 1.0 + float(balance.get("prepared_bonus", 0.25))
 	var restless := 1.0 - float(balance.get("restless_penalty", 0.3))
 	var echo := float(balance.get("echo_factor", 0.75))
+	var mods := {"global_strength": 1.0, "global_spawn": 1.0, "restless_penalty": float(balance.get("restless_penalty", 0.3))}
 	for floor in by_floor:
 		var row: Dictionary = by_floor[floor]
 		var s := float(row["strength"]) / int(row["samples"])
 		row["strength"] = s
-		row["yield_watch"] = Ladder.output_for(s * prepared, int(floor), balance)
-		row["yield_corpse_plus_echo"] = Ladder.output_for(s * restless, int(floor), balance) + Ladder.output_for(s * restless * echo, int(floor), balance)
+		var f := int(floor)
+		var ladder := Ladder.new()
+		ladder.add(Ghost.founder(content, 0))
+		row["yield_watch"] = ladder.marginal_yield(f, s * prepared, balance, mods)
+		var corpse := ladder.marginal_yield(f, s * restless, balance, mods)
+		var corpse_ghost := Ghost.new()
+		corpse_ghost.floor = f
+		corpse_ghost.strength = s * restless
+		ladder.add(corpse_ghost)
+		var best_echo := 0.0
+		for g in range(1, f + 1):
+			best_echo = maxf(best_echo, ladder.marginal_yield(g, s * restless * echo, balance, mods))
+		row["yield_corpse_plus_echo"] = corpse + best_echo
 	return by_floor
 
 
