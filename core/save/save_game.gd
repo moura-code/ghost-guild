@@ -1,7 +1,9 @@
 class_name SaveGame
 extends RefCounted
 ## The campaign on disk (spec §8): one JSON file with a version field,
-## rotating backups and one migration per version. The only file I/O in core/.
+## rotating backups and one migration per version; a corrupt main file
+## falls back through the backups before giving up. The only file I/O
+## in core/.
 
 const VERSION := 1
 const DEFAULT_PATH := "user://saves/slot1.json"
@@ -31,11 +33,21 @@ static func save(c: Campaign, path: String = DEFAULT_PATH) -> Error:
 static func load_campaign(content: Content, path: String = DEFAULT_PATH) -> Campaign:
 	if not FileAccess.file_exists(path):
 		return null
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var parsed: Variant = _parse(path)
+	if not (parsed is Dictionary):
+		parsed = _parse(path + ".bak1")
+	if not (parsed is Dictionary):
+		parsed = _parse(path + ".bak2")
 	if not (parsed is Dictionary):
 		return null
 	var d: Dictionary = Content.normalize_json(parsed)
 	return Campaign.from_dict(content, migrate(d))
+
+
+static func _parse(path: String) -> Variant:
+	if not FileAccess.file_exists(path):
+		return null
+	return JSON.parse_string(FileAccess.get_file_as_string(path))
 
 
 static func migrate(d: Dictionary) -> Dictionary:

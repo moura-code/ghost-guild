@@ -113,3 +113,17 @@ func test_load_and_catch_up_banks_offline_soul() -> void:
 	assert_bool(capped["offline"]["capped"]).is_true()
 	assert_float(capped["offline"]["soul"]).is_equal_approx(52.0 * 8.0, 0.0001)
 	assert_object(SaveGame.load_and_catch_up(TestFixtures.content(), 5, "user://test_saves/nothing.json")["campaign"]).is_null()
+
+
+func test_load_falls_back_to_a_backup_when_the_main_file_is_corrupt() -> void:
+	var c := TestFixtures.campaign(11, 1000)
+	c.soul = 7.0
+	SaveGame.save(c, PATH)
+	c.soul = 8.0
+	SaveGame.save(c, PATH)
+	var f := FileAccess.open(PATH, FileAccess.WRITE)
+	f.store_string("{broken")
+	f.close()
+	var back := SaveGame.load_campaign(TestFixtures.content(), PATH)
+	assert_object(back).is_not_null()
+	assert_float(back.soul).is_equal(7.0)
