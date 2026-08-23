@@ -98,13 +98,13 @@ event.lost_lantern.text,A lantern still burns beside a dead gravedigger. Its gla
 event.lost_lantern.take,Take it. Gain the Cracked Hourglass.
 event.lost_lantern.sell,Strip the brass. Gain 40 Coin.
 upgrade.might.name,Grave Strength
-upgrade.might.text,+1 Might for every new hero.
+upgrade.might.text,Your heroes gain +1 Might.
 upgrade.wit.name,Old Rites
-upgrade.wit.text,+1 Wit for every new hero.
+upgrade.wit.text,Your heroes gain +1 Wit.
 upgrade.vigor.name,Hardy Stock
-upgrade.vigor.text,+1 Vigor for every new hero.
+upgrade.vigor.text,Your heroes gain +1 Vigor.
 upgrade.focus.name,Lantern Discipline
-upgrade.focus.text,+1 Focus for every new hero.
+upgrade.focus.text,Your heroes gain +1 Focus.
 upgrade.resolve.name,Second Thoughts
 upgrade.resolve.text,+1 max Resolve. Retreat twice per hero.
 upgrade.mend_discount.name,Guild Surgeon
