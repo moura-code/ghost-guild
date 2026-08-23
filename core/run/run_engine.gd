@@ -247,6 +247,7 @@ static func _advance(run: RunState) -> void:
 
 
 static func _end_run(run: RunState, kind: String, killer: String = "", cause: String = "") -> void:
+	var bonus := run.stat_bonus.duplicate()
 	run.stat_bonus.clear()
 	var rate := float(run.content.balance.get("coin_to_soul", 0.1))
 	var soul_from_coin := run.coin * rate
@@ -259,6 +260,7 @@ static func _end_run(run: RunState, kind: String, killer: String = "", cause: St
 		"soul_from_coin": soul_from_coin,
 		"soul": run.soul + soul_from_coin,
 		"hero_hp": run.hero.hp,
+		"stat_bonus": bonus,
 	}
 	run.fight = null
 	run.phase = "ended"

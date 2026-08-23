@@ -59,6 +59,7 @@ func test_retreat_spends_resolve_sets_camp_and_keeps_hp() -> void:
 	run.hero.hp = 33
 	run.coin = 50
 	run.soul = 5.0
+	run.stat_bonus["wit"] = 2
 	RunEngine.apply(run, {"kind": "retreat"})
 	assert_str(run.phase).is_equal("ended")
 	assert_str(run.outcome["kind"]).is_equal("retreat")
@@ -68,6 +69,7 @@ func test_retreat_spends_resolve_sets_camp_and_keeps_hp() -> void:
 	assert_int(run.hero.hp).is_equal(33)
 	assert_float(run.outcome["soul"]).is_equal_approx(10.0, 0.0001)
 	assert_dict(run.stat_bonus).is_empty()
+	assert_int(run.outcome["stat_bonus"]["wit"]).is_equal(2)
 
 
 func test_retreat_needs_resolve() -> void:
