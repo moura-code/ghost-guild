@@ -55,6 +55,7 @@ static func finish_run(c: Campaign, now: int) -> Dictionary:
 	if c.run == null or not c.run.is_over():
 		push_error("finish_run: no finished run")
 		return {}
+	tick(c, now)
 	var outcome := c.run.outcome
 	var kind := String(outcome.get("kind", "death"))
 	var floor := int(outcome.get("floor", 1))

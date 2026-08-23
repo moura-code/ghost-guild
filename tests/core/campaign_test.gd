@@ -130,3 +130,15 @@ func test_buy_upgrade_spends_and_applies() -> void:
 	var next := CampaignEngine.new_hero(c, 5000)
 	assert_int(next.stats["might"]).is_equal(1)
 	assert_int(next.max_resolve).is_equal(2)
+
+
+func test_finish_run_accrues_the_run_time_at_the_old_rate() -> void:
+	var c := TestFixtures.campaign(9, 1000)
+	var run := CampaignEngine.start_run(c, 1, 1000)
+	run.hero.hp = 1
+	TestFixtures.set_nodes(run, [{"kind": "fight", "enemies": ["shambler", "shambler", "shambler"]}])
+	RunEngine.apply(run, {"kind": "enter"})
+	TestFixtures.autofight(run)
+	var result := CampaignEngine.finish_run(c, 1000 + 3600)
+	assert_int(c.last_tick).is_equal(1000 + 3600)
+	assert_float(c.soul).is_equal_approx(52.0 + float(result["soul"]), 0.0001)
