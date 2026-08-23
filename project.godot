@@ -18,6 +18,10 @@ config/name="Ghost Guild"
 config/features=PackedStringArray("4.7")
 config/icon="res://icon.svg"
 
+[autoload]
+
+Game="*res://game/game.gd"
+
 [debug]
 
 gdscript/warnings/untyped_declaration=1
