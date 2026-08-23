@@ -202,3 +202,14 @@ func test_dead_target_falls_back_to_living_enemy() -> void:
 func test_fight_start_is_the_first_event() -> void:
 	var s := _start(["bone_rat", "shambler"])
 	assert_str(s.events[0]["type"]).is_equal("fight_start")
+
+
+func test_summoned_enemy_is_announced_before_its_intent() -> void:
+	var s := _start(["mother_of_bones"])
+	_end(s)
+	var order: Array = []
+	for ev in s.events:
+		if int(ev.get("index", -1)) == 1 and ev["type"] in ["enemy_spawned", "enemy_intent", "summon"]:
+			order.append(ev["type"])
+	assert_array(order).is_equal(["enemy_spawned", "enemy_intent", "summon"])
+	assert_str(s.events[1]["type"]).is_equal("enemy_spawned")

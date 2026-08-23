@@ -2,6 +2,7 @@ class_name EnemyAI
 extends RefCounted
 ## Enemy move selection and execution. Patterns come from EnemyDef.pattern;
 ## move choice uses the "enemy_ai" rng stream so fights replay from a seed.
+## An entity is announced (enemy_spawned) before any event references its index.
 
 const MAX_ENEMIES := 5
 
@@ -17,6 +18,7 @@ static func spawn(s: FightState, enemy_id: String) -> int:
 	e.hp = e.max_hp
 	s.enemies.append(e)
 	var index := s.enemies.size() - 1
+	s.emit({"type": "enemy_spawned", "index": index, "enemy": enemy_id, "hp": e.hp, "max_hp": e.max_hp})
 	choose_next_move(s, index)
 	return index
 
