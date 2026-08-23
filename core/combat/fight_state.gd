@@ -3,6 +3,9 @@ extends RefCounted
 ## The complete state of one fight. Mutated in place by the engine;
 ## clone() returns an independent copy for what-if searches. Events are
 ## appended to `events` and never cloned.
+## CardInstances are immutable during a fight, so clones share them;
+## HeroSnapshot.clone() still deep-copies because the run layer mutates
+## upgrades between fights.
 
 var content: Content
 var rng: Rng
@@ -126,20 +129,13 @@ func clone() -> FightState:
 	s.stats = stats.duplicate()
 	s.statuses = statuses.duplicate()
 	s.relics = relics.duplicate()
-	s.draw_pile = _clone_cards(draw_pile)
-	s.hand = _clone_cards(hand)
-	s.discard_pile = _clone_cards(discard_pile)
-	s.exhaust_pile = _clone_cards(exhaust_pile)
+	s.draw_pile = draw_pile.duplicate()
+	s.hand = hand.duplicate()
+	s.discard_pile = discard_pile.duplicate()
+	s.exhaust_pile = exhaust_pile.duplicate()
 	for e in enemies:
 		s.enemies.append(e.clone())
 	s.cards_played_this_turn = cards_played_this_turn
 	s.next_uid = next_uid
 	s.pending_x = pending_x
 	return s
-
-
-static func _clone_cards(cards: Array[CardInstance]) -> Array[CardInstance]:
-	var out: Array[CardInstance] = []
-	for c in cards:
-		out.append(c.clone())
-	return out
