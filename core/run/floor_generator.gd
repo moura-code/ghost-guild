@@ -33,16 +33,21 @@ static func generate(content: Content, biome: BiomeDef, floor: int, rng: Rng, us
 	return nodes
 
 
-static func encounter_for(biome: BiomeDef, floor: int, rng: Rng) -> Array:
+static func groups_for(biome: BiomeDef, floor: int) -> Array:
 	var groups: Array = []
 	for bucket in biome.encounters:
 		var span: Array = bucket.get("floors", [1, 1])
 		if floor >= int(span[0]) and floor <= int(span[1]):
 			groups = bucket.get("groups", [])
 			break
-	if groups.is_empty():
+	if groups.is_empty() and not biome.encounters.is_empty():
 		var last: Dictionary = biome.encounters[biome.encounters.size() - 1]
 		groups = last.get("groups", [])
+	return groups.duplicate(true)
+
+
+static func encounter_for(biome: BiomeDef, floor: int, rng: Rng) -> Array:
+	var groups := groups_for(biome, floor)
 	var group: Array = groups[rng.randi_range("encounter", 0, groups.size() - 1)]
 	return group.duplicate()
 
