@@ -131,7 +131,14 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 	# Real card art would load here; until then the type icon stands in it,
 	# at the size and aspect the illustration will occupy.
 	_art_image.texture = Icons.card_art(card.def_id, def.type)
-	_art_image.modulate = Palette.BONE_DIM if playable else Palette.BONE_FAINT
+	_art_image.modulate = Palette.BONE if playable else Palette.BONE_FAINT
+	# The slot is tinted by what the card does -- attacks red, skills blue,
+	# powers violet -- so a hand reads as a set of types at a glance.
+	var slot := UiTheme.pip_box(
+		Palette.plate_for_card(def.type) if playable else Palette.VOID,
+		Palette.STONE_RAISED)
+	slot.set_corner_radius_all(3)
+	_art.add_theme_stylebox_override("panel", slot)
 	_paint(def)
 
 

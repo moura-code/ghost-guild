@@ -28,6 +28,7 @@ const RATE_COLUMN := 96.0
 
 var floors: int = 10
 var hovered: int = 0
+var _time: float = 0.0
 
 var _campaign: Campaign
 var _rows: Array = []
@@ -101,6 +102,17 @@ func _rebuild() -> void:
 			row.append(mark)
 		_marks[floor] = row
 	_layout()
+
+
+## The shaft breathes. A floor earning 52/h looked exactly like a floor
+## earning nothing except for the static height of a gradient -- the game's
+## signature image, representing its core loop, did not visibly produce
+## anything.
+func _process(delta: float) -> void:
+	if _campaign == null:
+		return
+	_time += delta
+	queue_redraw()
 
 
 func _notification(what: int) -> void:
@@ -197,7 +209,12 @@ func _draw() -> void:
 		# Its saturation, as light pooling in the chamber rather than a bar.
 		var saturation := _campaign.ladder.saturation(floor, bal, mods)
 		if saturation > 0.0:
-			var glow := clampf(saturation, 0.0, 1.0)
+			# Busier floors pulse faster and brighter: the light in the
+			# chamber is the Soul being earned.
+			var output := _campaign.ladder.floor_output(floor, bal, mods)
+			var speed := 1.1 + clampf(output / 400.0, 0.0, 1.6)
+			var breath := 0.82 + 0.18 * sin((_time + float(floor) * 0.7) * speed)
+			var glow := clampf(saturation, 0.0, 1.0) * breath
 			var pool := rect.size.y * 0.7
 			for i in 12:
 				var t := float(i) / 11.0

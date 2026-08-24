@@ -29,7 +29,7 @@ const HAND_BOTTOM := 76.0
 const GAP_TO_PANEL := 12.0
 const END_TURN_ROOM := 170.0
 ## Where the enemies stand, and how tall the table under the hand is.
-const ENEMY_TOP := 40.0
+const ENEMY_TOP := 34.0
 const TABLE_HEIGHT := 240.0
 ## How many of the floor's dead to show standing at the back of the room.
 const MAX_RESIDENTS := 6
@@ -95,7 +95,9 @@ func _build() -> void:
 	_fate = FatePanel.new()
 	_fate.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	_fate.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_fate.position = Vector2(16.0, -HeroPanel.PANEL_SIZE.y - FatePanel.PANEL_SIZE.y - 26.0)
+	# Clear of the hero panel: both grow with their content, so the gap is
+	# measured from the taller of the two rather than assumed.
+	_fate.position = Vector2(16.0, -HeroPanel.PANEL_SIZE.y - FatePanel.PANEL_SIZE.y - 46.0)
 	add_child(_fate)
 
 	_prompt = UiTheme.body("", Palette.SOUL)
@@ -466,6 +468,9 @@ func _animate(events: Array) -> void:
 ## resolves an entire enemy phase inside one apply() call, so without this
 ## three enemies attacking all landed in the same rendered frame.
 func _on_hit_landed(event: Dictionary) -> void:
+	if String(event.get("target", "")) == "hero" and int(event.get("amount", 0)) > 0:
+		_hero.react_hit(int(event["amount"]))
+		return
 	if not event.has("index"):
 		return
 	var index := int(event["index"])

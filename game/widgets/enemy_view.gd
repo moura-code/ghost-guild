@@ -15,8 +15,8 @@ extends Control
 
 signal pressed(enemy_index: int)
 
-const VIEW_SIZE := Vector2(230.0, 258.0)
-const FIGURE := 128.0
+const VIEW_SIZE := Vector2(230.0, 236.0)
+const FIGURE := 104.0
 const BAR_WIDTH := 132.0
 const BAR_HEIGHT := 8.0
 
@@ -35,6 +35,7 @@ var targetable: bool = false
 var idling: bool = true
 
 var _figure: TextureRect
+var _plate: PanelContainer
 var _name: Label
 var _hp: Label
 var _intent: Label
@@ -77,9 +78,13 @@ func _build() -> void:
 	_intent_chip.add_child(chip_row)
 	column.add_child(_intent_chip)
 
-	_figure = Icons.make_rect(null, FIGURE, Palette.BONE)
-	_figure.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	column.add_child(_figure)
+	# The figure sits on a plate so it reads as a designed piece rather
+	# than a stock glyph floating on the background.
+	_plate = Icons.make_plate(null, FIGURE, Palette.BONE, Palette.PLATE_ENEMY,
+		Palette.STONE_EDGE)
+	_plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_figure = _plate.get_child(0)
+	column.add_child(_plate)
 
 	_status_row = HBoxContainer.new()
 	_status_row.add_theme_constant_override("separation", 4)
@@ -116,6 +121,7 @@ func bind(state: FightState, index: int, is_targetable: bool) -> void:
 
 	_figure.texture = Icons.enemy(enemy.def_id)
 	_figure.modulate = _figure_colour()
+	_repaint_plate()
 	_name.text = state.content.text(def.name_key)
 	_name.add_theme_color_override("font_color", Palette.BONE if alive else Palette.BONE_FAINT)
 	_hp.text = "%d/%d" % [enemy.hp, enemy.max_hp]
@@ -135,6 +141,25 @@ func bind(state: FightState, index: int, is_targetable: bool) -> void:
 	_refresh_status_icons(enemy.statuses)
 	_bar.queue_redraw()
 	queue_redraw()
+
+
+## The plate carries the state a border used to: lit when this enemy can be
+## struck, drained when it is dead.
+func _repaint_plate() -> void:
+	var box := StyleBoxFlat.new()
+	box.set_corner_radius_all(int(FIGURE))
+	box.set_content_margin_all(FIGURE * 0.22)
+	box.set_border_width_all(1)
+	if not alive:
+		box.bg_color = Palette.VOID
+		box.border_color = Palette.STONE_RAISED
+	elif targetable:
+		box.bg_color = Palette.PLATE_ENEMY.lerp(Palette.SOUL, 0.22)
+		box.border_color = Palette.SOUL
+	else:
+		box.bg_color = Palette.PLATE_ENEMY
+		box.border_color = Palette.STONE_EDGE
+	_plate.add_theme_stylebox_override("panel", box)
 
 
 ## Lit when it can be struck, bone while it lives, faded once it is dead.

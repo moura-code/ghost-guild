@@ -56,6 +56,26 @@ static func ui(ident: String) -> Texture2D:
 	return get_icon("ui", ident)
 
 
+## An icon on a coloured plate. A flat glyph alone reads as clip art
+## dropped onto a slide; the same glyph on a filled disc reads as part of a
+## system, which is what Slay the Spire, Monster Train and Balatro all do
+## with flat iconography. Costs a StyleBox rather than an artist.
+static func make_plate(texture: Texture2D, px: float, tint: Color, plate: Color,
+		ring: Color = Color(0, 0, 0, 0)) -> PanelContainer:
+	var holder := PanelContainer.new()
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var box := StyleBoxFlat.new()
+	box.bg_color = plate
+	box.set_corner_radius_all(int(px))
+	box.set_content_margin_all(maxf(4.0, px * 0.22))
+	if ring.a > 0.0:
+		box.border_color = ring
+		box.set_border_width_all(1)
+	holder.add_theme_stylebox_override("panel", box)
+	holder.add_child(make_rect(texture, px, tint))
+	return holder
+
+
 ## A TextureRect sized and tinted for inline use next to text.
 static func make_rect(texture: Texture2D, px: float, tint: Color) -> TextureRect:
 	var rect := TextureRect.new()

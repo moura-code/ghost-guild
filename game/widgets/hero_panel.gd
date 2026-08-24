@@ -8,7 +8,7 @@ extends PanelContainer
 ## and whether the incoming hit kills them, and both answers should be
 ## readable at a glance rather than parsed out of a sentence.
 
-const PANEL_SIZE := Vector2(340.0, 116.0)
+const PANEL_SIZE := Vector2(344.0, 124.0)
 const BAR_HEIGHT := 16.0
 const ORB_RADIUS := 9.0
 const ORB_GAP := 7.0
@@ -29,6 +29,9 @@ var _turn: Label
 var _piles: Label
 var _status_row: HBoxContainer
 var _flash: float = 0.0
+var _figure: TextureRect
+var _plate: PanelContainer
+var _reaction: Tween
 
 
 func _init() -> void:
@@ -41,9 +44,15 @@ func _build() -> void:
 	box.add_theme_constant_override("separation", 5)
 	add_child(box)
 
+	# The hero had no body in the fight: every hit they took registered only
+	# as a bar flash, while enemies flash, squash and spring back. Now they
+	# have a figure that reacts the same way.
 	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 6)
-	top.add_child(Icons.make_rect(Icons.get_icon("vitals", "hp"), 16.0, Palette.BONE_DIM))
+	top.add_theme_constant_override("separation", 8)
+	_plate = Icons.make_plate(Icons.ui("hero"), 38.0, Palette.BONE,
+		Palette.PLATE_SKILL, Palette.STONE_EDGE)
+	_figure = _plate.get_child(0)
+	top.add_child(_plate)
 	_hp_text = UiTheme.body("")
 	top.add_child(_hp_text)
 
@@ -120,6 +129,23 @@ func bind(content: Content, fight: FightState) -> void:
 
 ## Bone while healthy, amber under half, danger under a quarter — so the
 ## colour alone tells the player how much trouble they are in.
+## The same flash-and-squash the enemies get, so a hit on the hero reads as
+## a hit rather than as a number quietly changing.
+func react_hit(amount: int) -> void:
+	if not is_inside_tree():
+		return
+	if _reaction != null and _reaction.is_valid():
+		_reaction.kill()
+	var depth := clampf(float(amount) / 12.0, 0.4, 1.0)
+	_plate.pivot_offset = _plate.size * 0.5
+	_plate.modulate = Palette.DANGER
+	_plate.scale = Vector2(1.0 + 0.14 * depth, 1.0 - 0.14 * depth)
+	_reaction = create_tween()
+	_reaction.set_parallel(true)
+	_reaction.tween_property(_plate, "modulate", Color.WHITE, 0.22)
+	_reaction.tween_property(_plate, "scale", Vector2.ONE, 0.3) 		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
 func _hp_colour() -> Color:
 	var frac := float(hp) / float(max_hp)
 	if frac <= 0.25:
