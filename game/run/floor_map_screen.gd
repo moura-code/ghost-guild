@@ -19,6 +19,7 @@ var _path: HBoxContainer
 var _enter: Button
 var _marks: Array[Label] = []
 var _boxes: Array[PanelContainer] = []
+var _icons: Array[TextureRect] = []
 
 
 func _init() -> void:
@@ -58,24 +59,34 @@ func _rebuild_path() -> void:
 	while _marks.size() < wanted:
 		var box := PanelContainer.new()
 		box.custom_minimum_size = Vector2(MARK_WIDTH, MARK_HEIGHT)
-		var label := UiTheme.body("")
+		var column := VBoxContainer.new()
+		column.add_theme_constant_override("separation", 1)
+		var icon := Icons.make_rect(null, 22.0, Palette.BONE)
+		icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		column.add_child(icon)
+		var label := UiTheme.small("")
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		box.add_child(label)
+		column.add_child(label)
+		box.add_child(column)
 		_path.add_child(box)
 		_marks.append(label)
 		_boxes.append(box)
+		_icons.append(icon)
 	while _marks.size() > wanted:
 		var stale: PanelContainer = _boxes.pop_back()
 		_marks.pop_back()
+		_icons.pop_back()
 		_path.remove_child(stale)
 		stale.queue_free()
 
 	for i in run.nodes.size():
-		_marks[i].text = game.text("ui.node.%s" % String(run.nodes[i]["kind"]))
+		var kind := String(run.nodes[i]["kind"])
+		_marks[i].text = game.text("ui.node.%s" % kind)
+		_icons[i].texture = Icons.get_icon("node", kind)
 		_paint(i)
 	var last := run.nodes.size()
 	_marks[last].text = game.text("ui.node.exit")
+	_icons[last].texture = Icons.get_icon("node", "exit")
 	_paint(last)
 
 
@@ -92,15 +103,19 @@ func _paint(index: int) -> void:
 	var state := state_of(index)
 	var label := _marks[index]
 	var box := _boxes[index]
+	var icon := _icons[index]
 	match state:
 		"done":
 			label.add_theme_color_override("font_color", Palette.BONE_FAINT)
+			icon.modulate = Palette.BONE_FAINT
 			box.add_theme_stylebox_override("panel", UiTheme.panel_box(Palette.STONE))
 		"current":
 			label.add_theme_color_override("font_color", Palette.BONE)
+			icon.modulate = Palette.SOUL
 			box.add_theme_stylebox_override("panel", UiTheme.panel_box(Palette.STONE_RAISED, Palette.SOUL))
 		_:
 			label.add_theme_color_override("font_color", Palette.BONE_DIM)
+			icon.modulate = Palette.BONE_DIM
 			box.add_theme_stylebox_override("panel", UiTheme.panel_box(Palette.STONE_RAISED))
 
 

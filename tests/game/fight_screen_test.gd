@@ -183,14 +183,41 @@ func test_the_screen_reports_when_the_fight_leaves_the_fight_phase() -> void:
 	assert_int(ended[0]).is_equal(1)
 
 
-func test_the_hero_vitals_read_back_the_fight_state() -> void:
+func test_the_hero_panel_reads_back_the_fight_state() -> void:
 	var g := _game()
 	var run := _fight(g)
 	var s := _screen(g, run)
 	await await_idle_frame()
-	assert_str(s._vitals.text).contains("%d/%d" % [run.fight.hero_hp, run.fight.hero_max_hp])
-	assert_str(s._vitals.text).contains(str(run.fight.energy))
-	assert_str(s._piles.text).contains(str(run.fight.draw_pile.size()))
+	assert_int(s._hero.hp).is_equal(run.fight.hero_hp)
+	assert_int(s._hero.max_hp).is_equal(run.fight.hero_max_hp)
+	assert_int(s._hero.energy).is_equal(run.fight.energy)
+	assert_int(s._hero.max_energy).is_equal(run.fight.max_energy)
+	assert_str(s._hero._hp_text.text).is_equal("%d/%d" % [run.fight.hero_hp, run.fight.hero_max_hp])
+
+
+func test_playing_a_card_spends_an_energy_orb() -> void:
+	var g := _game()
+	var run := _fight(g)
+	var s := _screen(g, run)
+	await await_idle_frame()
+	var before := s._hero.energy
+	var selfish := _find_card(g, run, "self")
+	s._card_views[selfish].press()
+	await await_idle_frame()
+	assert_int(s._hero.energy).is_less(before)
+
+
+func test_the_enemy_intent_carries_an_icon_and_a_number() -> void:
+	var g := _game()
+	var run := _fight(g)
+	var s := _screen(g, run)
+	await await_idle_frame()
+	var view := s._enemy_views[0]
+	assert_object(view._intent_icon.texture).is_not_null()
+	assert_bool(view._intent_icon.visible).is_true()
+	# The verb is the icon now; the text is just the number.
+	assert_str(view._intent.text).is_not_equal("")
+	assert_bool(view._intent.text.is_valid_int() or view._intent.text.contains("x")).is_true()
 
 
 ## Finds a hand index whose card targets `target`, or -1.

@@ -16,8 +16,7 @@ var selected_index: int = -1
 
 var _enemy_row: HBoxContainer
 var _hand_row: HBoxContainer
-var _vitals: Label
-var _piles: Label
+var _hero: HeroPanel
 var _prompt: Label
 var _end_turn: Button
 var _enemy_views: Array[EnemyView] = []
@@ -45,11 +44,8 @@ func _build() -> void:
 	_enemy_row.add_theme_constant_override("separation", 10)
 	add_child(_enemy_row)
 
-	_vitals = UiTheme.number("", Palette.BONE)
-	add_child(_vitals)
-
-	_piles = UiTheme.small("", Palette.BONE_FAINT)
-	add_child(_piles)
+	_hero = HeroPanel.new()
+	add_child(_hero)
 
 	_prompt = UiTheme.body("", Palette.SOUL)
 	add_child(_prompt)
@@ -113,21 +109,7 @@ func _refresh_enemies(fight: FightState) -> void:
 
 
 func _refresh_vitals(fight: FightState) -> void:
-	var bits := PackedStringArray()
-	bits.append("%s %d/%d" % [game.text("ui.hp"), fight.hero_hp, fight.hero_max_hp])
-	if fight.hero_block > 0:
-		bits.append("%s %d" % [game.text("ui.fight.block"), fight.hero_block])
-	bits.append("%s %d/%d" % [game.text("ui.fight.energy"), fight.energy, fight.max_energy])
-	bits.append(game.text("ui.fight.turn").replace("{turn}", str(fight.turn)))
-	_vitals.text = "   ".join(bits)
-
-	var piles := PackedStringArray()
-	piles.append("%s %d" % [game.text("ui.fight.draw"), fight.draw_pile.size()])
-	piles.append("%s %d" % [game.text("ui.fight.discard"), fight.discard_pile.size()])
-	var statuses := EnemyView.status_text(game.content, fight.statuses)
-	if statuses != "":
-		piles.append(statuses)
-	_piles.text = "   ".join(piles)
+	_hero.bind(game.content, fight)
 
 
 func _refresh_hand(fight: FightState) -> void:
@@ -204,7 +186,7 @@ func _discard_corner() -> Vector2:
 
 ## Where a number should appear for each thing the events can name.
 func anchors() -> Dictionary:
-	var out := {"hero": _vitals.position + Vector2(0.0, -8.0)}
+	var out := {"hero": _hero.position + Vector2(_hero.size.x * 0.5, -8.0)}
 	for i in _enemy_views.size():
 		if _enemy_views[i].visible:
 			out[i] = _enemy_views[i].position + _enemy_views[i].size * Vector2(0.5, 0.0)

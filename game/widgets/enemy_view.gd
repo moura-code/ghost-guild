@@ -28,6 +28,7 @@ var _bar: Control
 var _icon: TextureRect
 var _status_row: HBoxContainer
 var _reaction: Tween
+var _intent_icon: TextureRect
 
 
 func _init() -> void:
@@ -59,8 +60,13 @@ func _build() -> void:
 	_hp = UiTheme.small("", Palette.BONE_DIM)
 	box.add_child(_hp)
 
+	var intent_row := HBoxContainer.new()
+	intent_row.add_theme_constant_override("separation", 4)
+	_intent_icon = Icons.make_rect(null, 18.0, Palette.DANGER)
+	intent_row.add_child(_intent_icon)
 	_intent = UiTheme.body("", Palette.DANGER)
-	box.add_child(_intent)
+	intent_row.add_child(_intent)
+	box.add_child(intent_row)
 
 	_status_row = HBoxContainer.new()
 	_status_row.add_theme_constant_override("separation", 4)
@@ -90,12 +96,23 @@ func bind(state: FightState, index: int, is_targetable: bool) -> void:
 	if enemy.block > 0:
 		_hp.text += "  +%d" % enemy.block
 	_intent.text = intent_text(state, index)
+	_intent_icon.texture = Icons.get_icon("intent", intent_kind(state, index))
+	_intent_icon.visible = alive
 	_statuses.text = status_text(state.content, enemy.statuses)
 	_name.add_theme_color_override("font_color", Palette.BONE if alive else Palette.BONE_FAINT)
 	add_theme_stylebox_override("panel", UiTheme.panel_box(
 		Palette.STONE_RAISED if alive else Palette.STONE,
 		Palette.SOUL if targetable else Palette.STONE_EDGE))
 	_bar.queue_redraw()
+
+
+## Which icon the telegraph wears. Separate from the text so a glance reads
+## "sword, 7" while the sentence underneath stays unambiguous.
+static func intent_kind(state: FightState, index: int) -> String:
+	if not state.enemies[index].alive:
+		return ""
+	var kind := String(EnemyAI.intent_of(state, index).get("kind", ""))
+	return kind if kind != "" else "unknown"
 
 
 ## The telegraph. §4.1 says intents are shown, and the exit decision is only
@@ -110,11 +127,10 @@ static func intent_text(state: FightState, index: int) -> String:
 			var hits := int(intent.get("hits", 1))
 			var damage := int(intent.get("damage", 0))
 			if hits > 1:
-				return content.text("ui.fight.intent.attack_multi") \
-					.replace("{damage}", str(damage)).replace("{hits}", str(hits))
-			return content.text("ui.fight.intent.attack").replace("{damage}", str(damage))
+				return "%d x%d" % [damage, hits]
+			return str(damage)
 		"block":
-			return content.text("ui.fight.intent.block").replace("{block}", str(int(intent.get("block", 0))))
+			return str(int(intent.get("block", 0)))
 		"buff":
 			return content.text("ui.fight.intent.buff")
 		"debuff":

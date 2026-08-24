@@ -204,9 +204,6 @@ ui.fight.draw,Draw
 ui.fight.discard,Discard
 ui.fight.turn,Turn {turn}
 ui.fight.pick_target,Choose a target
-ui.fight.intent.attack,Attacks for {damage}
-ui.fight.intent.attack_multi,Attacks for {damage} x{hits}
-ui.fight.intent.block,Defends {block}
 ui.fight.intent.buff,Strengthens itself
 ui.fight.intent.debuff,Weakens you
 ui.fight.intent.summon,Calls for help

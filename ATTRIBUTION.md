@@ -27,6 +27,10 @@ game can tint it. No other changes.
 - `assets/icons/enemies/ossuary_warden.svg` — *bone-mace*
 - `assets/icons/enemies/plague_bearer.svg` — *plague-doctor-profile*
 - `assets/icons/enemies/shambler.svg` — *shambling-zombie*
+- `assets/icons/intent/buff.svg` — *upgrade*
+- `assets/icons/intent/unknown.svg` — *perspective-dice-six-faces-random*
+- `assets/icons/node/exit.svg` — *stairs*
+- `assets/icons/node/shop.svg` — *shop*
 - `assets/icons/relics/grave_coin.svg` — *two-coins*
 - `assets/icons/relics/ossuary_key.svg` — *boss-key*
 - `assets/icons/status/regen.svg` — *healing*
@@ -36,6 +40,11 @@ game can tint it. No other changes.
 - `assets/icons/ui/hero.svg` — *person*
 - `assets/icons/ui/ladder.svg` — *ladder*
 - `assets/icons/ui/soul.svg` — *soul*
+- `assets/icons/vitals/discard.svg` — *card-burn*
+
+### faithtoken
+
+- `assets/icons/vitals/draw.svg` — *card-draw*
 
 ### lorc
 
@@ -43,6 +52,13 @@ game can tint it. No other changes.
 - `assets/icons/card/power.svg` — *flat-star*
 - `assets/icons/enemies/grave_wisp.svg` — *spectre*
 - `assets/icons/enemies/skull_stack.svg` — *skull-crossed-bones*
+- `assets/icons/intent/attack.svg` — *pointy-sword*
+- `assets/icons/intent/block.svg` — *shield-echoes*
+- `assets/icons/node/boss.svg` — *dragon-head*
+- `assets/icons/node/elite.svg` — *crowned-skull*
+- `assets/icons/node/event.svg` — *scroll-unfurled*
+- `assets/icons/node/fight.svg` — *crossed-swords*
+- `assets/icons/node/rest.svg` — *campfire*
 - `assets/icons/relics/bone_charm.svg` — *charm*
 - `assets/icons/relics/cracked_hourglass.svg` — *hourglass*
 - `assets/icons/relics/lead_censer.svg` — *candle-holder*
@@ -55,13 +71,22 @@ game can tint it. No other changes.
 - `assets/icons/status/wit_buff.svg` — *brain*
 - `assets/icons/ui/ghost.svg` — *ghost*
 - `assets/icons/ui/seance.svg` — *candle-skull*
+- `assets/icons/vitals/energy.svg` — *lightning-arc*
+- `assets/icons/vitals/turn.svg` — *sands-of-time*
 
 ### sbed
 
 - `assets/icons/card/skill.svg` — *shield*
+- `assets/icons/intent/debuff.svg` — *fall-down*
 - `assets/icons/status/poison.svg` — *poison*
 - `assets/icons/status/thorns.svg` — *spikes*
 - `assets/icons/ui/guild.svg` — *tombstone*
+- `assets/icons/vitals/block.svg` — *shield*
+- `assets/icons/vitals/hp.svg` — *health-normal*
+
+### skoll
+
+- `assets/icons/intent/summon.svg` — *raise-skeleton*
 
 ## Fonts — SIL Open Font License 1.1
 
