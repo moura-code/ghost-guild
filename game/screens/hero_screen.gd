@@ -65,7 +65,7 @@ func refresh() -> void:
 		return
 	var hero := game.campaign.hero
 	_name.text = hero.name
-	_class.text = game.text("class.%s.name" % hero.class_id)
+	_class.text = game.text(_class_name_key(hero.class_id))
 	_vitals.text = "%s %d/%d   %s %d/%d   %s %d" % [
 		game.text("ui.hp"), hero.hp, hero.max_hp,
 		game.text("ui.resolve"), hero.resolve, hero.max_resolve,
@@ -75,6 +75,13 @@ func refresh() -> void:
 		(_stats[stat] as Label).text = str(int(hero.stats.get(stat, 0)))
 	_refresh_relics(hero)
 	_refresh_deck(hero)
+
+
+func _class_name_key(class_id: String) -> String:
+	if game.content.classes.has(class_id):
+		var def: ClassDef = game.content.classes[class_id]
+		return def.name_key
+	return class_id
 
 
 func _refresh_relics(hero: Hero) -> void:

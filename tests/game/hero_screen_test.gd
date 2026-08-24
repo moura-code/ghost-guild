@@ -43,6 +43,7 @@ func test_vitals_show_hp_resolve_and_camp() -> void:
 	var hero := g.campaign.hero
 	assert_str(s._vitals.text).contains("%d/%d" % [hero.hp, hero.max_hp])
 	assert_str(s._vitals.text).contains("%d/%d" % [hero.resolve, hero.max_resolve])
+	assert_str(s._vitals.text).contains("%s %d" % [g.text("ui.camp"), hero.camp])
 
 
 func test_the_four_stats_each_get_a_row() -> void:
@@ -58,11 +59,15 @@ func test_the_deck_lists_every_card_grouped_with_a_count() -> void:
 	var g := _game()
 	var s := _screen(g)
 	await await_idle_frame()
-	var total := 0
-	for label in s._deck.get_children():
-		total += 1
-	assert_int(total).is_greater(0)
-	assert_int(total).is_less_equal(g.campaign.hero.deck.size())
+	# The sexton starting deck is 5x strike, 4x brace, 1x last_rites: three
+	# groups, not ten lines.
+	assert_int(s._deck.get_child_count()).is_equal(3)
+	var expected := "%d× %s" % [5, g.text("card.strike.name")]
+	var found := false
+	for child in s._deck.get_children():
+		if (child as Label).text == expected:
+			found = true
+	assert_bool(found).is_true()
 
 
 func test_buying_a_stat_upgrade_updates_the_hero_screen() -> void:
