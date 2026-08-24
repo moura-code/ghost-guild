@@ -18,6 +18,7 @@ var selected: bool = false
 var _cost: Label
 var _name: Label
 var _text: Label
+var _type_icon: TextureRect
 
 
 func _init() -> void:
@@ -31,8 +32,14 @@ func _build() -> void:
 	box.add_theme_constant_override("separation", 4)
 	add_child(box)
 
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 6)
 	_cost = UiTheme.number("", Palette.SOUL)
-	box.add_child(_cost)
+	head.add_child(_cost)
+	_type_icon = Icons.make_rect(null, 20.0, Palette.BONE_DIM)
+	_type_icon.size_flags_horizontal = Control.SIZE_SHRINK_END | Control.SIZE_EXPAND
+	head.add_child(_type_icon)
+	box.add_child(head)
 
 	_name = UiTheme.body("")
 	_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -54,6 +61,7 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 	if card.upgraded:
 		_name.text += content.text("ui.upgraded")
 	_text.text = content.text(def.text_key)
+	_type_icon.texture = Icons.card_type(def.type)
 	_paint(def)
 
 
@@ -67,6 +75,7 @@ func _paint(def: CardDef) -> void:
 	add_theme_stylebox_override("panel", UiTheme.panel_box(body, edge))
 	var ink := Palette.BONE if playable else Palette.BONE_FAINT
 	_name.add_theme_color_override("font_color", ink)
+	_type_icon.modulate = edge if playable else Palette.BONE_FAINT
 	_cost.add_theme_color_override("font_color", Palette.SOUL if playable else Palette.BONE_FAINT)
 
 

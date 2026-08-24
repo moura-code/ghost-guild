@@ -22,6 +22,8 @@ var _hp: Label
 var _intent: Label
 var _statuses: Label
 var _bar: Control
+var _icon: TextureRect
+var _status_row: HBoxContainer
 
 
 func _init() -> void:
@@ -35,8 +37,14 @@ func _build() -> void:
 	box.add_theme_constant_override("separation", 2)
 	add_child(box)
 
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 6)
+	_icon = Icons.make_rect(null, 26.0, Palette.BONE)
+	head.add_child(_icon)
 	_name = UiTheme.body("")
-	box.add_child(_name)
+	_name.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(_name)
+	box.add_child(head)
 
 	_bar = Control.new()
 	_bar.custom_minimum_size = Vector2(0.0, BAR_HEIGHT)
@@ -48,6 +56,10 @@ func _build() -> void:
 
 	_intent = UiTheme.body("", Palette.DANGER)
 	box.add_child(_intent)
+
+	_status_row = HBoxContainer.new()
+	_status_row.add_theme_constant_override("separation", 4)
+	box.add_child(_status_row)
 
 	_statuses = UiTheme.small("", Palette.BONE_FAINT)
 	box.add_child(_statuses)
@@ -63,6 +75,9 @@ func bind(state: FightState, index: int, is_targetable: bool) -> void:
 	alive = enemy.alive
 
 	_name.text = state.content.text(def.name_key)
+	_icon.texture = Icons.enemy(enemy.def_id)
+	_icon.modulate = Palette.BONE if alive else Palette.BONE_FAINT
+	_refresh_status_icons(enemy.statuses)
 	_hp.text = "%d/%d" % [enemy.hp, enemy.max_hp]
 	if enemy.block > 0:
 		_hp.text += "  +%d" % enemy.block
@@ -109,6 +124,23 @@ static func status_text(content: Content, statuses: Dictionary) -> String:
 			continue
 		parts.append("%s %d" % [content.text("status.%s.name" % String(name)), stacks])
 	return " · ".join(parts)
+
+
+## Status icons read faster than a comma-separated list mid-fight; the text
+## line stays underneath as the unambiguous version.
+func _refresh_status_icons(statuses: Dictionary) -> void:
+	var wanted: Array[String] = []
+	for name in statuses:
+		if int(statuses[name]) > 0:
+			wanted.append(String(name))
+	while _status_row.get_child_count() < wanted.size():
+		_status_row.add_child(Icons.make_rect(null, 14.0, Palette.PREPARED))
+	for i in _status_row.get_child_count():
+		var rect: TextureRect = _status_row.get_child(i)
+		var used := i < wanted.size()
+		rect.visible = used
+		if used:
+			rect.texture = Icons.status(wanted[i])
 
 
 func _draw_bar() -> void:

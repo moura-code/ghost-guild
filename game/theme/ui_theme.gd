@@ -1,8 +1,19 @@
 class_name UiTheme
 extends RefCounted
 ## The game's Theme, built in code rather than authored as a .tres so it
-## reviews as a diff. Icon-and-typography aesthetic (spec §9): Godot's
-## default font stands in until real faces are licensed.
+## reviews as a diff. Icon-and-typography aesthetic (spec §9): a display
+## serif for titles, a humanist sans for body and numbers -- both under the
+## SIL Open Font License, see ATTRIBUTION.md.
+##
+## A missing font file is survivable: the loaders return null and Godot
+## falls back to its own face rather than the game refusing to start.
+
+const BODY_FONT_PATH := "res://assets/fonts/Inter.ttf"
+const TITLE_FONT_PATH := "res://assets/fonts/Cinzel.ttf"
+
+static var _body_font: Font = null
+static var _title_font: Font = null
+static var _fonts_tried: bool = false
 
 const FONT_SMALL := 12
 const FONT_BODY := 15
@@ -10,9 +21,37 @@ const FONT_NUMBER := 20
 const FONT_TITLE := 26
 
 
+## Inter for everything a player reads as information.
+static func body_font() -> Font:
+	_load_fonts()
+	return _body_font
+
+
+## Cinzel for titles, epitaphs and the name of the dead.
+static func title_font() -> Font:
+	_load_fonts()
+	return _title_font
+
+
+static func _load_fonts() -> void:
+	if _fonts_tried:
+		return
+	_fonts_tried = true
+	if ResourceLoader.exists(BODY_FONT_PATH):
+		_body_font = load(BODY_FONT_PATH) as Font
+	if ResourceLoader.exists(TITLE_FONT_PATH):
+		_title_font = load(TITLE_FONT_PATH) as Font
+
+
 static func build() -> Theme:
 	var t := Theme.new()
 	t.default_font_size = FONT_BODY
+	var body := body_font()
+	if body != null:
+		t.default_font = body
+		t.set_font("font", "Label", body)
+		t.set_font("font", "Button", body)
+		t.set_font("font", "LineEdit", body)
 
 	t.set_color("font_color", "Label", Palette.BONE)
 	t.set_font_size("font_size", "Label", FONT_BODY)
@@ -57,6 +96,9 @@ static func title(text: String) -> Label:
 	l.text = text
 	l.add_theme_font_size_override("font_size", FONT_TITLE)
 	l.add_theme_color_override("font_color", Palette.BONE)
+	var face := title_font()
+	if face != null:
+		l.add_theme_font_override("font", face)
 	return l
 
 
