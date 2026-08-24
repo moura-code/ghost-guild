@@ -38,16 +38,17 @@ func bind(g: GameRoot, p_run: RunState) -> void:
 
 
 func _build() -> void:
-	_title = UiTheme.title("")
+	alignment = BoxContainer.ALIGNMENT_CENTER
+	_title = ScreenLayout.centre(UiTheme.title(""))
 	add_child(_title)
 
-	_context = UiTheme.body("", Palette.BONE_DIM)
+	_context = ScreenLayout.centre(UiTheme.body("", Palette.BONE_DIM))
 	_context.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_context)
 
 	_options = VBoxContainer.new()
 	_options.add_theme_constant_override("separation", 6)
-	add_child(_options)
+	add_child(ScreenLayout.centred(_options))
 
 
 func refresh() -> void:
@@ -55,8 +56,24 @@ func refresh() -> void:
 		return
 	_title.text = game.text("ui.run.phase.%s" % run.phase)
 	_context.text = _context_text()
-	_actions = RunEngine.legal_actions(run)
+	_actions = _collapse(RunEngine.legal_actions(run))
 	_rebuild_options()
+
+
+## The shop offers one remove_card action per card in the deck, so a starter
+## deck with five Strikes produced five identical "Burn Strike" buttons and a
+## list that ran off the bottom of the screen. Collapsing by label keeps the
+## first of each: removing any one copy is the same move to the player.
+func _collapse(actions: Array) -> Array:
+	var out: Array = []
+	var seen := {}
+	for action in actions:
+		var label := label_for(action)
+		if seen.has(label):
+			continue
+		seen[label] = true
+		out.append(action)
+	return out
 
 
 ## The shop shows the purse; an event shows its authored text. The other two

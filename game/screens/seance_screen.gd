@@ -16,6 +16,7 @@ var _list: VBoxContainer
 
 func _init() -> void:
 	add_theme_constant_override("separation", 10)
+	alignment = BoxContainer.ALIGNMENT_CENTER
 
 
 func bind(g: GameRoot) -> void:
@@ -36,6 +37,7 @@ func _build() -> void:
 	header.add_theme_constant_override("separation", 24)
 	_echo_price = UiTheme.number("0")
 	_call_price = UiTheme.number("0")
+	header.alignment = BoxContainer.ALIGNMENT_CENTER
 	header.add_child(_price_block(_echo_price, game.text("ui.echo")))
 	header.add_child(_price_block(_call_price, game.text("ui.call")))
 	add_child(header)
@@ -48,12 +50,11 @@ func _build() -> void:
 	_mend_button.pressed.connect(_on_mend)
 	mend_row.add_child(_mend_label)
 	mend_row.add_child(_mend_button)
-	add_child(mend_row)
+	add_child(ScreenLayout.centred(mend_row))
 
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 4)
-	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(_list)
+	add_child(ScreenLayout.centred(_list))
 
 
 static func _price_block(value: Label, caption: String) -> VBoxContainer:

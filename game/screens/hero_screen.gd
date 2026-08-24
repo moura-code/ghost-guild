@@ -18,6 +18,7 @@ var _relics: Label
 
 func _init() -> void:
 	add_theme_constant_override("separation", 10)
+	alignment = BoxContainer.ALIGNMENT_CENTER
 
 
 func bind(g: GameRoot) -> void:
@@ -30,15 +31,16 @@ func bind(g: GameRoot) -> void:
 
 
 func _build() -> void:
-	_name = UiTheme.title("")
+	_name = ScreenLayout.centre(UiTheme.title(""))
 	add_child(_name)
-	_class = UiTheme.small("")
+	_class = ScreenLayout.centre(UiTheme.small(""))
 	add_child(_class)
-	_vitals = UiTheme.body("")
+	_vitals = ScreenLayout.centre(UiTheme.body(""))
 	add_child(_vitals)
 
 	var stat_row := HBoxContainer.new()
-	stat_row.add_theme_constant_override("separation", 18)
+	stat_row.add_theme_constant_override("separation", 34)
+	stat_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	for stat in STAT_IDS:
 		var value := UiTheme.number("0", Palette.BONE)
 		_stats[stat] = value
@@ -49,15 +51,15 @@ func _build() -> void:
 		stat_row.add_child(box)
 	add_child(stat_row)
 
-	add_child(UiTheme.small(game.text("ui.relics")))
-	_relics = UiTheme.body("")
+	add_child(ScreenLayout.centre(UiTheme.small(game.text("ui.relics"))))
+	_relics = ScreenLayout.centre(UiTheme.body(""))
 	_relics.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_relics)
 
-	add_child(UiTheme.small(game.text("ui.deck")))
+	add_child(ScreenLayout.centre(UiTheme.small(game.text("ui.deck"))))
 	_deck = VBoxContainer.new()
-	_deck.add_theme_constant_override("separation", 1)
-	add_child(_deck)
+	_deck.add_theme_constant_override("separation", 2)
+	add_child(ScreenLayout.centred(_deck, 300.0))
 
 
 func refresh() -> void:

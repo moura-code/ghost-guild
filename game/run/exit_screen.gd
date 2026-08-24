@@ -33,7 +33,8 @@ var _watch: Button
 
 
 func _init() -> void:
-	add_theme_constant_override("separation", 10)
+	add_theme_constant_override("separation", 18)
+	alignment = BoxContainer.ALIGNMENT_CENTER
 
 
 func bind(g: GameRoot, p_run: RunState) -> void:
@@ -87,7 +88,7 @@ func _build() -> void:
 	choices.add_child(_retreat)
 
 	_watch = Button.new()
-	_watch.custom_minimum_size = Vector2(220.0, 48.0)
+	_watch.custom_minimum_size = Vector2(310.0, 48.0)
 	_watch.pressed.connect(func() -> void: _decide("watch"))
 	choices.add_child(_watch)
 	add_child(choices)

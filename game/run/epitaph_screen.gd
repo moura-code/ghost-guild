@@ -42,6 +42,9 @@ func _build() -> void:
 	# game and the opening of the trailer; a left-aligned column of labels
 	# would read as a results dialog.
 	add_theme_stylebox_override("panel", UiTheme.panel_box(Palette.STONE, Palette.STONE_EDGE))
+	# Owns the screen rather than sitting in a band at the top: this is the
+	# moment the game is about, and it should not share the frame.
+	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 18)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -67,8 +70,16 @@ func _build() -> void:
 	_arrival.add_child(_floor)
 	box.add_child(_arrival)
 
+	# In its own centred row with the Soul icon. Left alone the label
+	# stretched the full width of the panel and read as left-aligned while
+	# every other line was centred.
+	var banked := HBoxContainer.new()
+	banked.add_theme_constant_override("separation", 8)
+	banked.alignment = BoxContainer.ALIGNMENT_CENTER
+	banked.add_child(Icons.make_rect(Icons.ui("soul"), 22.0, Palette.SOUL))
 	_soul = UiTheme.number("", Palette.SOUL)
-	box.add_child(_soul)
+	banked.add_child(_soul)
+	box.add_child(banked)
 
 	_rite = UiTheme.body("", Palette.PREPARED)
 	_rite.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

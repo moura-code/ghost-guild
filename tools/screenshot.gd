@@ -48,5 +48,36 @@ func _go(main: Node, screen: String) -> void:
 	elif screen == "map":
 		game.start_run(1)
 		main._refresh_run_visibility()
+	elif screen == "epitaph":
+		var result = TestFixtures.die_on_floor(game.campaign, 3, 1000)
+		main._epitaph.paced = false
+		main._on_run_finished(result)
+	elif screen == "reward":
+		var run = game.start_run(1)
+		TestFixtures.set_nodes(run, [{"kind": "fight", "enemies": ["bone_rat"]}])
+		RunEngine.apply(run, {"kind": "enter"})
+		TestFixtures.autofight(run)
+		main._refresh_run_visibility()
+	elif screen == "shop":
+		var run = game.start_run(1)
+		run.coin = 400
+		TestFixtures.set_nodes(run, [{"kind": "shop"}])
+		RunEngine.apply(run, {"kind": "enter"})
+		main._refresh_run_visibility()
+	elif screen == "event":
+		var run = game.start_run(1)
+		TestFixtures.set_nodes(run, [{"kind": "event", "event": "whispering_well"}])
+		RunEngine.apply(run, {"kind": "enter"})
+		main._refresh_run_visibility()
+	elif screen == "offline":
+		main._offline.bind(game.content, {"elapsed": 30000, "counted": 28800, "capped": true, "soul": 4210.0})
+		main._offline.visible = true
 	elif screen != "ladder":
+		# A rich campaign makes the guild and seance worth looking at: an
+		# empty ladder and no Soul shows nothing about how they compose.
+		game.campaign.soul = 2400.0
+		TestFixtures.end_at_exit(game.campaign, 4, "watch", 1000)
+		TestFixtures.die_on_floor(game.campaign, 6, 2000)
+		game.campaign.soul = 2400.0
+		game.campaign.hero.hp = 38
 		main.show_tab(screen)
