@@ -119,13 +119,15 @@ func test_a_phase_without_a_screen_yet_still_offers_the_step_button() -> void:
 	var run := g.start_run(1)
 	var v := _view(g)
 	await await_idle_frame()
-	# Rest has no screen until Task 5, so it must fall through to Continue.
+	# Exit has no screen until Task 6, so it must fall through to Continue.
 	TestFixtures.set_nodes(run, [{"kind": "rest"}])
 	g.run_action({"kind": "enter"})
+	g.run_action({"kind": "rest_heal"})
 	await await_idle_frame()
-	assert_str(run.phase).is_equal("rest")
+	assert_str(run.phase).is_equal("exit")
 	assert_bool(v._map.visible).is_false()
 	assert_bool(v._fight.visible).is_false()
+	assert_bool(v._choice.visible).is_false()
 	assert_bool(v._continue.visible).is_true()
 
 
@@ -142,3 +144,16 @@ func test_the_fight_phase_shows_the_fight_screen() -> void:
 	assert_bool(v._map.visible).is_false()
 	assert_bool(v._continue.visible).is_false()
 	assert_int(v._fight._enemy_views.size()).is_equal(1)
+
+
+func test_a_node_phase_shows_the_choice_screen() -> void:
+	var g := _game()
+	var run := g.start_run(1)
+	var v := _view(g)
+	await await_idle_frame()
+	TestFixtures.set_nodes(run, [{"kind": "rest"}])
+	g.run_action({"kind": "enter"})
+	await await_idle_frame()
+	assert_str(run.phase).is_equal("rest")
+	assert_bool(v._choice.visible).is_true()
+	assert_bool(v._continue.visible).is_false()

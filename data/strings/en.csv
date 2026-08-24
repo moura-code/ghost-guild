@@ -212,3 +212,9 @@ ui.fight.intent.debuff,Weakens you
 ui.fight.intent.summon,Calls for help
 ui.fight.intent.unknown,Unknown
 ui.fight.slain,Slain
+ui.coin,Coin
+ui.choice.skip,Take nothing
+ui.choice.leave,Leave
+ui.choice.rest_heal,Rest and heal {amount}
+ui.choice.rest_upgrade,Sharpen {card}
+ui.choice.remove,Burn {card}
