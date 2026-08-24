@@ -5,7 +5,7 @@ extends VBoxContainer
 ## saturation as fill, and the Soul counter ticking above it.
 
 const HEADER_SEPARATION := 40
-const ROW_SEPARATION := 2
+const ROW_SEPARATION := 1
 ## The tower is a tower: constrained and centred, not a full-width table.
 const TOWER_WIDTH := 660.0
 
@@ -25,7 +25,7 @@ var _rows: Array[FloorRow] = []
 
 
 func _init() -> void:
-	add_theme_constant_override("separation", 8)
+	add_theme_constant_override("separation", 6)
 	alignment = BoxContainer.ALIGNMENT_CENTER
 
 

@@ -5,7 +5,7 @@ extends Control
 ## still. Colour says what kind of ghost it is. A widget: it takes a Ghost
 ## through bind() and never touches Game.
 
-const BASE_SIZE := Vector2(19.0, 27.0)
+const BASE_SIZE := Vector2(26.0, 35.0)
 const WAVE_BUMPS := 3
 const FLOAT_PIXELS := 1.6
 const FLOAT_SECONDS := 3.2
@@ -56,6 +56,10 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
+	# The shadow it stands in, drawn first so the body sits on top of it.
+	if size.x > 0.0 and size.y > 0.0:
+		draw_circle(Vector2(size.x * 0.5, size.y - 2.0), size.x * 0.42,
+			Color(0.0, 0.0, 0.0, 0.35))
 	var w := size.x
 	var h := size.y
 	if w <= 0.0 or h <= 0.0:

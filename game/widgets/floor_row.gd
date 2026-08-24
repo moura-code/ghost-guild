@@ -5,9 +5,9 @@ extends Control
 ## floor pays per hour. A widget -- it takes data through bind() and never
 ## touches Game.
 
-const ROW_HEIGHT := 44.0
+const ROW_HEIGHT := 45.0
 const BAND_WIDTH := 5.0
-const NUMBER_WIDTH := 30.0
+const NUMBER_WIDTH := 34.0
 const RIGHT_WIDTH := 116.0
 const GAP := 8.0
 const MAX_MARKS := 12
@@ -39,12 +39,12 @@ func _build() -> void:
 	_number = UiTheme.body("1", Palette.BONE_DIM)
 	_number.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_number.custom_minimum_size = Vector2(NUMBER_WIDTH, 0.0)
-	_number.position = Vector2(BAND_WIDTH + GAP, 11.0)
+	_number.position = Vector2(BAND_WIDTH + GAP, 12.0)
 	add_child(_number)
 
 	_marks = HBoxContainer.new()
-	_marks.add_theme_constant_override("separation", 3)
-	_marks.position = Vector2(BAND_WIDTH + GAP + NUMBER_WIDTH + GAP, 10.0)
+	_marks.add_theme_constant_override("separation", 5)
+	_marks.position = Vector2(BAND_WIDTH + GAP + NUMBER_WIDTH + GAP, 4.0)
 	add_child(_marks)
 
 	_overflow = UiTheme.small("", Palette.BONE_FAINT)
@@ -115,8 +115,8 @@ func _layout() -> void:
 		return
 	# Inset by the same margin the fill uses, or the numbers sit on the edge.
 	var right_x := size.x - RIGHT_WIDTH - GAP * 2.0
-	_output.position = Vector2(right_x, 6.0)
-	_farmed.position = Vector2(right_x, 25.0)
+	_output.position = Vector2(right_x, 7.0)
+	_farmed.position = Vector2(right_x, 26.0)
 	_overflow.position = Vector2(_marks.position.x + _marks.size.x + GAP, 11.0)
 
 
@@ -148,12 +148,29 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2(inset, 0.0), Vector2(BAND_WIDTH, size.y)),
 		Color(accent.r, accent.g, accent.b, band_alpha * dim))
 
-	_draw_saturation(inset, w)
+	if output_per_hour <= 0.0:
+		_draw_unclaimed(inset, w)
+	else:
+		_draw_saturation(inset, w)
 
 	# The waypoint is a boundary, not a marker: the deepest floor a hero may
 	# descend to gets the full lit edge.
 	if is_waypoint:
 		draw_rect(Rect2(Vector2(inset, size.y - 2.0), Vector2(w, 2.0)), Palette.SOUL)
+
+
+## Nothing of yours stands here. A row of dashes reads as an empty seam in
+## the rock rather than as a row whose data failed to load.
+func _draw_unclaimed(inset: float, w: float) -> void:
+	var start := inset + BAND_WIDTH + GAP + NUMBER_WIDTH + GAP
+	var span := maxf(0.0, size.x - start - RIGHT_WIDTH - GAP * 2.0)
+	var y := size.y * 0.5
+	var dash := 7.0
+	var step := dash * 2.6
+	var count := int(span / step)
+	for i in count:
+		draw_rect(Rect2(Vector2(start + float(i) * step, y), Vector2(dash, 1.0)),
+			Color(Palette.BONE_FAINT.r, Palette.BONE_FAINT.g, Palette.BONE_FAINT.b, 0.16))
 
 
 ## The gauge behind the ghosts: how much of this floor's spawn the ladder is
