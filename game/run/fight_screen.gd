@@ -132,8 +132,19 @@ func _draw_stage() -> void:
 		return
 	var floor_y := ENEMY_TOP + EnemyView.VIEW_SIZE.y - 44.0
 
-	# A pool of lantern light under the enemies, brightest at the centre.
 	var glow := Palette.biome_accent(run.biome_id if run != null else "catacombs")
+
+	# A shaft of lantern light down the middle of the room. The band between
+	# the enemies and the hand was dead space; lighting it gives the fight a
+	# centre and puts the floating damage numbers somewhere lit.
+	var shaft := 320.0
+	for i in 30:
+		var t := float(i) / 29.0
+		var half := lerpf(shaft * 0.35, shaft, t)
+		draw_rect(Rect2(Vector2(size.x * 0.5 - half, t * floor_y), Vector2(half * 2.0, floor_y / 30.0 + 1.0)),
+			Color(glow.r, glow.g, glow.b, 0.016 * t))
+
+	# A pool of lantern light under the enemies, brightest at the centre.
 	for i in 22:
 		var t := float(i) / 21.0
 		var half := lerpf(150.0, 480.0, t)
