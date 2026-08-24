@@ -28,6 +28,7 @@ var _tab_bar: HBoxContainer
 var _offline: OfflineSummary
 var _run_view: RunView
 var _epitaph: EpitaphScreen
+var _atmosphere: Atmosphere
 
 
 func _ready() -> void:
@@ -59,6 +60,10 @@ func bind(g: GameRoot) -> void:
 
 
 func _build() -> void:
+	# Behind everything, and added first so it stays there.
+	_atmosphere = Atmosphere.new()
+	add_child(_atmosphere)
+
 	var margins := MarginContainer.new()
 	margins.set_anchors_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
@@ -160,6 +165,7 @@ func _refresh_run_visibility() -> void:
 		return
 	var mourning := _epitaph != null and _epitaph.visible
 	var in_run := game.campaign.run != null
+	_refresh_atmosphere(in_run)
 	_run_view.visible = in_run and not mourning
 	_tab_bar.visible = not in_run and not mourning
 	_body.visible = not in_run and not mourning
@@ -169,10 +175,24 @@ func _refresh_run_visibility() -> void:
 
 ## A run that left a ghost earns the epitaph beat before the guild comes
 ## back. A retreat does not: nobody was left behind.
+## The ground darkens as the hero descends and lifts again in the guild.
+func _refresh_atmosphere(in_run: bool) -> void:
+	if _atmosphere == null:
+		return
+	_atmosphere.set_accent(Palette.biome_accent(game.campaign.biome_id))
+	if in_run:
+		_atmosphere.set_floor(game.campaign.run.floor, game.campaign.biome().last_floor)
+	else:
+		_atmosphere.set_floor(1, game.campaign.biome().last_floor)
+
+
 func _on_run_finished(result: Dictionary) -> void:
 	if EpitaphScreen.should_show(result):
 		_epitaph.bind(game, result)
 		_epitaph.visible = true
+		# The dungeon notices when someone is left behind.
+		if _atmosphere != null:
+			_atmosphere.pulse(1.0)
 	_refresh_run_visibility()
 
 
@@ -192,6 +212,8 @@ func _on_offline_dismissed() -> void:
 	_offline.visible = false
 
 
+## The Atmosphere draws the ground now; this stays as the backstop for the
+## one frame before it is built, and if its shader ever fails to load.
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Palette.STONE)
 

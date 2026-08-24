@@ -196,3 +196,42 @@ func test_a_retreat_skips_the_epitaph_entirely() -> void:
 	await await_idle_frame()
 	assert_bool(m._epitaph.visible).is_false()
 	assert_bool(m._tab_bar.visible).is_true()
+
+
+func test_the_atmosphere_sits_behind_everything() -> void:
+	var g := _game()
+	var m := _main(g)
+	await await_idle_frame()
+	assert_object(m._atmosphere).is_not_null()
+	assert_int(m.get_child(0).get_instance_id()).is_equal(m._atmosphere.get_instance_id())
+	assert_int(m._atmosphere.mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
+
+
+func test_the_ground_darkens_as_the_hero_descends() -> void:
+	var g := _game()
+	var m := _main(g)
+	await await_idle_frame()
+	assert_float(m._atmosphere.depth).is_equal(0.0)
+	var run := g.start_run(1)
+	run.floor = g.campaign.biome().last_floor
+	m._refresh_run_visibility()
+	await await_idle_frame()
+	assert_float(m._atmosphere.depth).is_equal(1.0)
+
+
+func test_the_ground_lifts_again_back_in_the_guild() -> void:
+	var g := _game()
+	var m := _main(g)
+	await await_idle_frame()
+	var run := g.start_run(1)
+	run.floor = 8
+	m._refresh_run_visibility()
+	assert_float(m._atmosphere.depth).is_greater(0.0)
+	run.hero.resolve = 1
+	TestFixtures.set_nodes(run, [{"kind": "rest"}])
+	RunEngine.apply(run, {"kind": "enter"})
+	RunEngine.apply(run, {"kind": "rest_heal"})
+	RunEngine.apply(run, {"kind": "retreat"})
+	g.finish_run()
+	await await_idle_frame()
+	assert_float(m._atmosphere.depth).is_equal(0.0)
