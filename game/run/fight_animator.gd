@@ -103,7 +103,10 @@ func _render(event: Dictionary, stagger: int) -> bool:
 				_spawn(content.text("ui.fight.blocked"), Palette.SOUL, _anchor(event), stagger)
 				hit_landed.emit(event)
 				return true
-			_spawn(str(amount), Palette.DANGER, _anchor(event), stagger, amount >= BIG_HIT)
+			var at: Variant = _anchor(event)
+			_spawn(str(amount), Palette.DANGER, at, stagger, amount >= BIG_HIT)
+			if at != null:
+				_spark(at as Vector2, Palette.DANGER, amount >= BIG_HIT)
 			if String(event.get("target", "")) == "hero":
 				shake_requested.emit(minf(SHAKE_MAX, float(amount) * SHAKE_PER_DAMAGE))
 			hit_landed.emit(event)
@@ -128,7 +131,11 @@ func _render(event: Dictionary, stagger: int) -> bool:
 				Palette.PREPARED, _anchor(event), stagger)
 			return true
 		"enemy_died":
-			_spawn(content.text("ui.fight.slain"), Palette.BONE_DIM, _anchor(event), stagger, true)
+			var died_at: Variant = _anchor(event)
+			_spawn(content.text("ui.fight.slain"), Palette.BONE_DIM, died_at, stagger, true)
+			if died_at != null:
+				# A death throws more, and throws it in bone.
+				_spark(died_at as Vector2, Palette.BONE, true)
 			hit_landed.emit(event)
 			return true
 	return false
@@ -158,6 +165,30 @@ func _anchor(event: Dictionary) -> Variant:
 ## True while a sequence is still playing out.
 func is_playing() -> bool:
 	return _cursor < _queue.size()
+
+
+## A burst of sparks where the blow landed. Text alone tells the player
+## what happened; this makes it feel like it happened. One-shot, cheap, and
+## frees itself -- no art, just points.
+func _spark(at: Vector2, colour: Color, big: bool) -> void:
+	var p := CPUParticles2D.new()
+	p.position = at
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = 12 if big else 7
+	p.lifetime = 0.22 if big else 0.16
+	p.direction = Vector2.ZERO
+	p.spread = 180.0
+	p.gravity = Vector2(0.0, 220.0)
+	p.initial_velocity_min = 60.0
+	p.initial_velocity_max = 150.0 if big else 105.0
+	p.scale_amount_min = 1.0
+	p.scale_amount_max = 2.6 if big else 1.8
+	p.color = colour
+	add_child(p)
+	# CPUParticles2D does not tidy up after a one-shot burst.
+	get_tree().create_timer(p.lifetime + 0.2).timeout.connect(p.queue_free)
 
 
 ## Several events land in one action; staggering them vertically keeps a

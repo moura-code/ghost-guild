@@ -164,3 +164,30 @@ func test_each_hit_is_reported_as_it_lands() -> void:
 	await _settle(a)
 	assert_int(landed.size()).is_equal(2)
 	assert_str(String(landed[1]["type"])).is_equal("enemy_died")
+
+
+func test_a_landed_hit_throws_sparks_that_clean_themselves_up() -> void:
+	var a := _animator()
+	a.play([{"type": "damage", "target": "enemy", "index": 0, "amount": 9}], _anchors())
+	await _settle(a, 1)
+	var bursts := 0
+	for child in a.get_children():
+		if child is CPUParticles2D:
+			bursts += 1
+	assert_int(bursts).is_equal(1)
+	# CPUParticles2D does not tidy up after a one-shot, so the animator has
+	# to; without that a long fight leaves hundreds of dead emitters.
+	await get_tree().create_timer(0.9).timeout
+	var left := 0
+	for child in a.get_children():
+		if child is CPUParticles2D:
+			left += 1
+	assert_int(left).is_equal(0)
+
+
+func test_an_absorbed_hit_throws_no_sparks() -> void:
+	var a := _animator()
+	a.play([{"type": "damage", "target": "hero", "amount": 0}], _anchors())
+	await _settle(a, 1)
+	for child in a.get_children():
+		assert_bool(child is CPUParticles2D).is_false()
