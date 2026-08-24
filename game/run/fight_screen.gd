@@ -31,6 +31,8 @@ const END_TURN_ROOM := 170.0
 ## Where the enemies stand, and how tall the table under the hand is.
 const ENEMY_TOP := 40.0
 const TABLE_HEIGHT := 240.0
+## How many of the floor's dead to show standing at the back of the room.
+const MAX_RESIDENTS := 6
 
 var game: GameRoot
 var run: RunState
@@ -46,6 +48,9 @@ var _card_views: Array[CardView] = []
 var _playable: Dictionary = {}
 var _animator: FightAnimator
 var _shake_tween: Tween
+var _fate: FatePanel
+var _fate_rate: float = -1.0
+var _residents: Array[GhostMark] = []
 var _banner: TurnBanner
 var _last_turn: int = -1
 var _drawn_this_refresh: bool = false
@@ -82,6 +87,16 @@ func _build() -> void:
 	_hero.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_hero.position = Vector2(16.0, -HeroPanel.PANEL_SIZE.y - 16.0)
 	add_child(_hero)
+
+	# What this fight is actually for: the ghost you would leave if this
+	# floor killed you, and what that floor would pay. Ghost Guild is about
+	# choosing where to die, and none of that was on screen during the
+	# activity the player spends most of their time in.
+	_fate = FatePanel.new()
+	_fate.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_fate.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_fate.position = Vector2(16.0, -HeroPanel.PANEL_SIZE.y - FatePanel.PANEL_SIZE.y - 26.0)
+	add_child(_fate)
 
 	_prompt = UiTheme.body("", Palette.SOUL)
 	_prompt.set_anchors_preset(Control.PRESET_CENTER)
@@ -121,6 +136,7 @@ func _build() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and run != null and run.fight != null:
 		_fan(run.fight.hand.size())
+		_place_residents()
 		queue_redraw()
 
 
@@ -196,7 +212,64 @@ func refresh() -> void:
 	_end_turn.text = game.text("ui.fight.end_turn")
 	_end_turn.disabled = fight.is_over()
 	_refresh_prompt(fight)
+	_refresh_fate()
+	_refresh_residents()
 	_announce_turn(fight)
+
+
+## The ghost you would leave if this floor killed you, priced live. Uses
+## the measured half of the exit reckoning, which needs no simulation --
+## it is computed from the fights already fought on this floor, so it can
+## be refreshed every action without costing a frame.
+func _refresh_fate() -> void:
+	var numbers := ExitScreen.reckon_here(game.campaign, run)
+	var rate := float(numbers.get("here", 0.0))
+	_fate.bind(game.content, run.floor, rate)
+	# Only acknowledge a real change, or it pulses on every redraw.
+	if _fate_rate >= 0.0 and absf(rate - _fate_rate) > 0.01:
+		_fate.acknowledge()
+	_fate_rate = rate
+
+
+## Your dead are standing in the room. Whoever already died on this floor
+## watches from the back of it -- the ladder knows they are there, and the
+## fight used to show an empty room. They do nothing; being present is the
+## point.
+func _refresh_residents() -> void:
+	var here := game.campaign.ladder.on_floor(run.floor)
+	while _residents.size() < here.size() and _residents.size() < MAX_RESIDENTS:
+		var mark := GhostMark.new()
+		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		mark.modulate.a = 0.5
+		add_child(mark)
+		move_child(mark, 0)
+		_residents.append(mark)
+	for i in _residents.size():
+		var used := i < here.size()
+		_residents[i].visible = used
+		if used:
+			_residents[i].bind(here[i])
+	_place_residents()
+
+
+## Along the back wall, behind everything, at the height the enemies stand.
+func _place_residents() -> void:
+	var shown := 0
+	for mark in _residents:
+		if mark.visible:
+			shown += 1
+	if shown == 0 or size.x <= 0.0:
+		return
+	var floor_y := ENEMY_TOP + EnemyView.VIEW_SIZE.y - 44.0
+	var span := minf(size.x - 240.0, float(shown) * 54.0)
+	var start := size.x * 0.5 - span * 0.5
+	var i := 0
+	for mark in _residents:
+		if not mark.visible:
+			continue
+		mark.size = GhostMark.BASE_SIZE
+		mark.position = Vector2(start + float(i) * 54.0, floor_y - GhostMark.BASE_SIZE.y - 6.0)
+		i += 1
 
 
 ## A new turn number means the player got their hand back. Announcing it is
