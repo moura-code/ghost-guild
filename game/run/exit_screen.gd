@@ -101,9 +101,23 @@ func _start_projection() -> void:
 	if not threaded:
 		_on_reckoned(reckon(campaign, live, samples))
 		return
+	# The screen can be freed while the task is still running -- leaving a
+	# fight, quitting, a test tearing down. Capture the id and check the
+	# object is still alive before calling back into it, or the deferred
+	# call lands on freed memory.
+	var id := get_instance_id()
 	WorkerThreadPool.add_task(func() -> void:
 		var result := reckon(campaign, live, samples)
-		_on_reckoned.call_deferred(result))
+		_deliver.bind(id, result).call_deferred())
+
+
+## Runs on the main thread after the worker finishes. Static, so it can
+## verify the screen still exists before touching it.
+static func _deliver(id: int, result: Dictionary) -> void:
+	var screen := instance_from_id(id) as ExitScreen
+	if screen == null or not is_instance_valid(screen):
+		return
+	screen._on_reckoned(result)
 
 
 func _on_reckoned(result: Dictionary) -> void:

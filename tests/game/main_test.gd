@@ -50,7 +50,9 @@ func test_pressing_a_tab_switches_the_visible_screen() -> void:
 	var m := _main(g)
 	await await_idle_frame()
 	(m._buttons["guild"] as Button).emit_signal("pressed")
-	await await_idle_frame()
+	# The swap happens behind a wipe, so wait for the wipe rather than
+	# hoping one idle frame covers it -- it does not, under load.
+	await get_tree().create_timer(Transition.DEFAULT_SECONDS + 0.2).timeout
 	assert_str(m.current_tab).is_equal("guild")
 	assert_bool((m._screens["guild"] as Control).visible).is_true()
 	assert_bool((m._screens["ladder"] as Control).visible).is_false()
