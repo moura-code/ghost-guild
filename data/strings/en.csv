@@ -211,3 +211,4 @@ ui.fight.intent.buff,Strengthens itself
 ui.fight.intent.debuff,Weakens you
 ui.fight.intent.summon,Calls for help
 ui.fight.intent.unknown,Unknown
+ui.fight.slain,Slain

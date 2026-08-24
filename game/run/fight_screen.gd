@@ -23,6 +23,8 @@ var _end_turn: Button
 var _enemy_views: Array[EnemyView] = []
 var _card_views: Array[CardView] = []
 var _playable: Dictionary = {}
+var _animator: FightAnimator
+var _shake_tween: Tween
 
 
 func _init() -> void:
@@ -34,6 +36,7 @@ func bind(g: GameRoot, p_run: RunState) -> void:
 	run = p_run
 	if _enemy_row == null:
 		_build()
+	_animator.bind(g.content)
 	refresh()
 
 
@@ -59,6 +62,11 @@ func _build() -> void:
 	_end_turn = Button.new()
 	_end_turn.pressed.connect(_on_end_turn)
 	add_child(_end_turn)
+
+	# Overlay: it draws above the fight and never eats a click.
+	_animator = FightAnimator.new()
+	_animator.shake_requested.connect(_shake)
+	add_child(_animator)
 
 
 func refresh() -> void:
@@ -172,7 +180,8 @@ func _on_enemy_pressed(enemy_index: int) -> void:
 
 func _play(hand_index: int, target: int) -> void:
 	selected_index = -1
-	game.run_action({"kind": "play", "hand_index": hand_index, "target": target})
+	var events := game.run_action({"kind": "play", "hand_index": hand_index, "target": target})
+	_animate(events)
 	_after_action()
 
 
@@ -180,8 +189,38 @@ func _on_end_turn() -> void:
 	if run == null or run.fight == null or run.fight.is_over():
 		return
 	selected_index = -1
-	game.run_action({"kind": "end_turn"})
+	var events := game.run_action({"kind": "end_turn"})
+	_animate(events)
 	_after_action()
+
+
+## Where a number should appear for each thing the events can name.
+func anchors() -> Dictionary:
+	var out := {"hero": _vitals.position + Vector2(0.0, -8.0)}
+	for i in _enemy_views.size():
+		if _enemy_views[i].visible:
+			out[i] = _enemy_views[i].position + _enemy_views[i].size * Vector2(0.5, 0.0)
+	return out
+
+
+func _animate(events: Array) -> void:
+	if events.is_empty():
+		return
+	_animator.play(events, anchors())
+
+
+## Tweening a container child's position is fragile -- the parent re-sorts on
+## resize and can cut the shake short -- but the tween always resolves back to
+## zero, so the worst case is a shake that ends early. Cosmetic, not a bug.
+func _shake(strength: float) -> void:
+	if _shake_tween != null and _shake_tween.is_valid():
+		_shake_tween.kill()
+	var origin := Vector2.ZERO
+	_shake_tween = create_tween()
+	for i in 4:
+		var away := Vector2(strength * (1.0 if i % 2 == 0 else -1.0), 0.0) * (1.0 - float(i) / 4.0)
+		_shake_tween.tween_property(self, "position", origin + away, 0.045)
+	_shake_tween.tween_property(self, "position", origin, 0.045)
 
 
 ## The engine moves the run out of the fight phase itself when the fight
