@@ -8,8 +8,8 @@ extends PanelContainer
 
 signal pressed(enemy_index: int)
 
-const VIEW_SIZE := Vector2(186.0, 132.0)
-const BAR_HEIGHT := 9.0
+const VIEW_SIZE := Vector2(216.0, 178.0)
+const BAR_HEIGHT := 11.0
 const FLASH_SECONDS := 0.09
 const SQUASH := 0.12
 const DEATH_SECONDS := 0.45
@@ -47,12 +47,14 @@ func _build() -> void:
 	box.add_theme_constant_override("separation", 2)
 	add_child(box)
 
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 6)
-	_icon = Icons.make_rect(null, 40.0, Palette.BONE)
+	var head := VBoxContainer.new()
+	head.add_theme_constant_override("separation", 2)
+	head.alignment = BoxContainer.ALIGNMENT_CENTER
+	_icon = Icons.make_rect(null, 62.0, Palette.BONE)
 	head.add_child(_icon)
+	_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_name = UiTheme.body("")
-	_name.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	head.add_child(_name)
 	box.add_child(head)
 
@@ -62,10 +64,12 @@ func _build() -> void:
 	box.add_child(_bar)
 
 	_hp = UiTheme.small("", Palette.BONE_DIM)
+	_hp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_hp)
 
 	var intent_row := HBoxContainer.new()
-	intent_row.add_theme_constant_override("separation", 4)
+	intent_row.add_theme_constant_override("separation", 6)
+	intent_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_intent_icon = Icons.make_rect(null, 22.0, Palette.DANGER)
 	intent_row.add_child(_intent_icon)
 	_intent = UiTheme.number("", Palette.DANGER)
@@ -74,6 +78,7 @@ func _build() -> void:
 
 	_status_row = HBoxContainer.new()
 	_status_row.add_theme_constant_override("separation", 4)
+	_status_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_child(_status_row)
 
 	_statuses = UiTheme.small("", Palette.BONE_FAINT)
@@ -107,9 +112,11 @@ func bind(state: FightState, index: int, is_targetable: bool) -> void:
 	_intent_icon.visible = alive
 	_statuses.text = status_text(state.content, enemy.statuses)
 	_name.add_theme_color_override("font_color", Palette.BONE if alive else Palette.BONE_FAINT)
-	add_theme_stylebox_override("panel", UiTheme.panel_box(
-		Palette.STONE_RAISED if alive else Palette.STONE,
-		Palette.SOUL if targetable else Palette.STONE_EDGE))
+	if targetable:
+		add_theme_stylebox_override("panel", UiTheme.lit_box(Palette.STONE_HIGH, Palette.SOUL))
+	else:
+		add_theme_stylebox_override("panel", UiTheme.panel_box(
+			Palette.STONE_RAISED if alive else Palette.STONE, Palette.STONE_EDGE))
 	_bar.queue_redraw()
 
 
@@ -224,10 +231,15 @@ func _draw_bar() -> void:
 	if w <= 0.0:
 		return
 	var h := _bar.size.y
-	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w, h)), Palette.STONE)
+	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w, h)), Palette.VOID)
 	var frac := clampf(float(hp) / float(max_hp), 0.0, 1.0)
 	var colour := Palette.DANGER if frac <= 0.35 else Palette.BONE_DIM
-	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w * frac, h)), colour)
+	# Dim body, lit top edge: a solid fill of bone at full health was the
+	# brightest block on the screen and pulled the eye off the intent.
+	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w * frac, h)),
+		Color(colour.r * 0.5, colour.g * 0.5, colour.b * 0.5, 1.0))
+	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w * frac, 2.0)), colour)
+	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w, 1.0)), Color(0.0, 0.0, 0.0, 0.6))
 
 
 func press() -> void:

@@ -15,10 +15,13 @@ static var _body_font: Font = null
 static var _title_font: Font = null
 static var _fonts_tried: bool = false
 
+## Real scale contrast. Everything used to be within a few points of body
+## size, which flattened the hierarchy: a screen title and a caption looked
+## like the same thing.
 const FONT_SMALL := 12
 const FONT_BODY := 15
-const FONT_NUMBER := 20
-const FONT_TITLE := 26
+const FONT_NUMBER := 26
+const FONT_TITLE := 38
 
 
 ## Inter for everything a player reads as information.
@@ -59,27 +62,78 @@ static func build() -> Theme:
 	t.set_stylebox("panel", "PanelContainer", panel_box(Palette.STONE_RAISED))
 	t.set_stylebox("panel", "Panel", panel_box(Palette.STONE))
 
-	t.set_stylebox("normal", "Button", panel_box(Palette.STONE_RAISED))
-	t.set_stylebox("hover", "Button", panel_box(Palette.STONE_EDGE))
-	t.set_stylebox("pressed", "Button", panel_box(Palette.STONE))
-	t.set_stylebox("disabled", "Button", panel_box(Palette.STONE, Palette.STONE))
+	t.set_stylebox("normal", "Button", panel_box(Palette.STONE_HIGH))
+	t.set_stylebox("hover", "Button", lit_box(Palette.STONE_EDGE, Palette.SOUL))
+	t.set_stylebox("pressed", "Button", panel_box(Palette.STONE, Palette.STONE_EDGE))
+	var off := panel_box(Palette.STONE, Palette.STONE_RAISED)
+	off.shadow_size = 0
+	t.set_stylebox("disabled", "Button", off)
 	t.set_color("font_color", "Button", Palette.BONE)
 	t.set_color("font_hover_color", "Button", Palette.SOUL)
 	t.set_color("font_disabled_color", "Button", Palette.BONE_FAINT)
 	t.set_font_size("font_size", "Button", FONT_BODY)
+	t.set_constant("outline_size", "Label", 0)
 
 	t.set_color("font_color", "TabBar", Palette.BONE_DIM)
 	t.set_color("font_selected_color", "TabBar", Palette.BONE)
 	return t
 
 
+## A raised surface. Two things make a rectangle read as an object rather
+## than as a hole: a lit top edge, and a border darker than the fill on the
+## other three sides. Godot's StyleBoxFlat can do exactly that with an
+## asymmetric border, so every panel in the game gets it for free.
 static func panel_box(bg: Color, border: Color = Palette.STONE_EDGE) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = bg
 	sb.border_color = border
 	sb.set_border_width_all(1)
-	sb.set_corner_radius_all(3)
-	sb.set_content_margin_all(8)
+	sb.border_width_top = 2
+	sb.border_color = border
+	sb.set_corner_radius_all(4)
+	sb.set_content_margin_all(10)
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+	sb.shadow_size = 6
+	sb.shadow_offset = Vector2(0.0, 3.0)
+	return sb
+
+
+## A surface that is being pressed, hovered or selected: brighter fill, an
+## accent border, and the shadow pulled in so it reads as closer to the page.
+static func lit_box(bg: Color, accent: Color) -> StyleBoxFlat:
+	var sb := panel_box(bg, accent)
+	sb.border_width_top = 2
+	sb.shadow_size = 10
+	sb.shadow_color = Color(accent.r, accent.g, accent.b, 0.20)
+	sb.shadow_offset = Vector2.ZERO
+	return sb
+
+
+## A card. Tighter margins than a screen panel, a heavier lit edge, and a
+## deeper shadow -- a card should read as a physical object lying on top of
+## everything else.
+static func card_box(bg: Color, border: Color) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.border_color = border
+	sb.set_border_width_all(1)
+	sb.border_width_top = 3
+	sb.set_corner_radius_all(6)
+	sb.set_content_margin_all(9)
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.7)
+	sb.shadow_size = 10
+	sb.shadow_offset = Vector2(0.0, 5.0)
+	return sb
+
+
+## A small round chip: cost bubbles, counters, pips.
+static func pip_box(bg: Color, border: Color) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.border_color = border
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(15)
+	sb.set_content_margin_all(2)
 	return sb
 
 

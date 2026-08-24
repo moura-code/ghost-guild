@@ -28,10 +28,15 @@ func _fight(g: GameRoot, enemies: Array = ["bone_rat"]) -> RunState:
 	return run
 
 
+## The fight anchors itself to its parent, so setting size on it directly
+## is overridden by Godot on the next layout pass. It needs a sized parent.
 func _screen(g: GameRoot, run: RunState) -> FightScreen:
-	var s: FightScreen = auto_free(FightScreen.new())
-	add_child(s)
-	s.size = Vector2(960.0, 600.0)
+	var frame: Control = auto_free(Control.new())
+	frame.custom_minimum_size = Vector2(1280.0, 720.0)
+	frame.size = Vector2(1280.0, 720.0)
+	add_child(frame)
+	var s := FightScreen.new()
+	frame.add_child(s)
 	s.bind(g, run)
 	return s
 

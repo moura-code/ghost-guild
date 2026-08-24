@@ -5,16 +5,16 @@ extends Control
 ## floor pays per hour. A widget -- it takes data through bind() and never
 ## touches Game.
 
-const ROW_HEIGHT := 42.0
+const ROW_HEIGHT := 44.0
 const BAND_WIDTH := 5.0
 const NUMBER_WIDTH := 30.0
 const RIGHT_WIDTH := 116.0
-const GAP := 6.0
+const GAP := 8.0
 const MAX_MARKS := 12
 ## The tower recedes: deeper rows are indented and dimmer, so ten floors
 ## read as a descent rather than as a list.
-const DEPTH_INDENT := 5.0
-const DEPTH_DIM := 0.5
+const DEPTH_INDENT := 8.0
+const DEPTH_DIM := 0.62
 
 var floor_number: int = 1
 var saturation: float = 0.0
@@ -120,33 +120,73 @@ func _layout() -> void:
 	_overflow.position = Vector2(_marks.position.x + _marks.size.x + GAP, 11.0)
 
 
-## The fill runs under the ghosts, from the number to the numbers on the
-## right: how much of this floor's spawn the ladder is actually taking.
+## A floor is a niche cut into rock, not a table row. Four things make that
+## read without any art: a recessed dark interior, a lit lip along the top
+## where light from above catches the cut, a shadow under it, and a
+## saturation glow that fades rather than ending in a hard edge.
 func _draw() -> void:
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
 	var recede := clampf(float(floor_number - 1) / 9.0, 0.0, 1.0)
 	var inset := recede * DEPTH_INDENT
+	# Deeper floors are darker: the shaft goes down into the dark.
 	var dim := 1.0 - recede * DEPTH_DIM
-	var body := Palette.STONE_RAISED
-	draw_rect(Rect2(Vector2(inset, 0.0), Vector2(size.x - inset * 2.0, size.y)),
-		Color(body.r * dim, body.g * dim, body.b * dim, 1.0))
+	var w := size.x - inset * 2.0
+	var interior := Palette.STONE_RAISED
+	draw_rect(Rect2(Vector2(inset, 0.0), Vector2(w, size.y)),
+		Color(interior.r * dim, interior.g * dim, interior.b * dim, 1.0))
+
+	# The cut lip along the top, and the shadow it throws down the wall.
+	draw_rect(Rect2(Vector2(inset, 0.0), Vector2(w, 1.0)),
+		Color(Palette.EDGE_LIGHT.r, Palette.EDGE_LIGHT.g, Palette.EDGE_LIGHT.b, 0.5 * dim))
+	draw_rect(Rect2(Vector2(inset, 1.0), Vector2(w, 3.0)), Color(0.0, 0.0, 0.0, 0.30))
+	draw_rect(Rect2(Vector2(inset, 4.0), Vector2(w, 3.0)), Color(0.0, 0.0, 0.0, 0.14))
+	draw_rect(Rect2(Vector2(inset, size.y - 1.0), Vector2(w, 1.0)), Color(0.0, 0.0, 0.0, 0.55))
+
+	# The biome marker down the left edge, brightest where a ghost stands.
+	var band_alpha := 0.85 if output_per_hour > 0.0 else 0.30
 	draw_rect(Rect2(Vector2(inset, 0.0), Vector2(BAND_WIDTH, size.y)),
-		Color(accent.r, accent.g, accent.b, dim))
+		Color(accent.r, accent.g, accent.b, band_alpha * dim))
 
-	var fill_x := BAND_WIDTH + GAP + NUMBER_WIDTH + GAP
-	var fill_w := maxf(0.0, size.x - fill_x - RIGHT_WIDTH - GAP)
-	if fill_w > 0.0:
-		var frac := clampf(saturation, 0.0, 1.0)
-		# Faint: this is a gauge behind the ghosts standing on the floor, and
-		# at full saturation it was the brightest block on the screen.
-		draw_rect(Rect2(Vector2(fill_x, 3.0), Vector2(fill_w * frac, size.y - 6.0)),
-			Color(Palette.GHOST.r, Palette.GHOST.g, Palette.GHOST.b, 0.13))
-		if saturation > 1.0:
-			# Past the soft cap the floor still pays, at a quarter rate.
-			draw_rect(Rect2(Vector2(fill_x + fill_w - 1.0, 2.0), Vector2(1.0, size.y - 4.0)), Palette.PREPARED)
+	_draw_saturation(inset, w)
 
-	# The waypoint is the deepest floor you may descend to: worth a full
-	# edge rather than a marker, since it is a boundary.
+	# The waypoint is a boundary, not a marker: the deepest floor a hero may
+	# descend to gets the full lit edge.
 	if is_waypoint:
-		draw_rect(Rect2(Vector2(inset, size.y - 2.0), Vector2(size.x - inset * 2.0, 2.0)), Palette.SOUL)
+		draw_rect(Rect2(Vector2(inset, size.y - 2.0), Vector2(w, 2.0)), Palette.SOUL)
+
+
+## The gauge behind the ghosts: how much of this floor's spawn the ladder is
+## taking. Drawn with a real gradient texture rather than a run of
+## translucent rectangles -- overlapping alpha compounds at every seam and
+## the result came out visibly striped.
+func _draw_saturation(inset: float, w: float) -> void:
+	var fill_x := inset + BAND_WIDTH + GAP + NUMBER_WIDTH + GAP
+	var fill_w := maxf(0.0, size.x - fill_x - RIGHT_WIDTH - GAP * 2.0)
+	if fill_w <= 0.0 or saturation <= 0.0:
+		return
+	var lit := fill_w * clampf(saturation, 0.0, 1.0)
+	draw_texture_rect(_gauge_texture(), Rect2(Vector2(fill_x, 3.0), Vector2(lit, size.y - 7.0)), false)
+	if saturation > 1.0:
+		# Past the soft cap the floor still pays, at a quarter rate.
+		draw_rect(Rect2(Vector2(fill_x + fill_w - 2.0, 3.0), Vector2(2.0, size.y - 7.0)),
+			Palette.PREPARED)
+
+
+## Built once and shared: every row draws the same left-to-right falloff.
+static var _gauge: GradientTexture2D = null
+
+
+static func _gauge_texture() -> GradientTexture2D:
+	if _gauge != null:
+		return _gauge
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(Palette.GHOST.r, Palette.GHOST.g, Palette.GHOST.b, 0.26))
+	ramp.set_color(1, Color(Palette.GHOST.r, Palette.GHOST.g, Palette.GHOST.b, 0.03))
+	_gauge = GradientTexture2D.new()
+	_gauge.gradient = ramp
+	_gauge.width = 128
+	_gauge.height = 1
+	_gauge.fill_from = Vector2(0.0, 0.0)
+	_gauge.fill_to = Vector2(1.0, 0.0)
+	return _gauge

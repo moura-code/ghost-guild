@@ -5,7 +5,7 @@ extends Control
 ## still. Colour says what kind of ghost it is. A widget: it takes a Ghost
 ## through bind() and never touches Game.
 
-const BASE_SIZE := Vector2(14.0, 20.0)
+const BASE_SIZE := Vector2(19.0, 27.0)
 const WAVE_BUMPS := 3
 const FLOAT_PIXELS := 1.6
 const FLOAT_SECONDS := 3.2

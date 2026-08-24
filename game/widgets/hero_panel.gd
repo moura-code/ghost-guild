@@ -156,20 +156,22 @@ func _draw_bar() -> void:
 	var h := _bar.size.y
 	if w <= 0.0 or h <= 0.0:
 		return
-	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w, h)), Palette.STONE)
+	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w, h)), Palette.VOID)
 	var frac := clampf(float(hp) / float(max_hp), 0.0, 1.0)
-	# Dimmed: at full health a bar filled with bone-white is the brightest
-	# thing on screen, which puts the emphasis on being fine.
+	# Dim body, lit top edge -- the same treatment the enemy bars get. A
+	# solid bone fill at full health was the brightest block on the screen,
+	# which put the emphasis on being fine.
 	var fill := _hp_colour()
 	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w * frac, h)),
-		Color(fill.r * 0.62, fill.g * 0.62, fill.b * 0.62, 1.0))
-	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w * frac, 2.0)), fill)
+		Color(fill.r * 0.34, fill.g * 0.34, fill.b * 0.34, 1.0))
+	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w * frac, 2.0)),
+		Color(fill.r * 0.8, fill.g * 0.8, fill.b * 0.8, 1.0))
 	if _flash > 0.0:
 		_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w, h)), Color(1.0, 1.0, 1.0, 0.5 * _flash))
 	if block > 0:
 		var shielded := clampf(float(block) / float(max_hp), 0.0, 1.0 - frac)
 		_bar.draw_rect(Rect2(Vector2(w * frac, 0.0), Vector2(w * shielded, h)), Palette.SOUL)
-	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w, 1.0)), Palette.STONE_EDGE)
+	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w, 1.0)), Color(0.0, 0.0, 0.0, 0.7))
 
 
 ## One orb per point of energy: spent ones hollow out rather than vanish,

@@ -31,9 +31,12 @@ func _fight(g: GameRoot, enemies: Array = ["bone_rat"]) -> RunState:
 
 
 func _screen(g: GameRoot, run: RunState) -> FightScreen:
-	var s: FightScreen = auto_free(FightScreen.new())
-	add_child(s)
-	s.size = Vector2(960.0, 600.0)
+	var frame: Control = auto_free(Control.new())
+	frame.custom_minimum_size = Vector2(1280.0, 720.0)
+	frame.size = Vector2(1280.0, 720.0)
+	add_child(frame)
+	var s := FightScreen.new()
+	frame.add_child(s)
 	s.bind(g, run)
 	return s
 
@@ -226,7 +229,7 @@ func test_resizing_re_fans_the_hand() -> void:
 	var s := _screen(g, run)
 	await await_idle_frame()
 	var before := s._card_views[0].position
-	s.size = Vector2(1400.0, 800.0)
+	(s.get_parent() as Control).size = Vector2(1500.0, 820.0)
 	await await_idle_frame()
 	assert_that(s._card_views[0].position).is_not_equal(before)
 

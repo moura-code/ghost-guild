@@ -18,16 +18,19 @@ signal fight_ended()
 
 ## How far each card tilts and drops per step out from the middle of the fan.
 const FAN_ARC := 0.048
-const FAN_SPREAD := 0.86
+const FAN_SPREAD := 1.02
 const FAN_LIFT := 12.0
 ## Room under the hand for the lift and the rotation. A card at the edge of
 ## the fan is lower AND tilted, and a tilted 208px card reaches further down
 ## than its height suggests -- measured at ~24px past, hence the margin.
-const HAND_BOTTOM := 56.0
+const HAND_BOTTOM := 76.0
 ## The hand's corridor: clear of the hero panel on the left and the
 ## end-turn button on the right, at any window size.
 const GAP_TO_PANEL := 12.0
-const END_TURN_ROOM := 160.0
+const END_TURN_ROOM := 170.0
+## Where the enemies stand, and how tall the table under the hand is.
+const ENEMY_TOP := 56.0
+const TABLE_HEIGHT := 240.0
 
 var game: GameRoot
 var run: RunState
@@ -50,6 +53,8 @@ var _drawn_this_refresh: bool = false
 
 func _init() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	# The stage is drawn behind everything this screen owns.
+	draw.connect(_draw_stage)
 
 
 func bind(g: GameRoot, p_run: RunState) -> void:
@@ -58,6 +63,7 @@ func bind(g: GameRoot, p_run: RunState) -> void:
 	if _enemy_row == null:
 		_build()
 	_animator.bind(g.content)
+	queue_redraw()
 	refresh()
 
 
@@ -67,7 +73,7 @@ func _build() -> void:
 	_enemy_row.add_theme_constant_override("separation", 18)
 	_enemy_row.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_enemy_row.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_enemy_row.position = Vector2(0.0, 78.0)
+	_enemy_row.position = Vector2(0.0, ENEMY_TOP)
 	add_child(_enemy_row)
 
 	# The hero, bottom-left, opposite what is trying to kill them.
@@ -114,6 +120,57 @@ func _build() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and run != null and run.fight != null:
 		_fan(run.fight.hand.size())
+		queue_redraw()
+
+
+## Enemies floated in a void and the hand floated in a different one. Two
+## things fix that without any art: a lit floor the enemies stand on, and a
+## table edge the hand rests against. Both are gradients, and both give the
+## eye somewhere to put the objects.
+func _draw_stage() -> void:
+	if size.x <= 0.0 or size.y <= 0.0:
+		return
+	var floor_y := ENEMY_TOP + EnemyView.VIEW_SIZE.y + 10.0
+
+	# A pool of lantern light under the enemies, brightest at the centre.
+	var glow := Palette.biome_accent(run.biome_id if run != null else "catacombs")
+	for i in 22:
+		var t := float(i) / 21.0
+		var half := lerpf(150.0, 480.0, t)
+		var alpha := (1.0 - t) * 0.055
+		draw_rect(Rect2(Vector2(size.x * 0.5 - half, floor_y - 2.0 - t * 26.0),
+			Vector2(half * 2.0, 2.0)), Color(glow.r, glow.g, glow.b, alpha))
+
+	# The floor they stand on: a lit ellipse, fading out at both ends. A rule
+	# across the whole window read as a divider between two sections rather
+	# than as ground.
+	var pool := 430.0
+	var steps := 46
+	for j in steps:
+		var u := float(j) / float(steps - 1)
+		var x := size.x * 0.5 - pool + u * pool * 2.0
+		var fade := 1.0 - absf(u - 0.5) * 2.0
+		draw_rect(Rect2(Vector2(x, floor_y), Vector2(pool * 2.0 / float(steps) + 1.0, 2.0)),
+			Color(glow.r, glow.g, glow.b, 0.42 * fade))
+		draw_rect(Rect2(Vector2(x, floor_y + 2.0), Vector2(pool * 2.0 / float(steps) + 1.0, 5.0)),
+			Color(0.0, 0.0, 0.0, 0.5 * fade))
+
+	# The table the hand lies on: a dark band rising from the bottom edge.
+	var table_y := size.y - TABLE_HEIGHT
+	for i in 16:
+		var t2 := float(i) / 15.0
+		draw_rect(Rect2(Vector2(0.0, table_y + t2 * TABLE_HEIGHT), Vector2(size.x, TABLE_HEIGHT / 16.0 + 1.0)),
+			Color(0.0, 0.0, 0.0, 0.10 + t2 * 0.38))
+	# Faded at both ends, or it reads as a divider between two panels rather
+	# than as the near edge of a table.
+	var edge_steps := 60
+	for k in edge_steps:
+		var v := float(k) / float(edge_steps - 1)
+		var fade2 := 1.0 - absf(v - 0.5) * 1.9
+		if fade2 <= 0.0:
+			continue
+		draw_rect(Rect2(Vector2(v * size.x, table_y), Vector2(size.x / float(edge_steps) + 1.0, 1.0)),
+			Color(Palette.EDGE_LIGHT.r, Palette.EDGE_LIGHT.g, Palette.EDGE_LIGHT.b, 0.42 * fade2))
 
 
 func refresh() -> void:
@@ -217,8 +274,16 @@ func _fan(count: int) -> void:
 	var left := _hero.position.x + HeroPanel.PANEL_SIZE.x + GAP_TO_PANEL
 	var right := size.x - END_TURN_ROOM
 	var corridor := maxf(card.x, right - left)
-	var step := minf(card.x * FAN_SPREAD, (corridor - card.x) / maxf(1.0, float(count - 1)))
-	var centre := left + corridor * 0.5
+	# At least three quarters of a card between neighbours: below that the
+	# names disappear behind the card in front and the hand is unreadable.
+	var step := clampf((corridor - card.x) / maxf(1.0, float(count - 1)),
+		card.x * 0.74, card.x * FAN_SPREAD)
+	# Where the fan sits. The minimum step above can make the hand wider
+	# than the corridor at small window sizes, so the centre is pushed right
+	# until the leftmost card clears the hero panel -- readable cards matter
+	# more than a hand that is exactly centred.
+	var half_span := float(count - 1) * 0.5 * step
+	var centre := maxf(left + corridor * 0.5, left + half_span + card.x * 0.5)
 	var base_y := size.y - card.y - HAND_BOTTOM
 	for i in count:
 		var offset := float(i) - float(count - 1) * 0.5

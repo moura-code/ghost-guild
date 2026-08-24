@@ -5,7 +5,7 @@ extends VBoxContainer
 ## saturation as fill, and the Soul counter ticking above it.
 
 const HEADER_SEPARATION := 40
-const ROW_SEPARATION := 3
+const ROW_SEPARATION := 2
 ## The tower is a tower: constrained and centred, not a full-width table.
 const TOWER_WIDTH := 660.0
 
@@ -25,7 +25,7 @@ var _rows: Array[FloorRow] = []
 
 
 func _init() -> void:
-	add_theme_constant_override("separation", 14)
+	add_theme_constant_override("separation", 8)
 	alignment = BoxContainer.ALIGNMENT_CENTER
 
 
@@ -61,6 +61,8 @@ func _build() -> void:
 
 	# What to do right now. Without this the player has a tower, four tabs
 	# and no idea which one is waiting on them.
+	# Sits beside the premise rather than under it: two stacked sentences
+	# above the tower pushed the tower itself off the bottom of the screen.
 	_hint = UiTheme.small("", Palette.SOUL)
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

@@ -14,8 +14,8 @@ extends PanelContainer
 
 signal pressed(hand_index: int)
 
-const CARD_SIZE := Vector2(146.0, 208.0)
-const ART_SIZE := Vector2(122.0, 74.0)
+const CARD_SIZE := Vector2(158.0, 232.0)
+const ART_SIZE := Vector2(128.0, 82.0)
 const HOVER_LIFT := 14.0
 const HOVER_SCALE := 1.06
 const FLY_SECONDS := 0.28
@@ -48,15 +48,26 @@ func _init() -> void:
 
 
 func _build() -> void:
+	# The card carries its own tighter box: the shared panel margin is sized
+	# for screens, and on something this small it eats the art slot.
+	add_theme_stylebox_override("panel", UiTheme.card_box(Palette.STONE_RAISED, Palette.STONE_EDGE))
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 3)
-	box.custom_minimum_size = Vector2(CARD_SIZE.x - 16.0, 0.0)
+	box.add_theme_constant_override("separation", 4)
+	box.custom_minimum_size = Vector2(CARD_SIZE.x - 18.0, 0.0)
 	add_child(box)
 
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 6)
+	# The cost sits in its own bubble: it is the number the player checks
+	# before anything else on the card.
 	_cost = UiTheme.number("", Palette.SOUL)
-	head.add_child(_cost)
+	_cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_cost.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_cost.custom_minimum_size = Vector2(30.0, 30.0)
+	var bubble := PanelContainer.new()
+	bubble.add_theme_stylebox_override("panel", UiTheme.pip_box(Palette.STONE, Palette.SOUL))
+	bubble.add_child(_cost)
+	head.add_child(bubble)
 	_type_icon = Icons.make_rect(null, 20.0, Palette.BONE_DIM)
 	_type_icon.size_flags_horizontal = Control.SIZE_SHRINK_END | Control.SIZE_EXPAND
 	head.add_child(_type_icon)
@@ -65,12 +76,18 @@ func _build() -> void:
 	# The art slot. Empty by design until there is art -- it is the brief.
 	_art = PanelContainer.new()
 	_art.custom_minimum_size = ART_SIZE
-	_art.add_theme_stylebox_override("panel", UiTheme.panel_box(Color(0.03, 0.04, 0.05), Palette.STONE_EDGE))
+	# Recessed: the art slot is a window cut into the card, so it is darker
+	# than the card and its border reads as the inside edge of the cut.
+	var slot := UiTheme.pip_box(Palette.VOID, Palette.STONE_RAISED)
+	slot.set_corner_radius_all(3)
+	_art.add_theme_stylebox_override("panel", slot)
 	_art_image = TextureRect.new()
 	_art_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_art_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	# Bright enough to read as a deliberate placeholder rather than a smudge.
-	_art_image.modulate = Palette.BONE_DIM
+	# It is standing in for card art, so it should be the thing the eye
+	# lands on after the cost.
+	_art_image.modulate = Palette.BONE
 	_art_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_art.add_child(_art_image)
 	box.add_child(_art)
@@ -80,7 +97,7 @@ func _build() -> void:
 	# minimum tall enough to blow the card out to three times its size.
 	_name = UiTheme.body("")
 	_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_name.custom_minimum_size = Vector2(0.0, 34.0)
+	_name.custom_minimum_size = Vector2(0.0, 22.0)
 	_name.clip_text = true
 	box.add_child(_name)
 
@@ -89,7 +106,7 @@ func _build() -> void:
 	# PanelContainer that becomes the card's height.
 	_text = UiTheme.small("", Palette.BONE_DIM)
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_text.custom_minimum_size = Vector2(0.0, 40.0)
+	_text.custom_minimum_size = Vector2(0.0, 44.0)
 	_text.clip_text = true
 	box.add_child(_text)
 
@@ -114,6 +131,7 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 	# Real card art would load here; until then the type icon stands in it,
 	# at the size and aspect the illustration will occupy.
 	_art_image.texture = Icons.card_art(card.def_id, def.type)
+	_art_image.modulate = Palette.BONE_DIM if playable else Palette.BONE_FAINT
 	_paint(def)
 
 
@@ -122,10 +140,13 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 func _paint(def: CardDef) -> void:
 	var edge := rarity_colour(def.rarity)
 	# A playable card sits proud of the table; an unaffordable one sinks.
-	var body := Palette.STONE_EDGE if playable else Palette.STONE
+	# The body stays dark either way -- an earlier version used STONE_EDGE
+	# here, which after the palette was deepened turned every card into a
+	# pale grey slab lighter than the background behind it.
+	var body := Palette.STONE_RAISED if playable else Palette.VOID
 	if selected:
 		edge = Palette.SOUL
-	add_theme_stylebox_override("panel", UiTheme.panel_box(body, edge))
+	add_theme_stylebox_override("panel", UiTheme.card_box(body, edge))
 	var ink := Palette.BONE if playable else Palette.BONE_FAINT
 	_name.add_theme_color_override("font_color", ink)
 	_type_icon.modulate = edge if playable else Palette.BONE_FAINT
@@ -139,7 +160,7 @@ static func rarity_colour(rarity: String) -> Color:
 		"uncommon":
 			return Palette.SOUL
 		_:
-			return Palette.STONE_EDGE
+			return Palette.EDGE_LIGHT
 
 
 func set_selected(on: bool) -> void:
@@ -150,8 +171,8 @@ func set_selected(on: bool) -> void:
 	if _name != null:
 		# Repaint through the same path bind() uses so the two cannot drift.
 		var edge := Palette.SOUL if selected else Palette.STONE_EDGE
-		add_theme_stylebox_override("panel", UiTheme.panel_box(
-			Palette.STONE_RAISED if playable else Palette.STONE, edge))
+		add_theme_stylebox_override("panel", UiTheme.card_box(
+			Palette.STONE_RAISED if playable else Palette.VOID, edge))
 
 
 ## A playable card lifts under the cursor; an unaffordable one does not,
