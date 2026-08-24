@@ -197,6 +197,43 @@ static func fill_box(bg: Color) -> StyleBoxFlat:
 	return sb
 
 
+## Draws a health bar into `on`, at `rect`, `frac` full in `colour`, with
+## `shield` worth of block stacked after it.
+##
+## The fill used to be the colour at 34% brightness on a near-black trough,
+## which meant a hero at 70/70 had a bar that read as empty -- the player is
+## told they are about to die when they are untouched. It is lit at the top
+## and falls away below, like every other solid in the game.
+static func draw_health(on: CanvasItem, rect: Rect2, frac: float, colour: Color,
+		shield: float = 0.0) -> void:
+	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
+		return
+	on.draw_rect(rect, Palette.VOID)
+	var w := rect.size.x * clampf(frac, 0.0, 1.0)
+	var h := rect.size.y
+	if w > 0.0:
+		var bands := 6
+		for i in bands:
+			var t := float(i) / float(bands - 1)
+			var lit := 1.05 - t * 0.60
+			on.draw_rect(Rect2(rect.position + Vector2(0.0, h * t / float(bands) * float(bands)),
+				Vector2(w, h / float(bands) + 0.6)),
+				Color(minf(colour.r * lit, 1.0), minf(colour.g * lit, 1.0),
+					minf(colour.b * lit, 1.0), 1.0))
+		# The lit lip along the top, and a shadow where the fill ends.
+		on.draw_rect(Rect2(rect.position, Vector2(w, 1.0)),
+			Color(1.0, 1.0, 1.0, 0.45))
+		if frac < 0.999:
+			on.draw_rect(Rect2(rect.position + Vector2(w - 1.0, 0.0), Vector2(1.0, h)),
+				Color(0.0, 0.0, 0.0, 0.55))
+	if shield > 0.0:
+		var sw := rect.size.x * clampf(shield, 0.0, 1.0 - clampf(frac, 0.0, 1.0))
+		on.draw_rect(Rect2(rect.position + Vector2(w, 0.0), Vector2(sw, h)),
+			Color(Palette.SOUL.r * 0.75, Palette.SOUL.g * 0.75, Palette.SOUL.b * 0.75, 1.0))
+		on.draw_rect(Rect2(rect.position + Vector2(w, 0.0), Vector2(sw, 1.0)), Palette.SOUL)
+	on.draw_rect(Rect2(rect.position, Vector2(rect.size.x, 1.0)), Color(0.0, 0.0, 0.0, 0.7))
+
+
 static func title(text: String) -> Label:
 	var l := Label.new()
 	l.text = text

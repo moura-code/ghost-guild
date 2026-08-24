@@ -17,6 +17,10 @@ signal pressed(enemy_index: int)
 
 const VIEW_SIZE := Vector2(230.0, 236.0)
 const FIGURE := 104.0
+## The plate is the figure plus its margins on both sides, so it is half
+## again as wide. The slot has to be sized to the plate, not to the figure,
+## or the name below it is drawn over the bottom of the disc.
+const PLATE := FIGURE * 1.44
 const BAR_WIDTH := 132.0
 const BAR_HEIGHT := 8.0
 
@@ -35,6 +39,7 @@ var targetable: bool = false
 var idling: bool = true
 
 var _figure: TextureRect
+var _plate_slot: Control
 var _plate: PanelContainer
 var _name: Label
 var _hp: Label
@@ -80,11 +85,20 @@ func _build() -> void:
 
 	# The figure sits on a plate so it reads as a designed piece rather
 	# than a stock glyph floating on the background.
+	# A slot of constant height holds it, with the plate standing on the
+	# slot's floor. Letting the column size to the plate meant a smaller
+	# enemy's whole widget rode up, so two enemies of different size no
+	# longer shared a ground line and the row looked misaligned.
+	_plate_slot = Control.new()
+	_plate_slot.custom_minimum_size = Vector2(0.0, PLATE)
+	_plate_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_plate_slot.resized.connect(_resize_plate)
+	column.add_child(_plate_slot)
+
 	_plate = Icons.make_plate(null, FIGURE, Palette.BONE, Palette.PLATE_ENEMY,
 		Palette.STONE_EDGE)
-	_plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_figure = _plate.get_child(0)
-	column.add_child(_plate)
+	_plate_slot.add_child(_plate)
 
 	_status_row = HBoxContainer.new()
 	_status_row.add_theme_constant_override("separation", 4)
@@ -121,6 +135,7 @@ func bind(state: FightState, index: int, is_targetable: bool) -> void:
 
 	_figure.texture = Icons.enemy(enemy.def_id)
 	_figure.modulate = _figure_colour()
+	_resize_plate()
 	_repaint_plate()
 	_name.text = state.content.text(def.name_key)
 	_name.add_theme_color_override("font_color", Palette.BONE if alive else Palette.BONE_FAINT)
@@ -145,14 +160,38 @@ func bind(state: FightState, index: int, is_targetable: bool) -> void:
 
 ## The plate carries the state a border used to: lit when this enemy can be
 ## struck, drained when it is dead.
+## How big this thing is, from how much punishment it takes. A 14 HP rat and
+## a 24 HP shambler were drawn at exactly the same size, which is most of why
+## they read as one object with two stickers.
+func _figure_scale() -> float:
+	return clampf(sqrt(float(max_hp) / 24.0), 0.70, 1.32)
+
+
+func _resize_plate() -> void:
+	if _plate_slot == null:
+		return
+	var scale := _figure_scale()
+	var px := FIGURE * scale
+	var disc := PLATE * scale
+	_figure.custom_minimum_size = Vector2(px, px)
+	_plate.custom_minimum_size = Vector2(disc, disc)
+	_plate.size = Vector2(disc, disc)
+	# Centred in the slot, standing on its floor, so enemies of different
+	# size share a ground line.
+	_plate.position = Vector2((_plate_slot.size.x - disc) * 0.5, PLATE - disc)
+	queue_redraw()
+
+
 ## The plate holds the figure's margins and nothing else; _draw_niche paints
 ## it, because a flat disc of colour behind a white glyph is the flattest
 ## thing the game can put on screen and a StyleBox cannot be shaded.
 func _repaint_plate() -> void:
+	var px := FIGURE * _figure_scale()
 	var box := StyleBoxFlat.new()
 	box.bg_color = Color(0, 0, 0, 0)
-	box.set_corner_radius_all(int(FIGURE))
-	box.set_content_margin_all(FIGURE * 0.22)
+	box.set_corner_radius_all(int(px))
+	box.set_content_margin_all(px * 0.22)
+	box.content_margin_bottom = px * 0.22
 	_plate.add_theme_stylebox_override("panel", box)
 	queue_redraw()
 
@@ -176,7 +215,7 @@ func _ring_colour() -> Color:
 func _draw_niche() -> void:
 	if _plate == null or _plate.size.x <= 4.0:
 		return
-	var c := _plate.position + _plate.size * 0.5
+	var c := _plate_slot.position + _plate.position + _plate.size * 0.5
 	var r := _plate.size.x * 0.5
 	var base := _plate_colour()
 	var ring := _ring_colour()
@@ -327,33 +366,39 @@ func _draw_ground() -> void:
 	if not alive:
 		return
 	var centre := Vector2(size.x * 0.5, size.y - 44.0)
+	var wide := 46.0 * _figure_scale()
 	if targetable:
 		# A pool of light under a legal target: selection without a border.
 		for i in 9:
 			var t := float(i) / 8.0
 			draw_circle(centre, 30.0 + t * 52.0,
 				Color(Palette.SOUL.r, Palette.SOUL.g, Palette.SOUL.b, 0.055 * (1.0 - t)))
-	draw_circle(centre, 42.0, Color(0.0, 0.0, 0.0, 0.32))
-	draw_circle(centre, 27.0, Color(0.0, 0.0, 0.0, 0.28))
+	# The shadow it puts on the floor. Three flattened ellipses tightening
+	# toward the middle: a blurred contact shadow for the price of three
+	# polygons, and without one the thing is floating.
+	_ellipse(centre, wide * 1.5, 11.0, Color(0.0, 0.0, 0.0, 0.15))
+	_ellipse(centre, wide * 1.15, 8.0, Color(0.0, 0.0, 0.0, 0.20))
+	_ellipse(centre, wide * 0.85, 5.5, Color(0.0, 0.0, 0.0, 0.26))
+
+
+## A flattened disc. draw_circle only draws round ones, and a round shadow
+## on a floor seen from the front reads as a ball, not as contact.
+func _ellipse(centre: Vector2, rx: float, ry: float, colour: Color) -> void:
+	var pts := PackedVector2Array()
+	for i in 24:
+		var a := TAU * float(i) / 24.0
+		pts.append(centre + Vector2(cos(a) * rx, sin(a) * ry))
+	draw_colored_polygon(pts, colour)
 
 
 func _draw_bar() -> void:
 	var w := minf(_bar.size.x, BAR_WIDTH)
 	if w <= 0.0:
 		return
-	var x := (_bar.size.x - w) * 0.5
-	var h := _bar.size.y
-	_bar.draw_rect(Rect2(Vector2(x, 0.0), Vector2(w, h)), Palette.VOID)
-	var frac := clampf(float(hp) / float(max_hp), 0.0, 1.0)
-	var colour := Palette.DANGER if frac <= 0.35 else Palette.BONE_DIM
-	# Dim body, lit top edge -- a solid fill was the brightest block around.
-	_bar.draw_rect(Rect2(Vector2(x, 0.0), Vector2(w * frac, h)),
-		Color(colour.r * 0.45, colour.g * 0.45, colour.b * 0.45, 1.0))
-	_bar.draw_rect(Rect2(Vector2(x, 0.0), Vector2(w * frac, 2.0)), colour)
-	if block > 0:
-		var shielded := clampf(float(block) / float(max_hp), 0.0, 1.0 - frac)
-		_bar.draw_rect(Rect2(Vector2(x + w * frac, 0.0), Vector2(w * shielded, h)), Palette.SOUL)
-	_bar.draw_rect(Rect2(Vector2(x, 0.0), Vector2(w, 1.0)), Color(0.0, 0.0, 0.0, 0.7))
+	var frac := float(hp) / float(max_hp)
+	var colour := Palette.DANGER if frac <= 0.35 else Palette.BONE_DIM.lerp(Palette.BONE, 0.4)
+	UiTheme.draw_health(_bar, Rect2(Vector2((_bar.size.x - w) * 0.5, 0.0), Vector2(w, _bar.size.y)),
+		frac, colour, float(block) / float(max_hp))
 
 
 func press() -> void:

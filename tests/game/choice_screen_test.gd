@@ -140,10 +140,12 @@ func test_a_card_reward_names_its_cards_and_lets_you_refuse() -> void:
 	await await_idle_frame()
 	var offered: Array = run.reward.get("cards", [])
 	assert_int(s._actions.size()).is_equal(offered.size() + 1)
-	assert_str(s._buttons[s._actions.size() - 1].text).is_equal(g.text("ui.choice.skip"))
+	assert_str(s.option_label(s._actions.size() - 1)).is_equal(g.text("ui.choice.skip"))
 	for i in offered.size():
 		var def: CardDef = g.content.cards[String(offered[i])]
-		assert_str(s._buttons[i].text).is_equal(g.text(def.name_key))
+		assert_str(s.option_label(i)).is_equal(g.text(def.name_key))
+	# ...and each offer is a card face, not a row of text.
+	assert_int(_visible_cards(s)).is_equal(offered.size())
 
 
 func test_taking_a_reward_card_puts_it_in_the_deck() -> void:
@@ -153,7 +155,7 @@ func test_taking_a_reward_card_puts_it_in_the_deck() -> void:
 	var s := _screen(g, run)
 	await await_idle_frame()
 	var before := run.hero.deck.size()
-	s._buttons[0].emit_signal("pressed")
+	s._cards[0].press()
 	await await_idle_frame()
 	assert_int(run.hero.deck.size()).is_equal(before + 1)
 
@@ -168,6 +170,14 @@ func test_options_are_pooled_across_refreshes() -> void:
 	s.refresh()
 	await await_idle_frame()
 	assert_object(s._buttons[0]).is_same(first)
+
+
+func _visible_cards(s: ChoiceScreen) -> int:
+	var n := 0
+	for card in s._cards:
+		if card.visible:
+			n += 1
+	return n
 
 
 func _index_of(s: ChoiceScreen, kind: String) -> int:
@@ -191,8 +201,8 @@ func test_the_descent_draft_offers_one_pick_per_skipped_floor() -> void:
 	# One button per offered card, plus the refusal.
 	assert_int(s._actions.size()).is_equal(int(offer["cards"].size()) + 1)
 	var def: CardDef = g.content.cards[String(offer["cards"][0])]
-	assert_str(s._buttons[0].text).is_equal(g.text(def.name_key))
-	assert_str(s._buttons[s._actions.size() - 1].text).is_equal(g.text("ui.choice.skip"))
+	assert_str(s.option_label(0)).is_equal(g.text(def.name_key))
+	assert_str(s.option_label(s._actions.size() - 1)).is_equal(g.text("ui.choice.skip"))
 
 
 func test_taking_a_draft_pick_puts_the_card_in_the_deck() -> void:
@@ -202,7 +212,7 @@ func test_taking_a_draft_pick_puts_the_card_in_the_deck() -> void:
 	var s := _screen(g, run)
 	await await_idle_frame()
 	var before := run.hero.deck.size()
-	s._buttons[0].emit_signal("pressed")
+	s._cards[0].press()
 	await await_idle_frame()
 	assert_int(run.hero.deck.size()).is_equal(before + 1)
 
@@ -216,7 +226,7 @@ func test_the_draft_ends_and_the_run_begins_on_the_entry_floor() -> void:
 	var guard := 0
 	while run.phase == "descent" and guard < 20:
 		s.refresh()
-		s._buttons[0].emit_signal("pressed")
+		s.take(0)
 		guard += 1
 	assert_str(run.phase).is_equal("node")
 	assert_int(run.floor).is_equal(3)

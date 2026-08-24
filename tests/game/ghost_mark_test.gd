@@ -21,7 +21,7 @@ func test_restless_reads_before_prepared() -> void:
 	var m := _mark()
 	m.prepared = true
 	m.restless = true
-	assert_that(m.body_color()).is_equal(Palette.RESTLESS)
+	assert_that(m.body_color()).is_equal(Palette.DANGER)
 
 
 func test_bind_reads_the_ghost_and_gives_it_its_own_bob_phase() -> void:

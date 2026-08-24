@@ -14,10 +14,17 @@ const PHASES := ["reward", "event", "rest", "shop", "descent"]
 var game: GameRoot
 var run: RunState
 
+## Which actions are worth showing as a card face rather than as a line of
+## text. Winning a card is the payoff of a fight, and it was being delivered
+## as a grey list row while the game already owned a drawn card face.
+const CARD_ACTIONS := ["take_card", "draft_pick", "buy_card"]
+
 var _title: Label
 var _context: Label
+var _fan: HBoxContainer
 var _options: VBoxContainer
 var _buttons: Array[Button] = []
+var _cards: Array[CardView] = []
 var _actions: Array = []
 
 
@@ -45,6 +52,12 @@ func _build() -> void:
 	_context = ScreenLayout.centre(UiTheme.body("", Palette.BONE_DIM))
 	_context.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_context)
+
+	# The prizes, laid out as cards; then everything else as a list.
+	_fan = HBoxContainer.new()
+	_fan.alignment = BoxContainer.ALIGNMENT_CENTER
+	_fan.add_theme_constant_override("separation", 26)
+	add_child(_fan)
 
 	_options = VBoxContainer.new()
 	_options.add_theme_constant_override("separation", 6)
@@ -92,19 +105,84 @@ func _context_text() -> String:
 	return ""
 
 
-## Buttons are pooled, not churned — the same reason the fight's cards are.
+## What one option reads as, and how to take it, without a test having to
+## know whether it is drawn as a card or as a row.
+func option_label(index: int) -> String:
+	if index < 0 or index >= _actions.size():
+		return ""
+	return label_for(_actions[index])
+
+
+func take(index: int) -> void:
+	_choose(index)
+
+
+## Which card an offer is for, or "" if the option is not a card.
+func _card_of(action: Dictionary) -> String:
+	if not CARD_ACTIONS.has(String(action.get("kind", ""))):
+		return ""
+	return String(action.get("card", ""))
+
+
+## Both pools are pooled, not churned — the same reason the fight's are.
 func _rebuild_options() -> void:
-	while _buttons.size() < _actions.size():
-		var index := _buttons.size()
+	var offers: Array = []
+	var rows: Array = []
+	for i in _actions.size():
+		if _card_of(_actions[i]) != "":
+			offers.append(i)
+		else:
+			rows.append(i)
+
+	while _cards.size() < offers.size():
+		var card := CardView.new()
+		card.pressed.connect(_on_card_pressed)
+		_fan.add_child(card)
+		_cards.append(card)
+	for i in _cards.size():
+		var shown := i < offers.size()
+		_cards[i].visible = shown
+		if not shown:
+			continue
+		var index: int = offers[i]
+		var instance := CardInstance.new()
+		instance.uid = -1 - index
+		instance.def_id = _card_of(_actions[index])
+		_cards[i].bind(game.content, instance, index, true)
+		_cards[i].tooltip_text = label_for(_actions[index])
+
+	while _buttons.size() < rows.size():
 		var button := Button.new()
-		button.pressed.connect(func() -> void: _choose(index))
 		_options.add_child(button)
 		_buttons.append(button)
 	for i in _buttons.size():
-		var used := i < _actions.size()
+		var used := i < rows.size()
 		_buttons[i].visible = used
-		if used:
-			_buttons[i].text = label_for(_actions[i])
+		if not used:
+			continue
+		var at: int = rows[i]
+		_buttons[i].text = label_for(_actions[at])
+		# Rebound every refresh: which action sits in which row moves as the
+		# list shrinks, and a lambda captured at creation would go stale.
+		for existing in _buttons[i].pressed.get_connections():
+			_buttons[i].pressed.disconnect(existing["callable"])
+		_buttons[i].pressed.connect(func() -> void: _choose(at))
+		# Taking nothing should not look like a fourth prize.
+		var refusal := ["skip_card", "draft_skip", "leave"].has(
+			String(_actions[at].get("kind", "")))
+		_buttons[i].add_theme_stylebox_override("normal",
+			UiTheme.panel_box(Palette.VOID, Palette.STONE_RAISED) if refusal
+			else UiTheme.list_row_box())
+		_buttons[i].add_theme_color_override("font_color",
+			Palette.BONE_FAINT if refusal else Palette.BONE)
+		_buttons[i].size_flags_horizontal = (Control.SIZE_SHRINK_CENTER if refusal
+			else Control.SIZE_FILL)
+		_buttons[i].custom_minimum_size = Vector2(190.0 if refusal else 0.0, 0.0)
+
+
+## CardView reports the index it was bound with, which is the action's.
+func _on_card_pressed(index: int) -> void:
+	_choose(index)
 
 
 ## What one action reads as. Kept public so a test can assert the wording

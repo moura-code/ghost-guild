@@ -63,7 +63,7 @@ func test_the_ghost_mark_shows_a_restless_death() -> void:
 	var s := _screen(g, result)
 	await await_idle_frame()
 	assert_bool(s._mark.restless).is_true()
-	assert_that(s._mark.body_color()).is_equal(Palette.RESTLESS)
+	assert_that(s._mark.body_color()).is_equal(Palette.DANGER)
 
 
 func test_the_first_death_carries_the_rite_and_a_later_one_does_not() -> void:

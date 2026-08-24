@@ -14,6 +14,10 @@ func _init() -> void:
 	var frames: int = int(args[1]) if args.size() > 1 else 30
 	var screen: String = args[2] if args.size() > 2 else "ladder"
 
+	# A save left over from the last capture puts the game mid-run, so a tab
+	# shot comes back showing whatever floor that run was on.
+	DirAccess.remove_absolute(SaveGame.DEFAULT_PATH)
+
 	var packed: PackedScene = load("res://game/main.tscn")
 	var main: Node = packed.instantiate()
 	root.add_child(main)
