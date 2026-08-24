@@ -132,3 +132,32 @@ func test_buying_in_the_guild_updates_the_ladder_behind_it() -> void:
 	g.buy_upgrade("ghost_strength")
 	await await_idle_frame()
 	assert_float(ladder._rows[0].output_per_hour).is_not_equal(before)
+
+
+func test_starting_a_run_replaces_the_tabs_with_the_run_view() -> void:
+	var g := _game()
+	var m := _main(g)
+	await await_idle_frame()
+	assert_bool(m._run_view.visible).is_false()
+	assert_bool(m._tab_bar.visible).is_true()
+
+	g.start_run(1)
+	await await_idle_frame()
+	assert_bool(m._run_view.visible).is_true()
+	assert_bool(m._tab_bar.visible).is_false()
+
+
+func test_banking_a_run_returns_to_the_tabs() -> void:
+	var g := _game()
+	var m := _main(g)
+	await await_idle_frame()
+	var run := g.start_run(1)
+	run.hero.resolve = 1
+	TestFixtures.set_nodes(run, [{"kind": "rest"}])
+	RunEngine.apply(run, {"kind": "enter"})
+	RunEngine.apply(run, {"kind": "rest_heal"})
+	RunEngine.apply(run, {"kind": "retreat"})
+	g.finish_run()
+	await await_idle_frame()
+	assert_bool(m._run_view.visible).is_false()
+	assert_bool(m._tab_bar.visible).is_true()

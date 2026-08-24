@@ -26,6 +26,7 @@ var _buttons: Dictionary = {}
 var _body: Control
 var _tab_bar: HBoxContainer
 var _offline: OfflineSummary
+var _run_view: RunView
 
 
 func _ready() -> void:
@@ -50,6 +51,9 @@ func bind(g: GameRoot) -> void:
 	if _body == null:
 		_build()
 	show_tab(String(TABS[0]["id"]))
+	if not g.run_changed.is_connected(_refresh_run_visibility):
+		g.run_changed.connect(_refresh_run_visibility)
+	_refresh_run_visibility()
 	_maybe_show_offline()
 
 
@@ -82,6 +86,15 @@ func _build() -> void:
 		_tab_bar.add_child(button)
 		_buttons[id] = button
 		_screens[id] = _make_screen(id)
+
+	# A live run takes over the whole window: the tabs are the guild, and
+	# you are not in the guild while you are underground.
+	_run_view = RunView.new()
+	_run_view.visible = false
+	_run_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_run_view.bind(game)
+	_run_view.run_finished.connect(_on_run_finished)
+	column.add_child(_run_view)
 
 	_offline = OfflineSummary.new()
 	_offline.visible = false
@@ -132,6 +145,22 @@ func show_tab(id: String) -> void:
 		if wrapper != null:
 			wrapper.visible = on
 		(_buttons[other] as Button).button_pressed = on
+
+
+## The run view and the tab shell are mutually exclusive.
+func _refresh_run_visibility() -> void:
+	if _run_view == null or game == null or game.campaign == null:
+		return
+	var in_run := game.campaign.run != null
+	_run_view.visible = in_run
+	_tab_bar.visible = not in_run
+	_body.visible = not in_run
+	if in_run:
+		_run_view.refresh()
+
+
+func _on_run_finished(_result: Dictionary) -> void:
+	_refresh_run_visibility()
 
 
 func _maybe_show_offline() -> void:

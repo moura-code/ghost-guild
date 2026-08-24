@@ -14,7 +14,7 @@ var _rate: Label
 var _reach: Label
 var _premise: Label
 var _hint: Label
-var _soon: Label
+var _descend: Button
 var _cheapest_cost: float = -1.0
 var _tower: VBoxContainer
 var _rows: Array[FloorRow] = []
@@ -58,11 +58,11 @@ func _build() -> void:
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_hint)
 
-	# Honest about the half of the game that is not built yet, so nobody
-	# hunts for a Descend button that does not exist. Remove in M1-C2.
-	_soon = UiTheme.small("", Palette.BONE_FAINT)
-	_soon.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	add_child(_soon)
+	# The way into the dungeon. Disabled while a run is already live so the
+	# campaign never has to refuse the click.
+	_descend = Button.new()
+	_descend.pressed.connect(_on_descend)
+	add_child(_descend)
 
 	_tower = VBoxContainer.new()
 	_tower.add_theme_constant_override("separation", ROW_SEPARATION)
@@ -99,7 +99,8 @@ func refresh() -> void:
 	_reach.text = str(CampaignEngine.reach(game.campaign))
 	_refresh_premise()
 	_cheapest_cost = _cheapest_upgrade_cost()
-	_soon.text = game.text("ui.hint.no_run")
+	_descend.text = game.text("ui.descend")
+	_descend.disabled = game.campaign.run != null
 	_on_soul_changed(game.displayed_soul(), game.campaign.rate_per_hour)
 
 
@@ -130,6 +131,10 @@ func _on_soul_changed(soul: float, rate_per_hour: float) -> void:
 
 ## The price of the cheapest upgrade the player has not maxed out, or -1.0
 ## when there is nothing left to buy.
+func _on_descend() -> void:
+	game.start_run(1)
+
+
 func _cheapest_upgrade_cost() -> float:
 	var best := -1.0
 	for id in game.content.upgrades:

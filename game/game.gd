@@ -15,6 +15,7 @@ signal booted()
 signal soul_changed(soul: float, rate_per_hour: float)
 signal ladder_changed()
 signal hero_changed()
+signal run_changed()
 
 const CONTENT_ROOT := "res://data"
 const REFRESH_HZ := 10.0
@@ -124,6 +125,44 @@ func mend() -> Dictionary:
 	if bool(r["ok"]):
 		_after_mutation()
 	return r
+
+
+## Starts a descent. CampaignEngine validates the entry floor against reach
+## and refuses an unbanked finished run, returning null either way.
+##
+## start_run and finish_run tick production internally, so unlike the other
+## wrappers these do not call settle() first -- a second tick with zero
+## elapsed would be a no-op, but the intent should be visible here.
+func start_run(entry_floor: int) -> RunState:
+	if campaign == null:
+		return null
+	var run := CampaignEngine.start_run(campaign, entry_floor, now())
+	if run != null:
+		_emit_all()
+		run_changed.emit()
+		save()
+	return run
+
+
+## Applies one action to the live run and returns the events it produced.
+## The fight screen animates from those events rather than diffing state.
+func run_action(action: Dictionary) -> Array:
+	if campaign == null or campaign.run == null:
+		return []
+	var events := RunEngine.apply(campaign.run, action)
+	run_changed.emit()
+	return events
+
+
+## Banks a finished run: the Soul, the ghost, the epitaph and the new hero.
+func finish_run() -> Dictionary:
+	if campaign == null or campaign.run == null or not campaign.run.is_over():
+		return {}
+	var result := CampaignEngine.finish_run(campaign, now())
+	_emit_all()
+	run_changed.emit()
+	save()
+	return result
 
 
 func drain_events() -> Array:

@@ -165,4 +165,16 @@ ui.tip.floor,Floor {floor} spawns {spawn} kills an hour. Your ghosts take {taken
 ui.tip.floor_empty,Floor {floor} spawns {spawn} kills an hour. Nothing of yours stands here.
 ui.hint.wait,Your dead keep earning while the game is closed. Come back and spend it.
 ui.hint.spend,You have Soul to spend — open the Guild or the Séance.
-ui.hint.no_run,Taking a hero down into the dungeon arrives in the next build.
+ui.descend,Descend
+ui.run.continue,Continue
+ui.run.bank,Bank the run
+ui.run.over,The run is over.
+ui.run.floor,Floor {floor}
+ui.run.phase.descent,Descending
+ui.run.phase.node,Choose a path
+ui.run.phase.fight,Fight
+ui.run.phase.reward,Take a card
+ui.run.phase.event,An event
+ui.run.phase.rest,Rest
+ui.run.phase.shop,Shop
+ui.run.phase.exit,Floor cleared

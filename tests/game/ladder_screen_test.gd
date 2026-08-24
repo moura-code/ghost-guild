@@ -144,8 +144,23 @@ func test_the_hint_flips_as_soul_accrues_without_a_rebind() -> void:
 	assert_str(s._hint.text).is_equal(g.text("ui.hint.spend"))
 
 
-func test_it_admits_descending_is_not_in_this_build() -> void:
+func test_the_ladder_offers_a_descent() -> void:
 	var g := _game()
 	var s := _screen(g)
 	await await_idle_frame()
-	assert_str(s._soon.text).is_equal(g.text("ui.hint.no_run"))
+	assert_str(s._descend.text).is_equal(g.text("ui.descend"))
+	assert_bool(s._descend.disabled).is_false()
+	s._descend.emit_signal("pressed")
+	await await_idle_frame()
+	assert_object(g.campaign.run).is_not_null()
+	assert_int(g.campaign.run.floor).is_equal(1)
+
+
+func test_the_descent_button_is_unavailable_while_a_run_is_live() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	g.start_run(1)
+	s.refresh()
+	await await_idle_frame()
+	assert_bool(s._descend.disabled).is_true()

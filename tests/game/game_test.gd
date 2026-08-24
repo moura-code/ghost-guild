@@ -102,3 +102,48 @@ func test_drain_events_empties_the_campaign_stream() -> void:
 	assert_int(first.size()).is_greater(0)
 	assert_int(g.campaign.events.size()).is_equal(0)
 	assert_int(g.drain_events().size()).is_equal(0)
+
+
+func test_start_run_creates_a_run_and_announces_it() -> void:
+	var g := _fresh()
+	g.boot()
+	var seen := [0]
+	g.run_changed.connect(func() -> void: seen[0] += 1)
+	var run := g.start_run(1)
+	assert_object(run).is_not_null()
+	assert_object(g.campaign.run).is_same(run)
+	assert_int(seen[0]).is_equal(1)
+
+
+func test_start_run_refuses_a_floor_beyond_reach() -> void:
+	var g := _fresh()
+	g.boot()
+	assert_object(g.start_run(6)).is_null()
+	assert_object(g.campaign.run).is_null()
+
+
+func test_run_action_applies_it_and_announces_the_change() -> void:
+	var g := _fresh()
+	g.boot()
+	var run := g.start_run(1)
+	var before := run.phase
+	var seen := [0]
+	g.run_changed.connect(func() -> void: seen[0] += 1)
+	g.run_action({"kind": "enter"})
+	assert_int(seen[0]).is_equal(1)
+	assert_str(run.phase).is_not_equal(before)
+
+
+func test_finish_run_banks_the_outcome_and_clears_the_run() -> void:
+	var g := _fresh()
+	g.boot()
+	var run := g.start_run(1)
+	run.hero.resolve = 1
+	TestFixtures.set_nodes(run, [{"kind": "rest"}])
+	RunEngine.apply(run, {"kind": "enter"})
+	RunEngine.apply(run, {"kind": "rest_heal"})
+	RunEngine.apply(run, {"kind": "retreat"})
+	assert_bool(run.is_over()).is_true()
+	var result := g.finish_run()
+	assert_str(String(result["kind"])).is_equal("retreat")
+	assert_object(g.campaign.run).is_null()
