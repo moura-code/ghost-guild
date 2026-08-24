@@ -26,22 +26,38 @@ HOST = "127.0.0.1:8188"
 OUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)))), "art_previews")
 
-STYLE = ("dark fantasy, near-black background, muted palette, bone white and cold cyan "
-         "accents, dramatic single light source from below, heavy shadow, matte painting, "
-         "no text, no watermark, no border, centred composition")
+# Learned from the first batch: naming cyan as a colour makes SDXL wash the
+# whole frame teal, when the game is near-black stone with cyan only on the
+# ghosts. So the palette is described as desaturated stone, and the cyan is
+# attached to the ghosts in the individual prompts instead.
+STYLE = ("dark fantasy concept art, almost entirely black, desaturated grey stone, "
+         "deep shadow, one weak cold light source, dust in the air, subtle, restrained, "
+         "atmospheric, full bleed edge to edge")
 
-NEGATIVE = ("text, watermark, signature, logo, ui, frame, border, bright colours, saturated, "
-            "cheerful, anime, cartoon, 3d render, photorealistic skin, blurry, jpeg artifacts")
+# The first batch drew a border despite being told not to, and came out teal.
+# Both get named several ways here, because one mention is evidently not enough.
+NEGATIVE = ("text, letters, watermark, signature, logo, ui, hud, frame, border, framed, "
+            "matted, vignette border, white edge, margin, teal, turquoise, saturated, vibrant, "
+            "colourful, bright, cheerful, daylight, anime, cartoon, comic, cel shaded, "
+            "outlined, illustration border, 3d render, blurry, jpeg artifacts, deformed, "
+            "white background, grey background, diagram, blueprint, reference sheet, caption, "
+            "label, concept sheet, multiple views, isolated on white")
 
 # name -> (prompt, width, height). The capsule is wide; studies are square.
 PROMPTS = {
+    # Two failed framings, kept as a warning: "cross-section" reads as a
+    # stepped ziggurat, and "cutaway / front wall removed" pulls the whole
+    # image toward architectural-diagram conventions -- white background and
+    # caption gibberish. SDXL wants a scene as a camera would see it, so the
+    # tower is described as a place you are standing inside.
     "capsule": (
-        "a vertical cross-section of an underground stone tower, ten stacked floors "
-        "descending into darkness, faint translucent cyan ghost figures standing still on "
-        "each floor, cold light rising from the depths, ancient catacomb masonry", 1024, 512),
+        "looking down into an enormous pitch black circular stone well, level after level of "
+        "carved stone balconies descending into total darkness, a single small pale glowing "
+        "figure standing alone on several of the levels, cold blue-white glow, vast and empty",
+        1024, 512),
     "tower": (
         "an endless stone shaft seen from inside, carved floors receding downward into black, "
-        "a single pale ghost on the nearest ledge, dust in the air", 832, 1216),
+        "one pale glowing spirit standing on the nearest ledge, dust in the air", 832, 1216),
     "catacombs": (
         "endless ossuary corridors, stacked skulls set into ivory stone walls, cold dust in "
         "still air, one distant lantern", 1024, 576),
@@ -52,8 +68,9 @@ PROMPTS = {
         "a vast underground forge, cracked orange firelight through black basalt, chains and "
         "slag, heat haze", 1024, 576),
     "ghost": (
-        "a translucent cyan spectre of a fallen adventurer, hollow eyes, tattered shroud, "
-        "standing patiently in a dark crypt, faint inner light", 1024, 1024),
+        "a translucent pale blue-white spectre of a fallen adventurer, hollow eyes, tattered "
+        "shroud, standing patiently in a pitch black crypt, faint inner glow, the only lit "
+        "thing in frame", 1024, 1024),
     "card_frame": (
         "an ornate but austere card border, thin bone-white line work on near-black, carved "
         "stone motif, empty centre, symmetrical", 832, 1216),
