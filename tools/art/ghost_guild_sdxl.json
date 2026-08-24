@@ -1,0 +1,107 @@
+{
+ "1": {
+  "class_type": "CheckpointLoaderSimple",
+  "inputs": {
+   "ckpt_name": "sd_xl_base_1.0.safetensors"
+  },
+  "_meta": {
+   "title": "SDXL base"
+  }
+ },
+ "2": {
+  "class_type": "CLIPTextEncode",
+  "inputs": {
+   "text": "a vertical cross-section of an underground stone tower, ten stacked floors descending into darkness, faint translucent cyan ghost figures standing still on each floor, cold light rising from the depths, ancient catacomb masonry, dark fantasy, near-black background, muted palette, bone white and cold cyan accents, dramatic single light source from below, heavy shadow, matte painting, no text, no watermark, no border, centred composition",
+   "clip": [
+    "1",
+    1
+   ]
+  },
+  "_meta": {
+   "title": "POSITIVE - edit this"
+  }
+ },
+ "3": {
+  "class_type": "CLIPTextEncode",
+  "inputs": {
+   "text": "text, watermark, signature, logo, ui, frame, border, bright colours, saturated, cheerful, anime, cartoon, 3d render, photorealistic skin, blurry, jpeg artifacts",
+   "clip": [
+    "1",
+    1
+   ]
+  },
+  "_meta": {
+   "title": "negative"
+  }
+ },
+ "4": {
+  "class_type": "EmptyLatentImage",
+  "inputs": {
+   "width": 1024,
+   "height": 512,
+   "batch_size": 1
+  },
+  "_meta": {
+   "title": "size - batch 1, SDXL at 1024 uses ~11GB"
+  }
+ },
+ "5": {
+  "class_type": "KSampler",
+  "inputs": {
+   "seed": 1,
+   "steps": 30,
+   "cfg": 6.5,
+   "sampler_name": "dpmpp_2m",
+   "scheduler": "karras",
+   "denoise": 1.0,
+   "model": [
+    "1",
+    0
+   ],
+   "positive": [
+    "2",
+    0
+   ],
+   "negative": [
+    "3",
+    0
+   ],
+   "latent_image": [
+    "4",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "sampler"
+  }
+ },
+ "6": {
+  "class_type": "VAEDecode",
+  "inputs": {
+   "samples": [
+    "5",
+    0
+   ],
+   "vae": [
+    "1",
+    2
+   ]
+  },
+  "_meta": {
+   "title": "decode"
+  }
+ },
+ "7": {
+  "class_type": "SaveImage",
+  "inputs": {
+   "filename_prefix": "ghost_guild/capsule",
+   "images": [
+    "6",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "save"
+  }
+ }
+}
