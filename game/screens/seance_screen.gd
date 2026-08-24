@@ -35,6 +35,10 @@ func bind(g: GameRoot) -> void:
 func _build() -> void:
 	add_child(ScreenLayout.centre(UiTheme.title(game.text("ui.seance"))))
 
+	var rites := VBoxContainer.new()
+	rites.add_theme_constant_override("separation", 13)
+	rites.add_child(ScreenLayout.section(game.text("ui.seance.rites"), Palette.PREPARED))
+
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 44)
 	_echo_price = UiTheme.number("0")
@@ -42,7 +46,7 @@ func _build() -> void:
 	header.alignment = BoxContainer.ALIGNMENT_CENTER
 	header.add_child(_price_block(_echo_price, game.text("ui.echo")))
 	header.add_child(_price_block(_call_price, game.text("ui.call")))
-	add_child(header)
+	rites.add_child(header)
 
 	var mend_row := HBoxContainer.new()
 	mend_row.add_theme_constant_override("separation", 8)
@@ -52,11 +56,16 @@ func _build() -> void:
 	_mend_button.pressed.connect(_on_mend)
 	mend_row.add_child(_mend_label)
 	mend_row.add_child(_mend_button)
-	add_child(ScreenLayout.centred(mend_row))
+	rites.add_child(mend_row)
+	add_child(ScreenLayout.plate(rites))
 
+	var dead := VBoxContainer.new()
+	dead.add_theme_constant_override("separation", 11)
+	dead.add_child(ScreenLayout.section(game.text("ui.seance.dead"), Palette.GHOST))
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 4)
-	add_child(ScreenLayout.centred(_list))
+	dead.add_child(_list)
+	add_child(ScreenLayout.plate(dead))
 
 
 static func _price_block(value: Label, caption: String) -> VBoxContainer:

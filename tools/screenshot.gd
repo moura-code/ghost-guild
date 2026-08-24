@@ -21,6 +21,10 @@ func _init() -> void:
 	for i in frames:
 		await process_frame
 
+	# The "while you were away" modal covers whatever we came to look at.
+	if screen != "offline" and main._offline != null:
+		main._offline.visible = false
+
 	_go(main, screen)
 	for i in frames:
 		await process_frame

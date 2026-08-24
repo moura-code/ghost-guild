@@ -145,21 +145,64 @@ func bind(state: FightState, index: int, is_targetable: bool) -> void:
 
 ## The plate carries the state a border used to: lit when this enemy can be
 ## struck, drained when it is dead.
+## The plate holds the figure's margins and nothing else; _draw_niche paints
+## it, because a flat disc of colour behind a white glyph is the flattest
+## thing the game can put on screen and a StyleBox cannot be shaded.
 func _repaint_plate() -> void:
 	var box := StyleBoxFlat.new()
+	box.bg_color = Color(0, 0, 0, 0)
 	box.set_corner_radius_all(int(FIGURE))
 	box.set_content_margin_all(FIGURE * 0.22)
-	box.set_border_width_all(1)
-	if not alive:
-		box.bg_color = Palette.VOID
-		box.border_color = Palette.STONE_RAISED
-	elif targetable:
-		box.bg_color = Palette.PLATE_ENEMY.lerp(Palette.SOUL, 0.22)
-		box.border_color = Palette.SOUL
-	else:
-		box.bg_color = Palette.PLATE_ENEMY
-		box.border_color = Palette.STONE_EDGE
 	_plate.add_theme_stylebox_override("panel", box)
+	queue_redraw()
+
+
+## The colour of the stone the thing stands in.
+func _plate_colour() -> Color:
+	if not alive:
+		return Palette.VOID
+	return Palette.PLATE_ENEMY.lerp(Palette.SOUL, 0.22) if targetable else Palette.PLATE_ENEMY
+
+
+## The lit edge of the opening.
+func _ring_colour() -> Color:
+	if not alive:
+		return Palette.STONE_RAISED
+	return Palette.SOUL if targetable else Palette.EDGE_LIGHT
+
+
+## The niche the enemy stands in: recessed, lit from above by the same
+## lantern as the room, with a shadow pooling at its foot.
+func _draw_niche() -> void:
+	if _plate == null or _plate.size.x <= 4.0:
+		return
+	var c := _plate.position + _plate.size * 0.5
+	var r := _plate.size.x * 0.5
+	var base := _plate_colour()
+	var ring := _ring_colour()
+
+	# The shadow the cut throws onto the wall around it.
+	draw_circle(c + Vector2(0.0, 3.0), r + 5.0, Color(0.0, 0.0, 0.0, 0.30))
+	draw_circle(c, r, Color(base.r * 0.55, base.g * 0.55, base.b * 0.62, 1.0))
+
+	# Light from above: discs that shrink and climb, each barely visible on
+	# its own. draw_circle has no gradient, and this is what one costs.
+	for i in 8:
+		var t := float(i) / 7.0
+		var lift := 1.0 + t * 0.85
+		draw_circle(c - Vector2(0.0, r * 0.26 * t), r * (1.0 - t * 0.40),
+			Color(minf(base.r * lift, 1.0), minf(base.g * lift, 1.0),
+				minf(base.b * lift, 1.0), 0.10))
+	# Shadow pooling at the foot, so the figure has something to stand on.
+	for i in 5:
+		var t := float(i) / 4.0
+		draw_circle(c + Vector2(0.0, r * 0.34 + r * 0.20 * t), r * (0.72 - t * 0.22),
+			Color(0.0, 0.0, 0.0, 0.11))
+
+	# The rim: lit along the crown, dark along the sill.
+	draw_arc(c, r - 1.0, PI * 1.06, PI * 1.94, 34,
+		Color(ring.r, ring.g, ring.b, 0.85 if alive else 0.35), 2.0, true)
+	draw_arc(c, r - 1.0, PI * 0.06, PI * 0.94, 34, Color(0.0, 0.0, 0.02, 0.50), 2.0, true)
 
 
 ## Lit when it can be struck, bone while it lives, faded once it is dead.
@@ -278,7 +321,10 @@ func _refresh_status_icons(statuses: Dictionary) -> void:
 ## Drawn rather than styled, because the whole point of this widget is that
 ## there is no panel behind it.
 func _draw_ground() -> void:
-	if size.x <= 0.0 or not alive:
+	if size.x <= 0.0:
+		return
+	_draw_niche()
+	if not alive:
 		return
 	var centre := Vector2(size.x * 0.5, size.y - 44.0)
 	if targetable:

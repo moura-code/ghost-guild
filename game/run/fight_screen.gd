@@ -33,6 +33,11 @@ const ENEMY_TOP := 34.0
 const TABLE_HEIGHT := 240.0
 ## How many of the floor's dead to show standing at the back of the room.
 const MAX_RESIDENTS := 6
+## The gutter the resident ghosts stand in. The right one: the left of the
+## room belongs to the hero panel and the fate panel, and the residents were
+## being drawn straight over them.
+const RESIDENT_MARGIN := 24.0
+const RESIDENT_WIDTH := 230.0
 
 var game: GameRoot
 var run: RunState
@@ -51,6 +56,7 @@ var _shake_tween: Tween
 var _fate: FatePanel
 var _fate_rate: float = -1.0
 var _residents: Array[GhostMark] = []
+var _watching: Label
 var _banner: TurnBanner
 var _last_turn: int = -1
 var _drawn_this_refresh: bool = false
@@ -99,6 +105,13 @@ func _build() -> void:
 	# measured from the taller of the two rather than assumed.
 	_fate.position = Vector2(16.0, -HeroPanel.PANEL_SIZE.y - FatePanel.PANEL_SIZE.y - 46.0)
 	add_child(_fate)
+
+	# Says what the figures at the back of the room are, once. Unlabelled
+	# they read as a stray icon rather than as your dead standing watch.
+	_watching = UiTheme.small("", Palette.GHOST_DIM)
+	_watching.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_watching.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	add_child(_watching)
 
 	_prompt = UiTheme.body("", Palette.SOUL)
 	_prompt.set_anchors_preset(Control.PRESET_CENTER)
@@ -242,7 +255,9 @@ func _refresh_residents() -> void:
 	while _residents.size() < here.size() and _residents.size() < MAX_RESIDENTS:
 		var mark := GhostMark.new()
 		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		mark.modulate.a = 0.5
+		mark.modulate.a = 0.62
+		# Large enough to read as somebody standing there.
+		mark.custom_minimum_size = GhostMark.BASE_SIZE * 1.6
 		add_child(mark)
 		move_child(mark, 0)
 		_residents.append(mark)
@@ -251,27 +266,44 @@ func _refresh_residents() -> void:
 		_residents[i].visible = used
 		if used:
 			_residents[i].bind(here[i])
+	_watching.text = game.text("ui.fight.watching").replace("{count}", str(here.size())) 		if here.size() > 0 else ""
 	_place_residents()
 
 
-## Along the back wall, behind everything, at the height the enemies stand.
+## Gathered at the left of the back wall, with the line that counts them
+## directly beneath.
+##
+## They used to be spread about the centre of the room, which put a single
+## ghost at the exact midpoint of the enemy line: an unlabelled sprite in
+## negative space, reading as a stray marker rather than as somebody
+## standing there. A cluster with a caption under it has an obvious owner.
 func _place_residents() -> void:
 	var shown := 0
 	for mark in _residents:
 		if mark.visible:
 			shown += 1
+	_watching.visible = shown > 0
 	if shown == 0 or size.x <= 0.0:
 		return
-	var floor_y := ENEMY_TOP + EnemyView.VIEW_SIZE.y - 44.0
-	var span := minf(size.x - 240.0, float(shown) * 54.0)
-	var start := size.x * 0.5 - span * 0.5
+	var big := GhostMark.BASE_SIZE * 1.6
+	var top := ENEMY_TOP + 18.0
+	# Right-aligned as a group, so the cluster stays put as its size changes.
+	var left := size.x - RESIDENT_MARGIN - big.x - float(shown - 1) * 30.0
 	var i := 0
 	for mark in _residents:
 		if not mark.visible:
 			continue
-		mark.size = GhostMark.BASE_SIZE
-		mark.position = Vector2(start + float(i) * 54.0, floor_y - GhostMark.BASE_SIZE.y - 6.0)
+		# Overlapping, and each one a little further back than the last, so
+		# they read as a group standing in the dark rather than a row of
+		# identical icons.
+		var back := float(i) * 0.5
+		mark.size = big
+		mark.position = Vector2(left + float(i) * 30.0, top + back * 7.0)
+		mark.modulate.a = 0.62 - float(i) * 0.05
 		i += 1
+	_watching.size = Vector2(RESIDENT_WIDTH, 16.0)
+	_watching.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_watching.position = Vector2(size.x - RESIDENT_MARGIN - RESIDENT_WIDTH, top + big.y + 8.0)
 
 
 ## A new turn number means the player got their hand back. Announcing it is

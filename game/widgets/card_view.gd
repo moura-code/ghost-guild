@@ -47,6 +47,35 @@ func _init() -> void:
 	_build()
 
 
+## The face: lit at the top, falling into shadow at the bottom, with a
+## bright lip under the top border and a dark one at the foot.
+##
+## A flat fill and a hairline border made cards the flattest objects in the
+## fight -- an icon on a colour swatch rather than a thing you could pick
+## up. This draws after the panel's stylebox and before the children, so it
+## sits on the face without touching the art or the text.
+func _draw() -> void:
+	if size.x <= 0.0 or size.y <= 0.0:
+		return
+	var steps := 14
+	for i in steps:
+		var t := float(i) / float(steps - 1)
+		# Bright at the top, transparent through the middle, dark at the foot.
+		var lift := maxf(0.0, 1.0 - t * 2.6) * 0.13
+		var sink := maxf(0.0, t * 2.2 - 1.2) * 0.20
+		var band := Rect2(Vector2(2.0, 3.0 + (size.y - 6.0) * t),
+			Vector2(size.x - 4.0, (size.y - 6.0) / float(steps) + 1.0))
+		if lift > 0.0:
+			draw_rect(band, Color(1.0, 0.97, 0.90, lift))
+		if sink > 0.0:
+			draw_rect(band, Color(0.0, 0.0, 0.02, sink))
+	# The bevel: a lit inner lip below the top border, a shadow at the foot.
+	draw_rect(Rect2(Vector2(2.0, 3.0), Vector2(size.x - 4.0, 1.0)),
+		Color(1.0, 0.96, 0.88, 0.22))
+	draw_rect(Rect2(Vector2(2.0, size.y - 3.0), Vector2(size.x - 4.0, 1.0)),
+		Color(0.0, 0.0, 0.0, 0.35))
+
+
 func _build() -> void:
 	# The card carries its own tighter box: the shared panel margin is sized
 	# for screens, and on something this small it eats the art slot.

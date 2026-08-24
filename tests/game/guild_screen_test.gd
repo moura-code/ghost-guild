@@ -67,7 +67,10 @@ func test_pressing_buy_spends_soul_and_raises_the_level() -> void:
 	await await_idle_frame()
 	assert_int(g.campaign.upgrades.level("vigor")).is_equal(1)
 	assert_float(g.campaign.soul).is_equal_approx(980.0, 0.001)
-	assert_str((s.rows["vigor"] as UpgradeRow)._pips.text).is_equal("1/3")
+	# Levels are pips now, not text: a filled row says "nearly maxed" at a
+	# glance where "1/3" has to be read.
+	assert_int((s.rows["vigor"] as UpgradeRow)._level).is_equal(1)
+	assert_int((s.rows["vigor"] as UpgradeRow)._max_level).is_equal(3)
 
 
 func test_the_next_level_costs_more() -> void:
@@ -90,7 +93,8 @@ func test_a_maxed_upgrade_says_so_and_cannot_be_bought() -> void:
 	var row: UpgradeRow = s.rows["resolve"]
 	assert_str(row._button.text).is_equal(g.text("ui.maxed"))
 	assert_bool(row._button.disabled).is_true()
-	assert_str(row._pips.text).is_equal("1/1")
+	assert_int(row._level).is_equal(1)
+	assert_int(row._max_level).is_equal(1)
 
 
 func test_upgrades_are_grouped_hero_then_ghosts() -> void:

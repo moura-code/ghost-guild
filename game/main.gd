@@ -110,10 +110,12 @@ func _build() -> void:
 	_epitaph.dismissed.connect(_on_epitaph_dismissed)
 	column.add_child(_epitaph)
 
+	# On top of everything, not in the column: as a sibling of the screens it
+	# took its own share of the height and squashed whatever was above it.
 	_offline = OfflineSummary.new()
 	_offline.visible = false
 	_offline.dismissed.connect(_on_offline_dismissed)
-	column.add_child(_offline)
+	add_child(_offline)
 
 
 ## Each screen goes in its own ScrollContainer so a long Guild or a crowded
@@ -138,6 +140,11 @@ func _make_screen(id: String) -> Control:
 			hero.bind(game)
 			inner = hero
 	inner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Vertical too, so a screen shorter than the window centres in it. A
+	# ScrollContainer otherwise sizes its child to the content's minimum
+	# height and leaves the rest of the frame empty below it, which is what
+	# put every panel screen in the top third.
+	inner.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var scroll := ScrollContainer.new()
 	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED

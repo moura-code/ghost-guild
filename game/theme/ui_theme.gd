@@ -112,6 +112,7 @@ static func lit_box(bg: Color, accent: Color) -> StyleBoxFlat:
 ## A card. Tighter margins than a screen panel, a heavier lit edge, and a
 ## deeper shadow -- a card should read as a physical object lying on top of
 ## everything else.
+## The card's frame. CardView paints the lit-to-shadow face over it.
 static func card_box(bg: Color, border: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = bg

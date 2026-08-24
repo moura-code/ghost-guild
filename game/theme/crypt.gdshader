@@ -31,19 +31,20 @@ float noise(vec2 p) {
 	           mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
 }
 
-// One arch: a rounded opening centred at cx, of half-width w and height h.
-// Returns how far inside it a point is, 0 outside.
-float arch(vec2 p, float cx, float w, float h) {
+// One arch: an opening of half-width w running from `top` down to `bottom`,
+// with a semicircular crown. 1 inside, 0 outside.
+//
+// The crown has to be at the TOP. The first version put the curve at the
+// bottom of the shape, which made every arch a rounded slab hanging off the
+// ceiling -- two of them either side of centre read as one big dark mass
+// behind the fight, which is the blob problem all over again.
+float arch(vec2 p, float cx, float w, float top, float bottom) {
 	float dx = abs(p.x - cx);
-	if (dx > w || p.y > h) return 0.0;
-	// The curve of the top: a semicircle springing from 60% of the height.
-	float spring = h * 0.55;
-	if (p.y < spring) {
-		return 1.0;
-	}
-	float t = (p.y - spring) / max(0.0001, h - spring);
-	float half_at = w * sqrt(max(0.0, 1.0 - t * t));
-	return dx < half_at ? 1.0 : 0.0;
+	if (dx > w || p.y < top || p.y > bottom) return 0.0;
+	float spring = top + w;
+	if (p.y > spring) return 1.0;            // straight jambs below the crown
+	float t = (spring - p.y) / max(0.0001, w);
+	return dx < w * sqrt(max(0.0, 1.0 - t * t)) ? 1.0 : 0.0;
 }
 
 void fragment() {
@@ -53,28 +54,29 @@ void fragment() {
 	// Deeper floors are darker and lean toward the biome's colour.
 	col = mix(col, col * 0.42 + accent.rgb * 0.03, depth);
 
-	// Three ranks of arches receding toward the centre. Each is darker than
-	// the wall it is cut into, which is what makes it read as an opening.
+	// Two mirrored ranks of arches, held out at the sides. Nothing large and
+	// dark may sit behind the middle of the frame: that is where the fight
+	// happens, and a shadow there reads as a rendering fault rather than as
+	// a room.
 	float centred = (uv.x - 0.5) * aspect + 0.5;
-	for (int rank = 0; rank < 3; rank++) {
+	for (int rank = 0; rank < 2; rank++) {
 		float f = float(rank);
-		float scale = 1.0 - f * 0.18;
-		float w = 0.135 * scale;
-		float h = 0.68 * scale;
-		// Further ranks are darker, but never so dark that the opening
-		// becomes a black hole -- a big unlit shape in the middle of the
-		// frame is the void problem again, wearing an arch.
-		float dark = 0.52 - f * 0.07;
-		// A pair either side of centre, plus one behind it.
-		float inside = 0.0;
-		inside += arch(vec2(centred, uv.y), 0.5 - (0.30 - f * 0.075), w, h);
-		inside += arch(vec2(centred, uv.y), 0.5 + (0.30 - f * 0.075), w, h);
-		// A smaller opening straight ahead, well back, to give the room a
-		// vanishing point without punching a hole in the middle of it.
-		if (rank == 2) {
-			inside += arch(vec2(centred, uv.y), 0.5, w * 0.72, h * 0.82);
+		float w = 0.112 - f * 0.020;
+		float top = 0.13 + f * 0.055;
+		float bottom = 0.74 - f * 0.045;
+		// Never much darker than the wall. An opening reads as an opening
+		// because of its shape and its lit edge, not because it is black.
+		float dark = 0.74 - f * 0.06;
+		float off = 0.56 - f * 0.175;
+		for (int side = 0; side < 2; side++) {
+			float cx = side == 0 ? 0.5 - off : 0.5 + off;
+			float inside = arch(vec2(centred, uv.y), cx, w, top, bottom);
+			col = mix(col, col * dark, inside);
+			// The lit stone edge around the opening. This is what makes it
+			// architecture instead of a stain.
+			float outer = arch(vec2(centred, uv.y), cx, w + 0.013, top - 0.013, bottom);
+			col += accent.rgb * clamp(outer - inside, 0.0, 1.0) * (0.075 - f * 0.02);
 		}
-		col = mix(col, col * dark, clamp(inside, 0.0, 1.0));
 	}
 
 	// Pillars down both edges, so the frame is bounded by architecture

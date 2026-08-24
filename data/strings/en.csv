@@ -131,6 +131,8 @@ ui.maxed,Maxed
 ui.group.hero,Hero
 ui.group.ghosts,Ghosts
 ui.seance,Séance
+ui.seance.rites,Rites
+ui.seance.dead,Your Dead
 ui.echo,Echo
 ui.call,Call
 ui.tend,Tend
@@ -236,3 +238,4 @@ ui.fight.enemy_turn,They move
 ui.fight.becoming,If you fall here
 ui.fight.yield_here,this floor pays
 ui.fight.blocked,Blocked
+ui.fight.watching,{count} of your dead watch this floor

@@ -59,10 +59,14 @@ func _has_group(group: String) -> bool:
 func _add_group(group: String) -> void:
 	if _groups.has(group):
 		return
-	add_child(ScreenLayout.centre(UiTheme.body(game.text("ui.group.%s" % group), Palette.BONE_DIM)))
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 4)
-	add_child(ScreenLayout.centred(box, ScreenLayout.WIDE_COLUMN))
+	box.add_theme_constant_override("separation", 6)
+	var section := VBoxContainer.new()
+	section.add_theme_constant_override("separation", 11)
+	section.add_child(ScreenLayout.section(game.text("ui.group.%s" % group),
+		Palette.SOUL if group == "hero" else Palette.GHOST))
+	section.add_child(box)
+	add_child(ScreenLayout.plate(section, ScreenLayout.WIDE_COLUMN))
 	_groups[group] = box
 	_group_order.append(group)
 
