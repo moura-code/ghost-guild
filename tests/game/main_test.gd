@@ -124,8 +124,8 @@ func test_buying_in_the_guild_updates_the_ladder_behind_it() -> void:
 	var m := _main(g)
 	await await_idle_frame()
 	g.campaign.soul = 1000.0
-	var ladder: LadderScreen = m._screens["ladder"]
-	var before := ladder._rows[0].output_per_hour
+	var bal := g.campaign.balance()
+	var before := g.campaign.ladder.floor_output(1, bal, g.campaign.modifiers())
 	# "ghost_strength" (not the brief's "ghost_spawn"): global_spawn only raises
 	# floor 1's saturation ceiling (64.8 -> 71.28/h), and the lone Founder's 40
 	# strength sits under both, so output stays 52/h either way -- see the
@@ -133,7 +133,11 @@ func test_buying_in_the_guild_updates_the_ladder_behind_it() -> void:
 	# which is what this test means to exercise.
 	g.buy_upgrade("ghost_strength")
 	await await_idle_frame()
-	assert_float(ladder._rows[0].output_per_hour).is_not_equal(before)
+	var after := g.campaign.ladder.floor_output(1, bal, g.campaign.modifiers())
+	assert_float(after).is_not_equal(before)
+	# And the shaft behind the Guild has been rebound with it.
+	var ladder: LadderScreen = m._screens["ladder"]
+	assert_int(ladder._tower.floors).is_equal(g.campaign.biome().last_floor)
 
 
 func test_starting_a_run_replaces_the_tabs_with_the_run_view() -> void:

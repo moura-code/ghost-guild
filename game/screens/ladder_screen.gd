@@ -8,6 +8,7 @@ const HEADER_SEPARATION := 40
 const ROW_SEPARATION := 1
 ## The tower is a tower: constrained and centred, not a full-width table.
 const TOWER_WIDTH := 660.0
+const TOWER_HEIGHT := 400.0
 
 var game: GameRoot
 
@@ -22,8 +23,7 @@ var _cheapest_cost: float = -1.0
 var _last_shown_soul: int = -1
 var _shown_soul: float = 0.0
 var _soul_tween: Tween
-var _tower: VBoxContainer
-var _rows: Array[FloorRow] = []
+var _tower: TowerView
 
 
 func _init() -> void:
@@ -91,14 +91,17 @@ func _build() -> void:
 	descent_row.add_child(_descend)
 	add_child(descent_row)
 
-	# Centred at a fixed width so ten floors read as a shaft going down
-	# rather than as ten rows of a table.
+	# One drawn shaft rather than a stack of rows. Centred, and given the
+	# vertical space, because it is the subject of the screen.
 	var tower_wrap := HBoxContainer.new()
 	tower_wrap.alignment = BoxContainer.ALIGNMENT_CENTER
-	_tower = VBoxContainer.new()
-	_tower.add_theme_constant_override("separation", ROW_SEPARATION)
-	_tower.custom_minimum_size = Vector2(TOWER_WIDTH, 0.0)
-	_tower.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	tower_wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_tower = TowerView.new()
+	# A real minimum height: the shaft divides its own height into chambers,
+	# so a zero-height tower piles all ten floor numbers on one pixel.
+	_tower.custom_minimum_size = Vector2(TOWER_WIDTH, TOWER_HEIGHT)
+	_tower.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_tower.floor_clicked.connect(_on_floor_clicked)
 	tower_wrap.add_child(_tower)
 	add_child(tower_wrap)
 
@@ -119,22 +122,12 @@ static func _stat_block(value: Label, caption: String, tip: String, icon: String
 	return box
 
 
-## Grows or shrinks the tower to the biome's height, then rebinds every row.
-## Called on ladder_changed, which every Game mutator emits.
+## Rebinds the whole shaft. Called on ladder_changed, which every Game
+## mutator emits.
 func refresh() -> void:
 	if game == null or game.campaign == null:
 		return
-	var last := game.campaign.biome().last_floor
-	while _rows.size() < last:
-		var row := FloorRow.new()
-		_tower.add_child(row)
-		_rows.append(row)
-	while _rows.size() > last:
-		var extra: FloorRow = _rows.pop_back()
-		_tower.remove_child(extra)
-		extra.queue_free()
-	for i in range(_rows.size()):
-		_rows[i].bind(game.campaign, i + 1)
+	_tower.bind(game.campaign)
 	_reach.text = str(CampaignEngine.reach(game.campaign))
 	_refresh_premise()
 	_cheapest_cost = _cheapest_upgrade_cost()
@@ -161,6 +154,16 @@ func _refresh_premise() -> void:
 		_premise.text = game.text("ui.premise.empty")
 		return
 	_premise.text = game.text("ui.premise") 		.replace("{name}", deepest.name) 		.replace("{floor}", str(deepest.floor))
+
+
+## Clicking a floor you can reach sets it as the entry for the next descent
+## -- the tower is the floor picker, which is more intuitive than a spinner
+## that happens to sit above it.
+func _on_floor_clicked(floor: int) -> void:
+	if game == null or game.campaign == null:
+		return
+	if floor <= CampaignEngine.reach(game.campaign) and game.campaign.run == null:
+		_entry.value = float(floor)
 
 
 ## The 10 Hz path: numbers only, never a rebind. The tower is static

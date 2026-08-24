@@ -32,18 +32,25 @@ func test_the_tower_has_one_row_per_floor_of_the_biome() -> void:
 	var g := _game()
 	var s := _screen(g)
 	await await_idle_frame()
-	assert_int(s._rows.size()).is_equal(g.campaign.biome().last_floor)
-	assert_int(s._rows[0].floor_number).is_equal(1)
-	assert_int(s._rows[9].floor_number).is_equal(10)
+	assert_int(s._tower.floors).is_equal(g.campaign.biome().last_floor)
+	# The shaft narrows with depth: that is what makes it read as going
+	# away from the viewer rather than down a page.
+	assert_float(s._tower.chamber_rect(10).size.x).is_less(s._tower.chamber_rect(1).size.x)
+	# And darkens.
+	assert_float(s._tower.light_at(10)).is_less(s._tower.light_at(1))
 
 
 func test_the_founder_stands_on_the_top_row() -> void:
 	var g := _game()
 	var s := _screen(g)
 	await await_idle_frame()
-	assert_float(s._rows[0].output_per_hour).is_greater(0.0)
-	assert_bool(s._rows[0].is_waypoint).is_true()
-	assert_float(s._rows[1].output_per_hour).is_equal(0.0)
+	var bal := g.campaign.balance()
+	var mods := g.campaign.modifiers()
+	assert_float(g.campaign.ladder.floor_output(1, bal, mods)).is_greater(0.0)
+	assert_float(g.campaign.ladder.floor_output(2, bal, mods)).is_equal(0.0)
+	# One ghost mark stands on floor 1 and nothing stands below it.
+	assert_int((s._tower._marks[1] as Array).size()).is_equal(1)
+	assert_int((s._tower._marks[2] as Array).size()).is_equal(0)
 
 
 func test_the_header_shows_soul_rate_and_reach() -> void:
@@ -59,14 +66,14 @@ func test_soul_ticking_updates_the_header_without_rebinding_the_tower() -> void:
 	var g := _game()
 	var s := _screen(g)
 	await await_idle_frame()
-	var before := s._rows[0].saturation
+	var before: Rect2 = s._tower.chamber_rect(1)
 	g.clock = func() -> int: return 1000 + 3600
 	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
 	# The counter runs up to its value rather than snapping, so give the
 	# count time to land before reading it.
 	await get_tree().create_timer(0.8).timeout
 	assert_str(s._soul.text).is_equal("52")
-	assert_float(s._rows[0].saturation).is_equal(before)
+	assert_that(s._tower.chamber_rect(1)).is_equal(before)
 
 
 func test_placing_an_echo_refreshes_the_tower() -> void:
@@ -77,7 +84,7 @@ func test_placing_an_echo_refreshes_the_tower() -> void:
 	var r := g.create_echo(g.campaign.ladder.ghosts[0].id, 1)
 	assert_bool(r["ok"]).is_true()
 	await await_idle_frame()
-	assert_int(s._rows[0]._marks.get_child_count()).is_equal(2)
+	assert_int((s._tower._marks[1] as Array).size()).is_equal(2)
 
 
 func test_binding_twice_does_not_connect_the_signals_twice() -> void:
@@ -86,7 +93,7 @@ func test_binding_twice_does_not_connect_the_signals_twice() -> void:
 	s.bind(g)
 	await await_idle_frame()
 	assert_int(g.ladder_changed.get_connections().size()).is_equal(1)
-	assert_int(s._rows.size()).is_equal(g.campaign.biome().last_floor)
+	assert_int(s._tower.floors).is_equal(g.campaign.biome().last_floor)
 
 
 func test_the_premise_line_says_plainly_what_a_ghost_is() -> void:
@@ -248,3 +255,35 @@ func test_the_counter_runs_up_rather_than_snapping() -> void:
 	assert_float(s._shown_soul).is_less(52.0)
 	await get_tree().create_timer(0.8).timeout
 	assert_float(s._shown_soul).is_equal_approx(52.0, 0.01)
+
+
+func test_clicking_a_reachable_floor_sets_the_entry() -> void:
+	var g := _game()
+	g.campaign.record_depth = 4
+	var s := _screen(g)
+	await await_idle_frame()
+	s._tower.floor_clicked.emit(3)
+	assert_float(s._entry.value).is_equal(3.0)
+
+
+func test_clicking_below_your_reach_does_nothing() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	var before := s._entry.value
+	s._tower.floor_clicked.emit(9)
+	assert_float(s._entry.value).is_equal(before)
+
+
+func test_the_shaft_knows_which_floor_a_point_is_in() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	# Size it explicitly: the shaft divides its own height into chambers, so
+	# a zero-height tower cannot answer this question.
+	var h := s._tower.chamber_height()
+	assert_float(h).is_greater(0.0)
+	assert_int(s._tower._floor_at(Vector2(100.0, h * 0.5))).is_equal(1)
+	assert_int(s._tower._floor_at(Vector2(100.0, h * 4.5))).is_equal(5)
+	assert_int(s._tower._floor_at(Vector2(100.0, h * 9.5))).is_equal(10)
+	assert_int(s._tower._floor_at(Vector2(100.0, -20.0))).is_equal(0)
