@@ -6,13 +6,12 @@ extends Control
 ## the tree; the shipped scene picks up the autoload instead.
 
 const TABS := [
-	{"id": "ladder", "key": "ui.ladder"},
-	{"id": "guild", "key": "ui.guild"},
-	{"id": "seance", "key": "ui.seance"},
-	{"id": "hero", "key": "ui.hero"},
+	{"id": "ladder", "key": "ui.ladder", "icon": "ghost"},
+	{"id": "guild", "key": "ui.guild", "icon": "guild"},
+	{"id": "seance", "key": "ui.seance", "icon": "seance"},
+	{"id": "hero", "key": "ui.hero", "icon": "hero"},
 ]
 const MARGIN := 28
-const TAB_SEPARATION := 6
 
 var game: GameRoot
 var current_tab: String = ""
@@ -22,9 +21,8 @@ var manages_quit: bool = false
 var quit_action: Callable = func() -> void: get_tree().quit()
 
 var _screens: Dictionary = {}
-var _buttons: Dictionary = {}
 var _body: Control
-var _tab_bar: HBoxContainer
+var _tab_bar: NavBar
 var _offline: OfflineSummary
 var _run_view: RunView
 var _epitaph: EpitaphScreen
@@ -77,8 +75,8 @@ func _build() -> void:
 	column.add_theme_constant_override("separation", 12)
 	margins.add_child(column)
 
-	_tab_bar = HBoxContainer.new()
-	_tab_bar.add_theme_constant_override("separation", TAB_SEPARATION)
+	_tab_bar = NavBar.new()
+	_tab_bar.tab_pressed.connect(show_tab)
 	column.add_child(_tab_bar)
 
 	_body = Control.new()
@@ -89,15 +87,13 @@ func _build() -> void:
 	# Above everything, including the epitaph: it covers whatever is swapping.
 	_transition = Transition.new()
 
+	var nav: Array = []
 	for tab in TABS:
 		var id := String(tab["id"])
-		var button := Button.new()
-		button.text = game.text(String(tab["key"]))
-		button.toggle_mode = true
-		button.pressed.connect(show_tab.bind(id))
-		_tab_bar.add_child(button)
-		_buttons[id] = button
+		nav.append({"id": id, "label": game.text(String(tab["key"])), "icon": String(tab["icon"])})
 		_screens[id] = _make_screen(id)
+	_tab_bar.accent = Palette.biome_accent(game.campaign.biome_id)
+	_tab_bar.build_tabs(nav)
 
 	# A live run takes over the whole window: the tabs are the guild, and
 	# you are not in the guild while you are underground.
@@ -114,7 +110,6 @@ func _build() -> void:
 	_epitaph.dismissed.connect(_on_epitaph_dismissed)
 	column.add_child(_epitaph)
 
-	# Above everything, including the epitaph: it covers whatever is swapping.
 	_offline = OfflineSummary.new()
 	_offline.visible = false
 	_offline.dismissed.connect(_on_offline_dismissed)
@@ -174,7 +169,7 @@ func _apply_tab(id: String) -> void:
 		screen.visible = on
 		if wrapper != null:
 			wrapper.visible = on
-		(_buttons[other] as Button).button_pressed = on
+	_tab_bar.select(id)
 
 
 ## The run view and the tab shell are mutually exclusive.
@@ -191,8 +186,6 @@ func _refresh_run_visibility() -> void:
 		_run_view.refresh()
 
 
-## A run that left a ghost earns the epitaph beat before the guild comes
-## back. A retreat does not: nobody was left behind.
 ## The ground darkens as the hero descends and lifts again in the guild.
 func _refresh_atmosphere(in_run: bool) -> void:
 	if _atmosphere == null:
@@ -204,6 +197,8 @@ func _refresh_atmosphere(in_run: bool) -> void:
 		_atmosphere.set_floor(1, game.campaign.biome().last_floor)
 
 
+## A run that left a ghost earns the epitaph beat before the guild comes
+## back. A retreat does not: nobody was left behind.
 func _on_run_finished(result: Dictionary) -> void:
 	if EpitaphScreen.should_show(result):
 		_epitaph.bind(game, result)

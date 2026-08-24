@@ -136,6 +136,17 @@ static func row_box(bg: Color) -> StyleBoxFlat:
 	return sb
 
 
+## A bar across the window: flat top, no corner rounding, no shadow. Used
+## for the navigation, which should read as part of the frame rather than
+## as a panel floating on it.
+static func bar_box() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Palette.STONE
+	sb.set_corner_radius_all(0)
+	sb.set_content_margin_all(4)
+	return sb
+
+
 ## A small round chip: cost bubbles, counters, pips.
 static func pip_box(bg: Color, border: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()

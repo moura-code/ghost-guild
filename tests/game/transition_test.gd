@@ -63,7 +63,7 @@ func test_switching_tabs_actually_plays_a_wipe() -> void:
 	var m := _main(g)
 	await await_idle_frame()
 	assert_bool(m._transition.is_inside_tree()).is_true()
-	(m._buttons["guild"] as Button).emit_signal("pressed")
+	m._tab_bar.tab_pressed.emit("guild")
 	assert_bool(m._transition.is_playing()).is_true()
 
 
@@ -71,7 +71,7 @@ func test_the_screen_actually_swaps_once_the_wipe_reaches_its_midpoint() -> void
 	var g := _game()
 	var m := _main(g)
 	await await_idle_frame()
-	(m._buttons["seance"] as Button).emit_signal("pressed")
+	m._tab_bar.tab_pressed.emit("seance")
 	await get_tree().create_timer(Transition.DEFAULT_SECONDS + 0.15).timeout
 	assert_str(m.current_tab).is_equal("seance")
 	assert_bool((m._screens["seance"] as Control).visible).is_true()
@@ -82,6 +82,6 @@ func test_reselecting_the_open_tab_does_not_wipe() -> void:
 	var g := _game()
 	var m := _main(g)
 	await await_idle_frame()
-	(m._buttons["ladder"] as Button).emit_signal("pressed")
+	m._tab_bar.tab_pressed.emit("ladder")
 	assert_bool(m._transition.is_playing()).is_false()
 	assert_bool((m._screens["ladder"] as Control).visible).is_true()

@@ -5,7 +5,7 @@ extends Control
 ## floor pays per hour. A widget -- it takes data through bind() and never
 ## touches Game.
 
-const ROW_HEIGHT := 45.0
+const ROW_HEIGHT := 41.0
 const BAND_WIDTH := 5.0
 const NUMBER_WIDTH := 34.0
 const RIGHT_WIDTH := 116.0
@@ -39,7 +39,7 @@ func _build() -> void:
 	_number = UiTheme.body("1", Palette.BONE_DIM)
 	_number.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_number.custom_minimum_size = Vector2(NUMBER_WIDTH, 0.0)
-	_number.position = Vector2(BAND_WIDTH + GAP, 12.0)
+	_number.position = Vector2(BAND_WIDTH + GAP, 10.0)
 	add_child(_number)
 
 	_marks = HBoxContainer.new()
@@ -115,8 +115,8 @@ func _layout() -> void:
 		return
 	# Inset by the same margin the fill uses, or the numbers sit on the edge.
 	var right_x := size.x - RIGHT_WIDTH - GAP * 2.0
-	_output.position = Vector2(right_x, 7.0)
-	_farmed.position = Vector2(right_x, 26.0)
+	_output.position = Vector2(right_x, 5.0)
+	_farmed.position = Vector2(right_x, 23.0)
 	_overflow.position = Vector2(_marks.position.x + _marks.size.x + GAP, 11.0)
 
 

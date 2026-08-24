@@ -42,22 +42,22 @@ func test_every_tab_has_a_button_and_a_screen() -> void:
 	await await_idle_frame()
 	for id in ["ladder", "guild", "seance", "hero"]:
 		assert_bool(m._screens.has(id)).is_true()
-		assert_bool(m._buttons.has(id)).is_true()
+		assert_bool(m._tab_bar._items.has(id)).is_true()
 
 
 func test_pressing_a_tab_switches_the_visible_screen() -> void:
 	var g := _game()
 	var m := _main(g)
 	await await_idle_frame()
-	(m._buttons["guild"] as Button).emit_signal("pressed")
+	m._tab_bar.tab_pressed.emit("guild")
 	# The swap happens behind a wipe, so wait for the wipe rather than
 	# hoping one idle frame covers it -- it does not, under load.
 	await get_tree().create_timer(Transition.DEFAULT_SECONDS + 0.2).timeout
 	assert_str(m.current_tab).is_equal("guild")
 	assert_bool((m._screens["guild"] as Control).visible).is_true()
 	assert_bool((m._screens["ladder"] as Control).visible).is_false()
-	assert_bool((m._buttons["guild"] as Button).button_pressed).is_true()
-	assert_bool((m._buttons["ladder"] as Button).button_pressed).is_false()
+	# The nav lights the active destination and slides its marker there.
+	assert_str(m._tab_bar.current).is_equal("guild")
 
 
 func test_a_fresh_game_shows_no_offline_summary() -> void:
