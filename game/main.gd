@@ -17,6 +17,9 @@ const TAB_SEPARATION := 6
 var game: GameRoot
 var current_tab: String = ""
 var manages_quit: bool = false
+## Injectable so a test can exercise the close-request path without killing
+## the test runner. Production behaviour is unchanged.
+var quit_action: Callable = func() -> void: get_tree().quit()
 
 var _screens: Dictionary = {}
 var _buttons: Dictionary = {}
@@ -151,4 +154,4 @@ func _notification(what: int) -> void:
 		return
 	if game != null and game.is_booted:
 		game.save()
-	get_tree().quit()
+	quit_action.call()

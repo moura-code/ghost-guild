@@ -54,6 +54,8 @@ func test_pressing_a_tab_switches_the_visible_screen() -> void:
 	assert_str(m.current_tab).is_equal("guild")
 	assert_bool((m._screens["guild"] as Control).visible).is_true()
 	assert_bool((m._screens["ladder"] as Control).visible).is_false()
+	assert_bool((m._buttons["guild"] as Button).button_pressed).is_true()
+	assert_bool((m._buttons["ladder"] as Button).button_pressed).is_false()
 
 
 func test_a_fresh_game_shows_no_offline_summary() -> void:
@@ -97,6 +99,22 @@ func test_it_does_not_seize_quit_handling_unless_it_owns_the_autoload() -> void:
 	var m := _main(g)
 	await await_idle_frame()
 	assert_bool(m.manages_quit).is_false()
+
+
+func test_closing_the_window_saves_then_quits_when_it_owns_the_autoload() -> void:
+	var g := _game()
+	var m := _main(g)
+	await await_idle_frame()
+	# The test's GameRoot is pre-bound, so _ready never sets manages_quit --
+	# set it by hand to exercise the owns-the-autoload path.
+	m.manages_quit = true
+	var quit_calls := [0]
+	m.quit_action = func() -> void: quit_calls[0] += 1
+	g.campaign.soul = 4242.0
+	m.notification(NOTIFICATION_WM_CLOSE_REQUEST)
+	assert_int(quit_calls[0]).is_equal(1)
+	var reloaded := SaveGame.load_campaign(g.content, TMP)
+	assert_float(reloaded.soul).is_equal(4242.0)
 
 
 func test_buying_in_the_guild_updates_the_ladder_behind_it() -> void:
