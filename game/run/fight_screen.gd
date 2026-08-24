@@ -1,7 +1,13 @@
 class_name FightScreen
-extends VBoxContainer
-## The fight (spec §9): enemies across the top with their telegraphed
-## intents, the hero's vitals in the middle, the hand along the bottom.
+extends Control
+## The fight (spec §9): "enemies across the top (icon, HP bar, intent), hero
+## bottom-left (HP, Block, Energy, stats), hand along the bottom, piles in
+## the corners."
+##
+## Anchored regions rather than a vertical stack, because the stack read as
+## a settings dialog. The hand is fanned -- cards arc and tilt around a
+## centre point and lift out of the fan on hover -- which is the single
+## clearest signal that this is a card game and not a form.
 ##
 ## Targeting is two clicks: pick a card, then pick an enemy. Cards that
 ## target the hero resolve on the first click. Playability comes from
@@ -10,12 +16,18 @@ extends VBoxContainer
 
 signal fight_ended()
 
+## How far each card tilts and drops per step out from the middle of the fan.
+const FAN_ARC := 0.055
+const FAN_SPREAD := 0.72
+const FAN_LIFT := 26.0
+const HAND_BOTTOM := 24.0
+
 var game: GameRoot
 var run: RunState
 var selected_index: int = -1
 
 var _enemy_row: HBoxContainer
-var _hand_row: HBoxContainer
+var _hand: Control
 var _hero: HeroPanel
 var _prompt: Label
 var _end_turn: Button
@@ -27,7 +39,7 @@ var _shake_tween: Tween
 
 
 func _init() -> void:
-	add_theme_constant_override("separation", 10)
+	set_anchors_preset(Control.PRESET_FULL_RECT)
 
 
 func bind(g: GameRoot, p_run: RunState) -> void:
@@ -40,29 +52,52 @@ func bind(g: GameRoot, p_run: RunState) -> void:
 
 
 func _build() -> void:
+	# Enemies: centred across the top, where the player looks first.
 	_enemy_row = HBoxContainer.new()
-	_enemy_row.add_theme_constant_override("separation", 10)
+	_enemy_row.add_theme_constant_override("separation", 18)
+	_enemy_row.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_enemy_row.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_enemy_row.position = Vector2(0.0, 16.0)
 	add_child(_enemy_row)
 
+	# The hero, bottom-left, opposite what is trying to kill them.
 	_hero = HeroPanel.new()
+	_hero.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_hero.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_hero.position = Vector2(16.0, -HeroPanel.PANEL_SIZE.y - 16.0)
 	add_child(_hero)
 
 	_prompt = UiTheme.body("", Palette.SOUL)
+	_prompt.set_anchors_preset(Control.PRESET_CENTER)
+	_prompt.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_prompt)
 
-	_hand_row = HBoxContainer.new()
-	_hand_row.add_theme_constant_override("separation", 8)
-	_hand_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(_hand_row)
+	# The hand lays itself out: a container would space the cards evenly and
+	# flat, and the fan is the point.
+	_hand = Control.new()
+	_hand.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_hand.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_hand)
 
 	_end_turn = Button.new()
+	_end_turn.custom_minimum_size = Vector2(128.0, 40.0)
+	_end_turn.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_end_turn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_end_turn.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_end_turn.position = Vector2(-144.0, -56.0)
 	_end_turn.pressed.connect(_on_end_turn)
 	add_child(_end_turn)
 
-	# Overlay: it draws above the fight and never eats a click.
+	# Overlay: draws above the fight and never eats a click.
 	_animator = FightAnimator.new()
 	_animator.shake_requested.connect(_shake)
 	add_child(_animator)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and run != null and run.fight != null:
+		_fan(run.fight.hand.size())
 
 
 func refresh() -> void:
@@ -116,7 +151,7 @@ func _refresh_hand(fight: FightState) -> void:
 	while _card_views.size() < fight.hand.size():
 		var view := CardView.new()
 		view.pressed.connect(_on_card_pressed)
-		_hand_row.add_child(view)
+		_hand.add_child(view)
 		_card_views.append(view)
 	for i in _card_views.size():
 		var used := i < fight.hand.size()
@@ -124,6 +159,25 @@ func _refresh_hand(fight: FightState) -> void:
 		if used:
 			_card_views[i].bind(game.content, fight.hand[i], i, _playable.has(i))
 			_card_views[i].set_selected(i == selected_index)
+	_fan(fight.hand.size())
+
+
+## Arcs the hand around a centre point: each card tilts a little further
+## from vertical and sits a little lower the further it is from the middle,
+## which is what a hand of cards actually looks like.
+func _fan(count: int) -> void:
+	if count <= 0 or size.x <= 0.0:
+		return
+	var centre := size.x * 0.5
+	var card := CardView.CARD_SIZE
+	var step := minf(card.x * FAN_SPREAD, (size.x - 320.0) / maxf(1.0, float(count)))
+	var base_y := size.y - card.y - HAND_BOTTOM
+	for i in count:
+		var offset := float(i) - float(count - 1) * 0.5
+		var angle := offset * FAN_ARC
+		var lift := absf(offset) * absf(offset) * FAN_LIFT * 0.5
+		var at := Vector2(centre + offset * step - card.x * 0.5, base_y + lift)
+		_card_views[i].place(at, angle)
 
 
 func _refresh_prompt(fight: FightState) -> void:

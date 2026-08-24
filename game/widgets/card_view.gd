@@ -1,7 +1,12 @@
 class_name CardView
 extends PanelContainer
-## One card in the hand (spec §9): cost bubble, name, text, rarity edge.
-## Typographic — there is no card art and there never will be.
+## One card in the hand (spec §9): cost bubble, art slot, name, text, rarity
+## edge.
+##
+## The art slot holds the card-type icon today and is sized to the aspect a
+## real illustration would use, so the frame already shows an artist exactly
+## where art goes and how much room it has. Drop a texture in and the icon
+## steps aside.
 ##
 ## A widget: it renders what bind() gives it and reports the click. Headless
 ## tests call press() directly, because Godot does not deliver synthetic
@@ -9,8 +14,10 @@ extends PanelContainer
 
 signal pressed(hand_index: int)
 
-const CARD_SIZE := Vector2(132.0, 172.0)
-const HOVER_LIFT := 10.0
+const CARD_SIZE := Vector2(146.0, 208.0)
+const ART_SIZE := Vector2(122.0, 74.0)
+const HOVER_LIFT := 14.0
+const HOVER_SCALE := 1.06
 const FLY_SECONDS := 0.28
 
 var hand_index: int = -1
@@ -21,7 +28,11 @@ var _cost: Label
 var _name: Label
 var _text: Label
 var _type_icon: TextureRect
+var _art: PanelContainer
+var _art_image: TextureRect
 var _rest_y: float = 0.0
+var _rest_position: Vector2 = Vector2.ZERO
+var _hover_tween: Tween
 
 
 func _init() -> void:
@@ -47,6 +58,18 @@ func _build() -> void:
 	head.add_child(_type_icon)
 	box.add_child(head)
 
+	# The art slot. Empty by design until there is art -- it is the brief.
+	_art = PanelContainer.new()
+	_art.custom_minimum_size = ART_SIZE
+	_art.add_theme_stylebox_override("panel", UiTheme.fill_box(Palette.STONE))
+	_art_image = TextureRect.new()
+	_art_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_art_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_art_image.modulate = Palette.BONE_FAINT
+	_art_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_art.add_child(_art_image)
+	box.add_child(_art)
+
 	_name = UiTheme.body("")
 	_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_name)
@@ -62,9 +85,10 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 	playable = is_playable
 	# The container owns layout; remember where it put us so hover can
 	# return the card to exactly that spot.
-	_rest_y = position.y
 	rotation = 0.0
 	modulate.a = 1.0
+	scale = Vector2.ONE
+	z_index = 0
 	var def: CardDef = content.cards[card.def_id]
 	var cost := def.cost_for(card.upgraded)
 	_cost.text = content.text("ui.card.cost_x") if cost == CardDef.COST_X else str(cost)
@@ -73,6 +97,9 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 		_name.text += content.text("ui.upgraded")
 	_text.text = content.text(def.text_key)
 	_type_icon.texture = Icons.card_type(def.type)
+	# Real card art would load here; until then the type icon stands in it,
+	# at the size and aspect the illustration will occupy.
+	_art_image.texture = Icons.card_art(card.def_id, def.type)
 	_paint(def)
 
 
@@ -117,9 +144,16 @@ func set_selected(on: bool) -> void:
 func _on_hover(entered: bool) -> void:
 	if not is_inside_tree():
 		return
-	var lift := -HOVER_LIFT if entered and playable else 0.0
-	var tween := create_tween()
-	tween.tween_property(self, "position:y", _rest_y + lift, 0.08) 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	var raise := entered and playable
+	if _hover_tween != null and _hover_tween.is_valid():
+		_hover_tween.kill()
+	_hover_tween = create_tween()
+	_hover_tween.set_parallel(true)
+	_hover_tween.tween_property(self, "position:y", _rest_y - (HOVER_LIFT if raise else 0.0), 0.10) 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_hover_tween.tween_property(self, "scale",
+		Vector2.ONE * (HOVER_SCALE if raise else 1.0), 0.10) 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	# A raised card must draw over its neighbours, or the fan clips it.
+	z_index = 10 if raise else 0
 
 
 ## Arcs away toward the discard pile. Purely cosmetic: the engine has
@@ -132,6 +166,15 @@ func fly_out(to: Vector2) -> void:
 	tween.tween_property(self, "global_position", to, FLY_SECONDS) 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 	tween.tween_property(self, "rotation", 0.5, FLY_SECONDS)
 	tween.tween_property(self, "modulate:a", 0.0, FLY_SECONDS)
+
+
+## Where the fan put this card. Hover returns here, so the two cannot fight
+## over the same property.
+func place(at: Vector2, angle: float) -> void:
+	_rest_position = at
+	_rest_y = at.y
+	position = at
+	rotation = angle
 
 
 func press() -> void:

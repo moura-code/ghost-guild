@@ -44,6 +44,14 @@ static func card_type(type: String) -> Texture2D:
 	return get_icon("card", type)
 
 
+## What sits in a card's art slot. Real per-card art would live under
+## assets/icons/card_art/<id>; until it exists the type icon stands in, at
+## the size and aspect the illustration will occupy.
+static func card_art(def_id: String, type: String) -> Texture2D:
+	var art := get_icon("card_art", def_id)
+	return art if art != null else card_type(type)
+
+
 static func ui(ident: String) -> Texture2D:
 	return get_icon("ui", ident)
 
