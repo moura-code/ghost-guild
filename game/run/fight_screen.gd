@@ -180,6 +180,9 @@ func _on_enemy_pressed(enemy_index: int) -> void:
 
 func _play(hand_index: int, target: int) -> void:
 	selected_index = -1
+	# Fly the card before the refresh rebinds that slot to a different card.
+	if hand_index < _card_views.size():
+		_card_views[hand_index].fly_out(_discard_corner())
 	var events := game.run_action({"kind": "play", "hand_index": hand_index, "target": target})
 	_animate(events)
 	_after_action()
@@ -192,6 +195,11 @@ func _on_end_turn() -> void:
 	var events := game.run_action({"kind": "end_turn"})
 	_animate(events)
 	_after_action()
+
+
+## Bottom-right, where the discard count sits.
+func _discard_corner() -> Vector2:
+	return global_position + Vector2(size.x - 40.0, size.y - 24.0)
 
 
 ## Where a number should appear for each thing the events can name.
@@ -207,6 +215,24 @@ func _animate(events: Array) -> void:
 	if events.is_empty():
 		return
 	_animator.play(events, anchors())
+	_react(events)
+
+
+## The floating numbers say what happened; these make the thing it happened
+## to acknowledge it. Driven off the same event stream.
+func _react(events: Array) -> void:
+	for event in events:
+		if not event.has("index"):
+			continue
+		var index := int(event["index"])
+		if index < 0 or index >= _enemy_views.size():
+			continue
+		match String(event.get("type", "")):
+			"damage":
+				if int(event.get("amount", 0)) > 0:
+					_enemy_views[index].react_hit(int(event["amount"]))
+			"enemy_died":
+				_enemy_views[index].react_death()
 
 
 ## Tweening a container child's position is fragile -- the parent re-sorts on

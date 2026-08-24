@@ -10,6 +10,9 @@ signal pressed(enemy_index: int)
 
 const VIEW_SIZE := Vector2(148.0, 96.0)
 const BAR_HEIGHT := 6.0
+const FLASH_SECONDS := 0.09
+const SQUASH := 0.12
+const DEATH_SECONDS := 0.45
 
 var enemy_index: int = -1
 var hp: int = 0
@@ -24,11 +27,13 @@ var _statuses: Label
 var _bar: Control
 var _icon: TextureRect
 var _status_row: HBoxContainer
+var _reaction: Tween
 
 
 func _init() -> void:
 	custom_minimum_size = VIEW_SIZE
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	pivot_offset = VIEW_SIZE * 0.5
 	_build()
 
 
@@ -76,6 +81,9 @@ func bind(state: FightState, index: int, is_targetable: bool) -> void:
 
 	_name.text = state.content.text(def.name_key)
 	_icon.texture = Icons.enemy(enemy.def_id)
+	if alive and _reaction == null:
+		modulate = Color.WHITE
+		scale = Vector2.ONE
 	_icon.modulate = Palette.BONE if alive else Palette.BONE_FAINT
 	_refresh_status_icons(enemy.statuses)
 	_hp.text = "%d/%d" % [enemy.hp, enemy.max_hp]
@@ -124,6 +132,37 @@ static func status_text(content: Content, statuses: Dictionary) -> String:
 			continue
 		parts.append("%s %d" % [content.text("status.%s.name" % String(name)), stacks])
 	return " · ".join(parts)
+
+
+## Takes a hit: a fast white flash and a squash that springs back. Both are
+## short on purpose -- long enough to see, not long enough to wait for.
+func react_hit(amount: int) -> void:
+	if not is_inside_tree():
+		return
+	_kill_reaction()
+	var depth := clampf(float(amount) / 12.0, 0.35, 1.0)
+	modulate = Palette.BONE
+	scale = Vector2(1.0 + SQUASH * depth, 1.0 - SQUASH * depth)
+	_reaction = create_tween()
+	_reaction.set_parallel(true)
+	_reaction.tween_property(self, "modulate", Color.WHITE, FLASH_SECONDS * 2.0)
+	_reaction.tween_property(self, "scale", Vector2.ONE, FLASH_SECONDS * 3.0) 		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
+## Dies: sags, fades and drains of colour rather than blinking out.
+func react_death() -> void:
+	if not is_inside_tree():
+		return
+	_kill_reaction()
+	_reaction = create_tween()
+	_reaction.set_parallel(true)
+	_reaction.tween_property(self, "modulate:a", 0.25, DEATH_SECONDS).set_ease(Tween.EASE_IN)
+	_reaction.tween_property(self, "scale", Vector2(1.0, 0.82), DEATH_SECONDS) 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+
+func _kill_reaction() -> void:
+	if _reaction != null and _reaction.is_valid():
+		_reaction.kill()
 
 
 ## Status icons read faster than a comma-separated list mid-fight; the text
