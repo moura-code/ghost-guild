@@ -218,3 +218,13 @@ ui.choice.leave,Leave
 ui.choice.rest_heal,Rest and heal {amount}
 ui.choice.rest_upgrade,Sharpen {card}
 ui.choice.remove,Burn {card}
+ui.exit.title,Floor {floor} cleared
+ui.exit.here,A ghost left here earns
+ui.exit.next,A ghost on the next floor earns
+ui.exit.survival,Chance you survive the next floor
+ui.exit.no_push,The biome ends here.
+ui.exit.pending,Reckoning...
+ui.exit.push,Push deeper
+ui.exit.retreat,Retreat and mend
+ui.exit.watch,Take the Watch
+ui.exit.watch_locked,Take the Watch — locked until your first death

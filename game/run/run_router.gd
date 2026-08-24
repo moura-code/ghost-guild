@@ -22,6 +22,7 @@ var _body: VBoxContainer
 var _map: FloorMapScreen
 var _fight: FightScreen
 var _choice: ChoiceScreen
+var _exit: ExitScreen
 
 var _autopilot: RunAutopilot = RunAutopilot.new()
 var _lines: PackedStringArray = PackedStringArray()
@@ -67,6 +68,11 @@ func _build() -> void:
 	_choice.visible = false
 	_body.add_child(_choice)
 
+	_exit = ExitScreen.new()
+	_exit.visible = false
+	_exit.decided.connect(func(_kind: String) -> void: refresh())
+	_body.add_child(_exit)
+
 	_log = UiTheme.small("", Palette.BONE_FAINT)
 	_log.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_log.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -88,6 +94,7 @@ func refresh() -> void:
 		_map.visible = false
 		_fight.visible = false
 		_choice.visible = false
+		_exit.visible = false
 		return
 	_continue.visible = true
 	_floor.text = game.text("ui.run.floor").replace("{floor}", str(run.floor))
@@ -97,6 +104,7 @@ func refresh() -> void:
 		_map.visible = false
 		_fight.visible = false
 		_choice.visible = false
+		_exit.visible = false
 		_continue.visible = true
 		return
 	_phase.text = game.text("ui.run.phase.%s" % run.phase)
@@ -110,13 +118,18 @@ func _refresh_body(run: RunState) -> void:
 	_map.visible = run.phase == "node"
 	_fight.visible = run.phase == "fight"
 	_choice.visible = ChoiceScreen.handles(run.phase)
+	_exit.visible = run.phase == "exit"
 	if _map.visible:
 		_map.bind(game, run)
 	if _fight.visible:
 		_fight.bind(game, run)
 	if _choice.visible:
 		_choice.bind(game, run)
-	_continue.visible = not (_map.visible or _fight.visible or _choice.visible)
+	if _exit.visible and _exit.run != run:
+		# bind() kicks off a fresh reckoning, so only rebind on a real change
+		# of run -- a plain refresh must not restart the projection.
+		_exit.bind(game, run)
+	_continue.visible = not (_map.visible or _fight.visible or _choice.visible or _exit.visible)
 
 
 func _on_continue() -> void:

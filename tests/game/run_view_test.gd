@@ -119,15 +119,15 @@ func test_a_phase_without_a_screen_yet_still_offers_the_step_button() -> void:
 	var run := g.start_run(1)
 	var v := _view(g)
 	await await_idle_frame()
-	# Exit has no screen until Task 6, so it must fall through to Continue.
-	TestFixtures.set_nodes(run, [{"kind": "rest"}])
-	g.run_action({"kind": "enter"})
-	g.run_action({"kind": "rest_heal"})
+	# Descent has no screen until Task 8, so it must fall through to Continue.
+	run.phase = "descent"
+	run.descent_offers = [{"floor": 1, "cards": ["strike"]}]
+	v.refresh()
 	await await_idle_frame()
-	assert_str(run.phase).is_equal("exit")
 	assert_bool(v._map.visible).is_false()
 	assert_bool(v._fight.visible).is_false()
 	assert_bool(v._choice.visible).is_false()
+	assert_bool(v._exit.visible).is_false()
 	assert_bool(v._continue.visible).is_true()
 
 
@@ -156,4 +156,19 @@ func test_a_node_phase_shows_the_choice_screen() -> void:
 	await await_idle_frame()
 	assert_str(run.phase).is_equal("rest")
 	assert_bool(v._choice.visible).is_true()
+	assert_bool(v._continue.visible).is_false()
+
+
+func test_the_exit_phase_shows_the_exit_screen() -> void:
+	var g := _game()
+	var run := g.start_run(1)
+	var v := _view(g)
+	v._exit.threaded = false
+	await await_idle_frame()
+	TestFixtures.set_nodes(run, [{"kind": "rest"}])
+	g.run_action({"kind": "enter"})
+	g.run_action({"kind": "rest_heal"})
+	await await_idle_frame()
+	assert_str(run.phase).is_equal("exit")
+	assert_bool(v._exit.visible).is_true()
 	assert_bool(v._continue.visible).is_false()
