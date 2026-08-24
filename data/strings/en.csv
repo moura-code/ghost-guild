@@ -152,3 +152,7 @@ stat.might.name,Might
 stat.wit.name,Wit
 stat.vigor.name,Vigor
 stat.focus.name,Focus
+ui.offline.title,While you were away
+ui.offline.away,Away for {duration}
+ui.offline.capped,Your ghosts stopped at the offline cap.
+ui.offline.dismiss,Good
