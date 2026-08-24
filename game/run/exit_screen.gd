@@ -5,17 +5,31 @@ extends VBoxContainer
 ## would earn, and the chance of surviving to get there — then push, retreat,
 ## or take the watch.
 ##
-## The numbers cost real time: the survival projection and both yield
-## estimates each run fight simulations, measured at 300 ms to 3 s in the
-## balance work. So they are computed on a WorkerThreadPool task and the
-## screen shows a pending state until they land. Spec §11 wants a yield
-## simulation under 100 ms on a worker thread; this is the seam where that
-## requirement bites.
+## The numbers cost real time. Measured on this content: at floor 1 the full
+## reckoning takes 337 ms, at floor 9 it takes 3.0 s -- and a player meets
+## this screen at every floor exit, so three seconds of "Reckoning..." is
+## three seconds of nothing happening.
+##
+## Two things keep it honest. It runs on a WorkerThreadPool task rather than
+## the frame, and it arrives in two parts: the yield here is measured from
+## the run that just happened and is nearly free, so it lands immediately,
+## while the next-floor estimate and the survival odds simulate and follow.
+## The player reads the first number while the other two are still coming.
+##
+## The preview also simulates fewer fights than the balance tools do
+## (PREVIEW_FIGHTS): an estimate the player glances at does not need the
+## accuracy a balance invariant does.
 
 signal decided(kind: String)
 
 ## Tests set this false to compute inline and keep assertions deterministic.
 var threaded: bool = true
+
+## Fights per ghost-strength estimate, and floors sampled for the survival
+## odds. Both are well below the balance defaults, which is the trade the
+## docstring describes.
+const PREVIEW_FIGHTS := 8
+const PREVIEW_SAMPLES := 6
 
 var game: GameRoot
 var run: RunState
@@ -115,33 +129,56 @@ static func _reading(value: Label, caption: String, icon: String) -> PanelContai
 	return panel
 
 
-## Everything expensive in one place, so it can be lifted onto a thread as a
-## unit. Pure reads: nothing here mutates the run or the campaign.
-static func reckon(campaign: Campaign, p_run: RunState, samples: int) -> Dictionary:
+## The cheap half: what a ghost left on this floor would earn. Measured from
+## the fights that just happened, so it needs no simulation at all when the
+## hero fought here -- which they always have, by definition.
+static func reckon_here(campaign: Campaign, p_run: RunState) -> Dictionary:
 	var balance := campaign.balance()
-	var modifiers := campaign.modifiers()
 	var prepared := 1.0 + float(balance.get("prepared_bonus", 0.25))
 	var here := YieldSimulator.strength_here(campaign, p_run)
+	return {"here": campaign.ladder.marginal_yield(
+		p_run.floor, here * prepared, balance, campaign.modifiers())}
+
+
+## The expensive half: the next floor has never been fought, so its yield and
+## the odds of surviving it both have to be simulated. Pure reads -- nothing
+## here mutates the run or the campaign.
+static func reckon_ahead(campaign: Campaign, p_run: RunState, samples: int) -> Dictionary:
+	var balance := campaign.balance()
+	var prepared := 1.0 + float(balance.get("prepared_bonus", 0.25))
 	var summary := RunEngine.exit_summary(p_run, samples)
-	var out := {
-		"summary": summary,
-		"here": campaign.ladder.marginal_yield(p_run.floor, here * prepared, balance, modifiers),
-		"next": 0.0,
-	}
+	var out := {"summary": summary, "next": 0.0}
 	if bool(summary["can_push"]):
 		var ahead := YieldSimulator.strength_at(campaign, p_run, p_run.floor + 1)
-		out["next"] = campaign.ladder.marginal_yield(p_run.floor + 1, ahead * prepared, balance, modifiers)
+		out["next"] = campaign.ladder.marginal_yield(
+			p_run.floor + 1, ahead * prepared, balance, campaign.modifiers())
+	return out
+
+
+## Both halves, for the tests and for the inline path.
+static func reckon(campaign: Campaign, p_run: RunState, samples: int) -> Dictionary:
+	var out := reckon_here(campaign, p_run)
+	out.merge(reckon_ahead(campaign, p_run, samples))
 	return out
 
 
 func _start_projection() -> void:
 	pending = true
-	_refresh_labels()
 	var campaign := game.campaign
 	var live := run
-	var samples := int(game.content.balance.get("survival_samples", 20))
+	# Trimmed for the preview: the balance tools keep the full counts.
+	var restore := campaign.sim_fights
+	campaign.sim_fights = PREVIEW_FIGHTS
+
+	# The measured half is nearly free, so it lands before the first frame
+	# and the player has something to read immediately.
+	numbers = reckon_here(campaign, live)
+	_refresh_labels()
+	_refresh_buttons()
+
 	if not threaded:
-		_on_reckoned(reckon(campaign, live, samples))
+		campaign.sim_fights = restore
+		_on_reckoned(reckon(campaign, live, PREVIEW_SAMPLES))
 		return
 	# The screen can be freed while the task is still running -- leaving a
 	# fight, quitting, a test tearing down. Capture the id and check the
@@ -149,7 +186,8 @@ func _start_projection() -> void:
 	# call lands on freed memory.
 	var id := get_instance_id()
 	WorkerThreadPool.add_task(func() -> void:
-		var result := reckon(campaign, live, samples)
+		var result := reckon_ahead(campaign, live, PREVIEW_SAMPLES)
+		campaign.sim_fights = restore
 		_deliver.bind(id, result).call_deferred())
 
 
@@ -166,7 +204,7 @@ func _on_reckoned(result: Dictionary) -> void:
 	# The player may have left the exit before the thread finished.
 	if run == null or run.phase != "exit":
 		return
-	numbers = result
+	numbers.merge(result, true)
 	pending = false
 	_refresh_labels()
 	_refresh_buttons()
@@ -174,15 +212,14 @@ func _on_reckoned(result: Dictionary) -> void:
 
 func _refresh_labels() -> void:
 	_title.text = game.text("ui.exit.title").replace("{floor}", str(run.floor))
-	if pending or numbers.is_empty():
-		var waiting := game.text("ui.exit.pending")
-		_here.text = waiting
+	var waiting := game.text("ui.exit.pending")
+	_here.text = Num.rate(float(numbers["here"])) if numbers.has("here") else waiting
+	if not numbers.has("summary"):
 		_next.text = waiting
 		_survival.text = waiting
 		_note.text = ""
 		return
 	var summary: Dictionary = numbers["summary"]
-	_here.text = Num.rate(float(numbers["here"]))
 	if bool(summary["can_push"]):
 		_next.text = Num.rate(float(numbers["next"]))
 		var survival := float(summary["survival"])

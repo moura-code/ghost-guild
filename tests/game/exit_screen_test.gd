@@ -186,3 +186,60 @@ func test_the_odds_colour_themselves() -> void:
 		s.numbers["summary"]["survival"] = float(band[0])
 		s._refresh_labels()
 		assert_that(s._survival.get_theme_color("font_color")).is_equal(band[1])
+
+
+func test_the_measured_number_lands_before_the_simulated_ones() -> void:
+	var g := _game()
+	var run := _at_exit(g)
+	var s: ExitScreen = auto_free(ExitScreen.new())
+	s.threaded = false
+	add_child(s)
+	s.game = g
+	s.run = run
+	s._build()
+	# reckon_here is measured from the fights that just happened, so it is
+	# available without simulating anything.
+	s.numbers = ExitScreen.reckon_here(g.campaign, run)
+	s._refresh_labels()
+	await await_idle_frame()
+	assert_str(s._here.text).contains("/h")
+	# The two that need simulation are still waiting.
+	assert_str(s._next.text).is_equal(g.text("ui.exit.pending"))
+	assert_str(s._survival.text).is_equal(g.text("ui.exit.pending"))
+
+
+func test_the_slow_half_fills_in_without_losing_the_fast_half() -> void:
+	var g := _game()
+	var run := _at_exit(g)
+	var s: ExitScreen = auto_free(ExitScreen.new())
+	s.threaded = false
+	add_child(s)
+	s.game = g
+	s.run = run
+	s._build()
+	s.numbers = ExitScreen.reckon_here(g.campaign, run)
+	var measured: float = s.numbers["here"]
+	s._on_reckoned(ExitScreen.reckon_ahead(g.campaign, run, ExitScreen.PREVIEW_SAMPLES))
+	await await_idle_frame()
+	# Merging must not drop what already arrived.
+	assert_float(float(s.numbers["here"])).is_equal(float(measured))
+	assert_str(s._next.text).contains("/h")
+	assert_str(s._survival.text).contains("%")
+
+
+func test_the_preview_simulates_less_than_the_balance_tools() -> void:
+	# The trade this screen makes: an estimate the player glances at does
+	# not need the accuracy a balance invariant does.
+	assert_int(ExitScreen.PREVIEW_FIGHTS) 		.is_less(int(TestFixtures.content().balance.get("strength_sim_fights", 50)))
+	assert_int(ExitScreen.PREVIEW_SAMPLES) 		.is_less(int(TestFixtures.content().balance.get("survival_samples", 20)))
+
+
+func test_the_preview_restores_the_campaign_fight_count() -> void:
+	var g := _game()
+	var run := _at_exit(g)
+	var before := g.campaign.sim_fights
+	var s := _screen(g, run)
+	await await_idle_frame()
+	# Trimming sim_fights for the preview must not leak into the campaign,
+	# or every ghost placed afterwards would be measured with fewer fights.
+	assert_int(g.campaign.sim_fights).is_equal(before)
