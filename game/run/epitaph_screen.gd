@@ -28,6 +28,7 @@ var _arrival: HBoxContainer
 var _mark: GhostMark
 var _floor: Label
 var _soul: Label
+var _banked_caption: Label
 var _rite: Label
 var _dismiss: Button
 var _timer: SceneTreeTimer
@@ -70,15 +71,21 @@ func _build() -> void:
 	_arrival.add_child(_floor)
 	box.add_child(_arrival)
 
-	# In its own centred row with the Soul icon. Left alone the label
-	# stretched the full width of the panel and read as left-aligned while
-	# every other line was centred.
-	var banked := HBoxContainer.new()
-	banked.add_theme_constant_override("separation", 8)
-	banked.alignment = BoxContainer.ALIGNMENT_CENTER
-	banked.add_child(Icons.make_rect(Icons.ui("soul"), 22.0, Palette.SOUL))
+	# The number, then what it is -- the same shape every other reading in
+	# the game uses. Running the caption and the value together on one line
+	# made what they brought home read as a sentence rather than a result.
+	var banked := VBoxContainer.new()
+	banked.add_theme_constant_override("separation", 0)
+	banked.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var amount := HBoxContainer.new()
+	amount.add_theme_constant_override("separation", 8)
+	amount.alignment = BoxContainer.ALIGNMENT_CENTER
+	amount.add_child(Icons.make_rect(Icons.ui("soul"), 24.0, Palette.SOUL))
 	_soul = UiTheme.number("", Palette.SOUL)
-	banked.add_child(_soul)
+	amount.add_child(_soul)
+	banked.add_child(amount)
+	_banked_caption = ScreenLayout.centre(UiTheme.small(""))
+	banked.add_child(_banked_caption)
 	box.add_child(banked)
 
 	_rite = UiTheme.body("", Palette.PREPARED)
@@ -112,7 +119,8 @@ func bind(g: GameRoot, p_result: Dictionary) -> void:
 	if ghost != null:
 		_mark.bind(ghost)
 	_floor.text = g.text("ui.epitaph.stands").replace("{floor}", str(int(p_result.get("floor", 1))))
-	_soul.text = "%s %s" % [g.text("ui.epitaph.banked"), Num.short(float(p_result.get("soul", 0.0)))]
+	_soul.text = Num.short(float(p_result.get("soul", 0.0)))
+	_banked_caption.text = g.text("ui.epitaph.banked")
 	_rite.text = g.text("ui.epitaph.rite") if _has_rite(p_result) else ""
 	_dismiss.text = g.text("ui.epitaph.dismiss")
 
@@ -140,7 +148,7 @@ func _show_up_to(n: int) -> void:
 	_name.visible = n >= 1
 	_epitaph.visible = n >= 2
 	_arrival.visible = n >= 3
-	_soul.get_parent().visible = n >= 4
+	_soul.get_parent().get_parent().visible = n >= 4
 	_rite.visible = n >= 5 and _has_rite(result)
 	_dismiss.visible = n >= stage_count()
 
