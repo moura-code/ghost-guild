@@ -8,7 +8,7 @@ extends PanelContainer
 ## and whether the incoming hit kills them, and both answers should be
 ## readable at a glance rather than parsed out of a sentence.
 
-const PANEL_SIZE := Vector2(300.0, 108.0)
+const PANEL_SIZE := Vector2(340.0, 116.0)
 const BAR_HEIGHT := 16.0
 const ORB_RADIUS := 9.0
 const ORB_GAP := 7.0
@@ -54,9 +54,13 @@ func _build() -> void:
 	_shield.draw.connect(_draw_shield)
 	_shield.visible = false
 	top.add_child(_shield)
+	# Sits on the shield rather than beside it, so block reads as one thing.
 	_shield_text = UiTheme.small("", Palette.STONE)
 	_shield_text.visible = false
-	top.add_child(_shield_text)
+	_shield_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_shield_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_shield_text.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_shield.add_child(_shield_text)
 
 	_turn = UiTheme.small("", Palette.BONE_FAINT)
 	_turn.size_flags_horizontal = Control.SIZE_SHRINK_END | Control.SIZE_EXPAND
@@ -154,7 +158,12 @@ func _draw_bar() -> void:
 		return
 	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w, h)), Palette.STONE)
 	var frac := clampf(float(hp) / float(max_hp), 0.0, 1.0)
-	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w * frac, h)), _hp_colour())
+	# Dimmed: at full health a bar filled with bone-white is the brightest
+	# thing on screen, which puts the emphasis on being fine.
+	var fill := _hp_colour()
+	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w * frac, h)),
+		Color(fill.r * 0.62, fill.g * 0.62, fill.b * 0.62, 1.0))
+	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w * frac, 2.0)), fill)
 	if _flash > 0.0:
 		_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w, h)), Color(1.0, 1.0, 1.0, 0.5 * _flash))
 	if block > 0:

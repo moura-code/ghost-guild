@@ -11,7 +11,7 @@ const TABS := [
 	{"id": "seance", "key": "ui.seance"},
 	{"id": "hero", "key": "ui.hero"},
 ]
-const MARGIN := 16
+const MARGIN := 28
 const TAB_SEPARATION := 6
 
 var game: GameRoot

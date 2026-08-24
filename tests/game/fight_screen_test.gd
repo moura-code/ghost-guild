@@ -227,3 +227,40 @@ func _find_card(g: GameRoot, run: RunState, target: String) -> int:
 		if def.target == target:
 			return i
 	return -1
+
+
+func test_the_hand_stays_inside_the_window() -> void:
+	var g := _game()
+	var run := _fight(g)
+	var s := _screen(g, run)
+	await await_idle_frame()
+	# The bug this guards: the fight lived in a zero-height container, so
+	# the fan computed a negative base line and dealt the whole hand above
+	# the top of the screen. Every card must be on screen, bottom included.
+	assert_float(s.size.y).is_greater(0.0)
+	for i in run.fight.hand.size():
+		var card := s._card_views[i]
+		assert_float(card.position.y).is_greater_equal(0.0)
+		assert_float(card.position.y + CardView.CARD_SIZE.y) 			.override_failure_message("card %d hangs off the bottom" % i) 			.is_less_equal(s.size.y)
+
+
+func test_cards_are_the_size_they_are_supposed_to_be() -> void:
+	var g := _game()
+	var run := _fight(g)
+	var s := _screen(g, run)
+	await await_idle_frame()
+	# A wrapping Label with no width bound reports an enormous minimum, and
+	# in a PanelContainer that became the card's height -- 469px observed,
+	# against a 208px design.
+	for i in run.fight.hand.size():
+		assert_that(s._card_views[i].size).is_equal(CardView.CARD_SIZE)
+
+
+func test_the_hand_clears_the_hero_panel() -> void:
+	var g := _game()
+	var run := _fight(g)
+	var s := _screen(g, run)
+	await await_idle_frame()
+	var hero_right := s._hero.position.x + HeroPanel.PANEL_SIZE.x
+	for i in run.fight.hand.size():
+		assert_float(s._card_views[i].position.x) 			.override_failure_message("card %d overlaps the hero panel" % i) 			.is_greater_equal(hero_right)

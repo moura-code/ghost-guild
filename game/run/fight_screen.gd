@@ -17,10 +17,17 @@ extends Control
 signal fight_ended()
 
 ## How far each card tilts and drops per step out from the middle of the fan.
-const FAN_ARC := 0.055
-const FAN_SPREAD := 0.72
-const FAN_LIFT := 26.0
-const HAND_BOTTOM := 24.0
+const FAN_ARC := 0.048
+const FAN_SPREAD := 0.86
+const FAN_LIFT := 12.0
+## Room under the hand for the lift and the rotation. A card at the edge of
+## the fan is lower AND tilted, and a tilted 208px card reaches further down
+## than its height suggests -- measured at ~24px past, hence the margin.
+const HAND_BOTTOM := 56.0
+## The hand's corridor: clear of the hero panel on the left and the
+## end-turn button on the right, at any window size.
+const GAP_TO_PANEL := 12.0
+const END_TURN_ROOM := 160.0
 
 var game: GameRoot
 var run: RunState
@@ -60,7 +67,7 @@ func _build() -> void:
 	_enemy_row.add_theme_constant_override("separation", 18)
 	_enemy_row.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_enemy_row.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_enemy_row.position = Vector2(0.0, 16.0)
+	_enemy_row.position = Vector2(0.0, 78.0)
 	add_child(_enemy_row)
 
 	# The hero, bottom-left, opposite what is trying to kill them.
@@ -199,17 +206,29 @@ func _refresh_hand(fight: FightState) -> void:
 ## from vertical and sits a little lower the further it is from the middle,
 ## which is what a hand of cards actually looks like.
 func _fan(count: int) -> void:
-	if count <= 0 or size.x <= 0.0:
+	# Height matters as much as width: with a zero-height parent the base
+	# line goes negative and the whole hand lands above the window.
+	if count <= 0 or size.x <= 0.0 or size.y <= 0.0:
 		return
-	var centre := size.x * 0.5
 	var card := CardView.CARD_SIZE
-	var step := minf(card.x * FAN_SPREAD, (size.x - 320.0) / maxf(1.0, float(count)))
+	# The corridor the hand has to live in: right of the hero panel, left of
+	# the end-turn button. Computed rather than assumed, because at narrow
+	# window sizes a fan centred on the screen runs straight over the panel.
+	var left := _hero.position.x + HeroPanel.PANEL_SIZE.x + GAP_TO_PANEL
+	var right := size.x - END_TURN_ROOM
+	var corridor := maxf(card.x, right - left)
+	var step := minf(card.x * FAN_SPREAD, (corridor - card.x) / maxf(1.0, float(count - 1)))
+	var centre := left + corridor * 0.5
 	var base_y := size.y - card.y - HAND_BOTTOM
 	for i in count:
 		var offset := float(i) - float(count - 1) * 0.5
 		var angle := offset * FAN_ARC
 		var lift := absf(offset) * absf(offset) * FAN_LIFT * 0.5
 		var at := Vector2(centre + offset * step - card.x * 0.5, base_y + lift)
+		# The hand is a plain Control, not a container, so nothing sizes the
+		# cards -- left alone a wrapping Label drives them to three times
+		# their height. Size them here, explicitly.
+		_card_views[i].size = card
 		_card_views[i].place(at, angle)
 
 

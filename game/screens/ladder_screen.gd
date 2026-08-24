@@ -4,8 +4,10 @@ extends VBoxContainer
 ## section with floor 1 at the top, the ghosts standing in their floors,
 ## saturation as fill, and the Soul counter ticking above it.
 
-const HEADER_SEPARATION := 28
-const ROW_SEPARATION := 2
+const HEADER_SEPARATION := 40
+const ROW_SEPARATION := 3
+## The tower is a tower: constrained and centred, not a full-width table.
+const TOWER_WIDTH := 660.0
 
 var game: GameRoot
 
@@ -23,7 +25,8 @@ var _rows: Array[FloorRow] = []
 
 
 func _init() -> void:
-	add_theme_constant_override("separation", 12)
+	add_theme_constant_override("separation", 14)
+	alignment = BoxContainer.ALIGNMENT_CENTER
 
 
 func bind(g: GameRoot) -> void:
@@ -40,6 +43,7 @@ func bind(g: GameRoot) -> void:
 func _build() -> void:
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", HEADER_SEPARATION)
+	header.alignment = BoxContainer.ALIGNMENT_CENTER
 	_soul = UiTheme.number("0")
 	_rate = UiTheme.number("0/h", Palette.BONE)
 	_reach = UiTheme.number("1", Palette.BONE)
@@ -52,12 +56,14 @@ func _build() -> void:
 	# never seen the game: a dead hero is still working for you.
 	_premise = UiTheme.body("", Palette.BONE_DIM)
 	_premise.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_premise.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_premise)
 
 	# What to do right now. Without this the player has a tower, four tabs
 	# and no idea which one is waiting on them.
 	_hint = UiTheme.small("", Palette.SOUL)
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_hint)
 
 	# The way into the dungeon. Disabled while a run is already live so the
@@ -81,10 +87,16 @@ func _build() -> void:
 	descent_row.add_child(_descend)
 	add_child(descent_row)
 
+	# Centred at a fixed width so ten floors read as a shaft going down
+	# rather than as ten rows of a table.
+	var tower_wrap := HBoxContainer.new()
+	tower_wrap.alignment = BoxContainer.ALIGNMENT_CENTER
 	_tower = VBoxContainer.new()
 	_tower.add_theme_constant_override("separation", ROW_SEPARATION)
-	_tower.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(_tower)
+	_tower.custom_minimum_size = Vector2(TOWER_WIDTH, 0.0)
+	_tower.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	tower_wrap.add_child(_tower)
+	add_child(tower_wrap)
 
 
 ## A number over its name, with the icon beside the caption rather than the
@@ -97,7 +109,7 @@ static func _stat_block(value: Label, caption: String, tip: String, icon: String
 	box.add_child(value)
 	var foot := HBoxContainer.new()
 	foot.add_theme_constant_override("separation", 4)
-	foot.add_child(Icons.make_rect(Icons.ui(icon), 13.0, Palette.BONE_FAINT))
+	foot.add_child(Icons.make_rect(Icons.ui(icon), 15.0, Palette.BONE_DIM))
 	foot.add_child(UiTheme.small(caption))
 	box.add_child(foot)
 	return box

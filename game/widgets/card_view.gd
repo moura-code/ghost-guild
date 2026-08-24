@@ -38,6 +38,8 @@ var _hover_tween: Tween
 
 func _init() -> void:
 	custom_minimum_size = CARD_SIZE
+	size = CARD_SIZE
+	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	pivot_offset = CARD_SIZE * 0.5
 	mouse_entered.connect(_on_hover.bind(true))
@@ -47,7 +49,8 @@ func _init() -> void:
 
 func _build() -> void:
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 4)
+	box.add_theme_constant_override("separation", 3)
+	box.custom_minimum_size = Vector2(CARD_SIZE.x - 16.0, 0.0)
 	add_child(box)
 
 	var head := HBoxContainer.new()
@@ -62,22 +65,32 @@ func _build() -> void:
 	# The art slot. Empty by design until there is art -- it is the brief.
 	_art = PanelContainer.new()
 	_art.custom_minimum_size = ART_SIZE
-	_art.add_theme_stylebox_override("panel", UiTheme.fill_box(Palette.STONE))
+	_art.add_theme_stylebox_override("panel", UiTheme.panel_box(Color(0.03, 0.04, 0.05), Palette.STONE_EDGE))
 	_art_image = TextureRect.new()
 	_art_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_art_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_art_image.modulate = Palette.BONE_FAINT
+	# Bright enough to read as a deliberate placeholder rather than a smudge.
+	_art_image.modulate = Palette.BONE_DIM
 	_art_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_art.add_child(_art_image)
 	box.add_child(_art)
 
+	# Also capped. A PanelContainer takes its size from its content's
+	# minimum, and an autowrapping Label with no width bound reports a
+	# minimum tall enough to blow the card out to three times its size.
 	_name = UiTheme.body("")
 	_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_name.custom_minimum_size = Vector2(0.0, 34.0)
+	_name.clip_text = true
 	box.add_child(_name)
 
+	# Capped, not expanding: an autowrapping Label asked for its minimum
+	# height with no width bound reports something enormous, and in a
+	# PanelContainer that becomes the card's height.
 	_text = UiTheme.small("", Palette.BONE_DIM)
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_text.custom_minimum_size = Vector2(0.0, 40.0)
+	_text.clip_text = true
 	box.add_child(_text)
 
 
@@ -108,7 +121,8 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 ## disappearing — the player needs to see what they could not afford.
 func _paint(def: CardDef) -> void:
 	var edge := rarity_colour(def.rarity)
-	var body := Palette.STONE_RAISED if playable else Palette.STONE
+	# A playable card sits proud of the table; an unaffordable one sinks.
+	var body := Palette.STONE_EDGE if playable else Palette.STONE
 	if selected:
 		edge = Palette.SOUL
 	add_theme_stylebox_override("panel", UiTheme.panel_box(body, edge))

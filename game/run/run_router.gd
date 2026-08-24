@@ -38,20 +38,31 @@ func bind(g: GameRoot) -> void:
 
 
 func _build() -> void:
+	# A bar, not two stacked labels in the corner: where you are and what
+	# you are doing belong on one line, with room either side.
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 16)
 	_floor = UiTheme.title("")
-	add_child(_floor)
-
+	header.add_child(_floor)
 	_phase = UiTheme.body("", Palette.BONE_DIM)
-	add_child(_phase)
+	_phase.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	header.add_child(_phase)
+	add_child(header)
 
 	# Phase screens live here. Each task of M1-C2 adds one; any phase
 	# without a screen falls through to the Continue button below.
+	# Must expand: a VBoxContainer sizes to its children, and an anchored
+	# child like FightScreen requests nothing, so without this the body is
+	# zero pixels tall and every anchored layout inside it collapses.
 	_body = VBoxContainer.new()
 	_body.add_theme_constant_override("separation", 10)
+	_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(_body)
 
 	_map = FloorMapScreen.new()
 	_map.visible = false
+	_map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.add_child(_map)
 
 	_fight = FightScreen.new()
@@ -62,10 +73,14 @@ func _build() -> void:
 
 	_choice = ChoiceScreen.new()
 	_choice.visible = false
+	_choice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_choice.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_body.add_child(_choice)
 
 	_exit = ExitScreen.new()
 	_exit.visible = false
+	_exit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_exit.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_exit.decided.connect(func(_kind: String) -> void: refresh())
 	_body.add_child(_exit)
 

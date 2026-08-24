@@ -8,8 +8,8 @@ extends PanelContainer
 
 signal pressed(enemy_index: int)
 
-const VIEW_SIZE := Vector2(148.0, 96.0)
-const BAR_HEIGHT := 6.0
+const VIEW_SIZE := Vector2(186.0, 132.0)
+const BAR_HEIGHT := 9.0
 const FLASH_SECONDS := 0.09
 const SQUASH := 0.12
 const DEATH_SECONDS := 0.45
@@ -49,7 +49,7 @@ func _build() -> void:
 
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 6)
-	_icon = Icons.make_rect(null, 26.0, Palette.BONE)
+	_icon = Icons.make_rect(null, 40.0, Palette.BONE)
 	head.add_child(_icon)
 	_name = UiTheme.body("")
 	_name.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -66,9 +66,9 @@ func _build() -> void:
 
 	var intent_row := HBoxContainer.new()
 	intent_row.add_theme_constant_override("separation", 4)
-	_intent_icon = Icons.make_rect(null, 18.0, Palette.DANGER)
+	_intent_icon = Icons.make_rect(null, 22.0, Palette.DANGER)
 	intent_row.add_child(_intent_icon)
-	_intent = UiTheme.body("", Palette.DANGER)
+	_intent = UiTheme.number("", Palette.DANGER)
 	intent_row.add_child(_intent)
 	box.add_child(intent_row)
 

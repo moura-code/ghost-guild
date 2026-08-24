@@ -5,10 +5,10 @@ extends Control
 ## floor pays per hour. A widget -- it takes data through bind() and never
 ## touches Game.
 
-const ROW_HEIGHT := 34.0
-const BAND_WIDTH := 4.0
+const ROW_HEIGHT := 42.0
+const BAND_WIDTH := 5.0
 const NUMBER_WIDTH := 30.0
-const RIGHT_WIDTH := 108.0
+const RIGHT_WIDTH := 116.0
 const GAP := 6.0
 const MAX_MARKS := 12
 ## The tower recedes: deeper rows are indented and dimmer, so ten floors
@@ -39,12 +39,12 @@ func _build() -> void:
 	_number = UiTheme.body("1", Palette.BONE_DIM)
 	_number.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_number.custom_minimum_size = Vector2(NUMBER_WIDTH, 0.0)
-	_number.position = Vector2(BAND_WIDTH + GAP, 8.0)
+	_number.position = Vector2(BAND_WIDTH + GAP, 11.0)
 	add_child(_number)
 
 	_marks = HBoxContainer.new()
 	_marks.add_theme_constant_override("separation", 3)
-	_marks.position = Vector2(BAND_WIDTH + GAP + NUMBER_WIDTH + GAP, 7.0)
+	_marks.position = Vector2(BAND_WIDTH + GAP + NUMBER_WIDTH + GAP, 10.0)
 	add_child(_marks)
 
 	_overflow = UiTheme.small("", Palette.BONE_FAINT)
@@ -113,9 +113,10 @@ func _notification(what: int) -> void:
 func _layout() -> void:
 	if _output == null:
 		return
-	var right_x := size.x - RIGHT_WIDTH - GAP
-	_output.position = Vector2(right_x, 4.0)
-	_farmed.position = Vector2(right_x, 20.0)
+	# Inset by the same margin the fill uses, or the numbers sit on the edge.
+	var right_x := size.x - RIGHT_WIDTH - GAP * 2.0
+	_output.position = Vector2(right_x, 6.0)
+	_farmed.position = Vector2(right_x, 25.0)
 	_overflow.position = Vector2(_marks.position.x + _marks.size.x + GAP, 11.0)
 
 
@@ -137,7 +138,10 @@ func _draw() -> void:
 	var fill_w := maxf(0.0, size.x - fill_x - RIGHT_WIDTH - GAP)
 	if fill_w > 0.0:
 		var frac := clampf(saturation, 0.0, 1.0)
-		draw_rect(Rect2(Vector2(fill_x, 2.0), Vector2(fill_w * frac, size.y - 4.0)), Palette.GHOST_DIM)
+		# Faint: this is a gauge behind the ghosts standing on the floor, and
+		# at full saturation it was the brightest block on the screen.
+		draw_rect(Rect2(Vector2(fill_x, 3.0), Vector2(fill_w * frac, size.y - 6.0)),
+			Color(Palette.GHOST.r, Palette.GHOST.g, Palette.GHOST.b, 0.13))
 		if saturation > 1.0:
 			# Past the soft cap the floor still pays, at a quarter rate.
 			draw_rect(Rect2(Vector2(fill_x + fill_w - 1.0, 2.0), Vector2(1.0, size.y - 4.0)), Palette.PREPARED)
