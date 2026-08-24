@@ -38,22 +38,32 @@ func _init() -> void:
 
 
 func _build() -> void:
+	# Centred and given room. Spec §9 calls this the emotional beat of the
+	# game and the opening of the trailer; a left-aligned column of labels
+	# would read as a results dialog.
+	add_theme_stylebox_override("panel", UiTheme.panel_box(Palette.STONE, Palette.STONE_EDGE))
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 14)
+	box.add_theme_constant_override("separation", 18)
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(box)
 
 	_name = UiTheme.title("")
+	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_name)
 
 	_epitaph = UiTheme.body("", Palette.BONE_DIM)
 	_epitaph.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_epitaph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_epitaph)
 
 	_arrival = HBoxContainer.new()
-	_arrival.add_theme_constant_override("separation", 10)
+	_arrival.add_theme_constant_override("separation", 12)
+	_arrival.alignment = BoxContainer.ALIGNMENT_CENTER
 	_mark = GhostMark.new()
+	_mark.custom_minimum_size = GhostMark.BASE_SIZE * 2.0
 	_arrival.add_child(_mark)
 	_floor = UiTheme.body("", Palette.GHOST)
+	_floor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_arrival.add_child(_floor)
 	box.add_child(_arrival)
 
@@ -62,9 +72,12 @@ func _build() -> void:
 
 	_rite = UiTheme.body("", Palette.PREPARED)
 	_rite.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_rite.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_rite)
 
 	_dismiss = Button.new()
+	_dismiss.custom_minimum_size = Vector2(220.0, 44.0)
+	_dismiss.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_dismiss.pressed.connect(func() -> void: dismissed.emit())
 	box.add_child(_dismiss)
 
@@ -116,7 +129,7 @@ func _show_up_to(n: int) -> void:
 	_name.visible = n >= 1
 	_epitaph.visible = n >= 2
 	_arrival.visible = n >= 3
-	_soul.visible = n >= 4
+	_soul.get_parent().visible = n >= 4
 	_rite.visible = n >= 5 and _has_rite(result)
 	_dismiss.visible = n >= stage_count()
 

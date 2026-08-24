@@ -58,6 +58,7 @@ func test_it_shows_the_three_numbers_once_the_reckoning_lands() -> void:
 	assert_str(s._here.text).contains("/h")
 	assert_str(s._next.text).contains("/h")
 	assert_str(s._survival.text).contains("%")
+	assert_str(s._note.text).is_equal("")
 
 
 func test_the_yield_numbers_are_marginal_and_positive() -> void:
@@ -153,7 +154,10 @@ func test_the_last_floor_of_the_biome_cannot_be_pushed_past() -> void:
 	await await_idle_frame()
 	assert_bool(bool(s.numbers["summary"]["can_push"])).is_false()
 	assert_bool(s._push.visible).is_false()
-	assert_str(s._next.text).is_equal(g.text("ui.exit.no_push"))
+	# The reading has nothing to show, and the note says why.
+	assert_str(s._next.text).is_equal("—")
+	assert_str(s._note.text).is_equal(g.text("ui.exit.no_push"))
+	assert_str(s._note.text).is_not_equal("ui.exit.no_push")
 
 
 func test_reckon_reads_without_mutating_the_run() -> void:
@@ -168,3 +172,17 @@ func test_reckon_reads_without_mutating_the_run() -> void:
 	assert_int(run.hero.hp).is_equal(hp_before)
 	assert_str(run.phase).is_equal(phase_before)
 	assert_float(g.campaign.soul).is_equal(soul_before)
+
+
+func test_the_odds_colour_themselves() -> void:
+	var g := _game()
+	var run := _at_exit(g)
+	var s := _screen(g, run)
+	await await_idle_frame()
+	# This is the number the decision hangs on, so it should read before it
+	# is parsed. Drive each band directly rather than hunting for a floor
+	# that happens to produce one.
+	for band in [[0.2, Palette.DANGER], [0.55, Palette.PREPARED], [0.9, Palette.GOOD]]:
+		s.numbers["summary"]["survival"] = float(band[0])
+		s._refresh_labels()
+		assert_that(s._survival.get_theme_color("font_color")).is_equal(band[1])

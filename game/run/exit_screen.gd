@@ -26,6 +26,7 @@ var _title: Label
 var _here: Label
 var _next: Label
 var _survival: Label
+var _note: Label
 var _push: Button
 var _retreat: Button
 var _watch: Button
@@ -48,29 +49,69 @@ func bind(g: GameRoot, p_run: RunState) -> void:
 
 func _build() -> void:
 	_title = UiTheme.title("")
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_title)
 
+	# The three numbers side by side, each in its own panel. Spec §9 says
+	# these are the numbers the player learns to read, and a stack of
+	# labels does not teach anyone to compare them -- a row does.
+	var numbers_row := HBoxContainer.new()
+	numbers_row.add_theme_constant_override("separation", 12)
+	numbers_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_here = UiTheme.number("", Palette.SOUL)
-	add_child(_here)
-	add_child(UiTheme.small(""))
-
 	_next = UiTheme.number("", Palette.BONE)
-	add_child(_next)
-
 	_survival = UiTheme.number("", Palette.BONE)
-	add_child(_survival)
+	numbers_row.add_child(_reading(_here, game.text("ui.exit.here"), "soul"))
+	numbers_row.add_child(_reading(_next, game.text("ui.exit.next"), "descend"))
+	numbers_row.add_child(_reading(_survival, game.text("ui.exit.survival"), "hp"))
+	add_child(numbers_row)
+
+	# Why a reading is blank, when it is. An em-dash alone tells the player
+	# nothing about why they cannot go deeper.
+	_note = UiTheme.small("", Palette.BONE_DIM)
+	_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_note)
+
+	var choices := HBoxContainer.new()
+	choices.add_theme_constant_override("separation", 10)
+	choices.alignment = BoxContainer.ALIGNMENT_CENTER
 
 	_push = Button.new()
+	_push.custom_minimum_size = Vector2(180.0, 48.0)
 	_push.pressed.connect(func() -> void: _decide("push"))
-	add_child(_push)
+	choices.add_child(_push)
 
 	_retreat = Button.new()
+	_retreat.custom_minimum_size = Vector2(180.0, 48.0)
 	_retreat.pressed.connect(func() -> void: _decide("retreat"))
-	add_child(_retreat)
+	choices.add_child(_retreat)
 
 	_watch = Button.new()
+	_watch.custom_minimum_size = Vector2(220.0, 48.0)
 	_watch.pressed.connect(func() -> void: _decide("watch"))
-	add_child(_watch)
+	choices.add_child(_watch)
+	add_child(choices)
+
+
+## One reading: an icon, the value, and what it means underneath.
+static func _reading(value: Label, caption: String, icon: String) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(210.0, 96.0)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 5)
+	head.alignment = BoxContainer.ALIGNMENT_CENTER
+	head.add_child(Icons.make_rect(Icons.ui(icon), 15.0, Palette.BONE_FAINT))
+	head.add_child(value)
+	box.add_child(head)
+	var label := UiTheme.small(caption)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(label)
+	panel.add_child(box)
+	return panel
 
 
 ## Everything expensive in one place, so it can be lifted onto a thread as a
@@ -137,15 +178,23 @@ func _refresh_labels() -> void:
 		_here.text = waiting
 		_next.text = waiting
 		_survival.text = waiting
+		_note.text = ""
 		return
 	var summary: Dictionary = numbers["summary"]
-	_here.text = "%s  %s" % [game.text("ui.exit.here"), Num.rate(float(numbers["here"]))]
+	_here.text = Num.rate(float(numbers["here"]))
 	if bool(summary["can_push"]):
-		_next.text = "%s  %s" % [game.text("ui.exit.next"), Num.rate(float(numbers["next"]))]
-		_survival.text = "%s  %s" % [game.text("ui.exit.survival"), Num.percent(float(summary["survival"]))]
+		_next.text = Num.rate(float(numbers["next"]))
+		var survival := float(summary["survival"])
+		_survival.text = Num.percent(survival)
+		# The odds colour themselves: this is the number the decision hangs
+		# on, and it should read before it is parsed.
+		_survival.add_theme_color_override("font_color",
+			Palette.DANGER if survival < 0.4 else (Palette.PREPARED if survival < 0.7 else Palette.GOOD))
+		_note.text = ""
 	else:
-		_next.text = game.text("ui.exit.no_push")
-		_survival.text = ""
+		_next.text = "—"
+		_survival.text = "—"
+		_note.text = game.text("ui.exit.no_push")
 
 
 func _refresh_buttons() -> void:
