@@ -11,6 +11,10 @@ const NUMBER_WIDTH := 30.0
 const RIGHT_WIDTH := 108.0
 const GAP := 6.0
 const MAX_MARKS := 12
+## The tower recedes: deeper rows are indented and dimmer, so ten floors
+## read as a descent rather than as a list.
+const DEPTH_INDENT := 5.0
+const DEPTH_DIM := 0.5
 
 var floor_number: int = 1
 var saturation: float = 0.0
@@ -120,8 +124,14 @@ func _layout() -> void:
 func _draw() -> void:
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
-	draw_rect(Rect2(Vector2.ZERO, size), Palette.STONE_RAISED)
-	draw_rect(Rect2(Vector2.ZERO, Vector2(BAND_WIDTH, size.y)), accent)
+	var recede := clampf(float(floor_number - 1) / 9.0, 0.0, 1.0)
+	var inset := recede * DEPTH_INDENT
+	var dim := 1.0 - recede * DEPTH_DIM
+	var body := Palette.STONE_RAISED
+	draw_rect(Rect2(Vector2(inset, 0.0), Vector2(size.x - inset * 2.0, size.y)),
+		Color(body.r * dim, body.g * dim, body.b * dim, 1.0))
+	draw_rect(Rect2(Vector2(inset, 0.0), Vector2(BAND_WIDTH, size.y)),
+		Color(accent.r, accent.g, accent.b, dim))
 
 	var fill_x := BAND_WIDTH + GAP + NUMBER_WIDTH + GAP
 	var fill_w := maxf(0.0, size.x - fill_x - RIGHT_WIDTH - GAP)
@@ -132,5 +142,7 @@ func _draw() -> void:
 			# Past the soft cap the floor still pays, at a quarter rate.
 			draw_rect(Rect2(Vector2(fill_x + fill_w - 1.0, 2.0), Vector2(1.0, size.y - 4.0)), Palette.PREPARED)
 
+	# The waypoint is the deepest floor you may descend to: worth a full
+	# edge rather than a marker, since it is a boundary.
 	if is_waypoint:
-		draw_rect(Rect2(Vector2(0.0, size.y - 1.0), Vector2(size.x, 1.0)), Palette.SOUL)
+		draw_rect(Rect2(Vector2(inset, size.y - 2.0), Vector2(size.x - inset * 2.0, 2.0)), Palette.SOUL)

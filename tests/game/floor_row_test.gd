@@ -88,3 +88,18 @@ func test_an_empty_floor_says_nothing_of_yours_stands_there() -> void:
 	await await_idle_frame()
 	assert_str(r.tooltip_text).contains("Nothing of yours")
 	assert_str(r.tooltip_text).contains("Floor 5")
+
+
+func test_the_tower_recedes_with_depth() -> void:
+	var c := TestFixtures.campaign()
+	var shallow := _row(c, 1)
+	var deep := _row(c, 10)
+	await await_idle_frame()
+	# Both draw; the difference is in how, which _draw computes from the
+	# floor number. Pin the input so the effect cannot be silently dropped.
+	assert_int(shallow.floor_number).is_equal(1)
+	assert_int(deep.floor_number).is_equal(10)
+	var shallow_inset := clampf(float(shallow.floor_number - 1) / 9.0, 0.0, 1.0) * FloorRow.DEPTH_INDENT
+	var deep_inset := clampf(float(deep.floor_number - 1) / 9.0, 0.0, 1.0) * FloorRow.DEPTH_INDENT
+	assert_float(deep_inset).is_greater(shallow_inset)
+	assert_float(shallow_inset).is_equal(0.0)

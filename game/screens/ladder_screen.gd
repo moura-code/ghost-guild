@@ -43,9 +43,9 @@ func _build() -> void:
 	_soul = UiTheme.number("0")
 	_rate = UiTheme.number("0/h", Palette.BONE)
 	_reach = UiTheme.number("1", Palette.BONE)
-	header.add_child(_stat_block(_soul, game.text("ui.soul"), game.text("ui.tip.soul")))
-	header.add_child(_stat_block(_rate, game.text("ui.per_hour"), game.text("ui.tip.per_hour")))
-	header.add_child(_stat_block(_reach, game.text("ui.reach"), game.text("ui.tip.reach")))
+	header.add_child(_stat_block(_soul, game.text("ui.soul"), game.text("ui.tip.soul"), "soul"))
+	header.add_child(_stat_block(_rate, game.text("ui.per_hour"), game.text("ui.tip.per_hour"), "ghost"))
+	header.add_child(_stat_block(_reach, game.text("ui.reach"), game.text("ui.tip.reach"), "descend"))
 	add_child(header)
 
 	# The one line that has to teach the whole premise to someone who has
@@ -64,6 +64,7 @@ func _build() -> void:
 	# campaign never has to refuse the click.
 	var descent_row := HBoxContainer.new()
 	descent_row.add_theme_constant_override("separation", 8)
+	descent_row.alignment = BoxContainer.ALIGNMENT_CENTER
 
 	# Entry floor, bounded by reach. Seeded explicitly on every refresh
 	# because Godot's Range re-clamps .value when max_value is assigned,
@@ -75,6 +76,7 @@ func _build() -> void:
 	descent_row.add_child(_entry)
 
 	_descend = Button.new()
+	_descend.custom_minimum_size = Vector2(150.0, 40.0)
 	_descend.pressed.connect(_on_descend)
 	descent_row.add_child(_descend)
 	add_child(descent_row)
@@ -85,13 +87,19 @@ func _build() -> void:
 	add_child(_tower)
 
 
-static func _stat_block(value: Label, caption: String, tip: String) -> VBoxContainer:
+## A number over its name, with the icon beside the caption rather than the
+## value -- an icon next to a large number competes with it.
+static func _stat_block(value: Label, caption: String, tip: String, icon: String) -> VBoxContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 0)
 	box.mouse_filter = Control.MOUSE_FILTER_STOP
 	box.tooltip_text = tip
 	box.add_child(value)
-	box.add_child(UiTheme.small(caption))
+	var foot := HBoxContainer.new()
+	foot.add_theme_constant_override("separation", 4)
+	foot.add_child(Icons.make_rect(Icons.ui(icon), 13.0, Palette.BONE_FAINT))
+	foot.add_child(UiTheme.small(caption))
+	box.add_child(foot)
 	return box
 
 
