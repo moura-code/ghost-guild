@@ -40,6 +40,7 @@ func test_it_handles_exactly_the_four_non_fight_nodes() -> void:
 	assert_bool(ChoiceScreen.handles("event")).is_true()
 	assert_bool(ChoiceScreen.handles("rest")).is_true()
 	assert_bool(ChoiceScreen.handles("shop")).is_true()
+	assert_bool(ChoiceScreen.handles("descent")).is_true()
 	assert_bool(ChoiceScreen.handles("fight")).is_false()
 	assert_bool(ChoiceScreen.handles("node")).is_false()
 	assert_bool(ChoiceScreen.handles("exit")).is_false()
@@ -174,3 +175,48 @@ func _index_of(s: ChoiceScreen, kind: String) -> int:
 		if String(s._actions[i].get("kind", "")) == kind:
 			return i
 	return -1
+
+
+func test_the_descent_draft_offers_one_pick_per_skipped_floor() -> void:
+	var g := _game()
+	# Reach floor 3 so a descent from 3 skips floors 1 and 2.
+	g.campaign.record_depth = 3
+	var run := g.start_run(3)
+	var s := _screen(g, run)
+	await await_idle_frame()
+	assert_str(run.phase).is_equal("descent")
+	var offer: Dictionary = run.descent_offers[0]
+	assert_str(s._context.text).contains(str(int(offer["floor"])))
+	assert_str(s._context.text).is_not_equal("ui.descent.offer")
+	# One button per offered card, plus the refusal.
+	assert_int(s._actions.size()).is_equal(int(offer["cards"].size()) + 1)
+	var def: CardDef = g.content.cards[String(offer["cards"][0])]
+	assert_str(s._buttons[0].text).is_equal(g.text(def.name_key))
+	assert_str(s._buttons[s._actions.size() - 1].text).is_equal(g.text("ui.choice.skip"))
+
+
+func test_taking_a_draft_pick_puts_the_card_in_the_deck() -> void:
+	var g := _game()
+	g.campaign.record_depth = 3
+	var run := g.start_run(3)
+	var s := _screen(g, run)
+	await await_idle_frame()
+	var before := run.hero.deck.size()
+	s._buttons[0].emit_signal("pressed")
+	await await_idle_frame()
+	assert_int(run.hero.deck.size()).is_equal(before + 1)
+
+
+func test_the_draft_ends_and_the_run_begins_on_the_entry_floor() -> void:
+	var g := _game()
+	g.campaign.record_depth = 3
+	var run := g.start_run(3)
+	var s := _screen(g, run)
+	await await_idle_frame()
+	var guard := 0
+	while run.phase == "descent" and guard < 20:
+		s.refresh()
+		s._buttons[0].emit_signal("pressed")
+		guard += 1
+	assert_str(run.phase).is_equal("node")
+	assert_int(run.floor).is_equal(3)

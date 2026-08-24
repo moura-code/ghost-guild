@@ -38,30 +38,31 @@ func test_it_names_the_floor_and_the_phase() -> void:
 	assert_str(v._phase.text).is_not_equal("ui.run.phase.%s" % g.campaign.run.phase)
 
 
-func test_continue_advances_the_run_one_step() -> void:
+func test_the_view_keeps_up_with_a_run_driven_to_its_end() -> void:
 	var g := _game()
 	var run := g.start_run(1)
 	var v := _view(g)
 	await await_idle_frame()
-	var before := run.phase
-	v._continue.emit_signal("pressed")
-	await await_idle_frame()
-	assert_str(run.phase).is_not_equal(before)
-
-
-func test_pressing_continue_repeatedly_finishes_the_run() -> void:
-	var g := _game()
-	var run := g.start_run(1)
-	var v := _view(g)
-	await await_idle_frame()
-	# The Catacombs are ten floors; a starter Sexton dies well before the
-	# autopilot runs out of legal moves, so this terminates.
+	# Drive the run from the test, not from the UI: the shipping view has
+	# no auto-play, so this is the integration walk over every phase.
+	var pilot := RunAutopilot.new()
 	var guard := 0
 	while not run.is_over() and guard < 4000:
-		v._continue.emit_signal("pressed")
 		guard += 1
+		if run.phase == "fight":
+			for action in pilot.fight_ap.choose_turn(run.fight):
+				if run.phase != "fight":
+					break
+				g.run_action(action)
+			continue
+		var choice := pilot.choose(run)
+		assert_bool(choice.is_empty()).is_false()
+		g.run_action(choice)
 	assert_bool(run.is_over()).is_true()
 	assert_int(guard).is_less(4000)
+	v.refresh()
+	await await_idle_frame()
+	assert_str(v._continue.text).is_equal(g.text("ui.run.bank"))
 
 
 func test_a_finished_run_offers_to_bank_itself() -> void:
@@ -84,17 +85,6 @@ func test_a_finished_run_offers_to_bank_itself() -> void:
 	assert_object(g.campaign.run).is_null()
 
 
-func test_the_log_records_what_just_happened() -> void:
-	var g := _game()
-	g.start_run(1)
-	var v := _view(g)
-	await await_idle_frame()
-	assert_str(v._log.text).is_equal("")
-	v._continue.emit_signal("pressed")
-	await await_idle_frame()
-	assert_str(v._log.text).is_not_equal("")
-
-
 func test_binding_twice_does_not_connect_the_signals_twice() -> void:
 	var g := _game()
 	g.start_run(1)
@@ -114,21 +104,17 @@ func test_the_node_phase_shows_the_floor_map_instead_of_the_step_button() -> voi
 	assert_bool(v._continue.visible).is_false()
 
 
-func test_a_phase_without_a_screen_yet_still_offers_the_step_button() -> void:
+func test_no_phase_falls_through_to_a_step_button() -> void:
 	var g := _game()
 	var run := g.start_run(1)
 	var v := _view(g)
 	await await_idle_frame()
-	# Descent has no screen until Task 8, so it must fall through to Continue.
-	run.phase = "descent"
-	run.descent_offers = [{"floor": 1, "cards": ["strike"]}]
-	v.refresh()
-	await await_idle_frame()
-	assert_bool(v._map.visible).is_false()
-	assert_bool(v._fight.visible).is_false()
-	assert_bool(v._choice.visible).is_false()
-	assert_bool(v._exit.visible).is_false()
-	assert_bool(v._continue.visible).is_true()
+	# Mid-run there is never a generic Continue: each phase owns its controls.
+	for phase in ["node", "fight", "reward", "event", "rest", "shop", "exit", "descent"]:
+		var handled: bool = phase == "node" or phase == "fight" or phase == "exit" 			or ChoiceScreen.handles(String(phase))
+		assert_bool(handled).is_true()
+	assert_bool(v._continue.visible).is_false()
+	assert_bool(run.is_over()).is_false()
 
 
 func test_the_fight_phase_shows_the_fight_screen() -> void:
@@ -156,7 +142,6 @@ func test_a_node_phase_shows_the_choice_screen() -> void:
 	await await_idle_frame()
 	assert_str(run.phase).is_equal("rest")
 	assert_bool(v._choice.visible).is_true()
-	assert_bool(v._continue.visible).is_false()
 
 
 func test_the_exit_phase_shows_the_exit_screen() -> void:

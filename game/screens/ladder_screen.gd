@@ -15,6 +15,7 @@ var _reach: Label
 var _premise: Label
 var _hint: Label
 var _descend: Button
+var _entry: SpinBox
 var _cheapest_cost: float = -1.0
 var _tower: VBoxContainer
 var _rows: Array[FloorRow] = []
@@ -60,9 +61,22 @@ func _build() -> void:
 
 	# The way into the dungeon. Disabled while a run is already live so the
 	# campaign never has to refuse the click.
+	var descent_row := HBoxContainer.new()
+	descent_row.add_theme_constant_override("separation", 8)
+
+	# Entry floor, bounded by reach. Seeded explicitly on every refresh
+	# because Godot's Range re-clamps .value when max_value is assigned,
+	# which silently defeats a plain "keep the old value" guard.
+	_entry = SpinBox.new()
+	_entry.min_value = 1.0
+	_entry.step = 1.0
+	_entry.custom_minimum_size = Vector2(72.0, 0.0)
+	descent_row.add_child(_entry)
+
 	_descend = Button.new()
 	_descend.pressed.connect(_on_descend)
-	add_child(_descend)
+	descent_row.add_child(_descend)
+	add_child(descent_row)
 
 	_tower = VBoxContainer.new()
 	_tower.add_theme_constant_override("separation", ROW_SEPARATION)
@@ -99,6 +113,11 @@ func refresh() -> void:
 	_reach.text = str(CampaignEngine.reach(game.campaign))
 	_refresh_premise()
 	_cheapest_cost = _cheapest_upgrade_cost()
+	var reach := CampaignEngine.reach(game.campaign)
+	var chosen := clampi(int(_entry.value), 1, reach)
+	_entry.max_value = float(reach)
+	_entry.value = float(chosen)
+	_entry.editable = reach > 1 and game.campaign.run == null
 	_descend.text = game.text("ui.descend")
 	_descend.disabled = game.campaign.run != null
 	_on_soul_changed(game.displayed_soul(), game.campaign.rate_per_hour)
@@ -132,7 +151,7 @@ func _on_soul_changed(soul: float, rate_per_hour: float) -> void:
 ## The price of the cheapest upgrade the player has not maxed out, or -1.0
 ## when there is nothing left to buy.
 func _on_descend() -> void:
-	game.start_run(1)
+	game.start_run(int(_entry.value))
 
 
 func _cheapest_upgrade_cost() -> float:

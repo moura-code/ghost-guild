@@ -164,3 +164,41 @@ func test_the_descent_button_is_unavailable_while_a_run_is_live() -> void:
 	s.refresh()
 	await await_idle_frame()
 	assert_bool(s._descend.disabled).is_true()
+
+
+func test_the_entry_floor_is_bounded_by_reach() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	assert_float(s._entry.min_value).is_equal(1.0)
+	assert_float(s._entry.max_value).is_equal(float(CampaignEngine.reach(g.campaign)))
+	assert_bool(s._entry.editable).is_false()
+
+	g.campaign.record_depth = 4
+	s.refresh()
+	await await_idle_frame()
+	assert_float(s._entry.max_value).is_equal(4.0)
+	assert_bool(s._entry.editable).is_true()
+
+
+func test_descending_uses_the_chosen_entry_floor() -> void:
+	var g := _game()
+	g.campaign.record_depth = 3
+	var s := _screen(g)
+	await await_idle_frame()
+	s._entry.value = 3.0
+	s._descend.emit_signal("pressed")
+	await await_idle_frame()
+	assert_object(g.campaign.run).is_not_null()
+	assert_int(g.campaign.run.entry_floor).is_equal(3)
+
+
+func test_a_chosen_floor_survives_a_refresh() -> void:
+	var g := _game()
+	g.campaign.record_depth = 5
+	var s := _screen(g)
+	await await_idle_frame()
+	s._entry.value = 4.0
+	s.refresh()
+	await await_idle_frame()
+	assert_float(s._entry.value).is_equal(4.0)

@@ -1,14 +1,15 @@
 class_name ChoiceScreen
 extends VBoxContainer
-## Reward, event, rest and shop (spec §4.1 "Nodes"). All four are the same
-## shape — a title, some context, and a column of things you may do — so
-## they share one screen rather than four near-identical ones.
+## Reward, event, rest, shop and the Descent draft (spec §4.1 "Nodes",
+## §3.2). All five are the same shape — a title, some context, and a column
+## of things you may do — so they share one screen rather than five
+## near-identical ones.
 ##
 ## The options come straight from RunEngine.legal_actions, which means the
 ## screen cannot offer a move the engine would refuse, and a shop item the
 ## player cannot afford simply is not listed.
 
-const PHASES := ["reward", "event", "rest", "shop"]
+const PHASES := ["reward", "event", "rest", "shop", "descent"]
 
 var game: GameRoot
 var run: RunState
@@ -67,6 +68,10 @@ func _context_text() -> String:
 		"event":
 			var def: EventDef = game.content.events[run.event_id]
 			return game.text(def.text_key)
+		"descent":
+			# One pick per floor skipped on the way down (spec §3.2).
+			var offer: Dictionary = run.descent_offers[0]
+			return game.text("ui.descent.offer").replace("{floor}", str(int(offer["floor"])))
 	return ""
 
 
@@ -90,8 +95,10 @@ func _rebuild_options() -> void:
 func label_for(action: Dictionary) -> String:
 	var kind := String(action.get("kind", ""))
 	match kind:
-		"take_card":
+		"take_card", "draft_pick":
 			return _card_name(String(action["card"]))
+		"draft_skip":
+			return game.text("ui.choice.skip")
 		"skip_card":
 			return game.text("ui.choice.skip")
 		"choose":

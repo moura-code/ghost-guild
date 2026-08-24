@@ -232,3 +232,4 @@ ui.epitaph.stands,Still stands on Floor {floor}
 ui.epitaph.banked,Soul brought home
 ui.epitaph.rite,Next time — take the watch before you fall.
 ui.epitaph.dismiss,Leave them to it
+ui.descent.offer,You skipped Floor {floor}. Take something from it.
