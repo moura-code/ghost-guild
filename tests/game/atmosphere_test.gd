@@ -60,8 +60,57 @@ func test_deeper_floors_are_stiller() -> void:
 func test_the_accent_follows_the_biome() -> void:
 	var a := _atmos()
 	await await_idle_frame()
-	a.set_accent(Palette.biome_accent("catacombs"))
+	a.set_biome("catacombs")
 	assert_that(a._material.get_shader_parameter("accent")).is_equal(Palette.biome_accent("catacombs"))
+
+
+func test_a_biome_with_art_gets_a_backdrop() -> void:
+	var a := _atmos()
+	await await_idle_frame()
+	a.set_biome("catacombs")
+	assert_object(a._backdrop.texture).is_not_null()
+	assert_bool(a._backdrop.visible).is_true()
+
+
+func test_a_biome_without_art_shows_the_shader_ground_alone() -> void:
+	var a := _atmos()
+	await await_idle_frame()
+	a.set_biome("no_such_biome")
+	assert_object(a._backdrop.texture).is_null()
+	assert_bool(a._backdrop.visible).is_false()
+	# The ground is unaffected: losing a backdrop is not losing the look.
+	assert_object(a._ground.material).is_same(a._material)
+
+
+func test_switching_biomes_swaps_the_backdrop() -> void:
+	var a := _atmos()
+	await await_idle_frame()
+	a.set_biome("catacombs")
+	var first := a._backdrop.texture
+	a.set_biome("the_kiln")
+	assert_object(a._backdrop.texture).is_not_null()
+	assert_object(a._backdrop.texture).is_not_same(first)
+
+
+func test_the_backdrop_sits_behind_the_motes_and_never_eats_a_click() -> void:
+	var a := _atmos()
+	await await_idle_frame()
+	assert_int(a._backdrop.get_index()).is_greater(a._ground.get_index())
+	assert_int(a._backdrop.get_index()).is_less(a._motes.get_index())
+	assert_int(a._backdrop.mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
+
+
+func test_the_backdrop_is_faint_and_fades_as_the_hero_descends() -> void:
+	var a := _atmos()
+	await await_idle_frame()
+	a.set_biome("catacombs")
+	a.set_floor(1, 10)
+	var shallow := a._backdrop.modulate.a
+	assert_float(shallow).is_equal_approx(Atmosphere.BACKDROP_ALPHA, 0.001)
+	assert_float(shallow).is_less(0.5)
+	a.set_floor(10, 10)
+	assert_float(a._backdrop.modulate.a).is_less(shallow)
+	assert_float(a._backdrop.modulate.a).is_greater(0.0)
 
 
 func test_the_motes_fill_the_screen_they_are_given() -> void:

@@ -197,7 +197,7 @@ func _refresh_run_visibility() -> void:
 func _refresh_atmosphere(in_run: bool) -> void:
 	if _atmosphere == null:
 		return
-	_atmosphere.set_accent(Palette.biome_accent(game.campaign.biome_id))
+	_atmosphere.set_biome(game.campaign.biome_id)
 	if in_run:
 		_atmosphere.set_floor(game.campaign.run.floor, game.campaign.biome().last_floor)
 	else:
