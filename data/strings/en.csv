@@ -127,7 +127,6 @@ ui.per_hour,per hour
 ui.reach,reach
 ui.farmed,farmed
 ui.guild,Guild
-ui.buy,Buy
 ui.maxed,Maxed
 ui.group.hero,Hero
 ui.group.ghosts,Ghosts
@@ -156,3 +155,4 @@ ui.offline.title,While you were away
 ui.offline.away,Away for {duration}
 ui.offline.capped,Your ghosts stopped at the offline cap.
 ui.offline.dismiss,Good
+ui.ladder,Ladder
