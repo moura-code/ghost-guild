@@ -20,6 +20,7 @@ var _log: Label
 var _continue: Button
 var _body: VBoxContainer
 var _map: FloorMapScreen
+var _fight: FightScreen
 
 var _autopilot: RunAutopilot = RunAutopilot.new()
 var _lines: PackedStringArray = PackedStringArray()
@@ -55,6 +56,12 @@ func _build() -> void:
 	_map.visible = false
 	_body.add_child(_map)
 
+	_fight = FightScreen.new()
+	_fight.visible = false
+	_fight.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_fight.fight_ended.connect(refresh)
+	_body.add_child(_fight)
+
 	_log = UiTheme.small("", Palette.BONE_FAINT)
 	_log.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_log.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -74,6 +81,7 @@ func refresh() -> void:
 		_phase.text = game.text("ui.run.over")
 		_continue.visible = false
 		_map.visible = false
+		_fight.visible = false
 		return
 	_continue.visible = true
 	_floor.text = game.text("ui.run.floor").replace("{floor}", str(run.floor))
@@ -81,6 +89,7 @@ func refresh() -> void:
 		_phase.text = game.text("ui.run.over")
 		_continue.text = game.text("ui.run.bank")
 		_map.visible = false
+		_fight.visible = false
 		_continue.visible = true
 		return
 	_phase.text = game.text("ui.run.phase.%s" % run.phase)
@@ -91,11 +100,13 @@ func refresh() -> void:
 ## Shows the screen that owns this phase, if one exists yet, and hides the
 ## step-through button when it does.
 func _refresh_body(run: RunState) -> void:
-	var handled := run.phase == "node"
-	_map.visible = handled
-	if handled:
+	_map.visible = run.phase == "node"
+	_fight.visible = run.phase == "fight"
+	if _map.visible:
 		_map.bind(game, run)
-	_continue.visible = not handled
+	if _fight.visible:
+		_fight.bind(game, run)
+	_continue.visible = not (_map.visible or _fight.visible)
 
 
 func _on_continue() -> void:

@@ -186,3 +186,28 @@ ui.node.rest,Rest
 ui.node.shop,Shop
 ui.node.exit,Exit
 ui.node.enter,Enter
+status.poison.name,Poison
+status.bleed.name,Bleed
+status.burn.name,Burn
+status.weak.name,Weak
+status.vulnerable.name,Vulnerable
+status.might_buff.name,Might
+status.wit_buff.name,Wit
+status.thorns.name,Thorns
+status.regen.name,Regen
+status.vigil.name,Vigil
+status.knell.name,Knell
+ui.fight.end_turn,End turn
+ui.fight.energy,Energy
+ui.fight.block,Block
+ui.fight.draw,Draw
+ui.fight.discard,Discard
+ui.fight.turn,Turn {turn}
+ui.fight.pick_target,Choose a target
+ui.fight.intent.attack,Attacks for {damage}
+ui.fight.intent.attack_multi,Attacks for {damage} x{hits}
+ui.fight.intent.block,Defends {block}
+ui.fight.intent.buff,Strengthens itself
+ui.fight.intent.debuff,Weakens you
+ui.fight.intent.summon,Calls for help
+ui.fight.intent.unknown,Unknown
