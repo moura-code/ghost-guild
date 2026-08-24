@@ -72,9 +72,20 @@ func bind(campaign: Campaign, p_floor: int) -> void:
 	var farmed_word := campaign.content.text("ui.farmed")
 	_farmed.text = "%s %s" % [Num.percent(saturation), farmed_word] if saturation > 0.0 else ""
 
+	_refresh_tooltip(campaign, p_floor, bal, mods)
+
 	var ghosts := campaign.ladder.on_floor(p_floor)
 	_rebuild_marks(ghosts)
 	queue_redraw()
+
+
+## Saturation is the least self-explanatory number on the screen, so the row
+## spells it out: what the floor spawns, and what this player's dead take.
+func _refresh_tooltip(campaign: Campaign, p_floor: int, bal: Dictionary, mods: Dictionary) -> void:
+	var spawn := Ladder.spawn_rate(p_floor, bal) * float(mods.get("global_spawn", 1.0))
+	var strength := campaign.ladder.floor_strength(p_floor, bal, mods)
+	var key := "ui.tip.floor" if strength > 0.0 else "ui.tip.floor_empty"
+	tooltip_text = campaign.content.text(key) 		.replace("{floor}", str(p_floor)) 		.replace("{spawn}", Num.short(spawn)) 		.replace("{taken}", Num.short(minf(strength, spawn)))
 
 
 func _rebuild_marks(ghosts: Array[Ghost]) -> void:

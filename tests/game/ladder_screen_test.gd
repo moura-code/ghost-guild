@@ -84,3 +84,68 @@ func test_binding_twice_does_not_connect_the_signals_twice() -> void:
 	await await_idle_frame()
 	assert_int(g.ladder_changed.get_connections().size()).is_equal(1)
 	assert_int(s._rows.size()).is_equal(g.campaign.biome().last_floor)
+
+
+func test_the_premise_line_says_plainly_what_a_ghost_is() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	var founder := g.campaign.ladder.ghosts[0]
+	assert_str(s._premise.text).contains(founder.name)
+	assert_str(s._premise.text).contains("Floor 1")
+	assert_str(s._premise.text).contains("Soul")
+
+
+func test_the_premise_follows_the_deepest_ghost() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	TestFixtures.end_at_exit(g.campaign, 3, "watch", 1000)
+	s.refresh()
+	await await_idle_frame()
+	assert_str(s._premise.text).contains("Floor 3")
+
+
+func test_the_header_numbers_explain_themselves_on_hover() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	assert_str((s._soul.get_parent() as Control).tooltip_text).is_equal(g.text("ui.tip.soul"))
+	assert_str((s._rate.get_parent() as Control).tooltip_text).is_equal(g.text("ui.tip.per_hour"))
+	assert_str((s._reach.get_parent() as Control).tooltip_text).is_equal(g.text("ui.tip.reach"))
+	assert_str((s._soul.get_parent() as Control).tooltip_text).is_not_equal("ui.tip.soul")
+
+
+func test_the_hint_says_to_wait_when_nothing_is_affordable() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	assert_str(s._hint.text).is_equal(g.text("ui.hint.wait"))
+
+
+func test_the_hint_says_to_spend_once_an_upgrade_is_affordable() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	g.campaign.soul = 1000.0
+	s.refresh()
+	await await_idle_frame()
+	assert_str(s._hint.text).is_equal(g.text("ui.hint.spend"))
+
+
+func test_the_hint_flips_as_soul_accrues_without_a_rebind() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	assert_str(s._hint.text).is_equal(g.text("ui.hint.wait"))
+	# 20 Soul buys vigor; an hour of the Founder earns 52.
+	g.clock = func() -> int: return 1000 + 3600
+	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
+	assert_str(s._hint.text).is_equal(g.text("ui.hint.spend"))
+
+
+func test_it_admits_descending_is_not_in_this_build() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	assert_str(s._soon.text).is_equal(g.text("ui.hint.no_run"))

@@ -70,3 +70,21 @@ func test_it_draws_at_zero_size_without_crashing() -> void:
 	r.queue_redraw()
 	await await_idle_frame()
 	assert_int(r.floor_number).is_equal(1)
+
+
+func test_a_floor_explains_its_numbers_on_hover() -> void:
+	var c := TestFixtures.campaign()
+	var r := _row(c, 1)
+	await await_idle_frame()
+	# Floor 1 spawns 60 * 1.08 = 64.8 kills/h; the Founder's 40 strength takes 40.
+	assert_str(r.tooltip_text).contains("64.8")
+	assert_str(r.tooltip_text).contains("40")
+	assert_str(r.tooltip_text).contains("Floor 1")
+
+
+func test_an_empty_floor_says_nothing_of_yours_stands_there() -> void:
+	var c := TestFixtures.campaign()
+	var r := _row(c, 5)
+	await await_idle_frame()
+	assert_str(r.tooltip_text).contains("Nothing of yours")
+	assert_str(r.tooltip_text).contains("Floor 5")

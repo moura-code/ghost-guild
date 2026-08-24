@@ -156,3 +156,13 @@ ui.offline.away,Away for {duration}
 ui.offline.capped,Your ghosts stopped at the offline cap.
 ui.offline.dismiss,Good
 ui.ladder,Ladder
+ui.premise,{name} still fights on Floor {floor}. Every kill becomes your Soul.
+ui.premise.empty,Nothing of yours holds the dungeon yet.
+ui.tip.soul,What your dead have earned for you. Spend it in the Guild and the Séance.
+ui.tip.per_hour,What the whole tower earns each hour — whether the game is open or not.
+ui.tip.reach,The deepest floor a new hero is allowed to start from.
+ui.tip.floor,Floor {floor} spawns {spawn} kills an hour. Your ghosts take {taken} of them.
+ui.tip.floor_empty,Floor {floor} spawns {spawn} kills an hour. Nothing of yours stands here.
+ui.hint.wait,Your dead keep earning while the game is closed. Come back and spend it.
+ui.hint.spend,You have Soul to spend — open the Guild or the Séance.
+ui.hint.no_run,Taking a hero down into the dungeon arrives in the next build.
