@@ -62,6 +62,9 @@ func test_soul_ticking_updates_the_header_without_rebinding_the_tower() -> void:
 	var before := s._rows[0].saturation
 	g.clock = func() -> int: return 1000 + 3600
 	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
+	# The counter runs up to its value rather than snapping, so give the
+	# count time to land before reading it.
+	await get_tree().create_timer(0.8).timeout
 	assert_str(s._soul.text).is_equal("52")
 	assert_float(s._rows[0].saturation).is_equal(before)
 
@@ -232,3 +235,16 @@ func test_a_tick_that_does_not_move_the_whole_number_does_not_kick() -> void:
 	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
 	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
 	assert_that(s._soul.scale).is_equal(Vector2.ONE)
+
+
+func test_the_counter_runs_up_rather_than_snapping() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	g.clock = func() -> int: return 1000 + 3600
+	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
+	# Immediately after the value changes the counter has not arrived yet --
+	# that is the whole point of it running up.
+	assert_float(s._shown_soul).is_less(52.0)
+	await get_tree().create_timer(0.8).timeout
+	assert_float(s._shown_soul).is_equal_approx(52.0, 0.01)

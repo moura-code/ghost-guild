@@ -170,6 +170,22 @@ func _apply_tab(id: String) -> void:
 		if wrapper != null:
 			wrapper.visible = on
 	_tab_bar.select(id)
+	_enter(_screens[id] as Control)
+
+
+## A screen rises into place rather than blinking on. Small -- eight pixels
+## and a fifth of a second -- but the difference between a page that loads
+## and a screen that arrives.
+func _enter(screen: Control) -> void:
+	if screen == null or not screen.is_inside_tree():
+		return
+	screen.modulate.a = 0.0
+	var rest := screen.position.y
+	screen.position.y = rest + 8.0
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(screen, "modulate:a", 1.0, 0.18)
+	tween.tween_property(screen, "position:y", rest, 0.22) 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 ## The run view and the tab shell are mutually exclusive.

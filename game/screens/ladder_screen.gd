@@ -20,6 +20,8 @@ var _descend: Button
 var _entry: SpinBox
 var _cheapest_cost: float = -1.0
 var _last_shown_soul: int = -1
+var _shown_soul: float = 0.0
+var _soul_tween: Tween
 var _tower: VBoxContainer
 var _rows: Array[FloorRow] = []
 
@@ -164,12 +166,34 @@ func _refresh_premise() -> void:
 ## The 10 Hz path: numbers only, never a rebind. The tower is static
 ## between mutations, so ticking Soul must not touch it.
 func _on_soul_changed(soul: float, rate_per_hour: float) -> void:
-	_soul.text = Num.short(soul)
 	_rate.text = Num.rate(rate_per_hour)
+	_count_to(soul)
 	_punch_soul(int(soul))
 	# One float compare -- the cheapest price is cached by refresh().
 	var affordable := _cheapest_cost >= 0.0 and soul >= _cheapest_cost
 	_hint.text = game.text("ui.hint.spend") if affordable else game.text("ui.hint.wait")
+
+
+## The counter runs up to its new value instead of jumping. On an idle
+## screen the number climbing IS the feedback -- a value that snaps reads
+## as a field being overwritten.
+func _count_to(soul: float) -> void:
+	if not is_inside_tree() or absf(soul - _shown_soul) < 0.01:
+		_shown_soul = soul
+		_soul.text = Num.short(soul)
+		return
+	# A big jump (a run banked, an upgrade bought) is worth watching; the
+	# 10 Hz trickle is not, so it lands almost immediately.
+	var leap := absf(soul - _shown_soul) > maxf(8.0, _shown_soul * 0.05)
+	if _soul_tween != null and _soul_tween.is_valid():
+		_soul_tween.kill()
+	_soul_tween = create_tween()
+	_soul_tween.tween_method(_set_shown_soul, _shown_soul, soul, 0.55 if leap else 0.12) 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+
+func _set_shown_soul(value: float) -> void:
+	_shown_soul = value
+	_soul.text = Num.short(value)
 
 
 ## A small kick whenever the whole number climbs. It is the only motion on
