@@ -12,15 +12,30 @@ extends Control
 ## and colour, and how much shake an event asked for.
 
 signal shake_requested(strength: float)
+## Fired as each hit actually lands, so the thing that was hit reacts at
+## the moment its number appears rather than all at once up front.
+signal hit_landed(event: Dictionary)
 
 const SHAKE_PER_DAMAGE := 0.7
 const SHAKE_MAX := 14.0
 const BIG_HIT := 10
 const STAGGER := 14.0
+## Seconds between one hit and the next. The combat engine resolves an
+## entire enemy phase inside a single apply() call and hands back one flat
+## array, so three enemies attacking used to land in the same rendered
+## frame: a whole round played as one burst rather than as a sequence of
+## blows. This is what made the fight feel flat.
+const BEAT := 0.14
 
 var content: Content
 ## The numbers spawned by the most recent play() call. Tests read this.
 var last_spawned: Array[FloatNumber] = []
+
+var _queue: Array = []
+var _anchors: Dictionary = {}
+var _cursor: int = 0
+var _beat: Tween
+var _beat_counts: Dictionary = {}
 
 
 func _init() -> void:
@@ -37,43 +52,86 @@ func bind(c: Content) -> void:
 ## fight can animate before layout has settled.
 func play(events: Array, anchors: Dictionary) -> void:
 	last_spawned.clear()
-	var shake := 0.0
-	var stagger := 0
-	for event in events:
-		var type := String(event.get("type", ""))
-		match type:
-			"damage":
-				var amount := int(event.get("amount", 0))
-				if amount <= 0:
-					continue
-				_spawn(str(amount), Palette.DANGER, _anchor(event, anchors), stagger, amount >= BIG_HIT)
-				stagger += 1
-				if String(event.get("target", "")) == "hero":
-					shake = maxf(shake, minf(SHAKE_MAX, float(amount) * SHAKE_PER_DAMAGE))
-			"block_gained":
-				var block := int(event.get("amount", 0))
-				if block <= 0:
-					continue
-				_spawn("+%d" % block, Palette.SOUL, _anchor(event, anchors), stagger)
-				stagger += 1
-			"heal":
-				var healed := int(event.get("amount", 0))
-				if healed <= 0:
-					continue
-				_spawn("+%d" % healed, Palette.GOOD, _anchor(event, anchors), stagger)
-				stagger += 1
-			"status_applied":
-				var stacks := int(event.get("stacks", 0))
-				if stacks <= 0:
-					continue
-				var name_key := "status.%s.name" % String(event.get("status", ""))
-				_spawn(content.text(name_key), Palette.PREPARED, _anchor(event, anchors), stagger)
-				stagger += 1
-			"enemy_died":
-				_spawn(content.text("ui.fight.slain"), Palette.BONE_DIM, _anchor(event, anchors), stagger, true)
-				stagger += 1
-	if shake > 0.0:
-		shake_requested.emit(shake)
+	_queue = events.duplicate()
+	_anchors = anchors.duplicate()
+	_cursor = 0
+	_beat_counts.clear()
+	if _beat != null and _beat.is_valid():
+		_beat.kill()
+	_step()
+
+
+## One beat of the sequence: everything that should land together lands,
+## then the next beat is scheduled. Events with no visible effect are
+## consumed without spending a beat on them, so a turn does not stall on
+## bookkeeping.
+func _step() -> void:
+	while _cursor < _queue.size():
+		var event: Dictionary = _queue[_cursor]
+		_cursor += 1
+		if _render(event, _stagger_for(event)):
+			break
+	if _cursor < _queue.size() and is_inside_tree():
+		_beat = create_tween()
+		_beat.tween_interval(BEAT)
+		_beat.tween_callback(_step)
+
+
+## Numbers from the same beat stagger vertically so a multi-hit attack does
+## not stack every number on one pixel.
+func _stagger_for(event: Dictionary) -> int:
+	# Keyed by what was hit, so numbers landing on the same target in one
+	# beat stack upward instead of on top of each other. `target` is a
+	# String on damage events but an int on card_played, so it cannot be
+	# typed -- str() takes either.
+	var target: Variant = event.get("target", "")
+	var key := "%s%d" % [str(target), int(event.get("index", -1))]
+	var n := int(_beat_counts.get(key, 0))
+	_beat_counts[key] = n + 1
+	return n
+
+
+## Returns true when the event was worth a beat.
+func _render(event: Dictionary, stagger: int) -> bool:
+	var type := String(event.get("type", ""))
+	match type:
+		"damage":
+			var amount := int(event.get("amount", 0))
+			if amount <= 0:
+				# A fully absorbed hit is still an event the player should
+				# feel -- it is the block doing its job.
+				_spawn(content.text("ui.fight.blocked"), Palette.SOUL, _anchor(event), stagger)
+				hit_landed.emit(event)
+				return true
+			_spawn(str(amount), Palette.DANGER, _anchor(event), stagger, amount >= BIG_HIT)
+			if String(event.get("target", "")) == "hero":
+				shake_requested.emit(minf(SHAKE_MAX, float(amount) * SHAKE_PER_DAMAGE))
+			hit_landed.emit(event)
+			return true
+		"block_gained":
+			var block := int(event.get("amount", 0))
+			if block <= 0:
+				return false
+			_spawn("+%d" % block, Palette.SOUL, _anchor(event), stagger)
+			return true
+		"heal":
+			var healed := int(event.get("amount", 0))
+			if healed <= 0:
+				return false
+			_spawn("+%d" % healed, Palette.GOOD, _anchor(event), stagger)
+			return true
+		"status_applied":
+			var stacks := int(event.get("stacks", 0))
+			if stacks <= 0:
+				return false
+			_spawn(content.text("status.%s.name" % String(event.get("status", ""))),
+				Palette.PREPARED, _anchor(event), stagger)
+			return true
+		"enemy_died":
+			_spawn(content.text("ui.fight.slain"), Palette.BONE_DIM, _anchor(event), stagger, true)
+			hit_landed.emit(event)
+			return true
+	return false
 
 
 ## Damage to the hero shakes; damage to an enemy does not. The screen only
@@ -89,12 +147,17 @@ static func shake_for(events: Array) -> float:
 	return shake
 
 
-func _anchor(event: Dictionary, anchors: Dictionary) -> Variant:
+func _anchor(event: Dictionary) -> Variant:
 	if String(event.get("target", "")) == "hero":
-		return anchors.get("hero")
+		return _anchors.get("hero")
 	if event.has("index"):
-		return anchors.get(int(event["index"]))
-	return anchors.get("hero")
+		return _anchors.get(int(event["index"]))
+	return _anchors.get("hero")
+
+
+## True while a sequence is still playing out.
+func is_playing() -> bool:
+	return _cursor < _queue.size()
 
 
 ## Several events land in one action; staggering them vertically keeps a

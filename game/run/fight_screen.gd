@@ -114,6 +114,7 @@ func _build() -> void:
 	# Overlay: draws above the fight and never eats a click.
 	_animator = FightAnimator.new()
 	_animator.shake_requested.connect(_shake)
+	_animator.hit_landed.connect(_on_hit_landed)
 	add_child(_animator)
 
 
@@ -385,24 +386,24 @@ func _animate(events: Array) -> void:
 	if events.is_empty():
 		return
 	_animator.play(events, anchors())
-	_react(events)
 
 
-## The floating numbers say what happened; these make the thing it happened
-## to acknowledge it. Driven off the same event stream.
-func _react(events: Array) -> void:
-	for event in events:
-		if not event.has("index"):
-			continue
-		var index := int(event["index"])
-		if index < 0 or index >= _enemy_views.size():
-			continue
-		match String(event.get("type", "")):
-			"damage":
-				if int(event.get("amount", 0)) > 0:
-					_enemy_views[index].react_hit(int(event["amount"]))
-			"enemy_died":
-				_enemy_views[index].react_death()
+## The thing that was hit reacts at the moment its own number appears,
+## rather than the whole batch flashing up front. The combat engine
+## resolves an entire enemy phase inside one apply() call, so without this
+## three enemies attacking all landed in the same rendered frame.
+func _on_hit_landed(event: Dictionary) -> void:
+	if not event.has("index"):
+		return
+	var index := int(event["index"])
+	if index < 0 or index >= _enemy_views.size():
+		return
+	match String(event.get("type", "")):
+		"damage":
+			if int(event.get("amount", 0)) > 0:
+				_enemy_views[index].react_hit(int(event["amount"]))
+		"enemy_died":
+			_enemy_views[index].react_death()
 
 
 ## Tweening a container child's position is fragile -- the parent re-sorts on

@@ -7,7 +7,7 @@ extends Control
 
 const BASE_SIZE := Vector2(24.0, 32.0)
 const WAVE_BUMPS := 3
-const FLOAT_PIXELS := 1.6
+const FLOAT_PIXELS := 3.4
 const FLOAT_SECONDS := 3.2
 
 var kind: String = "true"
@@ -49,7 +49,12 @@ func _process(delta: float) -> void:
 	if not floating:
 		return
 	_phase += delta
-	var next := sin(_phase * TAU / FLOAT_SECONDS) * FLOAT_PIXELS
+	# The restless shudder rather than drift: on an idle screen the ghost
+	# that wants tending should catch the eye through movement, not only
+	# through being a different colour.
+	var period := FLOAT_SECONDS * (0.28 if restless else 1.0)
+	var swing := FLOAT_PIXELS * (1.5 if restless else 1.0)
+	var next := sin(_phase * TAU / period) * swing
 	if not is_equal_approx(next, _bob):
 		_bob = next
 		queue_redraw()

@@ -29,6 +29,7 @@ var _mark: GhostMark
 var _floor: Label
 var _soul: Label
 var _banked_caption: Label
+var _soul_target: float = 0.0
 var _rite: Label
 var _dismiss: Button
 var _timer: SceneTreeTimer
@@ -119,7 +120,8 @@ func bind(g: GameRoot, p_result: Dictionary) -> void:
 	if ghost != null:
 		_mark.bind(ghost)
 	_floor.text = g.text("ui.epitaph.stands").replace("{floor}", str(int(p_result.get("floor", 1))))
-	_soul.text = Num.short(float(p_result.get("soul", 0.0)))
+	_soul_target = float(p_result.get("soul", 0.0))
+	_soul.text = Num.short(0.0)
 	_banked_caption.text = g.text("ui.epitaph.banked")
 	_rite.text = g.text("ui.epitaph.rite") if _has_rite(p_result) else ""
 	_dismiss.text = g.text("ui.epitaph.dismiss")
@@ -143,12 +145,50 @@ func stage_count() -> int:
 	return 5 if _has_rite(result) else 4
 
 
+## Each beat fades and rises rather than snapping on. Four of the five
+## stages used to simply flip .visible, on the screen the spec calls the
+## emotional centre of the game.
+func _reveal(node: Control) -> void:
+	if node == null or node.visible or not is_inside_tree():
+		return
+	node.visible = true
+	node.modulate.a = 0.0
+	var tween := create_tween()
+	tween.tween_property(node, "modulate:a", 1.0, 0.28).set_ease(Tween.EASE_OUT)
+
+
+## The number counts up from nothing when it arrives. The spec asks for
+## exactly this and it was popping in fully formed.
+func _tick_soul() -> void:
+	if not is_inside_tree():
+		_soul.text = Num.short(_soul_target)
+		return
+	var tween := create_tween()
+	tween.tween_method(func(v: float) -> void: _soul.text = Num.short(v),
+		0.0, _soul_target, 0.75).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+
 func _show_up_to(n: int) -> void:
+	var was := stage
 	stage = n
+	var banked := _soul.get_parent().get_parent() as Control
+	if paced and n > was:
+		# Arriving: fade each beat in as it lands.
+		if n >= 1: _reveal(_name)
+		if n >= 2: _reveal(_epitaph)
+		if n >= 3: _reveal(_arrival)
+		if n >= 4 and not banked.visible:
+			_reveal(banked)
+			_tick_soul()
+		if n >= 5 and _has_rite(result): _reveal(_rite)
+		if n >= stage_count(): _reveal(_dismiss)
+		return
 	_name.visible = n >= 1
 	_epitaph.visible = n >= 2
 	_arrival.visible = n >= 3
-	_soul.get_parent().get_parent().visible = n >= 4
+	banked.visible = n >= 4
+	if n >= 4:
+		_soul.text = Num.short(_soul_target)
 	_rite.visible = n >= 5 and _has_rite(result)
 	_dismiss.visible = n >= stage_count()
 

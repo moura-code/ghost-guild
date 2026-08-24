@@ -233,3 +233,6 @@ ui.descent.offer,You skipped Floor {floor}. Take something from it.
 ui.card.cost_x,X
 ui.fight.your_turn,Your turn
 ui.fight.enemy_turn,They move
+ui.fight.becoming,If you fall here
+ui.fight.yield_here,this floor pays
+ui.fight.blocked,Blocked

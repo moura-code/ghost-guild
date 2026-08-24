@@ -147,6 +147,36 @@ static func bar_box() -> StyleBoxFlat:
 	return sb
 
 
+## The primary action on a screen: Descend, Push deeper, End turn. Lifted,
+## saturated and edged in the accent so the eye finds it without reading it.
+## Using one button style for the primary action, the bail-out and a plain
+## catalogue row is the loudest "unfinished" tell a UI can have.
+static func primary_box(accent: Color) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(accent.r * 0.30, accent.g * 0.26, accent.b * 0.34, 1.0)
+	sb.border_color = accent
+	sb.set_border_width_all(1)
+	sb.border_width_bottom = 3
+	sb.set_corner_radius_all(5)
+	sb.set_content_margin_all(10)
+	sb.shadow_color = Color(accent.r, accent.g, accent.b, 0.22)
+	sb.shadow_size = 8
+	return sb
+
+
+## A catalogue row -- a shop item, an upgrade. No fill, no border, just a
+## rule underneath. A list of forty identical buttons reads as a settings
+## menu; a list of rows reads as a catalogue.
+static func list_row_box(hovered: bool = false) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Palette.STONE_RAISED if hovered else Color(0, 0, 0, 0)
+	sb.border_color = Color(Palette.STONE_EDGE.r, Palette.STONE_EDGE.g, Palette.STONE_EDGE.b, 0.45)
+	sb.border_width_bottom = 1
+	sb.set_content_margin_all(9)
+	sb.content_margin_left = 14
+	return sb
+
+
 ## A small round chip: cost bubbles, counters, pips.
 static func pip_box(bg: Color, border: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
