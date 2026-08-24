@@ -7,11 +7,7 @@ extends Control
 ## The shader does the ground; CPUParticles2D do the motes. Both are cheap
 ## enough to leave running on the Ladder while the player is away.
 
-const SHADER_PATH := "res://game/theme/stone.gdshader"
-const BACKDROP_DIR := "res://assets/backdrops"
-## Low on purpose. Anything more and the backdrop competes with the tower
-## and the text in front of it; this is a suggestion of a place, not scenery.
-const BACKDROP_ALPHA := 0.30
+const SHADER_PATH := "res://game/theme/crypt.gdshader"
 const MOTE_COUNT := 34
 const MOTE_LIFETIME := 14.0
 
@@ -21,7 +17,6 @@ var depth: float = 0.0:
 		_apply_depth()
 
 var _ground: ColorRect
-var _backdrop: TextureRect
 var _motes: CPUParticles2D
 var _material: ShaderMaterial
 
@@ -45,16 +40,6 @@ func _build() -> void:
 		# A missing shader must not take the game down with it.
 		_ground.color = Palette.STONE
 	add_child(_ground)
-
-	# Between the shader ground and the motes: a heavily darkened, blurred
-	# still of the biome. Placeholder art -- see assets/backdrops/README.md.
-	_backdrop = TextureRect.new()
-	_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	_backdrop.visible = false
-	add_child(_backdrop)
 
 	_motes = _make_motes()
 	add_child(_motes)
@@ -88,6 +73,7 @@ func _notification(what: int) -> void:
 func _fit_motes() -> void:
 	if _motes == null or size.x <= 0.0:
 		return
+	_apply_depth()
 	_motes.emission_rect_extents = size * 0.5
 	_motes.position = size * 0.5
 
@@ -98,17 +84,11 @@ func set_floor(floor: int, last_floor: int) -> void:
 	depth = 0.0 if last_floor <= 1 else float(floor - 1) / float(last_floor - 1)
 
 
-## Shows the biome's backdrop if one exists. A biome without art simply has
-## none -- the shader ground alone is a complete look, and the backdrop is
-## an addition to it rather than something it depends on.
+## Sets the biome's colour on the crypt. There is no backdrop image any
+## more: an AI-generated still at low alpha read as a rendering glitch on
+## the warmed palette, and the shader draws the room itself now.
 func set_biome(biome_id: String) -> void:
 	set_accent(Palette.biome_accent(biome_id))
-	var path := "%s/%s.webp" % [BACKDROP_DIR, biome_id]
-	var texture: Texture2D = null
-	if ResourceLoader.exists(path):
-		texture = load(path) as Texture2D
-	_backdrop.texture = texture
-	_backdrop.visible = texture != null
 	_apply_depth()
 
 
@@ -135,11 +115,8 @@ func _set_glow(value: float) -> void:
 func _apply_depth() -> void:
 	if _material != null:
 		_material.set_shader_parameter("depth", depth)
+		_material.set_shader_parameter("aspect", (size.x / size.y) if size.y > 0.0 else 1.777)
 	if _motes != null:
 		# Deeper floors are stiller: fewer motes, slower.
 		_motes.amount = maxi(8, int(round(float(MOTE_COUNT) * (1.0 - depth * 0.55))))
-	if _backdrop != null:
-		# And darker: the backdrop fades out as the hero descends, so the
-		# bottom of a biome is close to true black.
-		var fade := BACKDROP_ALPHA * (1.0 - depth * 0.6)
-		_backdrop.modulate = Color(1.0, 1.0, 1.0, fade)
+

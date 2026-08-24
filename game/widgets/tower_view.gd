@@ -196,15 +196,17 @@ func _draw() -> void:
 		var light := light_at(floor)
 		var reachable := floor <= waypoint
 
-		# The rock the chamber is cut into.
+		# The rock the chamber is cut into. Translucent, not opaque: the
+		# crypt wall behind the whole screen should read through it, so the
+		# shaft looks cut into that wall rather than pasted on top of it.
 		draw_rect(Rect2(Vector2(NUMBER_COLUMN, rect.position.y),
 			Vector2(size.x - NUMBER_COLUMN - RATE_COLUMN, rect.size.y)),
-			Color(Palette.VOID.r, Palette.VOID.g, Palette.VOID.b, 1.0))
+			Color(Palette.VOID.r, Palette.VOID.g, Palette.VOID.b, 0.55))
 
 		# The chamber itself: darker than the rock, lit from above.
 		var air := Palette.STONE_RAISED
 		var lit := 0.35 + light * 0.65
-		draw_rect(rect, Color(air.r * lit, air.g * lit, air.b * lit, 1.0))
+		draw_rect(rect, Color(air.r * lit, air.g * lit, air.b * lit, 0.92))
 
 		# Its saturation, as light pooling in the chamber rather than a bar.
 		var saturation := _campaign.ladder.saturation(floor, bal, mods)
