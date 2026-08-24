@@ -10,8 +10,9 @@ game ships, which is why this file is also surfaced in-game.
 
 Each icon was downloaded from the project's source repository and modified in
 two ways: the opaque black backing plate was removed so the glyph is a
-silhouette on transparency, and the fill was changed to `currentColor` so the
-game can tint it. No other changes.
+silhouette on transparency, and the fill was set to white so the game can tint
+it (Godot's SVG rasteriser has no value for `currentColor` and renders it
+black, which then multiplies to black under any tint). No other changes.
 
 ### carl-olsen
 

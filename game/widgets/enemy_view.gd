@@ -1,88 +1,105 @@
 class_name EnemyView
-extends PanelContainer
-## One enemy across the top of the fight (spec §9): name, HP bar, block,
-## and the telegraphed intent — the number the player is deciding against.
+extends Control
+## One enemy in the fight (spec §9). Deliberately NOT a panel.
+##
+## The earlier version put every enemy inside a bordered box with a small
+## icon in it, and that is the single thing that made the fight read as an
+## application rather than a game: a card game's enemies are figures
+## standing on a floor, not rows in a list. So this draws a large
+## silhouette with its shadow on the ground, its name and health beneath
+## it, and its telegraphed intent floating above its head. Being a legal
+## target is a pool of light, not a border.
 ##
 ## A widget: bind() renders, press() reports. Headless tests call press()
 ## directly since Godot does not deliver synthetic InputEvents headless.
 
 signal pressed(enemy_index: int)
 
-const VIEW_SIZE := Vector2(216.0, 178.0)
-const BAR_HEIGHT := 11.0
+const VIEW_SIZE := Vector2(230.0, 258.0)
+const FIGURE := 128.0
+const BAR_WIDTH := 132.0
+const BAR_HEIGHT := 8.0
+
 const FLASH_SECONDS := 0.09
 const SQUASH := 0.12
 const DEATH_SECONDS := 0.45
 const BREATH_SECONDS := 3.4
-const BREATH_DEPTH := 0.018
+const BREATH_DEPTH := 0.02
 
 var enemy_index: int = -1
 var hp: int = 0
 var max_hp: int = 1
+var block: int = 0
 var alive: bool = true
 var targetable: bool = false
+var idling: bool = true
 
+var _figure: TextureRect
 var _name: Label
 var _hp: Label
 var _intent: Label
-var _statuses: Label
-var _bar: Control
-var _icon: TextureRect
-var _status_row: HBoxContainer
-var _reaction: Tween
 var _intent_icon: TextureRect
+var _intent_chip: PanelContainer
+var _status_row: HBoxContainer
+var _bar: Control
+var _reaction: Tween
 var _breath: float = 0.0
-var idling: bool = true
 
 
 func _init() -> void:
 	custom_minimum_size = VIEW_SIZE
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	pivot_offset = VIEW_SIZE * 0.5
+	# Scales from the feet: a figure that grows should grow upward rather
+	# than sink into the floor it is standing on.
+	pivot_offset = Vector2(VIEW_SIZE.x * 0.5, VIEW_SIZE.y)
+	draw.connect(_draw_ground)
 	_build()
 
 
 func _build() -> void:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
-	add_child(box)
+	var column := VBoxContainer.new()
+	column.set_anchors_preset(Control.PRESET_FULL_RECT)
+	column.add_theme_constant_override("separation", 4)
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(column)
 
-	var head := VBoxContainer.new()
-	head.add_theme_constant_override("separation", 2)
-	head.alignment = BoxContainer.ALIGNMENT_CENTER
-	_icon = Icons.make_rect(null, 62.0, Palette.BONE)
-	head.add_child(_icon)
-	_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_name = UiTheme.body("")
-	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	head.add_child(_name)
-	box.add_child(head)
-
-	_bar = Control.new()
-	_bar.custom_minimum_size = Vector2(0.0, BAR_HEIGHT)
-	_bar.draw.connect(_draw_bar)
-	box.add_child(_bar)
-
-	_hp = UiTheme.small("", Palette.BONE_DIM)
-	_hp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(_hp)
-
-	var intent_row := HBoxContainer.new()
-	intent_row.add_theme_constant_override("separation", 6)
-	intent_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	_intent_icon = Icons.make_rect(null, 22.0, Palette.DANGER)
-	intent_row.add_child(_intent_icon)
+	# The intent floats above the figure's head: it is the thing the player
+	# is deciding against, so it sits where they are already looking.
+	_intent_chip = PanelContainer.new()
+	_intent_chip.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_intent_chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var chip_row := HBoxContainer.new()
+	chip_row.add_theme_constant_override("separation", 5)
+	_intent_icon = Icons.make_rect(null, 20.0, Palette.DANGER)
+	chip_row.add_child(_intent_icon)
 	_intent = UiTheme.number("", Palette.DANGER)
-	intent_row.add_child(_intent)
-	box.add_child(intent_row)
+	chip_row.add_child(_intent)
+	_intent_chip.add_child(chip_row)
+	column.add_child(_intent_chip)
+
+	_figure = Icons.make_rect(null, FIGURE, Palette.BONE)
+	_figure.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	column.add_child(_figure)
 
 	_status_row = HBoxContainer.new()
 	_status_row.add_theme_constant_override("separation", 4)
 	_status_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_child(_status_row)
+	_status_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(_status_row)
 
-	_statuses = UiTheme.small("", Palette.BONE_FAINT)
-	box.add_child(_statuses)
+	_name = UiTheme.body("")
+	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(_name)
+
+	_bar = Control.new()
+	_bar.custom_minimum_size = Vector2(0.0, BAR_HEIGHT)
+	_bar.draw.connect(_draw_bar)
+	_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(_bar)
+
+	_hp = UiTheme.small("", Palette.BONE_DIM)
+	_hp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(_hp)
 
 
 func bind(state: FightState, index: int, is_targetable: bool) -> void:
@@ -94,34 +111,41 @@ func bind(state: FightState, index: int, is_targetable: bool) -> void:
 	var def: EnemyDef = state.content.enemies[enemy.def_id]
 	hp = enemy.hp
 	max_hp = maxi(1, enemy.max_hp)
+	block = enemy.block
 	alive = enemy.alive
 
+	_figure.texture = Icons.enemy(enemy.def_id)
+	_figure.modulate = _figure_colour()
 	_name.text = state.content.text(def.name_key)
-	_icon.texture = Icons.enemy(enemy.def_id)
+	_name.add_theme_color_override("font_color", Palette.BONE if alive else Palette.BONE_FAINT)
+	_hp.text = "%d/%d" % [enemy.hp, enemy.max_hp]
+	if enemy.block > 0:
+		_hp.text += "   +%d" % enemy.block
+
+	_intent.text = intent_text(state, index)
+	_intent_icon.texture = Icons.get_icon("intent", intent_kind(state, index))
+	_intent_chip.visible = alive
+	_intent_chip.add_theme_stylebox_override("panel",
+		UiTheme.pip_box(Palette.VOID, Palette.DANGER))
+
 	if alive and _reaction == null:
 		modulate = Color.WHITE
 		scale = Vector2.ONE
 		idling = true
-	_icon.modulate = Palette.BONE if alive else Palette.BONE_FAINT
 	_refresh_status_icons(enemy.statuses)
-	_hp.text = "%d/%d" % [enemy.hp, enemy.max_hp]
-	if enemy.block > 0:
-		_hp.text += "  +%d" % enemy.block
-	_intent.text = intent_text(state, index)
-	_intent_icon.texture = Icons.get_icon("intent", intent_kind(state, index))
-	_intent_icon.visible = alive
-	_statuses.text = status_text(state.content, enemy.statuses)
-	_name.add_theme_color_override("font_color", Palette.BONE if alive else Palette.BONE_FAINT)
-	if targetable:
-		add_theme_stylebox_override("panel", UiTheme.lit_box(Palette.STONE_HIGH, Palette.SOUL))
-	else:
-		add_theme_stylebox_override("panel", UiTheme.panel_box(
-			Palette.STONE_RAISED if alive else Palette.STONE, Palette.STONE_EDGE))
 	_bar.queue_redraw()
+	queue_redraw()
+
+
+## Lit when it can be struck, bone while it lives, faded once it is dead.
+func _figure_colour() -> Color:
+	if not alive:
+		return Palette.BONE_FAINT
+	return Palette.SOUL if targetable else Palette.BONE
 
 
 ## Which icon the telegraph wears. Separate from the text so a glance reads
-## "sword, 7" while the sentence underneath stays unambiguous.
+## "sword, 7" while the number stays exact.
 static func intent_kind(state: FightState, index: int) -> String:
 	if not state.enemies[index].alive:
 		return ""
@@ -141,7 +165,7 @@ static func intent_text(state: FightState, index: int) -> String:
 			var hits := int(intent.get("hits", 1))
 			var damage := int(intent.get("damage", 0))
 			if hits > 1:
-				return "%d x%d" % [damage, hits]
+				return "%d ×%d" % [damage, hits]
 			return str(damage)
 		"block":
 			return str(int(intent.get("block", 0)))
@@ -164,8 +188,7 @@ static func status_text(content: Content, statuses: Dictionary) -> String:
 	return " · ".join(parts)
 
 
-## Takes a hit: a fast white flash and a squash that springs back. Both are
-## short on purpose -- long enough to see, not long enough to wait for.
+## Takes a hit: a fast white flash and a squash that springs back.
 func react_hit(amount: int) -> void:
 	if not is_inside_tree():
 		return
@@ -176,7 +199,8 @@ func react_hit(amount: int) -> void:
 	_reaction = create_tween()
 	_reaction.set_parallel(true)
 	_reaction.tween_property(self, "modulate", Color.WHITE, FLASH_SECONDS * 2.0)
-	_reaction.tween_property(self, "scale", Vector2.ONE, FLASH_SECONDS * 3.0) 		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_reaction.tween_property(self, "scale", Vector2.ONE, FLASH_SECONDS * 3.0) \
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 
 ## Dies: sags, fades and drains of colour rather than blinking out.
@@ -185,12 +209,13 @@ func react_death() -> void:
 		return
 	_kill_reaction()
 	# The dead do not breathe. Without this the idle swell reclaims the
-	# scale the moment the death tween finishes and the corpse sits up.
+	# scale the moment the death tween ends and the corpse sits back up.
 	idling = false
 	_reaction = create_tween()
 	_reaction.set_parallel(true)
 	_reaction.tween_property(self, "modulate:a", 0.25, DEATH_SECONDS).set_ease(Tween.EASE_IN)
-	_reaction.tween_property(self, "scale", Vector2(1.0, 0.82), DEATH_SECONDS) 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_reaction.tween_property(self, "scale", Vector2(1.06, 0.8), DEATH_SECONDS) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 
 func _kill_reaction() -> void:
@@ -199,8 +224,7 @@ func _kill_reaction() -> void:
 
 
 ## A slow swell, seeded per enemy so a row of them does not pulse in
-## lockstep. Suppressed while a hit reaction or a death is playing, since
-## those own the scale.
+## lockstep. Suppressed while a reaction owns the scale.
 func _process(delta: float) -> void:
 	if not idling or not alive or (_reaction != null and _reaction.is_valid()):
 		return
@@ -209,15 +233,14 @@ func _process(delta: float) -> void:
 	scale = Vector2(swell, swell)
 
 
-## Status icons read faster than a comma-separated list mid-fight; the text
-## line stays underneath as the unambiguous version.
+## Status icons read faster than a comma-separated list mid-fight.
 func _refresh_status_icons(statuses: Dictionary) -> void:
 	var wanted: Array[String] = []
 	for name in statuses:
 		if int(statuses[name]) > 0:
 			wanted.append(String(name))
 	while _status_row.get_child_count() < wanted.size():
-		_status_row.add_child(Icons.make_rect(null, 14.0, Palette.PREPARED))
+		_status_row.add_child(Icons.make_rect(null, 16.0, Palette.PREPARED))
 	for i in _status_row.get_child_count():
 		var rect: TextureRect = _status_row.get_child(i)
 		var used := i < wanted.size()
@@ -226,20 +249,40 @@ func _refresh_status_icons(statuses: Dictionary) -> void:
 			rect.texture = Icons.status(wanted[i])
 
 
+## The shadow the figure casts, and the light that marks it as a target.
+## Drawn rather than styled, because the whole point of this widget is that
+## there is no panel behind it.
+func _draw_ground() -> void:
+	if size.x <= 0.0 or not alive:
+		return
+	var centre := Vector2(size.x * 0.5, size.y - 44.0)
+	if targetable:
+		# A pool of light under a legal target: selection without a border.
+		for i in 9:
+			var t := float(i) / 8.0
+			draw_circle(centre, 30.0 + t * 52.0,
+				Color(Palette.SOUL.r, Palette.SOUL.g, Palette.SOUL.b, 0.055 * (1.0 - t)))
+	draw_circle(centre, 42.0, Color(0.0, 0.0, 0.0, 0.32))
+	draw_circle(centre, 27.0, Color(0.0, 0.0, 0.0, 0.28))
+
+
 func _draw_bar() -> void:
-	var w := _bar.size.x
+	var w := minf(_bar.size.x, BAR_WIDTH)
 	if w <= 0.0:
 		return
+	var x := (_bar.size.x - w) * 0.5
 	var h := _bar.size.y
-	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w, h)), Palette.VOID)
+	_bar.draw_rect(Rect2(Vector2(x, 0.0), Vector2(w, h)), Palette.VOID)
 	var frac := clampf(float(hp) / float(max_hp), 0.0, 1.0)
 	var colour := Palette.DANGER if frac <= 0.35 else Palette.BONE_DIM
-	# Dim body, lit top edge: a solid fill of bone at full health was the
-	# brightest block on the screen and pulled the eye off the intent.
-	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w * frac, h)),
-		Color(colour.r * 0.5, colour.g * 0.5, colour.b * 0.5, 1.0))
-	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w * frac, 2.0)), colour)
-	_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(w, 1.0)), Color(0.0, 0.0, 0.0, 0.6))
+	# Dim body, lit top edge -- a solid fill was the brightest block around.
+	_bar.draw_rect(Rect2(Vector2(x, 0.0), Vector2(w * frac, h)),
+		Color(colour.r * 0.45, colour.g * 0.45, colour.b * 0.45, 1.0))
+	_bar.draw_rect(Rect2(Vector2(x, 0.0), Vector2(w * frac, 2.0)), colour)
+	if block > 0:
+		var shielded := clampf(float(block) / float(max_hp), 0.0, 1.0 - frac)
+		_bar.draw_rect(Rect2(Vector2(x + w * frac, 0.0), Vector2(w * shielded, h)), Palette.SOUL)
+	_bar.draw_rect(Rect2(Vector2(x, 0.0), Vector2(w, 1.0)), Color(0.0, 0.0, 0.0, 0.7))
 
 
 func press() -> void:

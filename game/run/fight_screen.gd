@@ -29,7 +29,7 @@ const HAND_BOTTOM := 76.0
 const GAP_TO_PANEL := 12.0
 const END_TURN_ROOM := 170.0
 ## Where the enemies stand, and how tall the table under the hand is.
-const ENEMY_TOP := 56.0
+const ENEMY_TOP := 40.0
 const TABLE_HEIGHT := 240.0
 
 var game: GameRoot
@@ -70,7 +70,7 @@ func bind(g: GameRoot, p_run: RunState) -> void:
 func _build() -> void:
 	# Enemies: centred across the top, where the player looks first.
 	_enemy_row = HBoxContainer.new()
-	_enemy_row.add_theme_constant_override("separation", 18)
+	_enemy_row.add_theme_constant_override("separation", 4)
 	_enemy_row.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_enemy_row.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_enemy_row.position = Vector2(0.0, ENEMY_TOP)
@@ -130,7 +130,7 @@ func _notification(what: int) -> void:
 func _draw_stage() -> void:
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
-	var floor_y := ENEMY_TOP + EnemyView.VIEW_SIZE.y + 10.0
+	var floor_y := ENEMY_TOP + EnemyView.VIEW_SIZE.y - 44.0
 
 	# A pool of lantern light under the enemies, brightest at the centre.
 	var glow := Palette.biome_accent(run.biome_id if run != null else "catacombs")
