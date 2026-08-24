@@ -33,8 +33,10 @@ func bind(g: GameRoot) -> void:
 
 
 func _build() -> void:
+	add_child(ScreenLayout.centre(UiTheme.title(game.text("ui.seance"))))
+
 	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 24)
+	header.add_theme_constant_override("separation", 44)
 	_echo_price = UiTheme.number("0")
 	_call_price = UiTheme.number("0")
 	header.alignment = BoxContainer.ALIGNMENT_CENTER

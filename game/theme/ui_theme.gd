@@ -126,6 +126,16 @@ static func card_box(bg: Color, border: Color) -> StyleBoxFlat:
 	return sb
 
 
+## A list row: the panel look, but with the vertical padding cut so a
+## screenful of them fits a screen.
+static func row_box(bg: Color) -> StyleBoxFlat:
+	var sb := panel_box(bg)
+	sb.content_margin_top = 5
+	sb.content_margin_bottom = 5
+	sb.shadow_size = 3
+	return sb
+
+
 ## A small round chip: cost bubbles, counters, pips.
 static func pip_box(bg: Color, border: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()

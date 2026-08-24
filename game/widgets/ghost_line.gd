@@ -29,18 +29,21 @@ func _init() -> void:
 
 func _build() -> void:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	row.add_theme_constant_override("separation", 12)
 	add_child(row)
 
+	# Large enough to read as somebody. This screen is a list of the people
+	# who died for you; a 14px glyph made it a spreadsheet of them.
 	_mark = GhostMark.new()
-	_mark.floating = false
+	_mark.custom_minimum_size = GhostMark.BASE_SIZE * 1.25
+	_mark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(_mark)
 
 	var text_box := VBoxContainer.new()
 	text_box.add_theme_constant_override("separation", 1)
 	text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_name = UiTheme.body("")
-	_detail = UiTheme.small("")
+	_detail = UiTheme.small("", Palette.BONE_DIM)
 	text_box.add_child(_name)
 	text_box.add_child(_detail)
 	row.add_child(text_box)

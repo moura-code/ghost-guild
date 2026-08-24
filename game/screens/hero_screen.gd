@@ -14,6 +14,7 @@ var _vitals: Label
 var _stats: Dictionary = {}
 var _deck: VBoxContainer
 var _relics: Label
+var _figure: TextureRect
 
 
 func _init() -> void:
@@ -31,6 +32,13 @@ func bind(g: GameRoot) -> void:
 
 
 func _build() -> void:
+	# The hero stands at the top of their own sheet. Every other screen in
+	# the game now has a figure on it; a page of labels looked like the
+	# options menu by comparison.
+	_figure = Icons.make_rect(Icons.ui("hero"), 92.0, Palette.BONE)
+	_figure.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	add_child(_figure)
+
 	_name = ScreenLayout.centre(UiTheme.title(""))
 	add_child(_name)
 	_class = ScreenLayout.centre(UiTheme.small(""))
@@ -42,13 +50,18 @@ func _build() -> void:
 	stat_row.add_theme_constant_override("separation", 34)
 	stat_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	for stat in STAT_IDS:
-		var value := UiTheme.number("0", Palette.BONE)
+		# Each stat in its own chip, so the four read as a set of readings
+		# rather than as four loose numbers on a page.
+		var value := ScreenLayout.centre(UiTheme.number("0", Palette.BONE))
 		_stats[stat] = value
 		var box := VBoxContainer.new()
 		box.add_theme_constant_override("separation", 0)
+		box.custom_minimum_size = Vector2(84.0, 0.0)
 		box.add_child(value)
-		box.add_child(UiTheme.small(game.text("stat.%s.name" % stat)))
-		stat_row.add_child(box)
+		box.add_child(ScreenLayout.centre(UiTheme.small(game.text("stat.%s.name" % stat))))
+		var chip := PanelContainer.new()
+		chip.add_child(box)
+		stat_row.add_child(chip)
 	add_child(stat_row)
 
 	add_child(ScreenLayout.centre(UiTheme.small(game.text("ui.relics"))))

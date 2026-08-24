@@ -19,8 +19,11 @@ func _init() -> void:
 
 
 func _build() -> void:
+	# A compact box: ten of these plus two headings have to fit one screen,
+	# and the shared panel margin made them tall enough to clip the last.
+	add_theme_stylebox_override("panel", UiTheme.row_box(Palette.STONE_RAISED))
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
+	row.add_theme_constant_override("separation", 12)
 	add_child(row)
 
 	var left := VBoxContainer.new()
@@ -39,7 +42,7 @@ func _build() -> void:
 	row.add_child(_pips)
 
 	_button = Button.new()
-	_button.custom_minimum_size = Vector2(84.0, 0.0)
+	_button.custom_minimum_size = Vector2(88.0, 32.0)
 	_button.pressed.connect(func() -> void: buy_pressed.emit(upgrade_id))
 	row.add_child(_button)
 
