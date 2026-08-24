@@ -9,3 +9,8 @@ Thumbs.db
 
 # GdUnit4 reports
 /reports/
+
+# Godot generates import sidecars for the preview PNGs; they are throwaway
+# scratch, not assets, and the game never loads from art_previews/.
+art_previews/*.import
+art_previews/comfyui.log
