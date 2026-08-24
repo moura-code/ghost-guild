@@ -13,6 +13,8 @@ const BAR_HEIGHT := 6.0
 const FLASH_SECONDS := 0.09
 const SQUASH := 0.12
 const DEATH_SECONDS := 0.45
+const BREATH_SECONDS := 3.4
+const BREATH_DEPTH := 0.018
 
 var enemy_index: int = -1
 var hp: int = 0
@@ -29,6 +31,8 @@ var _icon: TextureRect
 var _status_row: HBoxContainer
 var _reaction: Tween
 var _intent_icon: TextureRect
+var _breath: float = 0.0
+var idling: bool = true
 
 
 func _init() -> void:
@@ -77,6 +81,8 @@ func _build() -> void:
 
 
 func bind(state: FightState, index: int, is_targetable: bool) -> void:
+	if enemy_index != index:
+		_breath = float(index) * 1.3
 	enemy_index = index
 	targetable = is_targetable
 	var enemy := state.enemies[index]
@@ -90,6 +96,7 @@ func bind(state: FightState, index: int, is_targetable: bool) -> void:
 	if alive and _reaction == null:
 		modulate = Color.WHITE
 		scale = Vector2.ONE
+		idling = true
 	_icon.modulate = Palette.BONE if alive else Palette.BONE_FAINT
 	_refresh_status_icons(enemy.statuses)
 	_hp.text = "%d/%d" % [enemy.hp, enemy.max_hp]
@@ -170,6 +177,9 @@ func react_death() -> void:
 	if not is_inside_tree():
 		return
 	_kill_reaction()
+	# The dead do not breathe. Without this the idle swell reclaims the
+	# scale the moment the death tween finishes and the corpse sits up.
+	idling = false
 	_reaction = create_tween()
 	_reaction.set_parallel(true)
 	_reaction.tween_property(self, "modulate:a", 0.25, DEATH_SECONDS).set_ease(Tween.EASE_IN)
@@ -179,6 +189,17 @@ func react_death() -> void:
 func _kill_reaction() -> void:
 	if _reaction != null and _reaction.is_valid():
 		_reaction.kill()
+
+
+## A slow swell, seeded per enemy so a row of them does not pulse in
+## lockstep. Suppressed while a hit reaction or a death is playing, since
+## those own the scale.
+func _process(delta: float) -> void:
+	if not idling or not alive or (_reaction != null and _reaction.is_valid()):
+		return
+	_breath += delta
+	var swell := 1.0 + sin(_breath * TAU / BREATH_SECONDS) * BREATH_DEPTH
+	scale = Vector2(swell, swell)
 
 
 ## Status icons read faster than a comma-separated list mid-fight; the text

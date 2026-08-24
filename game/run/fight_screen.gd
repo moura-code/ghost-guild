@@ -36,6 +36,9 @@ var _card_views: Array[CardView] = []
 var _playable: Dictionary = {}
 var _animator: FightAnimator
 var _shake_tween: Tween
+var _banner: TurnBanner
+var _last_turn: int = -1
+var _drawn_this_refresh: bool = false
 
 
 func _init() -> void:
@@ -89,6 +92,12 @@ func _build() -> void:
 	_end_turn.pressed.connect(_on_end_turn)
 	add_child(_end_turn)
 
+	_banner = TurnBanner.new()
+	_banner.set_anchors_preset(Control.PRESET_CENTER)
+	_banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_banner.position = Vector2(0.0, -70.0)
+	add_child(_banner)
+
 	# Overlay: draws above the fight and never eats a click.
 	_animator = FightAnimator.new()
 	_animator.shake_requested.connect(_shake)
@@ -111,6 +120,30 @@ func refresh() -> void:
 	_end_turn.text = game.text("ui.fight.end_turn")
 	_end_turn.disabled = fight.is_over()
 	_refresh_prompt(fight)
+	_announce_turn(fight)
+
+
+## A new turn number means the player got their hand back. Announcing it is
+## what gives the fight a pulse instead of one continuous smear of numbers.
+func _announce_turn(fight: FightState) -> void:
+	if fight.turn == _last_turn or fight.is_over():
+		_last_turn = fight.turn
+		return
+	var first := _last_turn < 0
+	_last_turn = fight.turn
+	if first:
+		return
+	_banner.announce(game.text("ui.fight.your_turn"), true)
+	_deal_hand()
+
+
+## Flies the whole hand in from the draw pile, staggered, so a new turn
+## looks dealt rather than pasted.
+func _deal_hand() -> void:
+	var from := _draw_corner()
+	for i in _card_views.size():
+		if _card_views[i].visible:
+			_card_views[i].fly_in(from, float(i) * 0.05)
 
 
 ## The engine is the authority on what can be played; the screen only
@@ -228,6 +261,7 @@ func _on_end_turn() -> void:
 	if run == null or run.fight == null or run.fight.is_over():
 		return
 	selected_index = -1
+	_banner.announce(game.text("ui.fight.enemy_turn"), false)
 	var events := game.run_action({"kind": "end_turn"})
 	_animate(events)
 	_after_action()
@@ -236,6 +270,11 @@ func _on_end_turn() -> void:
 ## Bottom-right, where the discard count sits.
 func _discard_corner() -> Vector2:
 	return global_position + Vector2(size.x - 40.0, size.y - 24.0)
+
+
+## Bottom-left, beside the hero, where the draw pile is counted.
+func _draw_corner() -> Vector2:
+	return Vector2(30.0, size.y - 40.0)
 
 
 ## Where a number should appear for each thing the events can name.

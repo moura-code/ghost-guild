@@ -32,6 +32,7 @@ var _art: PanelContainer
 var _art_image: TextureRect
 var _rest_y: float = 0.0
 var _rest_position: Vector2 = Vector2.ZERO
+var _rest_rotation: float = 0.0
 var _hover_tween: Tween
 
 
@@ -156,6 +157,25 @@ func _on_hover(entered: bool) -> void:
 	z_index = 10 if raise else 0
 
 
+## Flies in from the draw pile to the place the fan gave it. Cosmetic: the
+## card is already in hand as far as the engine is concerned.
+func fly_in(from: Vector2, delay: float) -> void:
+	if not is_inside_tree():
+		return
+	var to := _rest_position
+	position = from
+	rotation = -0.5
+	modulate.a = 0.0
+	scale = Vector2(0.8, 0.8)
+	var tween := create_tween()
+	tween.tween_interval(delay)
+	tween.set_parallel(true)
+	tween.tween_property(self, "position", to, 0.30).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "rotation", _rest_rotation, 0.30).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "scale", Vector2.ONE, 0.30).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "modulate:a", 1.0, 0.18)
+
+
 ## Arcs away toward the discard pile. Purely cosmetic: the engine has
 ## already resolved the card by the time this plays.
 func fly_out(to: Vector2) -> void:
@@ -172,6 +192,7 @@ func fly_out(to: Vector2) -> void:
 ## over the same property.
 func place(at: Vector2, angle: float) -> void:
 	_rest_position = at
+	_rest_rotation = angle
 	_rest_y = at.y
 	position = at
 	rotation = angle

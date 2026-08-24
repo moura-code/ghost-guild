@@ -23,9 +23,9 @@ func _game() -> GameRoot:
 	return g
 
 
-func _fight(g: GameRoot) -> RunState:
+func _fight(g: GameRoot, enemies: Array = ["bone_rat"]) -> RunState:
 	var run := g.start_run(1)
-	TestFixtures.set_nodes(run, [{"kind": "fight", "enemies": ["bone_rat"]}])
+	TestFixtures.set_nodes(run, [{"kind": "fight", "enemies": enemies}])
 	RunEngine.apply(run, {"kind": "enter"})
 	return run
 
@@ -229,3 +229,77 @@ func test_resizing_re_fans_the_hand() -> void:
 	s.size = Vector2(1400.0, 800.0)
 	await await_idle_frame()
 	assert_that(s._card_views[0].position).is_not_equal(before)
+
+
+func test_enemies_breathe_while_they_live() -> void:
+	var g := _game()
+	var run := _fight(g)
+	var s := _screen(g, run)
+	await await_idle_frame()
+	var view := s._enemy_views[0]
+	assert_bool(view.idling).is_true()
+	var first := view.scale.x
+	await get_tree().create_timer(0.5).timeout
+	assert_float(view.scale.x).is_not_equal(first)
+	# But only just: a breathe that reads as a pulse is a distraction.
+	assert_float(absf(view.scale.x - 1.0)).is_less(0.05)
+
+
+func test_the_dead_do_not_breathe() -> void:
+	var g := _game()
+	var run := _fight(g)
+	var s := _screen(g, run)
+	await await_idle_frame()
+	var view := s._enemy_views[0]
+	view.react_death()
+	assert_bool(view.idling).is_false()
+	await get_tree().create_timer(0.7).timeout
+	# The death pose survives: without the guard the idle swell reclaims the
+	# scale as soon as the tween ends and the corpse sits back up.
+	assert_float(view.scale.y).is_less(1.0)
+
+
+func test_a_row_of_enemies_does_not_breathe_in_lockstep() -> void:
+	var g := _game()
+	var run := _fight(g, ["bone_rat", "bone_rat", "bone_rat"])
+	var s := _screen(g, run)
+	await await_idle_frame()
+	await get_tree().create_timer(0.3).timeout
+	assert_float(s._enemy_views[0].scale.x).is_not_equal(s._enemy_views[1].scale.x)
+
+
+func test_a_new_turn_is_announced_and_the_hand_is_dealt() -> void:
+	var g := _game()
+	var run := _fight(g)
+	var s := _screen(g, run)
+	await await_idle_frame()
+	assert_int(s._last_turn).is_equal(run.fight.turn)
+	# Ending the turn announces the enemy, then the new turn announces back.
+	s._end_turn.emit_signal("pressed")
+	await await_idle_frame()
+	assert_str(s._banner.text).is_not_equal("")
+	assert_bool(s._banner.is_announcing()).is_true()
+
+
+func test_the_first_paint_does_not_announce() -> void:
+	var g := _game()
+	var run := _fight(g)
+	var s := _screen(g, run)
+	await await_idle_frame()
+	# Opening a fight should not fire a banner for turn 1 arriving.
+	assert_bool(s._banner.is_announcing()).is_false()
+	assert_float(s._banner.modulate.a).is_equal(0.0)
+
+
+func test_a_dealt_card_arrives_at_its_place_in_the_fan() -> void:
+	var g := _game()
+	var run := _fight(g)
+	var s := _screen(g, run)
+	await await_idle_frame()
+	var card := s._card_views[0]
+	var home := card._rest_position
+	card.fly_in(Vector2(30.0, 560.0), 0.0)
+	assert_that(card.position).is_not_equal(home)
+	await get_tree().create_timer(0.5).timeout
+	assert_float(card.position.x).is_equal_approx(home.x, 1.0)
+	assert_float(card.modulate.a).is_equal_approx(1.0, 0.02)

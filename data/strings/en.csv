@@ -231,3 +231,5 @@ ui.epitaph.rite,Next time — take the watch before you fall.
 ui.epitaph.dismiss,Leave them to it
 ui.descent.offer,You skipped Floor {floor}. Take something from it.
 ui.card.cost_x,X
+ui.fight.your_turn,Your turn
+ui.fight.enemy_turn,They move
