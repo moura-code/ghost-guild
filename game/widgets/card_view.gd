@@ -49,7 +49,7 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 	playable = is_playable
 	var def: CardDef = content.cards[card.def_id]
 	var cost := def.cost_for(card.upgraded)
-	_cost.text = "X" if cost == CardDef.COST_X else str(cost)
+	_cost.text = content.text("ui.card.cost_x") if cost == CardDef.COST_X else str(cost)
 	_name.text = content.text(def.name_key)
 	if card.upgraded:
 		_name.text += content.text("ui.upgraded")
