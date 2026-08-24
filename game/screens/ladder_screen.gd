@@ -17,6 +17,7 @@ var _hint: Label
 var _descend: Button
 var _entry: SpinBox
 var _cheapest_cost: float = -1.0
+var _last_shown_soul: int = -1
 var _tower: VBoxContainer
 var _rows: Array[FloorRow] = []
 
@@ -143,9 +144,26 @@ func _refresh_premise() -> void:
 func _on_soul_changed(soul: float, rate_per_hour: float) -> void:
 	_soul.text = Num.short(soul)
 	_rate.text = Num.rate(rate_per_hour)
+	_punch_soul(int(soul))
 	# One float compare -- the cheapest price is cached by refresh().
 	var affordable := _cheapest_cost >= 0.0 and soul >= _cheapest_cost
 	_hint.text = game.text("ui.hint.spend") if affordable else game.text("ui.hint.wait")
+
+
+## A small kick whenever the whole number climbs. It is the only motion on
+## an idle screen, and it is what makes the counter feel like earnings
+## rather than a readout.
+func _punch_soul(whole: int) -> void:
+	if whole == _last_shown_soul:
+		return
+	var first := _last_shown_soul < 0
+	_last_shown_soul = whole
+	if first or not is_inside_tree():
+		return
+	_soul.pivot_offset = _soul.size * Vector2(0.0, 0.5)
+	_soul.scale = Vector2(1.12, 1.12)
+	var tween := create_tween()
+	tween.tween_property(_soul, "scale", Vector2.ONE, 0.16) 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 ## The price of the cheapest upgrade the player has not maxed out, or -1.0

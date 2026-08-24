@@ -202,3 +202,33 @@ func test_a_chosen_floor_survives_a_refresh() -> void:
 	s.refresh()
 	await await_idle_frame()
 	assert_float(s._entry.value).is_equal(4.0)
+
+
+func test_the_soul_counter_kicks_when_the_whole_number_climbs() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	# The first paint must not kick, or the screen jumps on open.
+	assert_that(s._soul.scale).is_equal(Vector2.ONE)
+	g.clock = func() -> int: return 1000 + 3600
+	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
+	assert_float(s._soul.scale.x).is_greater(1.0)
+
+
+func test_the_counter_settles_back_after_the_kick() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	g.clock = func() -> int: return 1000 + 3600
+	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
+	await get_tree().create_timer(0.3).timeout
+	assert_float(s._soul.scale.x).is_equal_approx(1.0, 0.02)
+
+
+func test_a_tick_that_does_not_move_the_whole_number_does_not_kick() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
+	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
+	assert_that(s._soul.scale).is_equal(Vector2.ONE)

@@ -29,6 +29,7 @@ var _offline: OfflineSummary
 var _run_view: RunView
 var _epitaph: EpitaphScreen
 var _atmosphere: Atmosphere
+var _transition: Transition
 
 
 func _ready() -> void:
@@ -52,6 +53,8 @@ func bind(g: GameRoot) -> void:
 	theme = UiTheme.build()
 	if _body == null:
 		_build()
+	if _transition.get_parent() == null:
+		add_child(_transition)
 	show_tab(String(TABS[0]["id"]))
 	if not g.run_changed.is_connected(_refresh_run_visibility):
 		g.run_changed.connect(_refresh_run_visibility)
@@ -83,6 +86,9 @@ func _build() -> void:
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_child(_body)
 
+	# Above everything, including the epitaph: it covers whatever is swapping.
+	_transition = Transition.new()
+
 	for tab in TABS:
 		var id := String(tab["id"])
 		var button := Button.new()
@@ -108,6 +114,7 @@ func _build() -> void:
 	_epitaph.dismissed.connect(_on_epitaph_dismissed)
 	column.add_child(_epitaph)
 
+	# Above everything, including the epitaph: it covers whatever is swapping.
 	_offline = OfflineSummary.new()
 	_offline.visible = false
 	_offline.dismissed.connect(_on_offline_dismissed)
@@ -148,6 +155,17 @@ func _make_screen(id: String) -> Control:
 func show_tab(id: String) -> void:
 	if not _screens.has(id):
 		return
+	# Swapping behind a wipe, unless nothing is on screen yet.
+	if current_tab != "" and current_tab != id and _transition != null:
+		var target := id
+		_transition.midpoint.connect(func() -> void: _apply_tab(target), CONNECT_ONE_SHOT)
+		_transition.play()
+		current_tab = id
+		return
+	_apply_tab(id)
+
+
+func _apply_tab(id: String) -> void:
 	current_tab = id
 	for other in _screens:
 		var screen: Control = _screens[other]
