@@ -27,6 +27,7 @@ var _body: Control
 var _tab_bar: HBoxContainer
 var _offline: OfflineSummary
 var _run_view: RunView
+var _epitaph: EpitaphScreen
 
 
 func _ready() -> void:
@@ -96,6 +97,12 @@ func _build() -> void:
 	_run_view.run_finished.connect(_on_run_finished)
 	column.add_child(_run_view)
 
+	# The death beat sits above everything, including the run it ended.
+	_epitaph = EpitaphScreen.new()
+	_epitaph.visible = false
+	_epitaph.dismissed.connect(_on_epitaph_dismissed)
+	column.add_child(_epitaph)
+
 	_offline = OfflineSummary.new()
 	_offline.visible = false
 	_offline.dismissed.connect(_on_offline_dismissed)
@@ -151,15 +158,26 @@ func show_tab(id: String) -> void:
 func _refresh_run_visibility() -> void:
 	if _run_view == null or game == null or game.campaign == null:
 		return
+	var mourning := _epitaph != null and _epitaph.visible
 	var in_run := game.campaign.run != null
-	_run_view.visible = in_run
-	_tab_bar.visible = not in_run
-	_body.visible = not in_run
-	if in_run:
+	_run_view.visible = in_run and not mourning
+	_tab_bar.visible = not in_run and not mourning
+	_body.visible = not in_run and not mourning
+	if _run_view.visible:
 		_run_view.refresh()
 
 
-func _on_run_finished(_result: Dictionary) -> void:
+## A run that left a ghost earns the epitaph beat before the guild comes
+## back. A retreat does not: nobody was left behind.
+func _on_run_finished(result: Dictionary) -> void:
+	if EpitaphScreen.should_show(result):
+		_epitaph.bind(game, result)
+		_epitaph.visible = true
+	_refresh_run_visibility()
+
+
+func _on_epitaph_dismissed() -> void:
+	_epitaph.visible = false
 	_refresh_run_visibility()
 
 

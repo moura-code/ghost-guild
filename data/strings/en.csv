@@ -228,3 +228,7 @@ ui.exit.push,Push deeper
 ui.exit.retreat,Retreat and mend
 ui.exit.watch,Take the Watch
 ui.exit.watch_locked,Take the Watch — locked until your first death
+ui.epitaph.stands,Still stands on Floor {floor}
+ui.epitaph.banked,Soul brought home
+ui.epitaph.rite,Next time — take the watch before you fall.
+ui.epitaph.dismiss,Leave them to it

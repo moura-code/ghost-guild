@@ -161,3 +161,38 @@ func test_banking_a_run_returns_to_the_tabs() -> void:
 	await await_idle_frame()
 	assert_bool(m._run_view.visible).is_false()
 	assert_bool(m._tab_bar.visible).is_true()
+
+
+func test_a_death_shows_the_epitaph_before_the_guild_comes_back() -> void:
+	var g := _game()
+	var m := _main(g)
+	m._epitaph.paced = false
+	await await_idle_frame()
+	var result := TestFixtures.die_on_floor(g.campaign, 2, 1000)
+	m._on_run_finished(result)
+	await await_idle_frame()
+	assert_bool(m._epitaph.visible).is_true()
+	assert_bool(m._tab_bar.visible).is_false()
+	assert_bool(m._run_view.visible).is_false()
+
+	m._epitaph._dismiss.emit_signal("pressed")
+	await await_idle_frame()
+	assert_bool(m._epitaph.visible).is_false()
+	assert_bool(m._tab_bar.visible).is_true()
+
+
+func test_a_retreat_skips_the_epitaph_entirely() -> void:
+	var g := _game()
+	var m := _main(g)
+	await await_idle_frame()
+	var run := g.start_run(1)
+	run.hero.resolve = 1
+	TestFixtures.set_nodes(run, [{"kind": "rest"}])
+	RunEngine.apply(run, {"kind": "enter"})
+	RunEngine.apply(run, {"kind": "rest_heal"})
+	RunEngine.apply(run, {"kind": "retreat"})
+	var result := g.finish_run()
+	m._on_run_finished(result)
+	await await_idle_frame()
+	assert_bool(m._epitaph.visible).is_false()
+	assert_bool(m._tab_bar.visible).is_true()
