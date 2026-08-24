@@ -178,3 +178,11 @@ ui.run.phase.event,An event
 ui.run.phase.rest,Rest
 ui.run.phase.shop,Shop
 ui.run.phase.exit,Floor cleared
+ui.node.fight,Fight
+ui.node.elite,Elite
+ui.node.boss,Boss
+ui.node.event,Event
+ui.node.rest,Rest
+ui.node.shop,Shop
+ui.node.exit,Exit
+ui.node.enter,Enter

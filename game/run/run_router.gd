@@ -18,6 +18,8 @@ var _floor: Label
 var _phase: Label
 var _log: Label
 var _continue: Button
+var _body: VBoxContainer
+var _map: FloorMapScreen
 
 var _autopilot: RunAutopilot = RunAutopilot.new()
 var _lines: PackedStringArray = PackedStringArray()
@@ -43,6 +45,16 @@ func _build() -> void:
 	_phase = UiTheme.body("", Palette.BONE_DIM)
 	add_child(_phase)
 
+	# Phase screens live here. Each task of M1-C2 adds one; any phase
+	# without a screen falls through to the Continue button below.
+	_body = VBoxContainer.new()
+	_body.add_theme_constant_override("separation", 10)
+	add_child(_body)
+
+	_map = FloorMapScreen.new()
+	_map.visible = false
+	_body.add_child(_map)
+
 	_log = UiTheme.small("", Palette.BONE_FAINT)
 	_log.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_log.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -61,15 +73,29 @@ func refresh() -> void:
 		_floor.text = ""
 		_phase.text = game.text("ui.run.over")
 		_continue.visible = false
+		_map.visible = false
 		return
 	_continue.visible = true
 	_floor.text = game.text("ui.run.floor").replace("{floor}", str(run.floor))
 	if run.is_over():
 		_phase.text = game.text("ui.run.over")
 		_continue.text = game.text("ui.run.bank")
+		_map.visible = false
+		_continue.visible = true
 		return
 	_phase.text = game.text("ui.run.phase.%s" % run.phase)
 	_continue.text = game.text("ui.run.continue")
+	_refresh_body(run)
+
+
+## Shows the screen that owns this phase, if one exists yet, and hides the
+## step-through button when it does.
+func _refresh_body(run: RunState) -> void:
+	var handled := run.phase == "node"
+	_map.visible = handled
+	if handled:
+		_map.bind(game, run)
+	_continue.visible = not handled
 
 
 func _on_continue() -> void:

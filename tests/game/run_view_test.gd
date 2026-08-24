@@ -102,3 +102,25 @@ func test_binding_twice_does_not_connect_the_signals_twice() -> void:
 	v.bind(g)
 	await await_idle_frame()
 	assert_int(g.run_changed.get_connections().size()).is_equal(1)
+
+
+func test_the_node_phase_shows_the_floor_map_instead_of_the_step_button() -> void:
+	var g := _game()
+	var run := g.start_run(1)
+	var v := _view(g)
+	await await_idle_frame()
+	assert_str(run.phase).is_equal("node")
+	assert_bool(v._map.visible).is_true()
+	assert_bool(v._continue.visible).is_false()
+
+
+func test_a_phase_without_a_screen_yet_still_offers_the_step_button() -> void:
+	var g := _game()
+	var run := g.start_run(1)
+	var v := _view(g)
+	await await_idle_frame()
+	g.run_action({"kind": "enter"})
+	await await_idle_frame()
+	assert_str(run.phase).is_not_equal("node")
+	assert_bool(v._map.visible).is_false()
+	assert_bool(v._continue.visible).is_true()
