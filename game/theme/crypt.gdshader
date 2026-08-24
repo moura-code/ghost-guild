@@ -61,13 +61,18 @@ void fragment() {
 		float scale = 1.0 - f * 0.18;
 		float w = 0.135 * scale;
 		float h = 0.68 * scale;
-		float dark = 0.34 - f * 0.09;
+		// Further ranks are darker, but never so dark that the opening
+		// becomes a black hole -- a big unlit shape in the middle of the
+		// frame is the void problem again, wearing an arch.
+		float dark = 0.52 - f * 0.07;
 		// A pair either side of centre, plus one behind it.
 		float inside = 0.0;
 		inside += arch(vec2(centred, uv.y), 0.5 - (0.30 - f * 0.075), w, h);
 		inside += arch(vec2(centred, uv.y), 0.5 + (0.30 - f * 0.075), w, h);
+		// A smaller opening straight ahead, well back, to give the room a
+		// vanishing point without punching a hole in the middle of it.
 		if (rank == 2) {
-			inside += arch(vec2(centred, uv.y), 0.5, w * 1.25, h * 1.1);
+			inside += arch(vec2(centred, uv.y), 0.5, w * 0.72, h * 0.82);
 		}
 		col = mix(col, col * dark, clamp(inside, 0.0, 1.0));
 	}

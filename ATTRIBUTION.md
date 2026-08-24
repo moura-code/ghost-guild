@@ -21,6 +21,17 @@ black, which then multiplies to black under any tint). No other changes.
 
 ### delapouite
 
+- `assets/icons/card_art/bone_wall.svg` — *stone-wall*
+- `assets/icons/card_art/brace.svg` — *shield-bash*
+- `assets/icons/card_art/cairn.svg` — *stone-pile*
+- `assets/icons/card_art/dig_in.svg` — *dig-hole*
+- `assets/icons/card_art/grave_coin.svg` — *two-coins*
+- `assets/icons/card_art/grave_moss.svg` — *grass*
+- `assets/icons/card_art/lantern_oil.svg` — *oil-can*
+- `assets/icons/card_art/rat_swarm.svg` — *rat*
+- `assets/icons/card_art/sanctify.svg` — *holy-water*
+- `assets/icons/card_art/sharpen_spade.svg` — *sharp-axe*
+- `assets/icons/card_art/tomb_lantern.svg` — *old-lantern*
 - `assets/icons/enemies/bone_archer.svg` — *archer*
 - `assets/icons/enemies/bone_rat.svg` — *rat*
 - `assets/icons/enemies/hollow_knight.svg` — *black-knight-helm*
@@ -51,6 +62,25 @@ black, which then multiplies to black under any tint). No other changes.
 
 - `assets/icons/card/attack.svg` — *sword-hilt*
 - `assets/icons/card/power.svg` — *flat-star*
+- `assets/icons/card_art/ashes.svg` — *burning-embers*
+- `assets/icons/card_art/bone_shard.svg` — *bone-knife*
+- `assets/icons/card_art/bone_spear.svg` — *barbed-spear*
+- `assets/icons/card_art/bulwark.svg` — *bordered-shield*
+- `assets/icons/card_art/censer_smoke.svg` — *smoking-orb*
+- `assets/icons/card_art/cold_iron.svg` — *iron-mask*
+- `assets/icons/card_art/death_knell.svg` — *ringing-bell*
+- `assets/icons/card_art/exhume.svg` — *coffin*
+- `assets/icons/card_art/grave_dust.svg` — *dust-cloud*
+- `assets/icons/card_art/hallowed_strike.svg` — *holy-symbol*
+- `assets/icons/card_art/last_rites.svg` — *crossed-bones*
+- `assets/icons/card_art/plague_vial.svg` — *poison-bottle*
+- `assets/icons/card_art/reaping.svg` — *scythe*
+- `assets/icons/card_art/requiem.svg` — *music-spell*
+- `assets/icons/card_art/second_wind.svg` — *wind-hole*
+- `assets/icons/card_art/shovel_swing.svg` — *spade*
+- `assets/icons/card_art/strike.svg` — *shard-sword*
+- `assets/icons/card_art/tolling_bell.svg` — *bell-shield*
+- `assets/icons/card_art/vigil.svg` — *candle-flame*
 - `assets/icons/enemies/grave_wisp.svg` — *spectre*
 - `assets/icons/enemies/skull_stack.svg` — *skull-crossed-bones*
 - `assets/icons/intent/attack.svg` — *pointy-sword*
@@ -75,6 +105,10 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/vitals/energy.svg` — *lightning-arc*
 - `assets/icons/vitals/turn.svg` — *sands-of-time*
 
+### lucasms
+
+- `assets/icons/card_art/shroud.svg` — *cloak*
+
 ### sbed
 
 - `assets/icons/card/skill.svg` — *shield*
@@ -98,3 +132,8 @@ black, which then multiplies to black under any tint). No other changes.
 
 Both are unmodified. The OFL permits bundling in a commercial game; it does
 not permit selling the fonts on their own.
+
+## Everything else
+
+There is no other third-party content. Backgrounds, panels, cards, bars, the
+crypt the game is set in and every animation are drawn in code.

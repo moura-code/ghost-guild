@@ -241,6 +241,14 @@ func _refresh_buttons() -> void:
 	var can_retreat := bool(summary.get("can_retreat", run.hero.resolve > 0))
 	var can_watch := bool(summary.get("can_watch", RunEngine.can_watch(run)))
 
+	# The three choices are not equal and should not look it. Pushing risks
+	# everything and gets the warm accent; retreating banks the run and
+	# stays quiet; taking the watch is the deliberate death and reads in
+	# ghost-cyan, the colour the game uses for the dead.
+	_push.add_theme_stylebox_override("normal", UiTheme.primary_box(Palette.PREPARED))
+	_push.add_theme_stylebox_override("hover", UiTheme.lit_box(Palette.STONE_HIGH, Palette.PREPARED))
+	_watch.add_theme_stylebox_override("normal", UiTheme.primary_box(Palette.GHOST))
+	_watch.add_theme_stylebox_override("hover", UiTheme.lit_box(Palette.STONE_HIGH, Palette.GHOST))
 	_push.text = game.text("ui.exit.push")
 	_push.disabled = not can_push or pending
 	_push.visible = can_push

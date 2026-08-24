@@ -50,6 +50,23 @@ func test_every_card_type_has_an_icon() -> void:
 			.override_failure_message("no icon for card type %s" % type).is_not_null()
 
 
+func test_every_shipped_card_has_its_own_art() -> void:
+	var content := TestFixtures.content()
+	for card_id in content.cards:
+		assert_object(Icons.get_icon("card_art", String(card_id))) 			.override_failure_message("no art for card %s" % card_id).is_not_null()
+
+
+func test_cards_that_do_different_things_look_different() -> void:
+	# Strike and Last Rites shared a silhouette, so a player had to read the
+	# text of every card in hand rather than recognising it.
+	var content := TestFixtures.content()
+	var seen := {}
+	for card_id in content.cards:
+		var art := Icons.get_icon("card_art", String(card_id))
+		assert_bool(seen.has(art)) 			.override_failure_message("%s reuses another card's icon" % card_id).is_false()
+		seen[art] = card_id
+
+
 func test_a_missing_icon_returns_null_rather_than_throwing() -> void:
 	assert_object(Icons.get_icon("enemies", "no_such_enemy")).is_null()
 	assert_object(Icons.get_icon("nonsense", "at_all")).is_null()
