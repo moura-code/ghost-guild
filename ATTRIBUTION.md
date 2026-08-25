@@ -25,6 +25,8 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/card_art/brace.svg` — *shield-bash*
 - `assets/icons/card_art/cairn.svg` — *stone-pile*
 - `assets/icons/card_art/dig_in.svg` — *dig-hole*
+- `assets/icons/upgrade/ghost_spawn.svg` — *dig-hole* (the same glyph, reused:
+  Deeper Burrows digs more of the floor out, which is the same idea)
 - `assets/icons/card_art/grave_coin.svg` — *two-coins*
 - `assets/icons/card_art/grave_moss.svg` — *grass*
 - `assets/icons/card_art/lantern_oil.svg` — *oil-can*

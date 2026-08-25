@@ -5,6 +5,11 @@ extends VBoxContainer
 ## production first and saves after.
 
 const GROUP_ORDER := ["hero", "ghosts"]
+## A whole group abreast, plus the gaps between the tablets and the plate's
+## own margins. Too narrow and the flow wraps, which puts the second group
+## below the fold and the screen starts scrolling again.
+const WALL_GAP := 10.0
+const WALL_WIDTH := UpgradePlaque.COLUMNS * UpgradePlaque.PLAQUE_SIZE.x 	+ (UpgradePlaque.COLUMNS - 1) * WALL_GAP + 70.0
 
 var game: GameRoot
 var rows: Dictionary = {}
@@ -41,10 +46,10 @@ func _build() -> void:
 			_add_group(def.group)
 	for id in game.content.upgrades:
 		var def2: UpgradeDef = game.content.upgrades[id]
-		var row := UpgradeRow.new()
+		var row := UpgradePlaque.new()
 		row.buy_pressed.connect(_on_buy)
-		var box: VBoxContainer = _groups[def2.group]
-		box.add_child(row)
+		var wall: HFlowContainer = _groups[def2.group]
+		wall.add_child(row)
 		rows[def2.id] = row
 
 
@@ -56,18 +61,25 @@ func _has_group(group: String) -> bool:
 	return false
 
 
+## A wall of tablets, not a column of rows.
+##
+## Every upgrade the guild offers is visible at once and nothing scrolls,
+## which is the difference between "a place you walk into and look around"
+## and "a settings page you page through". Ten of them fit five across.
 func _add_group(group: String) -> void:
 	if _groups.has(group):
 		return
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 6)
+	var wall := HFlowContainer.new()
+	wall.add_theme_constant_override("h_separation", int(WALL_GAP))
+	wall.add_theme_constant_override("v_separation", int(WALL_GAP))
+	wall.alignment = FlowContainer.ALIGNMENT_CENTER
 	var section := VBoxContainer.new()
-	section.add_theme_constant_override("separation", 11)
+	section.add_theme_constant_override("separation", 9)
 	section.add_child(ScreenLayout.section(game.text("ui.group.%s" % group),
 		Palette.SOUL if group == "hero" else Palette.GHOST))
-	section.add_child(box)
-	add_child(ScreenLayout.plate(section, ScreenLayout.WIDE_COLUMN))
-	_groups[group] = box
+	section.add_child(wall)
+	add_child(ScreenLayout.plate(section, WALL_WIDTH))
+	_groups[group] = wall
 	_group_order.append(group)
 
 
@@ -80,7 +92,7 @@ func refresh() -> void:
 		var level := game.campaign.upgrades.level(String(id))
 		var cost := game.campaign.upgrades.cost(game.content, String(id))
 		var affordable := cost >= 0.0 and soul >= cost
-		(rows[id] as UpgradeRow).bind(game.content, def, level, cost, affordable)
+		(rows[id] as UpgradePlaque).bind(game.content, def, level, cost, affordable)
 
 
 func _on_buy(id: String) -> void:
@@ -94,7 +106,7 @@ func _on_buy(id: String) -> void:
 ## ladder has earned enough without the player touching anything.
 func _on_soul_changed(soul: float, _rate_per_hour: float) -> void:
 	for id in rows:
-		var row: UpgradeRow = rows[id]
+		var row: UpgradePlaque = rows[id]
 		var cost := game.campaign.upgrades.cost(game.content, String(id))
 		if cost < 0.0:
 			continue

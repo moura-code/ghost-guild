@@ -152,3 +152,17 @@ func test_the_attribution_declares_the_generated_art() -> void:
 	var text := f.get_as_text()
 	assert_str(text).contains("Stable Diffusion XL")
 	assert_str(text).contains("disclos")
+
+
+## Every upgrade needs a glyph. The Guild is a wall of tablets found by
+## shape rather than by reading ten names, so one without an icon is not a
+## missing detail -- it is a blank tablet that reads as a broken build.
+func test_every_shipped_upgrade_has_an_icon() -> void:
+	var content := TestFixtures.content()
+	var missing: Array[String] = []
+	for def_id in content.upgrades:
+		if Icons.get_icon("upgrade", String(def_id)) == null:
+			missing.append(String(def_id))
+	assert_array(missing) \
+		.override_failure_message("blank tablets on: %s" % ", ".join(missing)) \
+		.is_empty()
