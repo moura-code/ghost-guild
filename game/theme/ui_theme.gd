@@ -87,6 +87,25 @@ static func build() -> Theme:
 	t.set_font_size("font_size", "Button", FONT_BODY)
 	t.set_constant("outline_size", "Label", 0)
 
+	# Scrollbars. A stock scrollbar is the loudest remaining "this is an app"
+	# signal on any screen long enough to need one: a carved groove with a
+	# stone grip in it reads as part of the wall.
+	var trough := StoneBox.make(Palette.ABYSS, 2.0, false)
+	trough.pressed = true
+	trough.lit = Palette.STONE_HIGH
+	trough.set_content_margin_all(0)
+	var grip := StoneBox.make(Palette.STONE_HIGH, 3.0, false)
+	grip.lit = Palette.STONE_EDGE
+	grip.set_content_margin_all(0)
+	var grip_lit := StoneBox.make(Palette.STONE_EDGE, 3.0, false)
+	grip_lit.lit = Palette.EDGE_LIGHT
+	grip_lit.set_content_margin_all(0)
+	for axis in ["VScrollBar", "HScrollBar"]:
+		t.set_stylebox("scroll", axis, trough)
+		t.set_stylebox("grabber", axis, grip)
+		t.set_stylebox("grabber_highlight", axis, grip_lit)
+		t.set_stylebox("grabber_pressed", axis, grip_lit)
+
 	t.set_color("font_color", "TabBar", Palette.BONE_DIM)
 	t.set_color("font_selected_color", "TabBar", Palette.BONE)
 	return t

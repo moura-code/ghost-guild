@@ -48,8 +48,14 @@ func build_tabs(tabs: Array) -> void:
 func _make_item(id: String, label: String, icon: String) -> Button:
 	var button := Button.new()
 	button.custom_minimum_size = Vector2(ITEM_WIDTH, HEIGHT - 10.0)
-	button.flat = true
+	# Not flat. A row of flat text buttons under a sliding underline is a
+	# website's navigation, which is what this was. Each destination is a
+	# stone plaque set into the wall instead: sunken while you are elsewhere,
+	# pushed out and lit while you are there.
 	button.focus_mode = Control.FOCUS_NONE
+	button.add_theme_stylebox_override("normal", _sunken())
+	button.add_theme_stylebox_override("hover", _sunken(true))
+	button.add_theme_stylebox_override("pressed", _sunken())
 	button.pressed.connect(func() -> void: tab_pressed.emit(id))
 
 	var column := VBoxContainer.new()
@@ -70,6 +76,29 @@ func _make_item(id: String, label: String, icon: String) -> Button:
 	return button
 
 
+## A slot cut into the wall: the bevel inverted, so the light falls on the
+## bottom edge and the plaque reads as set back rather than standing out.
+func _sunken(warm: bool = false) -> StoneBox:
+	var box := StoneBox.make(Palette.STONE, 3.0, false)
+	box.pressed = true
+	box.lit = Palette.EDGE_LIGHT if warm else Palette.STONE_EDGE
+	box.groove = Palette.ABYSS
+	box.set_content_margin_all(4)
+	return box
+
+
+## The plaque you are standing at: pushed out of the wall and catching the
+## lantern, so which screen you are on is a property of the object rather
+## than of a line underneath it.
+func _raised() -> StoneBox:
+	var box := StoneBox.make(Palette.STONE_HIGH, 4.0, false)
+	box.lit = accent
+	box.accent = Color(accent.r, accent.g, accent.b, 0.45)
+	box.groove = Palette.ABYSS
+	box.set_content_margin_all(4)
+	return box
+
+
 ## Lights the active destination and slides the marker to it. The slide is
 ## the point: a marker that jumps reads as a page reload.
 func select(id: String) -> void:
@@ -83,6 +112,8 @@ func select(id: String) -> void:
 		(column.get_child(0) as TextureRect).modulate = accent if lit else Palette.BONE_DIM
 		(column.get_child(1) as Label).add_theme_color_override(
 			"font_color", Palette.BONE if lit else Palette.BONE_DIM)
+		button.add_theme_stylebox_override("normal", _raised() if lit else _sunken())
+		button.add_theme_stylebox_override("pressed", _raised() if lit else _sunken())
 	# Deferred: at the moment select() runs, the container has not laid the
 	# buttons out yet, so every position reads 0 and the marker parks itself
 	# at the far left of the bar.
@@ -131,10 +162,13 @@ func _notification(what: int) -> void:
 func _draw() -> void:
 	if size.x <= 0.0:
 		return
-	# A hairline under the whole bar, so it reads as a shelf the screen
-	# hangs from rather than as a floating strip.
-	draw_rect(Rect2(Vector2(0.0, size.y - 1.0), Vector2(size.x, 1.0)),
-		Color(Palette.STONE_EDGE.r, Palette.STONE_EDGE.g, Palette.STONE_EDGE.b, 0.7))
+	# A lintel: a thick shadowed course under the whole bar with one lit
+	# edge, so the row of plaques reads as cut into a beam of stone rather
+	# than as a strip floating over the wall.
+	draw_rect(Rect2(Vector2(0.0, size.y - 5.0), Vector2(size.x, 5.0)),
+		Color(Palette.ABYSS.r, Palette.ABYSS.g, Palette.ABYSS.b, 0.85))
+	draw_rect(Rect2(Vector2(0.0, size.y - 5.0), Vector2(size.x, 1.0)),
+		Color(Palette.STONE_EDGE.r, Palette.STONE_EDGE.g, Palette.STONE_EDGE.b, 0.55))
 	if _marker_w <= 0.0:
 		return
 	var x := _row.position.x + _marker_x

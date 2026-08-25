@@ -14,3 +14,4 @@ Thumbs.db
 # scratch, not assets, and the game never loads from art_previews/.
 art_previews/*.import
 art_previews/comfyui.log
+art_previews/raw/
