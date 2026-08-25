@@ -17,14 +17,14 @@ extends Control
 
 signal floor_clicked(floor: int)
 
-const TOP_INSET := 0.06
-const BOTTOM_INSET := 0.42
+const TOP_INSET := 0.04
+const BOTTOM_INSET := 0.26
 const WALL := 2.0
 const SLAB := 2.0
 const MAX_MARKS := 8
 ## Fixed gutters either side of the shaft for the floor number and the rate.
-const NUMBER_COLUMN := 26.0
-const RATE_COLUMN := 48.0
+const NUMBER_COLUMN := 14.0
+const RATE_COLUMN := 34.0
 
 var floors: int = 10
 var hovered: int = 0
@@ -39,7 +39,7 @@ var _rates: Dictionary = {}
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	custom_minimum_size = Vector2(280.0, 190.0)
+	custom_minimum_size = Vector2(160.0, 200.0)
 
 
 func bind(campaign: Campaign) -> void:
@@ -162,7 +162,14 @@ func _layout() -> void:
 			# on floor 1 and floor 10 fights the shaft's perspective and flattens
 			# it back into a list.
 			var near := 1.0 - float(floor - 1) / float(maxi(1, floors - 1))
-			mark.size = GhostMark.BASE_SIZE * lerpf(1.0, 1.7, near)
+			var wanted := GhostMark.BASE_SIZE * lerpf(1.0, 1.7, near)
+			# ...but never taller than the room they are standing in. On a
+			# 640x360 frame a chamber is about 24 pixels high, and a ghost
+			# scaled for depth spilled up through the floor above it.
+			var headroom := maxf(8.0, rect.size.y - SLAB - 1.0)
+			if wanted.y > headroom:
+				wanted *= headroom / wanted.y
+			mark.size = wanted
 			mark.position = Vector2(start + float(i) * 30.0, foot - GhostMark.BASE_SIZE.y)
 
 

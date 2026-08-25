@@ -39,7 +39,7 @@ import shutil
 import sys
 
 try:
-    from PIL import Image, ImageOps
+    from PIL import Image, ImageFilter, ImageOps
 except ImportError:
     sys.exit("Pillow is required: run this with C:\\ComfyUI\\venv\\Scripts\\python.exe")
 
@@ -84,7 +84,7 @@ LEVELS = 10
 # straight mapping buries the subject in the bottom of the ramp and every
 # card reads as a dark rectangle. Lifting the midtones first puts the subject
 # in the half of the range the eye can actually read.
-GAMMA = 0.62
+GAMMA = 0.72
 
 
 def ramp_lut():
@@ -148,14 +148,23 @@ def unify(set_name, spec, lut, colour):
         # Colour first: divergent palettes are most of what makes a generated
         # set look assembled from different games.
         grey = ImageOps.grayscale(src)
-        grey = ImageOps.autocontrast(grey, cutoff=1)
-        grey = grey.point([min(255, round(255.0 * (i / 255.0) ** GAMMA)) for i in range(256)])
 
-        # Down to sprite size with a box filter, which averages honestly, and
-        # only then to the palette. Doing it the other way round quantises a
-        # thousand pixels that are about to be thrown away and leaves the few
-        # that survive looking dithered.
+        # Sharpen BEFORE the downsample. Box-averaging a 1216px render down to
+        # 64px throws away exactly the edges that define a silhouette, and a
+        # silhouette is all a sprite this size has -- without this the cards
+        # came out as dark blobs you could not name.
+        grey = grey.filter(ImageFilter.UnsharpMask(radius=8, percent=180, threshold=2))
         grey = grey.resize((out_w, out_h), Image.BOX)
+
+        # ...and stretch the range AFTER, not before. Downsampling averages,
+        # which pulls everything toward the middle, so contrast set on the
+        # source is gone by the time it matters. Setting it at final size is
+        # what makes the subject read against the background.
+        grey = ImageOps.autocontrast(grey, cutoff=0)
+        grey = grey.point([min(255, round(255.0 * (i / 255.0) ** GAMMA)) for i in range(256)])
+        # One more edge pass at sprite size: at 64px a single pixel of local
+        # contrast is a whole feature.
+        grey = grey.filter(ImageFilter.UnsharpMask(radius=1, percent=120, threshold=0))
         toned = ImageOps.colorize(grey, black="#04050a", white="#f4efe4")
         toned = toned.convert("RGB").point(lut)
         if colour > 0.0:

@@ -263,3 +263,10 @@ func _enrich(game) -> void:
 	TestFixtures.die_on_floor(game.campaign, 6, 4000)
 	game.campaign.soul = 2400.0
 	game.campaign.hero.hp = 38
+	# The fixtures mutate the campaign directly, which no signal covers, so
+	# the screens are still bound to the state from before the enrich. That
+	# is why the Ladder -- the one screen this exists to show populated --
+	# kept being captured with a single ghost on floor one.
+	game.ladder_changed.emit()
+	game.hero_changed.emit()
+	game.soul_changed.emit(game.displayed_soul(), game.campaign.rate_per_hour)

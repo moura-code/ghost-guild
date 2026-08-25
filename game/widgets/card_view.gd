@@ -24,13 +24,13 @@ signal pressed(hand_index: int)
 ## text is 167px wide in Pixelify at 6, and a 82px card has 74px of usable
 ## width, so it wraps to three. Six-pixel text doubles to twelve on screen,
 ## which is the same apparent size the old vector body had.
-const TEXT_LINES := 3
+const TEXT_LINES := 4
 ## Two lines at FONT_BODY: "Hallowed Strike" does not fit one.
 const NAME_LINES := 2
 ## Godot stacks lines at font height PLUS this, and forgetting it is what
 ## silently ate a line off three cards the last time.
 const LINE_SPACING := 3.0
-const CARD_SIZE := Vector2(82.0, 146.0)
+const CARD_SIZE := Vector2(82.0, 159.0)
 ## How much of the card's width is margin rather than content. Everything the
 ## player reads lives inside this inset, which is what makes a fan possible at
 ## all: cards may overlap each other's margins, never each other's text.

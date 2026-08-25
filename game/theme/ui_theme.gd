@@ -13,11 +13,21 @@ extends RefCounted
 ## the illusion hardest -- smooth glyphs sitting on hard pixels read as a
 ## screenshot of pixel art rather than as pixel art.
 ##
-## Pixelify carries the body: measured against the game's longest card text
-## it is as narrow as Inter was, which is what makes a 79px card still able
-## to hold its rules. Silkscreen is wide and blocky and is the title voice.
-const BODY_FONT_PATH := "res://assets/fonts/PixelifySans.ttf"
-const TITLE_FONT_PATH := "res://assets/fonts/Silkscreen.ttf"
+## Silkscreen carries the body and Pixelify the titles, which is the opposite
+## of the first arrangement and was decided by measurement after the first one
+## shipped unreadable text.
+##
+## Pixelify is a vector face drawn to look pixelated; it only lands on the
+## grid at its own design size. At 6px its SPACE advance rounds to one pixel,
+## so "You have Soul to spend" rendered as one word, and at 8px the adjacent
+## single-pixel stems in "ill" merged into a solid block -- "kill" came out as
+## a rectangle. Silkscreen is an actual 8px-grid face: its space is three to
+## four pixels and its stems keep their gap.
+##
+## Silkscreen is wider, so this costs the card an extra line of text. Legible
+## and one line taller beats compact and unreadable.
+const BODY_FONT_PATH := "res://assets/fonts/Silkscreen.ttf"
+const TITLE_FONT_PATH := "res://assets/fonts/PixelifySans.ttf"
 
 static var _body_font: Font = null
 static var _title_font: Font = null

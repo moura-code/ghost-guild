@@ -6,8 +6,15 @@ extends VBoxContainer
 
 const ROW_SEPARATION := 1
 ## The tower is a tower: constrained and centred, not a full-width table.
-const TOWER_WIDTH := 330.0
-const TOWER_HEIGHT := 214.0
+## Narrow and deep, because that is what a shaft is.
+##
+## Ten floors in a 360px frame gives each chamber about 24 pixels of height
+## whatever else changes -- so the only lever on whether it reads as a well
+## or as a bar chart is width. Wide chambers at that height are bars; narrow
+## ones are ledges down a shaft, which is the image the whole game is named
+## after.
+const TOWER_WIDTH := 186.0
+const TOWER_HEIGHT := 236.0
 
 var game: GameRoot
 
@@ -20,7 +27,7 @@ var _tower: TowerView
 
 
 func _init() -> void:
-	add_theme_constant_override("separation", 6)
+	add_theme_constant_override("separation", 2)
 	alignment = BoxContainer.ALIGNMENT_CENTER
 
 
@@ -50,15 +57,18 @@ func _build() -> void:
 	# and no idea which one is waiting on them.
 	# Sits beside the premise rather than under it: two stacked sentences
 	# above the tower pushed the tower itself off the bottom of the screen.
+	# Beside the premise rather than under it: two stacked sentences above the
+	# tower cost it fifteen pixels of depth, and depth is the whole point of
+	# the image.
 	_hint = UiTheme.small("", Palette.SOUL)
-	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint.clip_text = true
 	add_child(_hint)
 
 	# The way into the dungeon. Disabled while a run is already live so the
 	# campaign never has to refuse the click.
 	var descent_row := HBoxContainer.new()
-	descent_row.add_theme_constant_override("separation", 8)
+	descent_row.add_theme_constant_override("separation", 4)
 	descent_row.alignment = BoxContainer.ALIGNMENT_CENTER
 
 	# Entry floor, bounded by reach. Seeded explicitly on every refresh
@@ -67,7 +77,7 @@ func _build() -> void:
 	_entry = SpinBox.new()
 	_entry.min_value = 1.0
 	_entry.step = 1.0
-	_entry.custom_minimum_size = Vector2(72.0, 0.0)
+	_entry.custom_minimum_size = Vector2(40.0, 0.0)
 	descent_row.add_child(_entry)
 
 	_descend = Button.new()
