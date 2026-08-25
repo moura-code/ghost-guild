@@ -20,6 +20,10 @@ signal run_changed()
 const CONTENT_ROOT := "res://data"
 const REFRESH_HZ := 10.0
 
+## The game's sound. Lives on the bridge because every screen wants it and
+## none of them should own it -- and because a single pool of voices is the
+## point (see Sfx).
+var sfx: Sfx
 var content: Content
 var campaign: Campaign
 var offline: Dictionary = {"elapsed": 0, "counted": 0, "capped": false, "soul": 0.0}
@@ -41,6 +45,9 @@ func text(key: String) -> String:
 
 
 func boot() -> Dictionary:
+	if sfx == null:
+		sfx = Sfx.new()
+		add_child(sfx)
 	content = Content.load_from(CONTENT_ROOT)
 	if not content.load_errors.is_empty():
 		push_error("boot: content failed to load: %s" % ", ".join(content.load_errors))
@@ -136,6 +143,8 @@ func mend() -> Dictionary:
 func start_run(entry_floor: int) -> RunState:
 	if campaign == null:
 		return null
+	if sfx != null:
+		sfx.play("descend")
 	var run := CampaignEngine.start_run(campaign, entry_floor, now())
 	if run != null:
 		_emit_all()
@@ -180,7 +189,12 @@ func save() -> Error:
 	return SaveGame.save(campaign, save_path)
 
 
+## Every Soul spend in the game -- upgrades, echoes, Calls, tending, Mend --
+## reaches here on success and nowhere else, which makes it the one place
+## that has to know a purchase makes a sound.
 func _after_mutation() -> void:
+	if sfx != null:
+		sfx.play("purchase")
 	_emit_all()
 	save()
 

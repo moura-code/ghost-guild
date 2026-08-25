@@ -134,6 +134,11 @@ func _build() -> void:
 	_palette = PaletteLayer.new()
 	add_child(_palette)
 
+	# Every button in the game gets a click and a hover from one place. A
+	# silent button is the single most "unfinished" thing a UI can do, and
+	# wiring them screen by screen is how three of them end up forgotten.
+	UiTheme.voice_buttons(self, game.sfx)
+
 
 ## Each screen goes in its own ScrollContainer so a long Guild or a crowded
 ## Séance scrolls instead of clipping.
@@ -194,6 +199,8 @@ func _apply_tab(id: String) -> void:
 		if wrapper != null:
 			wrapper.visible = on
 	_tab_bar.select(id)
+	if game != null and _screens.has(id):
+		UiTheme.voice_buttons(_screens[id] as Node, game.sfx)
 	# The light follows the tab: each screen puts its content somewhere
 	# different, and a focus left pointing at the last one is worse than none.
 	_refresh_focus()

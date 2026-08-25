@@ -69,8 +69,12 @@ a spreadsheet and Balatro. Budget it explicitly.
 - **The Ladder is the Steam capsule.** Ghosts drift on their own phase (built),
   but the tower also wants: a soft glow on a saturated floor, the waypoint
   marker animating when it moves, and a new ghost easing into place.
-- **Sound.** Not yet scoped anywhere. Free CC0 libraries (freesound, Kenney)
-  cover the whole slice. A game with this look lives or dies on audio feedback.
+- ~~**Sound.**~~ Done 2026-08-25. Synthesised rather than sourced from a CC0
+  library: `tools/audio/generate.py` builds eighteen effects from oscillators
+  and noise, which suits the pixel-art direction better than samples would
+  and leaves no licence to track. Wired through `Sfx` on the GameRoot; the
+  fight drives it from the same event stream the animator uses, so what you
+  see land is what you hear land. Still missing: ambient loops and music.
 
 ## Recommendations carried into M1-C / M2
 

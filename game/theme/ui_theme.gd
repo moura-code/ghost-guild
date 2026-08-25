@@ -282,6 +282,31 @@ static func draw_health(on: CanvasItem, rect: Rect2, frac: float, colour: Color,
 	on.draw_rect(Rect2(rect.position, Vector2(rect.size.x, 1.0)), Color(0.0, 0.0, 0.0, 0.7))
 
 
+## Gives every Button under `root` a click and a hover, once, at bind time.
+##
+## The alternative is each screen remembering to wire its own buttons, which
+## is the kind of thing that is right on the day and wrong three screens
+## later. Walks the tree, so a screen that builds more buttons after binding
+## calls it again.
+static func voice_buttons(root: Node, sfx: Sfx) -> void:
+	if sfx == null or root == null:
+		return
+	for node in _every_button(root):
+		if not node.pressed.is_connected(sfx.play):
+			node.pressed.connect(sfx.play.bind("click", 1.0))
+		if not node.mouse_entered.is_connected(sfx.play):
+			node.mouse_entered.connect(sfx.play.bind("hover", 1.0))
+
+
+static func _every_button(node: Node) -> Array[Button]:
+	var found: Array[Button] = []
+	if node is Button:
+		found.append(node as Button)
+	for child in node.get_children():
+		found.append_array(_every_button(child))
+	return found
+
+
 static func title(text: String) -> Label:
 	var l := Label.new()
 	l.text = text

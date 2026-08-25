@@ -321,6 +321,7 @@ func _announce_turn(fight: FightState) -> void:
 	if first:
 		return
 	_banner.announce(game.text("ui.fight.your_turn"), true)
+	_sound("turn_start")
 	_deal_hand()
 
 
@@ -328,6 +329,7 @@ func _announce_turn(fight: FightState) -> void:
 ## looks dealt rather than pasted.
 func _deal_hand() -> void:
 	var from := _draw_corner()
+	_sound("card_draw")
 	for i in _card_views.size():
 		if _card_views[i].visible:
 			_card_views[i].fly_in(from, float(i) * 0.05)
@@ -448,6 +450,13 @@ func _on_card_pressed(hand_index: int) -> void:
 	_play(hand_index, -1)
 
 
+## Every sound this screen makes goes through here, so a screen built without
+## a GameRoot (which is what a test gets) is simply silent.
+func _sound(id: String) -> void:
+	if game != null and game.sfx != null:
+		game.sfx.play(id)
+
+
 func _on_enemy_pressed(enemy_index: int) -> void:
 	if selected_index < 0 or run == null or run.fight == null:
 		return
@@ -461,6 +470,10 @@ func _play(hand_index: int, target: int) -> void:
 	# Fly the card before the refresh rebinds that slot to a different card.
 	if hand_index < _card_views.size():
 		_card_views[hand_index].fly_out(_discard_corner())
+	# Here rather than on the click: every card reaches play() whether it was
+	# clicked once or twice, and the sound belongs to the card leaving the
+	# hand rather than to the cursor.
+	_sound("card_play")
 	var events := game.run_action({"kind": "play", "hand_index": hand_index, "target": target})
 	_animate(events)
 	_after_action()

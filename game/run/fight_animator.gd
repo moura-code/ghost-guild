@@ -30,6 +30,10 @@ const STAGGER := 14.0
 const BEAT := 0.14
 
 var content: Content
+## The ear and the eye are driven from the same event stream, at the same
+## beat, so a blow you see land is a blow you hear land. Optional: the
+## animator works silently if nothing set it, which is what tests get.
+var sfx: Sfx
 ## The numbers spawned by the most recent play() call. Tests read this.
 var last_spawned: Array[FloatNumber] = []
 
@@ -109,6 +113,7 @@ func _render(event: Dictionary, stagger: int) -> bool:
 				# A fully absorbed hit is still an event the player should
 				# feel -- it is the block doing its job.
 				_spawn(content.text("ui.fight.blocked"), Palette.SOUL, _anchor(event), stagger)
+				_sound("block")
 				hit_landed.emit(event)
 				return true
 			var at: Variant = _anchor(event)
@@ -119,6 +124,9 @@ func _render(event: Dictionary, stagger: int) -> bool:
 				_hold = HIT_STOP
 			if String(event.get("target", "")) == "hero":
 				shake_requested.emit(minf(SHAKE_MAX, float(amount) * SHAKE_PER_DAMAGE))
+				_sound("hero_hurt")
+			elif sfx != null:
+				sfx.hit(amount)
 			hit_landed.emit(event)
 			return true
 		"block_gained":
@@ -126,6 +134,7 @@ func _render(event: Dictionary, stagger: int) -> bool:
 			if block <= 0:
 				return false
 			_spawn("+%d" % block, Palette.SOUL, _anchor(event), stagger)
+			_sound("block")
 			return true
 		"heal":
 			var healed := int(event.get("amount", 0))
@@ -147,9 +156,15 @@ func _render(event: Dictionary, stagger: int) -> bool:
 				# A death throws more, and throws it in bone.
 				_spark(died_at as Vector2, Palette.BONE, true)
 			_hold = HIT_STOP * 1.6
+			_sound("enemy_die")
 			hit_landed.emit(event)
 			return true
 	return false
+
+
+func _sound(id: String) -> void:
+	if sfx != null:
+		sfx.play(id)
 
 
 ## Damage to the hero shakes; damage to an enemy does not. The screen only
