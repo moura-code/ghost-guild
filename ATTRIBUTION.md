@@ -137,3 +137,22 @@ not permit selling the fonts on their own.
 
 There is no other third-party content. Backgrounds, panels, cards, bars, the
 crypt the game is set in and every animation are drawn in code.
+
+## Generated art — SDXL base 1.0, local
+
+`assets/icons/card_art/*.png`, `assets/icons/enemies/*.png` and
+`assets/icons/relics/*.png` are generated locally with Stable Diffusion XL
+base 1.0 through ComfyUI, driven by `tools/art/generate.py`. The prompts,
+their weighting and the reasoning behind both live in that file.
+
+SDXL base 1.0 is released under the CreativeML Open RAIL++-M licence, which
+permits commercial use of the outputs.
+
+**Steam requires this to be disclosed.** Ghost Guild ships with
+AI-generated art, and the store page's AI disclosure must say so: pre-generated
+images produced with Stable Diffusion XL, reviewed before shipping, with no
+live generation at runtime. Decided 2026-08-24.
+
+Where a `.png` is absent for an id the game falls back to the CC BY
+game-icons.net glyph of the same name, so both sets are live in the build and
+both licences apply.

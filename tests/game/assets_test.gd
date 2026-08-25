@@ -127,3 +127,28 @@ func test_an_svg_still_resolves_when_no_png_was_delivered() -> void:
 
 func test_an_undelivered_id_resolves_to_nothing() -> void:
 	assert_str(Icons.resolve("card_art", "no_such_card", _icon_root())).is_empty()
+
+
+## Generated art ships under assets/ and the loader prefers it, so a missing
+## or misnamed file has to be a red test rather than a silent fall back to
+## the placeholder glyph -- the fallback is what makes a bad delivery
+## invisible.
+func test_every_shipped_card_resolves_to_a_file() -> void:
+	var content := TestFixtures.content()
+	var missing: Array[String] = []
+	for def_id in content.cards:
+		if Icons.resolve("card_art", String(def_id)) == "":
+			missing.append(String(def_id))
+	assert_array(missing) \
+		.override_failure_message("no art at all for: %s" % ", ".join(missing)) \
+		.is_empty()
+
+
+func test_the_attribution_declares_the_generated_art() -> void:
+	# Shipping generated art obliges a Steam AI disclosure. If the art is in
+	# the build, the paperwork saying so has to be too.
+	var f := FileAccess.open("res://ATTRIBUTION.md", FileAccess.READ)
+	assert_object(f).is_not_null()
+	var text := f.get_as_text()
+	assert_str(text).contains("Stable Diffusion XL")
+	assert_str(text).contains("disclos")

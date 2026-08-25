@@ -49,7 +49,6 @@ func _build() -> void:
 	# centre.
 	var frame := UiTheme.panel_box(Color(Palette.VOID.r, Palette.VOID.g, Palette.VOID.b, 0.62),
 		Color(Palette.STONE_EDGE.r, Palette.STONE_EDGE.g, Palette.STONE_EDGE.b, 0.30))
-	frame.shadow_size = 0
 	add_theme_stylebox_override("panel", frame)
 	# Owns the screen rather than sitting in a band at the top: this is the
 	# moment the game is about, and it should not share the frame.

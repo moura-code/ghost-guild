@@ -48,6 +48,13 @@ static func enemy(def_id: String) -> Texture2D:
 	return get_icon("enemies", def_id)
 
 
+## Whether this id is backed by a raster illustration rather than a
+## silhouette glyph. Callers tint a glyph and leave an illustration alone --
+## a full-colour piece multiplied by bone-white just looks faded.
+static func is_illustrated(category: String, ident: String) -> bool:
+	return resolve(category, ident).ends_with(".png")
+
+
 static func status(name: String) -> Texture2D:
 	return get_icon("status", name)
 
@@ -68,6 +75,14 @@ static func card_type(type: String) -> Texture2D:
 static func card_art(def_id: String, type: String) -> Texture2D:
 	var art := get_icon("card_art", def_id)
 	return art if art != null else card_type(type)
+
+
+## Whether this card has real illustration rather than a silhouette standing
+## in for it. The two want opposite treatment: a glyph is a white shape the
+## card tints and centres, while an illustration is already lit and coloured
+## and tinting it just washes it out.
+static func has_card_art(def_id: String) -> bool:
+	return is_illustrated("card_art", def_id)
 
 
 static func ui(ident: String) -> Texture2D:

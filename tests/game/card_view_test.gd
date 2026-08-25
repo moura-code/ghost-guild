@@ -58,3 +58,30 @@ func test_an_upgraded_card_still_fits() -> void:
 	assert_array(clipped) \
 		.override_failure_message("upgraded cards cut off: %s" % ", ".join(clipped)) \
 		.is_empty()
+
+
+## A placeholder glyph and a real illustration want opposite treatment: the
+## glyph is a white silhouette the card tints and centres, the illustration
+## arrives lit and coloured and fills the window.
+func test_an_illustrated_card_is_not_tinted() -> void:
+	var content := TestFixtures.content()
+	var illustrated := ""
+	for def_id in content.cards:
+		if Icons.has_card_art(String(def_id)):
+			illustrated = String(def_id)
+			break
+	if illustrated == "":
+		return
+	var view := _card(illustrated, content)
+	await await_idle_frame()
+	assert_that(view._art_image.modulate).is_equal(Color.WHITE)
+	assert_int(view._art_image.stretch_mode).is_equal(TextureRect.STRETCH_KEEP_ASPECT_COVERED)
+
+
+func test_the_art_slot_crops_rather_than_spilling_over_the_card() -> void:
+	var content := TestFixtures.content()
+	var view := _card(String(content.cards.keys()[0]), content)
+	await await_idle_frame()
+	assert_bool(view._art.clip_contents) \
+		.override_failure_message("a full-bleed illustration would paint over the card name") \
+		.is_true()

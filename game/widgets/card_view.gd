@@ -119,7 +119,6 @@ func _build() -> void:
 	# Recessed: the art slot is a window cut into the card, so it is darker
 	# than the card and its border reads as the inside edge of the cut.
 	var slot := UiTheme.pip_box(Palette.VOID, Palette.STONE_RAISED)
-	slot.set_corner_radius_all(3)
 	_art.add_theme_stylebox_override("panel", slot)
 	_art_image = TextureRect.new()
 	_art_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -129,6 +128,9 @@ func _build() -> void:
 	# lands on after the cost.
 	_art_image.modulate = Palette.BONE
 	_art_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# A covered illustration is wider than the slot by design; without this
+	# it paints over the card's name and cost.
+	_art.clip_contents = true
 	_art.add_child(_art_image)
 	box.add_child(_art)
 
@@ -187,13 +189,21 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 	# Real card art would load here; until then the type icon stands in it,
 	# at the size and aspect the illustration will occupy.
 	_art_image.texture = Icons.card_art(card.def_id, def.type)
-	_art_image.modulate = Palette.BONE if playable else Palette.BONE_FAINT
+	# A glyph is a white silhouette the card tints; an illustration arrives
+	# already lit and coloured, and tinting that washes it out. They also want
+	# different framing -- a glyph sits centred inside the slot with air
+	# around it, an illustration fills the window it is looking through.
+	var illustrated := Icons.has_card_art(card.def_id)
+	_art_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED if illustrated 		else TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if illustrated:
+		_art_image.modulate = Color.WHITE if playable else Color(0.45, 0.45, 0.5, 1.0)
+	else:
+		_art_image.modulate = Palette.BONE if playable else Palette.BONE_FAINT
 	# The slot is tinted by what the card does -- attacks red, skills blue,
 	# powers violet -- so a hand reads as a set of types at a glance.
 	var slot := UiTheme.pip_box(
 		Palette.plate_for_card(def.type) if playable else Palette.VOID,
 		Palette.STONE_RAISED)
-	slot.set_corner_radius_all(3)
 	_art.add_theme_stylebox_override("panel", slot)
 	_paint(def)
 

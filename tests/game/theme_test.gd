@@ -53,9 +53,11 @@ func test_the_theme_builds_with_the_stone_palette() -> void:
 
 
 func test_panel_box_carries_the_colour_it_was_given() -> void:
-	var sb := UiTheme.panel_box(Palette.STONE_RAISED)
-	assert_that(sb.bg_color).is_equal(Palette.STONE_RAISED)
-	assert_int(sb.border_width_left).is_equal(1)
+	# Carved stone now, not a flat box: the fill is the face of the slab and
+	# the bevel is what gives it a thickness.
+	var box := UiTheme.panel_box(Palette.STONE_RAISED)
+	assert_that(box.fill).is_equal(Palette.STONE_RAISED)
+	assert_float(box.bevel).is_greater(2.0)
 
 
 func test_label_helpers_set_size_and_colour() -> void:
@@ -71,10 +73,9 @@ func test_hovering_a_button_lights_it_like_a_lantern() -> void:
 	# the dead, which are the only cool thing in the game.
 	var t := UiTheme.build()
 	assert_that(t.get_color("font_hover_color", "Button")).is_equal(Palette.LANTERN)
-	var hover := t.get_stylebox("hover", "Button") as StyleBoxFlat
+	var hover := t.get_stylebox("hover", "Button") as StoneBox
 	assert_object(hover).is_not_null()
-	assert_float(hover.border_color.r).is_greater(hover.border_color.b)
-	var normal := t.get_stylebox("normal", "Button") as StyleBoxFlat
-	assert_float(Palette.luma(hover.bg_color)) \
-		.override_failure_message("hover is not brighter than rest, so nothing happens on hover") \
-		.is_greater(Palette.luma(normal.bg_color))
+	assert_float(hover.accent.a).is_greater(0.0)
+	assert_float(hover.accent.r).is_greater(hover.accent.b)
+	var normal := t.get_stylebox("normal", "Button") as StoneBox
+	assert_float(Palette.luma(hover.fill)).is_greater(Palette.luma(normal.fill))

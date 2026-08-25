@@ -39,6 +39,7 @@ var targetable: bool = false
 var idling: bool = true
 
 var _figure: TextureRect
+var _illustrated: bool = false
 var _plate_slot: Control
 var _plate: PanelContainer
 var _name: Label
@@ -134,6 +135,7 @@ func bind(state: FightState, index: int, is_targetable: bool) -> void:
 	alive = enemy.alive
 
 	_figure.texture = Icons.enemy(enemy.def_id)
+	_illustrated = Icons.is_illustrated("enemies", enemy.def_id)
 	_figure.modulate = _figure_colour()
 	_resize_plate()
 	_repaint_plate()
@@ -245,7 +247,15 @@ func _draw_niche() -> void:
 
 
 ## Lit when it can be struck, bone while it lives, faded once it is dead.
+## A silhouette glyph is tinted to say what it is doing; an illustration
+## arrives already lit and coloured, so it only ever gets dimmed or lifted.
+## Multiplying a full-colour piece by bone-white makes it look faded, and by
+## SOUL makes it look like it is underwater.
 func _figure_colour() -> Color:
+	if _illustrated:
+		if not alive:
+			return Color(0.40, 0.40, 0.46, 1.0)
+		return Color(1.18, 1.18, 1.12, 1.0) if targetable else Color.WHITE
 	if not alive:
 		return Palette.BONE_FAINT
 	return Palette.SOUL if targetable else Palette.BONE

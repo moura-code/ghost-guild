@@ -246,13 +246,25 @@ func _draw_circle_rite() -> void:
 			Color(tint.r, tint.g, tint.b, 0.28 * breath), 1.5)
 
 
+## Broken stone on the floor. Irregular quads, not rectangles: axis-aligned
+## boxes in a mid grey read as UI artifacts floating over the screen rather
+## than as debris lying on it, which is exactly how the first version looked.
+## Dark, with one lit top edge each -- the light is above, so only the top
+## face of a chip catches it.
 func _draw_rubble() -> void:
 	for at in scatter():
-		var w := size.x * 0.045 + _hash(int(at.x) + 11) * size.x * 0.04
-		var h := w * (0.5 + _hash(int(at.x) + 13) * 0.5)
-		draw_rect(Rect2(at - Vector2(w, h) * 0.5, Vector2(w, h)), Palette.STONE_HIGH)
-		draw_line(at - Vector2(w, h) * 0.5, at + Vector2(w * 0.5, -h * 0.5),
-			Color(Palette.EDGE_LIGHT.r, Palette.EDGE_LIGHT.g, Palette.EDGE_LIGHT.b, 0.30), 1.0)
+		var w := size.x * 0.030 + _hash(int(at.x) + 11) * size.x * 0.030
+		var h := w * (0.34 + _hash(int(at.x) + 13) * 0.30)
+		var lean := (_hash(int(at.x) + 17) - 0.5) * w * 0.45
+		var top_left := at + Vector2(-w * 0.5 + lean, -h * 0.5)
+		var top_right := at + Vector2(w * 0.5 + lean * 0.4, -h * 0.5 - h * 0.15)
+		draw_colored_polygon(PackedVector2Array([
+			top_left, top_right,
+			at + Vector2(w * 0.5, h * 0.5),
+			at + Vector2(-w * 0.5, h * 0.5)]),
+			Color(Palette.STONE_RAISED.r, Palette.STONE_RAISED.g, Palette.STONE_RAISED.b, 0.9))
+		draw_line(top_left, top_right,
+			Color(Palette.EDGE_LIGHT.r, Palette.EDGE_LIGHT.g, Palette.EDGE_LIGHT.b, 0.22), 1.0)
 
 
 func _draw_cobweb() -> void:

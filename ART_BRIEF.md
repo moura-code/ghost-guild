@@ -97,10 +97,11 @@ with it: it is what the game is about.
 **Drop into `assets/icons/enemies/<enemy_id>.png`** (replaces the current
 CC BY silhouettes).
 
-- **26 x 26 px** at 1x in the fight, deliver at 4x (104 x 104) so there is
-  room to enlarge later.
-- Flat silhouette or near-silhouette. The game tints these: they grey out
-  when the enemy dies, so avoid baked-in colour that fights a tint.
+- **104 x 104 px** at 1x in the fight, deliver at 2x (208 x 208).
+- Either works, and the game can tell which it got: a flat white silhouette
+  is tinted by the game (it lifts when targetable and greys out on death),
+  while a full-colour illustration is left alone and only dimmed or
+  brightened. Do not hand over a coloured piece that expects to be tinted.
 - Bosses and elites are marked; they can carry more detail since they get
   more screen time.
 
@@ -120,7 +121,7 @@ CC BY silhouettes).
 ### 3. Relic art — 6 pieces
 
 **`assets/icons/relics/<relic_id>.png`**, same treatment as enemies,
-**32 x 32** at 1x.
+**34 x 34** at 1x, deliver at 4x (136 x 136).
 
 - `bone_charm` — Bone Charm
 - `cracked_hourglass` — Cracked Hourglass

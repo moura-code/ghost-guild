@@ -59,18 +59,27 @@ static func build() -> Theme:
 	t.set_color("font_color", "Label", Palette.BONE)
 	t.set_font_size("font_size", "Label", FONT_BODY)
 
-	t.set_stylebox("panel", "PanelContainer", panel_box(Palette.STONE_RAISED))
-	t.set_stylebox("panel", "Panel", panel_box(Palette.STONE))
+	# Carved stone, not rounded rectangles. Everything the player touches is a
+	# slab cut into the wall: a lit top edge because the lanterns are above, a
+	# thickness you can see, a chiselled groove and four pegs.
+	t.set_stylebox("panel", "PanelContainer", StoneBox.make(Palette.STONE_RAISED))
+	t.set_stylebox("panel", "Panel", StoneBox.make(Palette.STONE, 3.0, false))
 
-	t.set_stylebox("normal", "Button", panel_box(Palette.STONE_HIGH))
-	# Warm, not cyan. Under the light model an interactive thing lights up
-	# like the lanterns do; ghost cyan belongs to the dead and to nothing else,
-	# and a button borrowing it was the game's brightest colour competing with
-	# its subject.
-	t.set_stylebox("hover", "Button", lit_box(Palette.STONE_EDGE, Palette.EDGE_LIGHT))
-	t.set_stylebox("pressed", "Button", panel_box(Palette.STONE, Palette.STONE_EDGE))
-	var off := panel_box(Palette.STONE, Palette.STONE_RAISED)
-	off.shadow_size = 0
+	var rest := StoneBox.make(Palette.STONE_HIGH, 5.0)
+	rest.lit = Palette.STONE_EDGE
+	t.set_stylebox("normal", "Button", rest)
+	# Hover lights the slab warm, the way a lantern would. Ghost cyan belongs
+	# to the dead and to nothing else, and a button borrowing it was the
+	# game's brightest colour competing with its own subject.
+	var hover := StoneBox.make(Palette.STONE_EDGE, 5.0)
+	hover.accent = Color(Palette.EDGE_LIGHT.r, Palette.EDGE_LIGHT.g, Palette.EDGE_LIGHT.b, 0.65)
+	t.set_stylebox("hover", "Button", hover)
+	# Pushed into the wall: the bevel inverts, so the light is underneath.
+	var down := StoneBox.make(Palette.STONE, 5.0)
+	down.pressed = true
+	t.set_stylebox("pressed", "Button", down)
+	var off := StoneBox.make(Palette.STONE, 3.0, false)
+	off.lit = Palette.STONE_EDGE
 	t.set_stylebox("disabled", "Button", off)
 	t.set_color("font_color", "Button", Palette.BONE)
 	t.set_color("font_hover_color", "Button", Palette.LANTERN)
@@ -83,98 +92,97 @@ static func build() -> Theme:
 	return t
 
 
-## A raised surface. Two things make a rectangle read as an object rather
-## than as a hole: a lit top edge, and a border darker than the fill on the
-## other three sides. Godot's StyleBoxFlat can do exactly that with an
-## asymmetric border, so every panel in the game gets it for free.
-static func panel_box(bg: Color, border: Color = Palette.STONE_EDGE) -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = bg
-	sb.border_color = border
-	sb.set_border_width_all(1)
-	sb.border_width_top = 2
-	sb.border_color = border
-	sb.set_corner_radius_all(4)
-	sb.set_content_margin_all(10)
-	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
-	sb.shadow_size = 6
-	sb.shadow_offset = Vector2(0.0, 3.0)
-	return sb
+## A raised surface, carved into the wall.
+##
+## This was a StyleBoxFlat with a 4px corner radius and a hairline border --
+## which is to say, it was the look of a settings menu. Everything the player
+## reads sits on one of these, so it is the single highest-leverage shape in
+## the game: making it carved changes every screen at once.
+static func panel_box(bg: Color, border: Color = Palette.STONE_EDGE) -> StoneBox:
+	var box := StoneBox.make(bg, 4.0)
+	# Structure is stone; only the things you touch catch the lantern. Lighting
+	# every panel's chamfer with EDGE_LIGHT put a gold line along the top of
+	# every element on screen, which read as gold-bordered boxes rather than as
+	# carved rock and left nothing for a button to stand out against.
+	box.lit = Palette.STONE_EDGE
+	box.shade = Color(Palette.ABYSS.r, Palette.ABYSS.g, Palette.ABYSS.b, 0.9)
+	box.groove = border
+	box.set_content_margin_all(11)
+	return box
 
 
-## A surface that is being pressed, hovered or selected: brighter fill, an
-## accent border, and the shadow pulled in so it reads as closer to the page.
-static func lit_box(bg: Color, accent: Color) -> StyleBoxFlat:
-	var sb := panel_box(bg, accent)
-	sb.border_width_top = 2
-	sb.shadow_size = 10
-	sb.shadow_color = Color(accent.r, accent.g, accent.b, 0.20)
-	sb.shadow_offset = Vector2.ZERO
-	return sb
+## A surface being hovered, pressed or selected. Same carving, plus a warm
+## hairline just inside the groove -- the light catching an edge, rather than
+## a different-coloured border, which is what a form control does.
+static func lit_box(bg: Color, accent: Color) -> StoneBox:
+	var box := panel_box(bg, accent)
+	box.accent = Color(accent.r, accent.g, accent.b, 0.75)
+	return box
 
 
-## A card. Tighter margins than a screen panel, a heavier lit edge, and a
-## deeper shadow -- a card should read as a physical object lying on top of
-## everything else.
-## The card's frame. CardView paints the lit-to-shadow face over it.
-static func card_box(bg: Color, border: Color) -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = bg
-	sb.border_color = border
-	sb.set_border_width_all(1)
-	sb.border_width_top = 3
-	sb.set_corner_radius_all(6)
-	sb.set_content_margin_all(9)
-	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.7)
-	sb.shadow_size = 10
-	sb.shadow_offset = Vector2(0.0, 5.0)
-	return sb
+## A card: a thin stone tablet. Tighter margins than a screen panel and no
+## pegs -- at 158px wide four rivets crowd the art slot -- but the same
+## carved bevel, so a card in the hand and a plaque on the wall read as the
+## same material.
+static func card_box(bg: Color, border: Color) -> StoneBox:
+	var box := StoneBox.make(bg, 3.0, false)
+	box.lit = Palette.STONE_EDGE
+	box.groove = border
+	box.set_content_margin_all(9)
+	return box
 
 
 ## A list row: the panel look, but with the vertical padding cut so a
 ## screenful of them fits a screen.
-static func row_box(bg: Color) -> StyleBoxFlat:
-	var sb := panel_box(bg)
-	sb.content_margin_top = 5
-	sb.content_margin_bottom = 5
-	sb.shadow_size = 3
-	return sb
+static func row_box(bg: Color) -> StoneBox:
+	var box := StoneBox.make(bg, 3.0, false)
+	box.lit = Palette.STONE_EDGE
+	box.set_content_margin_all(9)
+	box.content_margin_top = 5
+	box.content_margin_bottom = 5
+	return box
 
 
 ## A bar across the window: flat top, no corner rounding, no shadow. Used
 ## for the navigation, which should read as part of the frame rather than
 ## as a panel floating on it.
-static func bar_box() -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Palette.STONE
-	sb.set_corner_radius_all(0)
-	sb.set_content_margin_all(4)
-	return sb
+static func bar_box() -> StoneBox:
+	var box := StoneBox.make(Palette.STONE, 3.0, false)
+	box.lit = Palette.STONE_EDGE
+	box.set_content_margin_all(4)
+	return box
 
 
 ## The primary action on a screen: Descend, Push deeper, End turn. Lifted,
 ## saturated and edged in the accent so the eye finds it without reading it.
 ## Using one button style for the primary action, the bail-out and a plain
 ## catalogue row is the loudest "unfinished" tell a UI can have.
-static func primary_box(accent: Color) -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(accent.r * 0.30, accent.g * 0.26, accent.b * 0.34, 1.0)
-	sb.border_color = accent
-	sb.set_border_width_all(1)
-	sb.border_width_bottom = 3
-	sb.set_corner_radius_all(5)
-	sb.set_content_margin_all(10)
-	sb.shadow_color = Color(accent.r, accent.g, accent.b, 0.22)
-	sb.shadow_size = 8
-	return sb
+static func primary_box(accent: Color) -> StoneBox:
+	var box := StoneBox.make(
+		Color(accent.r * 0.30, accent.g * 0.26, accent.b * 0.34, 1.0), 5.0)
+	# The accent lights the carved edge itself rather than outlining the
+	# shape: this is the slab the lantern is pointed at.
+	box.lit = Color(accent.r, accent.g, accent.b, 0.85)
+	box.accent = Color(accent.r, accent.g, accent.b, 0.55)
+	box.groove = Palette.ABYSS
+	box.set_content_margin_all(11)
+	return box
 
 
 ## A catalogue row -- a shop item, an upgrade. No fill, no border, just a
 ## rule underneath. A list of forty identical buttons reads as a settings
 ## menu; a list of rows reads as a catalogue.
-static func list_row_box(hovered: bool = false) -> StyleBoxFlat:
+static func list_row_box(hovered: bool = false) -> StyleBox:
+	if hovered:
+		var box := StoneBox.make(Palette.STONE_RAISED, 3.0, false)
+		box.set_content_margin_all(9)
+		box.content_margin_left = 14
+		return box
+	# At rest a catalogue row is a rule, not a slab. Forty carved plaques
+	# stacked in a list is noise; the carving is what marks the one under
+	# the cursor.
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Palette.STONE_RAISED if hovered else Color(0, 0, 0, 0)
+	sb.bg_color = Color(0, 0, 0, 0)
 	sb.border_color = Color(Palette.STONE_EDGE.r, Palette.STONE_EDGE.g, Palette.STONE_EDGE.b, 0.45)
 	sb.border_width_bottom = 1
 	sb.set_content_margin_all(9)
@@ -197,7 +205,6 @@ static func pip_box(bg: Color, border: Color) -> StyleBoxFlat:
 static func fill_box(bg: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = bg
-	sb.set_corner_radius_all(2)
 	return sb
 
 
