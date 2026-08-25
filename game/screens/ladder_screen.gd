@@ -111,6 +111,17 @@ func refresh() -> void:
 	_on_soul_changed(game.displayed_soul(), game.campaign.rate_per_hour)
 
 
+## The shaft. It is the capsule image, the first screenshot and the first
+## three seconds of the trailer, so it gets the light on this screen and the
+## premise line above it does not.
+func focus_rect() -> Rect2:
+	if _tower == null or not _tower.is_inside_tree():
+		return Rect2()
+	var box := _tower.get_global_rect()
+	return Rect2(box.position - global_position - Vector2(60.0, 30.0),
+		box.size + Vector2(120.0, 60.0))
+
+
 ## Names the deepest true ghost, because that one is both the waypoint and
 ## the best example of what the player is looking at.
 func _refresh_premise() -> void:

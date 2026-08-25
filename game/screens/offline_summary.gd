@@ -14,12 +14,17 @@ signal dismissed()
 
 const MIN_SECONDS := 60
 const MIN_SOUL := 1.0
+## Long enough to watch. This is the one number in the game the player came
+## back specifically to see, so it gets more than the usual count.
+const COUNT_SECONDS := 1.1
 
 var _title: Label
 var _away: Label
 var _earned: Label
 var _capped: Label
 var _button: Button
+var _earned_ticker: Ticker
+var _motes: CPUParticles2D
 
 
 func _init() -> void:
@@ -78,6 +83,15 @@ func _build() -> void:
 	_capped.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_capped)
 
+	# Two candles burning on the card. Coming back to the game is supposed
+	# to feel like finding the guild still lit.
+	var flames := HBoxContainer.new()
+	flames.alignment = BoxContainer.ALIGNMENT_CENTER
+	flames.add_theme_constant_override("separation", 300)
+	flames.add_child(Prop.of(Prop.Kind.CANDLE, 2))
+	flames.add_child(Prop.of(Prop.Kind.CANDLE, 9))
+	box.add_child(flames)
+
 	_button = Button.new()
 	_button.custom_minimum_size = Vector2(200.0, 42.0)
 	_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -85,11 +99,39 @@ func _build() -> void:
 	_button.pressed.connect(func() -> void: dismissed.emit())
 	box.add_child(_button)
 
+	# Soul rising through the scrim behind the card. This screen is the
+	# entire payoff of an idle game -- the reason to come back tomorrow --
+	# and it was a dialog with an OK button.
+	_motes = CPUParticles2D.new()
+	_motes.amount = 46
+	_motes.lifetime = 4.5
+	_motes.preprocess = 4.5
+	_motes.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	_motes.direction = Vector2(0.0, -1.0)
+	_motes.spread = 14.0
+	_motes.gravity = Vector2.ZERO
+	_motes.initial_velocity_min = 26.0
+	_motes.initial_velocity_max = 62.0
+	_motes.scale_amount_min = 1.0
+	_motes.scale_amount_max = 2.6
+	_motes.color = Palette.SOUL
+	# Behind the card, in front of the scrim.
+	add_child(_motes)
+	move_child(_motes, 0)
+
+	_earned_ticker = Ticker.new(_earned, Num.short, COUNT_SECONDS)
+
 
 ## The room behind, darkened. Without a scrim the card floats over a fully
 ## lit screen and does not read as modal.
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.0, 0.0, 0.02, 0.72))
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and _motes != null:
+		_motes.emission_rect_extents = Vector2(size.x * 0.5, 8.0)
+		_motes.position = Vector2(size.x * 0.5, size.y)
 
 
 func bind(content: Content, offline: Dictionary) -> void:
@@ -99,7 +141,9 @@ func bind(content: Content, offline: Dictionary) -> void:
 	# The time that actually paid, not the time away -- otherwise a capped
 	# return claims credit for hours it did not earn.
 	_away.text = content.text("ui.offline.away").replace("{duration}", Num.duration(counted))
-	_earned.text = Num.short(float(offline.get("soul", 0.0)))
+	# From zero, every time: the count IS the reward.
+	_earned_ticker.set_now(0.0)
+	_earned_ticker.to(float(offline.get("soul", 0.0)))
 	_capped.text = content.text("ui.offline.capped")
 	_capped.visible = capped
 	_button.text = content.text("ui.offline.dismiss")

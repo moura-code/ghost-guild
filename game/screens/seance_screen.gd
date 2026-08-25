@@ -12,6 +12,7 @@ var _call_price: Label
 var _mend_label: Label
 var _mend_button: Button
 var _list: VBoxContainer
+var _circle: Prop
 
 
 func _init() -> void:
@@ -59,13 +60,40 @@ func _build() -> void:
 	rites.add_child(mend_row)
 	add_child(ScreenLayout.plate(rites))
 
+	# Your dead stand inside the circle. This section used to be a bare list
+	# in a black box with two thirds of its width empty -- the screen is
+	# called the Séance and it looked like a settings page, which is exactly
+	# the "spreadsheet, not a game" problem the overhaul exists to fix.
 	var dead := VBoxContainer.new()
 	dead.add_theme_constant_override("separation", 11)
 	dead.add_child(ScreenLayout.section(game.text("ui.seance.dead"), Palette.GHOST))
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 4)
 	dead.add_child(_list)
-	add_child(ScreenLayout.plate(dead))
+
+	_circle = Prop.of(Prop.Kind.CIRCLE)
+	var stage := ScreenLayout.staged(dead, [_circle])
+	ScreenLayout.centre_prop(stage, _circle)
+	add_child(ScreenLayout.plate(stage))
+
+	# Candles at the foot of the rite, on their own phases so they do not
+	# pulse in unison like a row of LEDs.
+	var candles := HBoxContainer.new()
+	candles.alignment = BoxContainer.ALIGNMENT_CENTER
+	candles.add_theme_constant_override("separation", 130)
+	for i in 3:
+		candles.add_child(Prop.of(Prop.Kind.CANDLE, i * 5 + 1))
+	add_child(candles)
+
+
+## Where the light gathers on this screen: the circle and the dead standing
+## in it, not the price header above them.
+func focus_rect() -> Rect2:
+	if _list == null or not _list.is_inside_tree():
+		return Rect2()
+	var box := _list.get_global_rect()
+	return Rect2(box.position - global_position - Vector2(120.0, 90.0),
+		box.size + Vector2(240.0, 180.0))
 
 
 static func _price_block(value: Label, caption: String) -> VBoxContainer:

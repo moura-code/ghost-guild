@@ -20,6 +20,7 @@ var run: RunState
 const CARD_ACTIONS := ["take_card", "draft_pick", "buy_card"]
 
 var _title: Label
+var _decor: HBoxContainer
 var _context: Label
 var _fan: HBoxContainer
 var _options: VBoxContainer
@@ -63,11 +64,22 @@ func _build() -> void:
 	_options.add_theme_constant_override("separation", 6)
 	add_child(ScreenLayout.centred(_options))
 
+	# Candles either side of the choice. These screens are a title, a line of
+	# text and some rows in the middle of an empty frame; a pair of flames
+	# gives the light somewhere to come from and the eye something to sit on.
+	_decor = HBoxContainer.new()
+	_decor.alignment = BoxContainer.ALIGNMENT_CENTER
+	_decor.add_theme_constant_override("separation", 620)
+	_decor.add_child(Prop.of(Prop.Kind.CANDLE, 3))
+	_decor.add_child(Prop.of(Prop.Kind.CANDLE, 8))
+	add_child(_decor)
+	add_child(ScreenLayout.centred(Prop.of(Prop.Kind.RUBBLE, 4), 400.0))
+
 
 func refresh() -> void:
 	if game == null or run == null or not handles(run.phase):
 		return
-	_title.text = game.text("ui.run.phase.%s" % run.phase)
+	_title.text = _title_text()
 	_context.text = _context_text()
 	_actions = _collapse(RunEngine.legal_actions(run))
 	_rebuild_options()
@@ -89,6 +101,20 @@ func _collapse(actions: Array) -> Array:
 	return out
 
 
+## An event is titled with its own name -- "The Whispering Well" -- not with
+## the literal word "event". The phase key is a fine heading for a shop or a
+## card pick, which are the same thing every time; an authored encounter is
+## the one place in the run with a name of its own, and throwing it away for
+## a generic label was the single flattest thing on any screen.
+func _title_text() -> String:
+	if run.phase == "event" and game.content.events.has(run.event_id):
+		var def: EventDef = game.content.events[run.event_id]
+		var named := game.text(def.name_key)
+		if named != "" and named != def.name_key:
+			return named
+	return game.text("ui.run.phase.%s" % run.phase)
+
+
 ## The shop shows the purse; an event shows its authored text. The other two
 ## need no more than their title.
 func _context_text() -> String:
@@ -103,6 +129,19 @@ func _context_text() -> String:
 			var offer: Dictionary = run.descent_offers[0]
 			return game.text("ui.descent.offer").replace("{floor}", str(int(offer["floor"])))
 	return ""
+
+
+## The choice itself: the cards or the rows, plus the line of text above
+## them. The title sits outside it -- the light should land on what the
+## player has to decide.
+func focus_rect() -> Rect2:
+	if _options == null or not _options.is_inside_tree():
+		return Rect2()
+	var box: Rect2 = _options.get_global_rect()
+	if _fan != null and _fan.is_inside_tree() and _fan.visible and _fan.size.x > 0.0:
+		box = box.merge(_fan.get_global_rect())
+	return Rect2(box.position - global_position - Vector2(110.0, 90.0),
+		box.size + Vector2(220.0, 170.0))
 
 
 ## What one option reads as, and how to take it, without a test having to

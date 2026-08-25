@@ -10,6 +10,11 @@ extends Control
 const SHADER_PATH := "res://game/theme/crypt.gdshader"
 const MOTE_COUNT := 34
 const MOTE_LIFETIME := 14.0
+## The lantern is a flame. Never below MIN -- a light that drops to nothing
+## reads as a rendering fault rather than as a draught -- and never far above
+## 1, because this multiplies every warm highlight in the room.
+const FLICKER_MIN := 0.86
+const FLICKER_MAX := 1.06
 
 var depth: float = 0.0:
 	set(value):
@@ -26,6 +31,7 @@ var _material: ShaderMaterial
 var _focus: Rect2 = Rect2()
 var _has_focus: bool = false
 var _focus_strength: float = 0.0
+var _flicker_time: float = 0.0
 
 
 func _init() -> void:
@@ -116,6 +122,25 @@ func _apply_focus() -> void:
 	_material.set_shader_parameter("focus_centre", centre)
 	_material.set_shader_parameter("focus_radius", radius)
 	_material.set_shader_parameter("focus_strength", _focus_strength)
+
+
+## Driven here rather than from TIME inside the shader so the range is a rule
+## the tests can hold, and so it stays deterministic: no engine randomness,
+## just three incommensurate sines, which never repeat on a period a player
+## would notice and give the same frame the same value every time.
+func _process(delta: float) -> void:
+	_advance_flicker(delta)
+
+
+func _advance_flicker(delta: float) -> void:
+	_flicker_time += delta
+	var t := _flicker_time
+	var wave := sin(t * 2.7) * 0.5 + sin(t * 6.1 + 1.3) * 0.32 + sin(t * 11.9 + 2.7) * 0.18
+	var mid := (FLICKER_MIN + FLICKER_MAX) * 0.5
+	var half := (FLICKER_MAX - FLICKER_MIN) * 0.5
+	var value := clampf(mid + wave * half, FLICKER_MIN, FLICKER_MAX)
+	if _material != null:
+		_material.set_shader_parameter("flicker", value)
 
 
 func _notification(what: int) -> void:

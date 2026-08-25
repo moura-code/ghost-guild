@@ -176,7 +176,6 @@ func _gui_input(event: InputEvent) -> void:
 				floor_clicked.emit(floor)
 
 
-## Which floor a point falls in, or 0 for none. The negative case matters:
 ## The stone filling an unexcavated floor. This is the tapered chamber, not
 ## the full gutter-to-gutter rock: filling the gutters made floors 2-10 one
 ## flat wall of constant width and erased the perspective that is the only
@@ -185,6 +184,22 @@ func solid_rect(floor: int) -> Rect2:
 	return chamber_rect(floor)
 
 
+## The colour of undug rock, and of an open chamber's air. Both are pulled
+## out of _draw so the rule that matters can be asserted: the floors you
+## cannot reach must never outshine the ones you can.
+func undug_colour(floor: int) -> Color:
+	var solid := 0.34 - float(floor) * 0.022
+	return Color(Palette.STONE_HIGH.r * solid, Palette.STONE_HIGH.g * solid,
+		Palette.STONE_HIGH.b * solid, 1.0)
+
+
+func chamber_colour(floor: int) -> Color:
+	var air := Palette.STONE_RAISED
+	var lit := 0.35 + light_at(floor) * 0.65
+	return Color(air.r * lit, air.g * lit, air.b * lit, 0.92)
+
+
+## Which floor a point falls in, or 0 for none. The negative case matters:
 ## int() truncates toward zero, so a point above the shaft would otherwise
 ## come back as floor 1.
 func _floor_at(at: Vector2) -> int:
@@ -214,42 +229,41 @@ func _draw() -> void:
 
 		if not reachable:
 			rock = solid_rect(floor)
-			# Below your reach the shaft has not been dug. Solid stone, with
-			# the courses of it showing -- an unlit empty room looks exactly
-			# like a lit one nobody is standing in, and nine of those in a
-			# column is the void problem wearing a tower.
-			# Solid stone is LIGHTER than an open chamber, not darker: it
-			# catches what light there is instead of swallowing it. Filling
-			# it dark just made floors 2-10 one black slab.
-			var solid := 0.86 - float(floor) * 0.045
-			draw_rect(rock, Color(Palette.STONE_HIGH.r * solid, Palette.STONE_HIGH.g * solid,
-				Palette.STONE_HIGH.b * solid, 1.0))
+			# Below your reach the shaft has not been dug: this is the rock
+			# it will one day be cut through.
+			#
+			# It used to be drawn LIGHTER than an open chamber, on the theory
+			# that solid stone catches light while a room swallows it. True
+			# of a real wall, wrong here: it made undug rock the brightest
+			# thing on the game's capsule screen, so the eye went to the nine
+			# floors you cannot reach instead of to the one ghost you have.
+			# Unreached floors are a promise, not the subject. They recede.
+			draw_rect(rock, undug_colour(floor))
+			# How lit this rock is, reused to keep the courses in step with it.
+			var solid := 0.34 - float(floor) * 0.022
+			# Courses, faint. Enough texture that it reads as laid stone
+			# rather than as a hole in the screen, not enough to compete.
 			var courses := 3
 			var course_h := rock.size.y / float(courses)
 			for c in courses:
 				var y := rock.position.y + course_h * float(c)
-				# A lit top edge and a dark joint under it: that pairing is
-				# what makes a flat fill read as a laid course of stone.
 				draw_rect(Rect2(Vector2(rock.position.x, y), Vector2(rock.size.x, 1.0)),
 					Color(Palette.EDGE_LIGHT.r, Palette.EDGE_LIGHT.g, Palette.EDGE_LIGHT.b,
-						0.22 * solid))
-				draw_rect(Rect2(Vector2(rock.position.x, y + 1.0), Vector2(rock.size.x, 2.0)),
-					Color(0.0, 0.0, 0.0, 0.35))
-				# Staggered vertical joints, so it reads as masonry.
+						0.10 * solid * 3.0))
+				draw_rect(Rect2(Vector2(rock.position.x, y + 1.0), Vector2(rock.size.x, 1.0)),
+					Color(0.0, 0.0, 0.0, 0.30))
 				var joints := 6
 				for j in range(1, joints):
 					var offset := 0.5 if c % 2 == 0 else 0.0
 					var jx := rock.position.x + rock.size.x * (float(j) + offset) / float(joints)
 					if jx >= rock.end.x:
 						continue
-					draw_rect(Rect2(Vector2(jx, y + 2.0), Vector2(2.0, course_h - 2.0)),
-						Color(0.0, 0.0, 0.0, 0.30))
+					draw_rect(Rect2(Vector2(jx, y + 2.0), Vector2(1.0, course_h - 2.0)),
+						Color(0.0, 0.0, 0.0, 0.22))
 			continue
 
 		# The chamber itself: darker than the rock, lit from above.
-		var air := Palette.STONE_RAISED
-		var lit := 0.35 + light * 0.65
-		draw_rect(rect, Color(air.r * lit, air.g * lit, air.b * lit, 0.92))
+		draw_rect(rect, chamber_colour(floor))
 		# Its back wall catches the light near the ceiling and falls away.
 		for i in 6:
 			var t := float(i) / 5.0

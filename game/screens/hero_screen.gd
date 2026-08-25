@@ -5,6 +5,8 @@ extends VBoxContainer
 ## spendable lives in the Guild and the Séance.
 
 const STAT_IDS := ["might", "wit", "vigor", "focus"]
+## A whole starting deck has to fit on the sheet without scrolling.
+const DECK_CARD_SCALE := 0.46
 
 var game: GameRoot
 
@@ -12,8 +14,9 @@ var _name: Label
 var _class: Label
 var _vitals: Label
 var _stats: Dictionary = {}
-var _deck: VBoxContainer
+var _deck: HFlowContainer
 var _relics: Label
+var _relic_row: HBoxContainer
 var _figure: TextureRect
 
 
@@ -65,14 +68,26 @@ func _build() -> void:
 	add_child(stat_row)
 
 	add_child(ScreenLayout.centre(UiTheme.small(game.text("ui.relics"))))
-	_relics = ScreenLayout.centre(UiTheme.body(""))
+	# Relics are objects you carry, so they are shown as objects. A relic
+	# rendered as a word in a comma-separated list has no more weight than
+	# a footnote.
+	_relic_row = HBoxContainer.new()
+	_relic_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_relic_row.add_theme_constant_override("separation", 10)
+	add_child(_relic_row)
+	_relics = ScreenLayout.centre(UiTheme.small("", Palette.BONE_DIM))
 	_relics.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_relics)
 
 	add_child(ScreenLayout.centre(UiTheme.small(game.text("ui.deck"))))
-	_deck = VBoxContainer.new()
-	_deck.add_theme_constant_override("separation", 2)
-	add_child(ScreenLayout.centred(_deck, 300.0))
+	# The deck as cards, not as "5x Strike / 4x Brace". This is the screen
+	# where a player looks at what they have built, and a bulleted text list
+	# is the least persuasive possible way to show them a deck.
+	_deck = HFlowContainer.new()
+	_deck.add_theme_constant_override("h_separation", 8)
+	_deck.add_theme_constant_override("v_separation", 8)
+	_deck.alignment = FlowContainer.ALIGNMENT_CENTER
+	add_child(ScreenLayout.centred(_deck, ScreenLayout.WIDE_COLUMN))
 
 
 func refresh() -> void:
@@ -92,6 +107,15 @@ func refresh() -> void:
 	_refresh_deck(hero)
 
 
+## The hero themselves, not the deck below them.
+func focus_rect() -> Rect2:
+	if _figure == null or not _figure.is_inside_tree():
+		return Rect2()
+	var box := _figure.get_global_rect()
+	return Rect2(box.position - global_position - Vector2(150.0, 40.0),
+		box.size + Vector2(300.0, 320.0))
+
+
 func _class_name_key(class_id: String) -> String:
 	if game.content.classes.has(class_id):
 		var def: ClassDef = game.content.classes[class_id]
@@ -100,12 +124,21 @@ func _class_name_key(class_id: String) -> String:
 
 
 func _refresh_relics(hero: Hero) -> void:
+	for child in _relic_row.get_children():
+		_relic_row.remove_child(child)
+		child.queue_free()
 	if hero.relics.is_empty():
 		_relics.text = game.text("ui.none")
 		return
 	var names := PackedStringArray()
 	for relic_id in hero.relics:
-		names.append(game.text(_relic_name_key(relic_id)))
+		var name := game.text(_relic_name_key(String(relic_id)))
+		names.append(name)
+		var plate := Icons.make_plate(Icons.relic(String(relic_id)), 34.0,
+			Palette.BONE, Palette.PLATE_NEUTRAL, Palette.EDGE_LIGHT)
+		plate.tooltip_text = name
+		plate.mouse_filter = Control.MOUSE_FILTER_STOP
+		_relic_row.add_child(plate)
 	_relics.text = ", ".join(names)
 
 
@@ -132,12 +165,25 @@ func _refresh_deck(hero: Hero) -> void:
 		counts[key] = int(counts[key]) + 1
 	for key in order:
 		var parts := key.split("|")
-		var def_id := parts[0]
+		var def_id := String(parts[0])
 		var upgraded := parts[1] == "1"
-		var label_text := "%d× %s" % [int(counts[key]), game.text(_card_name_key(def_id))]
-		if upgraded:
-			label_text += game.text("ui.upgraded")
-		_deck.add_child(UiTheme.small(label_text, Palette.BONE))
+		var card := CardView.new()
+		card.bind(game.content, CardInstance.new(0, def_id, upgraded), 0, true)
+		# Small enough that a thirty-card deck still fits the screen, big
+		# enough that the art and the cost are legible.
+		card.scale = Vector2(DECK_CARD_SCALE, DECK_CARD_SCALE)
+		card.pivot_offset = Vector2.ZERO
+		# A scaled Control still reserves its unscaled size in a container,
+		# so the flow has to be told how much room the card really takes.
+		var slot := Control.new()
+		slot.custom_minimum_size = CardView.CARD_SIZE * DECK_CARD_SCALE
+		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		slot.add_child(card)
+		_deck.add_child(slot)
+		if int(counts[key]) > 1:
+			var badge := UiTheme.small("x%d" % int(counts[key]), Palette.LANTERN)
+			badge.position = Vector2(4.0, 2.0)
+			slot.add_child(badge)
 
 
 func _card_name_key(def_id: String) -> String:

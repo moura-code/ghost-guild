@@ -77,3 +77,37 @@ static func plate(content: Control, width: float = WIDE_COLUMN) -> Control:
 	margin.add_child(content)
 	panel.add_child(margin)
 	return centred(panel, width)
+
+
+## Stacks `decor` behind `content` in one box that sizes to the content.
+##
+## The panel screens are VBoxContainers, which lay every child out in the
+## stack -- so a prop added to one becomes another row rather than something
+## standing behind the row. This gives a section its own little stage: the
+## decor fills the same rect and draws first, the content draws over it.
+static func staged(content: Control, decor: Array) -> Control:
+	var stage := Control.new()
+	stage.mouse_filter = Control.MOUSE_FILTER_PASS
+	for prop in decor:
+		var node := prop as Control
+		if node == null:
+			continue
+		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		stage.add_child(node)
+	content.set_anchors_preset(Control.PRESET_FULL_RECT)
+	stage.add_child(content)
+	# The stage has no layout of its own, so it has to be told how big the
+	# thing standing on it is or it collapses to nothing inside a VBox.
+	content.resized.connect(func() -> void:
+		stage.custom_minimum_size = Vector2(0.0, content.size.y))
+	return stage
+
+
+## Centres `prop` inside `stage`'s eventual rect, deferred so it lands after
+## the container has decided how big the stage is. Props are decoration and
+## must never drive layout, so they are positioned rather than added as rows.
+static func centre_prop(stage: Control, prop: Control, offset: Vector2 = Vector2.ZERO) -> void:
+	var place := func() -> void:
+		prop.position = (stage.size - prop.size) * 0.5 + offset
+	stage.resized.connect(place)
+	place.call_deferred()

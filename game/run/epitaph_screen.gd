@@ -54,9 +54,29 @@ func _build() -> void:
 	# Owns the screen rather than sitting in a band at the top: this is the
 	# moment the game is about, and it should not share the frame.
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# A vigil is held by candlelight, and this screen was 90% empty void with
+	# a small column of labels in the middle of it. The candles and the bones
+	# give the frame something to be, and the mourners' light comes from
+	# somewhere.
+	var vigil := HBoxContainer.new()
+	vigil.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vigil.alignment = BoxContainer.ALIGNMENT_CENTER
+	vigil.add_theme_constant_override("separation", 780)
+	vigil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for i in 2:
+		var stand := VBoxContainer.new()
+		stand.alignment = BoxContainer.ALIGNMENT_CENTER
+		stand.add_theme_constant_override("separation", 20)
+		stand.add_child(Prop.of(Prop.Kind.CANDLE, i * 6 + 2))
+		stand.add_child(Prop.of(Prop.Kind.SKULL, i))
+		stand.add_child(Prop.of(Prop.Kind.BONES, i * 3))
+		vigil.add_child(stand)
+	add_child(vigil)
+
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 18)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(box)
 
 	_name = UiTheme.title("")
@@ -141,6 +161,15 @@ func bind(g: GameRoot, p_result: Dictionary) -> void:
 
 
 ## first_death carries the rite that unlocks Take the Watch (spec §3.4).
+## The dead hero, tight. Everything else on this screen is a mourner.
+func focus_rect() -> Rect2:
+	if _name == null or not _name.is_inside_tree():
+		return Rect2()
+	var box := _name.get_global_rect()
+	return Rect2(box.position - global_position - Vector2(160.0, 60.0),
+		box.size + Vector2(320.0, 300.0))
+
+
 static func _has_rite(p_result: Dictionary) -> bool:
 	for event in p_result.get("rite_events", []):
 		if String(event.get("type", "")) == "first_death":

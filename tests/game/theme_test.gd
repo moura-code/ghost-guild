@@ -64,3 +64,17 @@ func test_label_helpers_set_size_and_colour() -> void:
 	assert_int(l.get_theme_font_size("font_size")).is_equal(UiTheme.FONT_NUMBER)
 	var s: Label = auto_free(UiTheme.small("floor 1"))
 	assert_int(s.get_theme_font_size("font_size")).is_equal(UiTheme.FONT_SMALL)
+
+
+func test_hovering_a_button_lights_it_like_a_lantern() -> void:
+	# Interactive things catch the warm light; ghost cyan stays reserved for
+	# the dead, which are the only cool thing in the game.
+	var t := UiTheme.build()
+	assert_that(t.get_color("font_hover_color", "Button")).is_equal(Palette.LANTERN)
+	var hover := t.get_stylebox("hover", "Button") as StyleBoxFlat
+	assert_object(hover).is_not_null()
+	assert_float(hover.border_color.r).is_greater(hover.border_color.b)
+	var normal := t.get_stylebox("normal", "Button") as StyleBoxFlat
+	assert_float(Palette.luma(hover.bg_color)) \
+		.override_failure_message("hover is not brighter than rest, so nothing happens on hover") \
+		.is_greater(Palette.luma(normal.bg_color))

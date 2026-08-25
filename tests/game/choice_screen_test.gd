@@ -230,3 +230,24 @@ func test_the_draft_ends_and_the_run_begins_on_the_entry_floor() -> void:
 		guard += 1
 	assert_str(run.phase).is_equal("node")
 	assert_int(run.floor).is_equal(3)
+
+
+func test_an_event_is_titled_with_its_own_name() -> void:
+	# It said "An event". The one encounter in the run that is hand-authored
+	# and has a name was being labelled with the name of its phase.
+	var g := _game()
+	var run := _at(g, {"kind": "event", "event": "whispering_well"})
+	var s := _screen(g, run)
+	await await_idle_frame()
+	var def: EventDef = g.content.events["whispering_well"]
+	assert_str(s._title.text).is_equal(g.text(def.name_key))
+	assert_str(s._title.text).is_not_equal(g.text("ui.run.phase.event"))
+
+
+func test_a_shop_still_uses_its_phase_heading() -> void:
+	# Only an authored encounter has a name of its own; a shop is a shop.
+	var g := _game()
+	var run := _at(g, {"kind": "shop"})
+	var s := _screen(g, run)
+	await await_idle_frame()
+	assert_str(s._title.text).is_equal(g.text("ui.run.phase.shop"))

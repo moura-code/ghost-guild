@@ -63,13 +63,17 @@ static func build() -> Theme:
 	t.set_stylebox("panel", "Panel", panel_box(Palette.STONE))
 
 	t.set_stylebox("normal", "Button", panel_box(Palette.STONE_HIGH))
-	t.set_stylebox("hover", "Button", lit_box(Palette.STONE_EDGE, Palette.SOUL))
+	# Warm, not cyan. Under the light model an interactive thing lights up
+	# like the lanterns do; ghost cyan belongs to the dead and to nothing else,
+	# and a button borrowing it was the game's brightest colour competing with
+	# its subject.
+	t.set_stylebox("hover", "Button", lit_box(Palette.STONE_EDGE, Palette.EDGE_LIGHT))
 	t.set_stylebox("pressed", "Button", panel_box(Palette.STONE, Palette.STONE_EDGE))
 	var off := panel_box(Palette.STONE, Palette.STONE_RAISED)
 	off.shadow_size = 0
 	t.set_stylebox("disabled", "Button", off)
 	t.set_color("font_color", "Button", Palette.BONE)
-	t.set_color("font_hover_color", "Button", Palette.SOUL)
+	t.set_color("font_hover_color", "Button", Palette.LANTERN)
 	t.set_color("font_disabled_color", "Button", Palette.BONE_FAINT)
 	t.set_font_size("font_size", "Button", FONT_BODY)
 	t.set_constant("outline_size", "Label", 0)

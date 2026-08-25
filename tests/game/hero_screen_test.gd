@@ -55,19 +55,37 @@ func test_the_four_stats_each_get_a_row() -> void:
 		assert_str((s._stats[stat] as Label).text).is_equal(str(g.campaign.hero.stats[stat]))
 
 
-func test_the_deck_lists_every_card_grouped_with_a_count() -> void:
+## The deck is shown as card faces now rather than as "5x Strike". Grouping
+## is unchanged -- a thirty-card deck must still read as a dozen entries --
+## but the entries are cards, because this is the screen where a player looks
+## at what they have built.
+func test_the_deck_shows_one_card_face_per_group() -> void:
 	var g := _game()
 	var s := _screen(g)
 	await await_idle_frame()
 	# The sexton starting deck is 5x strike, 4x brace, 1x last_rites: three
-	# groups, not ten lines.
+	# groups, not ten cards.
 	assert_int(s._deck.get_child_count()).is_equal(3)
-	var expected := "%d× %s" % [5, g.text("card.strike.name")]
-	var found := false
-	for child in s._deck.get_children():
-		if (child as Label).text == expected:
-			found = true
-	assert_bool(found).is_true()
+	var names: Array[String] = []
+	for slot in s._deck.get_children():
+		var card := (slot as Control).get_child(0) as CardView
+		assert_object(card).override_failure_message("a deck slot holds no card").is_not_null()
+		names.append(card._name.text)
+	assert_array(names).contains([g.text("card.strike.name")])
+
+
+func test_a_repeated_card_carries_its_count() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	var badges: Array[String] = []
+	for slot in s._deck.get_children():
+		for child in (slot as Control).get_children():
+			if child is Label:
+				badges.append((child as Label).text)
+	# Five Strikes and four Braces are badged; the lone Last Rites is not.
+	assert_array(badges).contains(["x5", "x4"])
+	assert_array(badges).not_contains(["x1"])
 
 
 func test_buying_a_stat_upgrade_updates_the_hero_screen() -> void:
@@ -90,8 +108,9 @@ func test_upgraded_cards_are_marked() -> void:
 	await await_idle_frame()
 	var marker := g.text("ui.upgraded")
 	var found := false
-	for child in s._deck.get_children():
-		if (child as Label).text.contains(marker):
+	for slot in s._deck.get_children():
+		var card := (slot as Control).get_child(0) as CardView
+		if card != null and card._name.text.contains(marker):
 			found = true
 	assert_bool(found).is_true()
 
@@ -110,3 +129,15 @@ func test_binding_twice_does_not_connect_the_signals_twice() -> void:
 	s.bind(g)
 	await await_idle_frame()
 	assert_int(g.hero_changed.get_connections().size()).is_equal(1)
+
+
+func test_relics_are_shown_as_objects_not_as_a_comma_list() -> void:
+	# A relic rendered as a word in a comma-separated list has no more weight
+	# than a footnote; the player is supposed to feel they are carrying it.
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	assert_int(g.campaign.hero.relics.size()).is_greater(0)
+	assert_int(s._relic_row.get_child_count()).is_equal(g.campaign.hero.relics.size())
+	var first := s._relic_row.get_child(0) as Control
+	assert_str(first.tooltip_text).is_not_empty()

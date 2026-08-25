@@ -27,6 +27,11 @@ uniform float glow_pulse : hint_range(0.0, 1.0) = 0.0;
 uniform vec2 focus_centre = vec2(0.5, 0.5);
 uniform float focus_radius = 0.35;
 uniform float focus_strength : hint_range(0.0, 1.0) = 0.0;
+
+// Pushed every frame by Atmosphere. Multiplies every warm highlight in the
+// room so the whole place breathes with the flame rather than one element
+// of it blinking on its own.
+uniform float flicker = 1.0;
 uniform float grain : hint_range(0.0, 0.25) = 0.03;
 uniform float aspect = 1.777;
 
@@ -87,7 +92,7 @@ void fragment() {
 		// architecture instead of a hole punched in a wall, so it carries
 		// more weight now that the interior is dark.
 		float outer = arch(vec2(centred, uv.y), cx, w + 0.014, top - 0.014, bottom);
-		col += lantern.rgb * clamp(outer - inside, 0.0, 1.0) * 0.14;
+		col += lantern.rgb * clamp(outer - inside, 0.0, 1.0) * 0.14 * flicker;
 	}
 
 	// The frame falls into shadow at both edges.
@@ -102,7 +107,7 @@ void fragment() {
 	// A single warm lip where the pillar's inner face catches the light, so
 	// the darkness at the edge still reads as a solid and not as a fade-out.
 	float lip = smoothstep(0.168, 0.148, edge) * smoothstep(0.128, 0.150, edge);
-	col += lantern.rgb * lip * 0.10;
+	col += lantern.rgb * lip * 0.10 * flicker;
 
 	// Masonry: broad blocks, then a finer grain over the top. Subtler than
 	// before -- on a ground this dark, loud seams are the loudest thing here.
@@ -113,7 +118,12 @@ void fragment() {
 
 	// The lantern: light rising from the floor of the room.
 	float from_below = smoothstep(1.05, 0.35, uv.y);
-	col += lantern.rgb * from_below * (0.030 + 0.075 * glow_pulse) * (1.0 - depth * 0.6);
+	col += lantern.rgb * from_below * (0.030 + 0.075 * glow_pulse) * (1.0 - depth * 0.6) * flicker;
+
+	// Damp drifting along the floor. Slow enough to read as air rather than
+	// as a scrolling texture, and faint enough to stay out of the way.
+	float fog = noise(vec2(uv.x * 2.4 + TIME * 0.045, uv.y * 3.2 - TIME * 0.02));
+	col += lantern.rgb * fog * smoothstep(0.45, 1.0, uv.y) * 0.022;
 
 	// The focus falloff: the ground darkens away from wherever this screen
 	// put its content. Measured with the aspect folded in so the lit core is

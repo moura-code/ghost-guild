@@ -240,3 +240,29 @@ func test_the_shaft_still_narrows_with_depth_where_it_is_undug() -> void:
 	var tower := s._tower
 	tower.size = Vector2(560.0, 380.0)
 	assert_float(tower.solid_rect(10).size.x).is_less(tower.solid_rect(1).size.x)
+
+
+## The Ladder is the store capsule, the first screenshot and the first three
+## seconds of the trailer. Unreached floors are a promise; the ghosts you
+## actually have are the subject, and the subject has to be the brightest
+## thing on the screen.
+func test_undug_rock_is_darker_than_the_chambers_you_have_reached() -> void:
+	var g := _game()
+	var s: LadderScreen = auto_free(LadderScreen.new())
+	s.bind(g)
+	add_child(s)
+	await await_idle_frame()
+	var tower := s._tower
+	assert_float(Palette.luma(tower.undug_colour(10))) \
+		.override_failure_message("the floors you cannot reach outshine the one you can") \
+		.is_less(Palette.luma(tower.chamber_colour(1)))
+
+
+func test_undug_rock_gets_darker_the_deeper_it_goes() -> void:
+	var g := _game()
+	var s: LadderScreen = auto_free(LadderScreen.new())
+	s.bind(g)
+	add_child(s)
+	await await_idle_frame()
+	var tower := s._tower
+	assert_float(Palette.luma(tower.undug_colour(10))).is_less(Palette.luma(tower.undug_colour(2)))

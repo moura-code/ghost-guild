@@ -145,3 +145,36 @@ func test_a_focus_set_before_layout_survives_being_resized() -> void:
 	var centre: Vector2 = a._material.get_shader_parameter("focus_centre")
 	assert_float(centre.x).is_equal_approx(0.025, 0.001)
 	assert_float(centre.y).is_equal_approx(0.025, 0.001)
+
+
+## The lantern is a flame, not a bulb (visual-overhaul spec §3.2). Driven
+## from GDScript rather than from TIME in the shader so the range is a rule
+## a test can hold: a light that occasionally drops to nothing reads as a
+## rendering fault, and one that never moves reads as a screenshot.
+func test_the_lantern_flickers_without_ever_going_out() -> void:
+	var a := _atmos()
+	await await_idle_frame()
+	var seen: Array[float] = []
+	for i in 60:
+		a._advance_flicker(0.05)
+		var f: float = a._material.get_shader_parameter("flicker")
+		assert_float(f).is_between(Atmosphere.FLICKER_MIN, Atmosphere.FLICKER_MAX)
+		seen.append(f)
+	var lowest: float = seen.min()
+	var highest: float = seen.max()
+	assert_float(highest - lowest) \
+		.override_failure_message("the lantern is a bulb: it never moved") \
+		.is_greater(0.02)
+
+
+func test_the_flicker_is_deterministic_for_a_given_elapsed_time() -> void:
+	# No engine randomness: two atmospheres advanced the same way agree, so
+	# a screenshot of the same frame is the same screenshot.
+	var a := _atmos()
+	var b := _atmos()
+	await await_idle_frame()
+	for i in 12:
+		a._advance_flicker(0.05)
+		b._advance_flicker(0.05)
+	assert_float(a._material.get_shader_parameter("flicker")) \
+		.is_equal(b._material.get_shader_parameter("flicker"))
