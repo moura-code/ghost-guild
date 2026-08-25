@@ -14,6 +14,11 @@ var _mend_button: Button
 var _list: VBoxContainer
 var _circle: Prop
 
+## Matched to the Guild's tablets so the two spending screens read as the
+## same game.
+const TILE_SIZE := Vector2(176.0, 132.0)
+const DEAD_WIDTH := 640.0
+
 
 func _init() -> void:
 	add_theme_constant_override("separation", 10)
@@ -36,29 +41,24 @@ func bind(g: GameRoot) -> void:
 func _build() -> void:
 	add_child(ScreenLayout.centre(UiTheme.title(game.text("ui.seance"))))
 
-	var rites := VBoxContainer.new()
-	rites.add_theme_constant_override("separation", 13)
-	rites.add_child(ScreenLayout.section(game.text("ui.seance.rites"), Palette.PREPARED))
-
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 44)
+	# The rites as a price board of tablets, the same language as the Guild's
+	# wall. This was two numbers floating in the top-left of a 900px black
+	# box with a Mend row under them and two thirds of the width empty --
+	# which is what a form looks like, not a rite.
+	var rites := HBoxContainer.new()
+	rites.alignment = BoxContainer.ALIGNMENT_CENTER
+	rites.add_theme_constant_override("separation", 12)
 	_echo_price = UiTheme.number("0")
 	_call_price = UiTheme.number("0")
-	header.alignment = BoxContainer.ALIGNMENT_CENTER
-	header.add_child(_price_block(_echo_price, game.text("ui.echo")))
-	header.add_child(_price_block(_call_price, game.text("ui.call")))
-	rites.add_child(header)
+	rites.add_child(_rite_tile(_echo_price, game.text("ui.echo"), "seance"))
+	rites.add_child(_rite_tile(_call_price, game.text("ui.call"), "ghost"))
 
-	var mend_row := HBoxContainer.new()
-	mend_row.add_theme_constant_override("separation", 8)
-	_mend_label = UiTheme.body("")
-	_mend_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_mend_label = UiTheme.number("", Palette.BONE)
 	_mend_button = Button.new()
+	_mend_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_mend_button.pressed.connect(_on_mend)
-	mend_row.add_child(_mend_label)
-	mend_row.add_child(_mend_button)
-	rites.add_child(mend_row)
-	add_child(ScreenLayout.plate(rites))
+	rites.add_child(_mend_tile())
+	add_child(rites)
 
 	# Your dead stand inside the circle. This section used to be a bare list
 	# in a black box with two thirds of its width empty -- the screen is
@@ -72,9 +72,13 @@ func _build() -> void:
 	dead.add_child(_list)
 
 	_circle = Prop.of(Prop.Kind.CIRCLE)
+	_circle.custom_minimum_size = Vector2(330.0, 330.0)
+	_circle.size = _circle.custom_minimum_size
 	var stage := ScreenLayout.staged(dead, [_circle])
 	ScreenLayout.centre_prop(stage, _circle)
-	add_child(ScreenLayout.plate(stage))
+	# Sized to the dead standing in it. At the shared wide column this was a
+	# single row of one ghost adrift in a black field.
+	add_child(ScreenLayout.plate(stage, DEAD_WIDTH))
 
 	# Candles at the foot of the rite, on their own phases so they do not
 	# pulse in unison like a row of LEDs.
@@ -96,12 +100,44 @@ func focus_rect() -> Rect2:
 		box.size + Vector2(240.0, 180.0))
 
 
-static func _price_block(value: Label, caption: String) -> VBoxContainer:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 0)
-	box.add_child(value)
-	box.add_child(UiTheme.small(caption))
-	return box
+## One rite, as a tablet: what it is, and what it costs.
+func _rite_tile(value: Label, caption: String, icon: String) -> PanelContainer:
+	var tile := _tile_shell()
+	var column := tile.get_child(0) as VBoxContainer
+	var plate := Icons.make_plate(Icons.ui(icon), 26.0, Palette.BONE,
+		Palette.PLATE_NEUTRAL, Palette.STONE_EDGE)
+	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	column.add_child(plate)
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(value)
+	column.add_child(ScreenLayout.centre(UiTheme.small(caption)))
+	return tile
+
+
+## Mend is the one rite on this board you can actually perform from here, so
+## its tablet carries the button rather than just the price.
+func _mend_tile() -> PanelContainer:
+	var tile := _tile_shell()
+	var column := tile.get_child(0) as VBoxContainer
+	var plate := Icons.make_plate(Icons.ui("hero"), 26.0, Palette.BONE,
+		Palette.PLATE_NEUTRAL, Palette.STONE_EDGE)
+	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	column.add_child(plate)
+	_mend_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(_mend_label)
+	column.add_child(_mend_button)
+	return tile
+
+
+static func _tile_shell() -> PanelContainer:
+	var tile := PanelContainer.new()
+	tile.custom_minimum_size = TILE_SIZE
+	tile.add_theme_stylebox_override("panel", UiTheme.panel_box(Palette.STONE_RAISED))
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 3)
+	column.alignment = BoxContainer.ALIGNMENT_CENTER
+	tile.add_child(column)
+	return tile
 
 
 func refresh() -> void:
@@ -148,8 +184,11 @@ func _refresh_mend(soul: float) -> void:
 		_mend_button.disabled = true
 		return
 	var cost := Seance.mend_cost(game.campaign)
-	_mend_label.text = "%s  %d/%d" % [game.text("ui.mend"), hero.hp, hero.max_hp]
-	_mend_button.text = Num.short(cost)
+	# The tablet already says Mend under it, so the number is just the hero's
+	# health -- repeating the word inside the tile it labels was the row
+	# layout's habit, not the board's.
+	_mend_label.text = "%d/%d" % [hero.hp, hero.max_hp]
+	_mend_button.text = "%s  %s" % [game.text("ui.mend"), Num.short(cost)]
 	_mend_button.disabled = hero.hp >= hero.max_hp or soul < cost
 
 

@@ -10,6 +10,11 @@ extends VBoxContainer
 ## player cannot afford simply is not listed.
 
 const PHASES := ["reward", "event", "rest", "shop", "descent"]
+## Tall enough that a choice reads as something you press rather than as a
+## line of text with a rule under it.
+const CHOICE_HEIGHT := 46.0
+## A comfortable measure for a paragraph of authored text.
+const TEXT_WIDTH := 560.0
 
 var game: GameRoot
 var run: RunState
@@ -22,6 +27,7 @@ const CARD_ACTIONS := ["take_card", "draft_pick", "buy_card"]
 var _title: Label
 var _decor: HBoxContainer
 var _context: Label
+var _context_plate: PanelContainer
 var _fan: HBoxContainer
 var _options: VBoxContainer
 var _buttons: Array[Button] = []
@@ -50,9 +56,18 @@ func _build() -> void:
 	_title = ScreenLayout.centre(UiTheme.title(""))
 	add_child(_title)
 
-	_context = ScreenLayout.centre(UiTheme.body("", Palette.BONE_DIM))
+	# An authored encounter's text sits on something, the way a notice nailed
+	# to a wall does. Floating a single grey line in the middle of an empty
+	# frame is what made the event screen the flattest in the game.
+	_context = ScreenLayout.centre(UiTheme.body("", Palette.BONE))
 	_context.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	add_child(_context)
+	_context.custom_minimum_size = Vector2(0.0, 30.0)
+	_context.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_context_plate = PanelContainer.new()
+	_context_plate.add_theme_stylebox_override("panel",
+		UiTheme.panel_box(Color(Palette.VOID.r, Palette.VOID.g, Palette.VOID.b, 0.72)))
+	_context_plate.add_child(_context)
+	add_child(ScreenLayout.centred(_context_plate, TEXT_WIDTH))
 
 	# The prizes, laid out as cards; then everything else as a list.
 	_fan = HBoxContainer.new()
@@ -73,7 +88,10 @@ func _build() -> void:
 	_decor.add_child(Prop.of(Prop.Kind.CANDLE, 3))
 	_decor.add_child(Prop.of(Prop.Kind.CANDLE, 8))
 	add_child(_decor)
-	add_child(ScreenLayout.centred(Prop.of(Prop.Kind.RUBBLE, 4), 400.0))
+	# No rubble here. Debris needs a floor to lie on, and floating in the
+	# middle of an empty frame it read as loose grey rectangles rather than
+	# as broken stone -- decor that draws attention to itself is worse than
+	# no decor.
 
 
 func refresh() -> void:
@@ -81,6 +99,10 @@ func refresh() -> void:
 		return
 	_title.text = _title_text()
 	_context.text = _context_text()
+	if _context_plate != null:
+		# A rest or a card pick says nothing here, and an empty plate is
+		# worse than no plate.
+		(_context_plate.get_parent() as Control).visible = _context.text != ""
 	_actions = _collapse(RunEngine.legal_actions(run))
 	_rebuild_options()
 
@@ -209,14 +231,27 @@ func _rebuild_options() -> void:
 		# Taking nothing should not look like a fourth prize.
 		var refusal := ["skip_card", "draft_skip", "leave"].has(
 			String(_actions[at].get("kind", "")))
-		_buttons[i].add_theme_stylebox_override("normal",
-			UiTheme.panel_box(Palette.VOID, Palette.STONE_RAISED) if refusal
-			else UiTheme.list_row_box())
+		# A choice is a carved plaque, not an underlined row of text. An
+		# authored encounter offering "Drink. Heal 12." as a list item with a
+		# rule under it is the flattest thing the game does -- this is the
+		# moment the run turns on, and it should have some weight under the
+		# cursor.
+		if refusal:
+			var walk := UiTheme.panel_box(Palette.VOID, Palette.STONE_RAISED)
+			walk.bevel = 3.0
+			walk.pegs = false
+			_buttons[i].add_theme_stylebox_override("normal", walk)
+		else:
+			_buttons[i].add_theme_stylebox_override("normal",
+				UiTheme.panel_box(Palette.STONE_RAISED))
+			_buttons[i].add_theme_stylebox_override("hover",
+				UiTheme.lit_box(Palette.STONE_HIGH, Palette.EDGE_LIGHT))
 		_buttons[i].add_theme_color_override("font_color",
 			Palette.BONE_FAINT if refusal else Palette.BONE)
 		_buttons[i].size_flags_horizontal = (Control.SIZE_SHRINK_CENTER if refusal
 			else Control.SIZE_FILL)
-		_buttons[i].custom_minimum_size = Vector2(190.0 if refusal else 0.0, 0.0)
+		_buttons[i].custom_minimum_size = Vector2(190.0 if refusal else 0.0,
+			0.0 if refusal else CHOICE_HEIGHT)
 
 
 ## CardView reports the index it was bound with, which is the action's.
