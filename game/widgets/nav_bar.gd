@@ -8,9 +8,9 @@ extends PanelContainer
 
 signal tab_pressed(id: String)
 
-const HEIGHT := 56.0
-const ITEM_WIDTH := 108.0
-const MARKER_HEIGHT := 2.0
+const HEIGHT := 28.0
+const ITEM_WIDTH := 54.0
+const MARKER_HEIGHT := 1.0
 const SLIDE_SECONDS := 0.22
 
 var current: String = ""
@@ -31,7 +31,7 @@ func _init() -> void:
 
 func _build() -> void:
 	_row = HBoxContainer.new()
-	_row.add_theme_constant_override("separation", 4)
+	_row.add_theme_constant_override("separation", 2)
 	_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(_row)
 
@@ -47,7 +47,7 @@ func build_tabs(tabs: Array) -> void:
 
 func _make_item(id: String, label: String, icon: String) -> Button:
 	var button := Button.new()
-	button.custom_minimum_size = Vector2(ITEM_WIDTH, HEIGHT - 10.0)
+	button.custom_minimum_size = Vector2(ITEM_WIDTH, HEIGHT - 5.0)
 	# Not flat. A row of flat text buttons under a sliding underline is a
 	# website's navigation, which is what this was. Each destination is a
 	# stone plaque set into the wall instead: sunken while you are elsewhere,
@@ -64,7 +64,7 @@ func _make_item(id: String, label: String, icon: String) -> Button:
 	column.add_theme_constant_override("separation", 1)
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	var glyph := Icons.make_rect(Icons.ui(icon), 22.0, Palette.BONE_DIM)
+	var glyph := Icons.make_rect(Icons.ui(icon), 11.0, Palette.BONE_DIM)
 	glyph.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	column.add_child(glyph)
 

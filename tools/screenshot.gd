@@ -105,8 +105,18 @@ func _fresh(screen: String, frames: int) -> Node:
 	return main
 
 
+## The game renders at 640x360 and the window scales it up by an integer
+## factor. A capture of the raw viewport is the true pixel content but it is
+## not what anybody looks at, so it is upscaled here the same way the window
+## does it -- nearest, whole numbers only -- and judged at the size it ships.
+const DISPLAY_SCALE := 2
+
+
 func _shoot(path: String) -> int:
 	var image := root.get_texture().get_image()
+	if DISPLAY_SCALE > 1:
+		image.resize(image.get_width() * DISPLAY_SCALE, image.get_height() * DISPLAY_SCALE,
+			Image.INTERPOLATE_NEAREST)
 	return image.save_png(path)
 
 
@@ -145,7 +155,15 @@ func _contact_sheet(paths: Array[String], out: String, frames: int) -> int:
 	var rows := int(ceil(float(paths.size()) / float(SHEET_COLS)))
 	var cell := Vector2i(THUMB.x + PAD, THUMB.y + LABEL_H + PAD)
 	var window := Vector2i(SHEET_COLS * cell.x + PAD, rows * cell.y + PAD)
+	# The game stretches a 640x360 viewport to fill the window, which is
+	# right for the game and wrong for a contact sheet: the sheet would be
+	# squeezed into 640x360 and cropped. Turn the scaling off for this one
+	# render so the sheet is drawn at its real size.
+	root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
+	root.content_scale_size = Vector2i(0, 0)
 	DisplayServer.window_set_size(window)
+	root.size = window
+	await process_frame
 
 	var page := ColorRect.new()
 	page.color = Color(0.02, 0.02, 0.03)
@@ -156,7 +174,9 @@ func _contact_sheet(paths: Array[String], out: String, frames: int) -> int:
 		var image := Image.new()
 		if image.load(paths[i]) != OK:
 			continue
-		image.resize(THUMB.x, THUMB.y, Image.INTERPOLATE_LANCZOS)
+		# Nearest, not Lanczos: a smoothly-downscaled pixel-art thumbnail is a
+		# blurry lie about what the screen looks like.
+		image.resize(THUMB.x, THUMB.y, Image.INTERPOLATE_NEAREST)
 		var at := Vector2(float(PAD + (i % SHEET_COLS) * cell.x),
 			float(PAD + (i / SHEET_COLS) * cell.y))
 
@@ -176,7 +196,10 @@ func _contact_sheet(paths: Array[String], out: String, frames: int) -> int:
 
 	for i in frames:
 		await process_frame
-	return _shoot(out)
+	var image := root.get_texture().get_image()
+	var err := image.save_png(out)
+	root.content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT
+	return err
 
 
 func _go(main: Node, screen: String) -> void:

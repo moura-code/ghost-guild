@@ -12,9 +12,9 @@ extends VBoxContainer
 const PHASES := ["reward", "event", "rest", "shop", "descent"]
 ## Tall enough that a choice reads as something you press rather than as a
 ## line of text with a rule under it.
-const CHOICE_HEIGHT := 46.0
+const CHOICE_HEIGHT := 22.0
 ## A comfortable measure for a paragraph of authored text.
-const TEXT_WIDTH := 560.0
+const TEXT_WIDTH := 280.0
 
 var game: GameRoot
 var run: RunState
@@ -250,7 +250,7 @@ func _rebuild_options() -> void:
 			Palette.BONE_FAINT if refusal else Palette.BONE)
 		_buttons[i].size_flags_horizontal = (Control.SIZE_SHRINK_CENTER if refusal
 			else Control.SIZE_FILL)
-		_buttons[i].custom_minimum_size = Vector2(190.0 if refusal else 0.0,
+		_buttons[i].custom_minimum_size = Vector2(95.0 if refusal else 0.0,
 			0.0 if refusal else CHOICE_HEIGHT)
 
 

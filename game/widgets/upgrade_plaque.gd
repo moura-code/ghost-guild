@@ -18,7 +18,7 @@ signal buy_pressed(id: String)
 ## Sized so a group fits one row and both groups fit one screen with nothing
 ## to scroll -- that is the whole point of the wall, and a tablet ten pixels
 ## too wide puts half the guild below the fold again.
-const PLAQUE_SIZE := Vector2(170.0, 146.0)
+const PLAQUE_SIZE := Vector2(85.0, 76.0)
 const COLUMNS := 6
 
 var upgrade_id: String = ""
@@ -45,7 +45,7 @@ func _build() -> void:
 
 	# The glyph is the biggest thing on the tablet: at a wall of ten, the
 	# player finds the one they want by its shape, not by reading ten names.
-	_icon = Icons.make_plate(null, 32.0, Palette.BONE, Palette.PLATE_NEUTRAL,
+	_icon = Icons.make_plate(null, 16.0, Palette.BONE, Palette.PLATE_NEUTRAL,
 		Palette.STONE_EDGE)
 	_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	column.add_child(_icon)
@@ -67,13 +67,13 @@ func _build() -> void:
 	# Levels as pips: a filled row of them says "nearly maxed" at a glance,
 	# where "2/3" has to be read.
 	_pips = Control.new()
-	_pips.custom_minimum_size = Vector2(0.0, 12.0)
+	_pips.custom_minimum_size = Vector2(0.0, 7.0)
 	_pips.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_pips.draw.connect(_draw_pips)
 	column.add_child(_pips)
 
 	_button = Button.new()
-	_button.custom_minimum_size = Vector2(0.0, 28.0)
+	_button.custom_minimum_size = Vector2(0.0, 14.0)
 	_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_button.pressed.connect(func() -> void: buy_pressed.emit(upgrade_id))
 	column.add_child(_button)

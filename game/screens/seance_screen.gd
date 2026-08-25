@@ -16,8 +16,8 @@ var _circle: Prop
 
 ## Matched to the Guild's tablets so the two spending screens read as the
 ## same game.
-const TILE_SIZE := Vector2(176.0, 132.0)
-const DEAD_WIDTH := 640.0
+const TILE_SIZE := Vector2(88.0, 66.0)
+const DEAD_WIDTH := 320.0
 
 
 func _init() -> void:
@@ -72,7 +72,7 @@ func _build() -> void:
 	dead.add_child(_list)
 
 	_circle = Prop.of(Prop.Kind.CIRCLE)
-	_circle.custom_minimum_size = Vector2(330.0, 330.0)
+	_circle.custom_minimum_size = Vector2(165.0, 165.0)
 	_circle.size = _circle.custom_minimum_size
 	var stage := ScreenLayout.staged(dead, [_circle])
 	ScreenLayout.centre_prop(stage, _circle)
@@ -104,7 +104,7 @@ func focus_rect() -> Rect2:
 func _rite_tile(value: Label, caption: String, icon: String) -> PanelContainer:
 	var tile := _tile_shell()
 	var column := tile.get_child(0) as VBoxContainer
-	var plate := Icons.make_plate(Icons.ui(icon), 26.0, Palette.BONE,
+	var plate := Icons.make_plate(Icons.ui(icon), 13.0, Palette.BONE,
 		Palette.PLATE_NEUTRAL, Palette.STONE_EDGE)
 	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	column.add_child(plate)
@@ -119,7 +119,7 @@ func _rite_tile(value: Label, caption: String, icon: String) -> PanelContainer:
 func _mend_tile() -> PanelContainer:
 	var tile := _tile_shell()
 	var column := tile.get_child(0) as VBoxContainer
-	var plate := Icons.make_plate(Icons.ui("hero"), 26.0, Palette.BONE,
+	var plate := Icons.make_plate(Icons.ui("hero"), 13.0, Palette.BONE,
 		Palette.PLATE_NEUTRAL, Palette.STONE_EDGE)
 	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	column.add_child(plate)

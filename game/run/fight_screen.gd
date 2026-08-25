@@ -19,29 +19,29 @@ signal fight_ended()
 ## How far each card tilts and drops per step out from the middle of the fan.
 const FAN_ARC := 0.048
 const FAN_SPREAD := 1.02
-const FAN_LIFT := 12.0
+const FAN_LIFT := 6.0
 ## Room under the hand for the lift and the rotation. A card at the edge of
 ## the fan is lower AND tilted, and a tilted 208px card reaches further down
 ## than its height suggests -- measured at ~24px past, hence the margin.
-const HAND_BOTTOM := 76.0
+const HAND_BOTTOM := 34.0
 ## The hand's corridor: clear of the hero panel on the left and the
 ## end-turn button on the right, at any window size.
-const GAP_TO_PANEL := 12.0
+const GAP_TO_PANEL := 6.0
 ## Just enough to clear the End Turn button, which is anchored 144px from the
 ## right and 128px wide. It used to reserve 170, and those spare 20px were the
 ## difference between a hand that fans readably and one where every card
 ## covers its neighbour's rules text.
-const END_TURN_ROOM := 150.0
+const END_TURN_ROOM := 74.0
 ## Where the enemies stand, and how tall the table under the hand is.
-const ENEMY_TOP := 34.0
-const TABLE_HEIGHT := 240.0
+const ENEMY_TOP := 8.0
+const TABLE_HEIGHT := 120.0
 ## How many of the floor's dead to show standing at the back of the room.
 const MAX_RESIDENTS := 6
 ## The gutter the resident ghosts stand in. The right one: the left of the
 ## room belongs to the hero panel and the fate panel, and the residents were
 ## being drawn straight over them.
-const RESIDENT_MARGIN := 24.0
-const RESIDENT_WIDTH := 230.0
+const RESIDENT_MARGIN := 12.0
+const RESIDENT_WIDTH := 115.0
 
 var game: GameRoot
 var run: RunState
@@ -95,7 +95,7 @@ func _build() -> void:
 	_hero = HeroPanel.new()
 	_hero.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	_hero.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_hero.position = Vector2(16.0, -HeroPanel.PANEL_SIZE.y - 16.0)
+	_hero.position = Vector2(8.0, -HeroPanel.PANEL_SIZE.y - 8.0)
 	add_child(_hero)
 
 	# What this fight is actually for: the ghost you would leave if this
@@ -131,11 +131,11 @@ func _build() -> void:
 	add_child(_hand)
 
 	_end_turn = Button.new()
-	_end_turn.custom_minimum_size = Vector2(128.0, 40.0)
+	_end_turn.custom_minimum_size = Vector2(62.0, 20.0)
 	_end_turn.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	_end_turn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_end_turn.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_end_turn.position = Vector2(-144.0, -56.0)
+	_end_turn.position = Vector2(-70.0, -26.0)
 	_end_turn.pressed.connect(_on_end_turn)
 	add_child(_end_turn)
 

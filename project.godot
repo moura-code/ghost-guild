@@ -29,8 +29,18 @@ gdscript/warnings/untyped_declaration=1
 
 [display]
 
-window/size/viewport_width=1280
-window/size/viewport_height=720
+; Pixel art. The game renders at 640x360 and the whole viewport is scaled up
+; by an integer factor -- x2 into a 1280x720 window -- so every pixel stays
+; square and sharp. "viewport" rather than "canvas_items" is the point: with
+; canvas_items Godot would render text and vectors at native resolution and
+; the pixels would only be in the textures, which reads as pixel art pasted
+; onto a smooth UI. Everything has to live on the same grid.
+window/size/viewport_width=640
+window/size/viewport_height=360
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="viewport"
+window/stretch/aspect="keep"
 
 [editor_plugins]
 
@@ -38,5 +48,8 @@ enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
 
 [rendering]
 
+; No filtering anywhere: a bilinear-sampled sprite is a blurry sprite, and
+; one blurry element is enough to break the illusion for the whole screen.
+textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

@@ -8,10 +8,10 @@ extends PanelContainer
 ## and whether the incoming hit kills them, and both answers should be
 ## readable at a glance rather than parsed out of a sentence.
 
-const PANEL_SIZE := Vector2(344.0, 124.0)
-const BAR_HEIGHT := 16.0
-const ORB_RADIUS := 9.0
-const ORB_GAP := 7.0
+const PANEL_SIZE := Vector2(172.0, 62.0)
+const BAR_HEIGHT := 7.0
+const ORB_RADIUS := 4.0
+const ORB_GAP := 4.0
 
 var hp: int = 0
 var max_hp: int = 1
@@ -59,7 +59,7 @@ func _build() -> void:
 	# The shield only appears when there is block to show; an empty shield
 	# outline would read as "you have protection" when you have none.
 	_shield = Control.new()
-	_shield.custom_minimum_size = Vector2(30.0, 22.0)
+	_shield.custom_minimum_size = Vector2(15.0, 11.0)
 	_shield.draw.connect(_draw_shield)
 	_shield.visible = false
 	top.add_child(_shield)
@@ -166,7 +166,7 @@ func _refresh_statuses(statuses: Dictionary) -> void:
 		if int(statuses[name]) > 0:
 			wanted.append(String(name))
 	while _status_row.get_child_count() < wanted.size():
-		_status_row.add_child(Icons.make_rect(null, 15.0, Palette.PREPARED))
+		_status_row.add_child(Icons.make_rect(null, 8.0, Palette.PREPARED))
 	for i in _status_row.get_child_count():
 		var rect: TextureRect = _status_row.get_child(i)
 		var used := i < wanted.size()

@@ -32,7 +32,11 @@ uniform float focus_strength : hint_range(0.0, 1.0) = 0.0;
 // room so the whole place breathes with the flame rather than one element
 // of it blinking on its own.
 uniform float flicker = 1.0;
-uniform float grain : hint_range(0.0, 0.25) = 0.03;
+// Zero, and it stays zero. Per-pixel noise was free texture when the frame
+// was rendered in millions of colours; against a locked palette every grain
+// sample lands on a different entry and the whole wall crawls with speckle.
+// Texture at this resolution has to come from deliberate pattern, not noise.
+uniform float grain : hint_range(0.0, 0.25) = 0.0;
 uniform float aspect = 1.777;
 
 float hash(vec2 p) {
@@ -114,16 +118,15 @@ void fragment() {
 	vec2 block = vec2(uv.x * 14.0, uv.y * 22.0);
 	float seam = step(0.94, fract(block.x)) + step(0.95, fract(block.y));
 	col *= 1.0 - clamp(seam, 0.0, 1.0) * 0.22;
-	col += (noise(uv * vec2(9.0, 6.0)) - 0.5) * 0.03;
 
 	// The lantern: light rising from the floor of the room.
 	float from_below = smoothstep(1.05, 0.35, uv.y);
 	col += lantern.rgb * from_below * (0.030 + 0.075 * glow_pulse) * (1.0 - depth * 0.6) * flicker;
 
-	// Damp drifting along the floor. Slow enough to read as air rather than
-	// as a scrolling texture, and faint enough to stay out of the way.
-	float fog = noise(vec2(uv.x * 2.4 + TIME * 0.045, uv.y * 3.2 - TIME * 0.02));
-	col += lantern.rgb * fog * smoothstep(0.45, 1.0, uv.y) * 0.022;
+	// Damp drifting along the floor, at a scale a 640x360 frame can hold.
+	// Finer than this and the palette snap turns it into crawling dirt.
+	float fog = noise(vec2(uv.x * 1.1 + TIME * 0.03, uv.y * 1.4 - TIME * 0.015));
+	col += lantern.rgb * fog * smoothstep(0.45, 1.0, uv.y) * 0.030;
 
 	// The focus falloff: the ground darkens away from wherever this screen
 	// put its content. Measured with the aspect folded in so the lit core is
@@ -138,7 +141,9 @@ void fragment() {
 	// frame now that the edges no longer glow.
 	vec2 c = uv - vec2(0.5);
 	col *= clamp(1.0 - dot(c, c) * 2.30, 0.0, 1.0);
-	col += (hash(floor((uv + vec2(0.0, TIME * 0.02)) * 520.0)) - 0.5) * grain;
+	if (grain > 0.0) {
+		col += (hash(floor((uv + vec2(0.0, TIME * 0.02)) * 520.0)) - 0.5) * grain;
+	}
 
 	COLOR = vec4(col, 1.0);
 }

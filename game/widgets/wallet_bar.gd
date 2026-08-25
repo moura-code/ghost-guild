@@ -13,7 +13,7 @@ extends HBoxContainer
 ## the tower and the upgrade rows are static between mutations and must not
 ## be rebuilt by a ticking number.
 
-const SEPARATION := 40
+const SEPARATION := 20
 
 var game: GameRoot
 
@@ -58,7 +58,7 @@ static func _stat_block(value: Label, caption: String, tip: String, icon: String
 	box.add_child(value)
 	var foot := HBoxContainer.new()
 	foot.add_theme_constant_override("separation", 4)
-	foot.add_child(Icons.make_rect(Icons.ui(icon), 15.0, Palette.BONE_DIM))
+	foot.add_child(Icons.make_rect(Icons.ui(icon), 8.0, Palette.BONE_DIM))
 	foot.add_child(UiTheme.small(caption))
 	box.add_child(foot)
 	return box

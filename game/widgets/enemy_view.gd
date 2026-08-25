@@ -16,7 +16,7 @@ extends Control
 signal pressed(enemy_index: int)
 
 const VIEW_SIZE := Vector2(230.0, 236.0)
-const FIGURE := 104.0
+const FIGURE := 52.0
 ## The plate is the figure plus its margins on both sides, so it is half
 ## again as wide. The slot has to be sized to the plate, not to the figure,
 ## or the name below it is drawn over the bottom of the disc.

@@ -23,8 +23,11 @@ extends StyleBox
 
 ## Thick enough to read as a carved edge rather than as a border. Below about
 ## 3px this is indistinguishable from the hairline it replaced.
-const DEFAULT_BEVEL := 4.0
-const PEG := 4.0
+## Two pixels at 640x360, which is four on screen. A carved edge needs to be
+## a visible number of pixels and nothing more -- at this resolution a 4px
+## bevel eats a quarter of a card.
+const DEFAULT_BEVEL := 2.0
+const PEG := 2.0
 
 @export var fill: Color = Palette.STONE_RAISED
 @export var lit: Color = Palette.EDGE_LIGHT
@@ -109,8 +112,8 @@ func _draw(to: RID, rect: Rect2) -> void:
 
 	# Pegs. Small, in the corners of the face, lit on top like everything
 	# else -- these are the detail that stops the eye reading "rectangle".
-	if pegs and face.size.x > 90.0 and face.size.y > 46.0:
-		var inset := PEG * 1.4
+	if pegs and face.size.x > 45.0 and face.size.y > 23.0:
+		var inset := PEG * 1.5
 		var corners: Array[Vector2] = [Vector2(inset, inset),
 			Vector2(face.size.x - inset - PEG, inset),
 			Vector2(inset, face.size.y - inset - PEG),

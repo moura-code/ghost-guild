@@ -8,20 +8,28 @@ extends RefCounted
 ## A missing font file is survivable: the loaders return null and Godot
 ## falls back to its own face rather than the game refusing to start.
 
-const BODY_FONT_PATH := "res://assets/fonts/Inter.ttf"
-const TITLE_FONT_PATH := "res://assets/fonts/Cinzel.ttf"
+## Pixel fonts, imported with antialiasing and subpixel positioning off. A
+## vector face rendered into a 640x360 viewport is the one thing that breaks
+## the illusion hardest -- smooth glyphs sitting on hard pixels read as a
+## screenshot of pixel art rather than as pixel art.
+##
+## Pixelify carries the body: measured against the game's longest card text
+## it is as narrow as Inter was, which is what makes a 79px card still able
+## to hold its rules. Silkscreen is wide and blocky and is the title voice.
+const BODY_FONT_PATH := "res://assets/fonts/PixelifySans.ttf"
+const TITLE_FONT_PATH := "res://assets/fonts/Silkscreen.ttf"
 
 static var _body_font: Font = null
 static var _title_font: Font = null
 static var _fonts_tried: bool = false
 
-## Real scale contrast. Everything used to be within a few points of body
-## size, which flattened the hierarchy: a screen title and a caption looked
-## like the same thing.
-const FONT_SMALL := 12
-const FONT_BODY := 15
-const FONT_NUMBER := 26
-const FONT_TITLE := 38
+## Sizes are in 640x360 pixels, so they are half what they were and they land
+## on whole numbers on purpose: a pixel font asked for a fractional size gets
+## rounded somewhere and the glyphs stop lining up with the grid.
+const FONT_SMALL := 6
+const FONT_BODY := 8
+const FONT_NUMBER := 16
+const FONT_TITLE := 16
 
 
 ## Inter for everything a player reads as information.
@@ -144,10 +152,10 @@ static func lit_box(bg: Color, accent: Color) -> StoneBox:
 ## carved bevel, so a card in the hand and a plaque on the wall read as the
 ## same material.
 static func card_box(bg: Color, border: Color) -> StoneBox:
-	var box := StoneBox.make(bg, 3.0, false)
+	var box := StoneBox.make(bg, 2.0, false)
 	box.lit = Palette.STONE_EDGE
 	box.groove = border
-	box.set_content_margin_all(9)
+	box.set_content_margin_all(4)
 	return box
 
 

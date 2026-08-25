@@ -12,7 +12,7 @@ extends PanelContainer
 ## pay. It updates as the fight goes, because the answer changes with the
 ## deck you are drawing and the health you have left.
 
-const PANEL_SIZE := Vector2(196.0, 116.0)
+const PANEL_SIZE := Vector2(98.0, 58.0)
 
 var floor_number: int = 1
 var yield_here: float = 0.0

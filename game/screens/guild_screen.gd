@@ -8,8 +8,8 @@ const GROUP_ORDER := ["hero", "ghosts"]
 ## A whole group abreast, plus the gaps between the tablets and the plate's
 ## own margins. Too narrow and the flow wraps, which puts the second group
 ## below the fold and the screen starts scrolling again.
-const WALL_GAP := 10.0
-const WALL_WIDTH := UpgradePlaque.COLUMNS * UpgradePlaque.PLAQUE_SIZE.x 	+ (UpgradePlaque.COLUMNS - 1) * WALL_GAP + 70.0
+const WALL_GAP := 5.0
+const WALL_WIDTH := UpgradePlaque.COLUMNS * UpgradePlaque.PLAQUE_SIZE.x 	+ (UpgradePlaque.COLUMNS - 1) * WALL_GAP + 34.0
 
 var game: GameRoot
 var rows: Dictionary = {}

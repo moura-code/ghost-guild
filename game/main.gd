@@ -11,7 +11,7 @@ const TABS := [
 	{"id": "seance", "key": "ui.seance", "icon": "seance"},
 	{"id": "hero", "key": "ui.hero", "icon": "hero"},
 ]
-const MARGIN := 28
+const MARGIN := 10
 
 var game: GameRoot
 var current_tab: String = ""
@@ -29,6 +29,7 @@ var _epitaph: EpitaphScreen
 var _atmosphere: Atmosphere
 var _transition: Transition
 var _wallet: WalletBar
+var _palette: PaletteLayer
 
 
 func _ready() -> void:
@@ -73,7 +74,7 @@ func _build() -> void:
 	add_child(margins)
 
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 12)
+	column.add_theme_constant_override("separation", 5)
 	margins.add_child(column)
 
 	_tab_bar = NavBar.new()
@@ -124,6 +125,14 @@ func _build() -> void:
 	_offline.visible = false
 	_offline.dismissed.connect(_on_offline_dismissed)
 	add_child(_offline)
+
+	# Last, and over everything including the modal: the whole frame gets
+	# snapped to the game's palette. Added here rather than per-screen
+	# because the things that break the pixel look worst -- shader gradients,
+	# anti-aliased circles, particle fades, font edge greys -- are exactly
+	# the things no individual screen owns.
+	_palette = PaletteLayer.new()
+	add_child(_palette)
 
 
 ## Each screen goes in its own ScrollContainer so a long Guild or a crowded

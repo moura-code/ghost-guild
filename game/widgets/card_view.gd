@@ -20,13 +20,22 @@ signal pressed(hand_index: int)
 ## fit the text rather than the text clipped to fit the card: a card whose
 ## rules are cut off mid-sentence is a card the player cannot play, which is
 ## what the reward picker was shipping.
-const TEXT_LINES := 4
-const CARD_SIZE := Vector2(158.0, 252.0)
+## Three lines at FONT_SMALL. Measured, not guessed: the game's longest card
+## text is 167px wide in Pixelify at 6, and a 82px card has 74px of usable
+## width, so it wraps to three. Six-pixel text doubles to twelve on screen,
+## which is the same apparent size the old vector body had.
+const TEXT_LINES := 3
+## Two lines at FONT_BODY: "Hallowed Strike" does not fit one.
+const NAME_LINES := 2
+## Godot stacks lines at font height PLUS this, and forgetting it is what
+## silently ate a line off three cards the last time.
+const LINE_SPACING := 3.0
+const CARD_SIZE := Vector2(82.0, 146.0)
 ## How much of the card's width is margin rather than content. Everything the
 ## player reads lives inside this inset, which is what makes a fan possible at
 ## all: cards may overlap each other's margins, never each other's text.
-const CONTENT_INSET := 18.0
-const ART_SIZE := Vector2(128.0, 82.0)
+const CONTENT_INSET := 8.0
+const ART_SIZE := Vector2(64.0, 38.0)
 const HOVER_LIFT := 14.0
 const HOVER_SCALE := 1.06
 const FLY_SECONDS := 0.28
@@ -92,6 +101,7 @@ func _build() -> void:
 	# for screens, and on something this small it eats the art slot.
 	add_theme_stylebox_override("panel", UiTheme.card_box(Palette.STONE_RAISED, Palette.STONE_EDGE))
 	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
 	box.add_theme_constant_override("separation", 4)
 	box.custom_minimum_size = Vector2(CARD_SIZE.x - CONTENT_INSET, 0.0)
 	add_child(box)
@@ -103,12 +113,12 @@ func _build() -> void:
 	_cost = UiTheme.number("", Palette.SOUL)
 	_cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_cost.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_cost.custom_minimum_size = Vector2(30.0, 30.0)
+	_cost.custom_minimum_size = Vector2(15.0, 15.0)
 	var bubble := PanelContainer.new()
 	bubble.add_theme_stylebox_override("panel", UiTheme.pip_box(Palette.STONE, Palette.SOUL))
 	bubble.add_child(_cost)
 	head.add_child(bubble)
-	_type_icon = Icons.make_rect(null, 20.0, Palette.BONE_DIM)
+	_type_icon = Icons.make_rect(null, 10.0, Palette.BONE_DIM)
 	_type_icon.size_flags_horizontal = Control.SIZE_SHRINK_END | Control.SIZE_EXPAND
 	head.add_child(_type_icon)
 	box.add_child(head)
@@ -139,7 +149,7 @@ func _build() -> void:
 	# minimum tall enough to blow the card out to three times its size.
 	_name = UiTheme.body("")
 	_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_name.custom_minimum_size = Vector2(0.0, 22.0)
+	_name.custom_minimum_size = Vector2(0.0, name_height())
 	_name.clip_text = true
 	box.add_child(_name)
 
@@ -164,9 +174,17 @@ static func text_safe_step() -> float:
 
 
 static func text_height() -> float:
+	return _lines(UiTheme.FONT_SMALL, TEXT_LINES)
+
+
+static func name_height() -> float:
+	return _lines(UiTheme.FONT_BODY, NAME_LINES)
+
+
+static func _lines(size: int, count: int) -> float:
 	var font := UiTheme.body_font()
-	var line := font.get_height(UiTheme.FONT_SMALL) if font != null else float(UiTheme.FONT_SMALL) * 1.35
-	return ceilf(line * float(TEXT_LINES))
+	var line := font.get_height(size) if font != null else float(size) * 1.35
+	return ceilf((line + LINE_SPACING) * float(count))
 
 
 func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -> void:

@@ -46,10 +46,19 @@ except ImportError:
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RAW = os.path.join(ROOT, "art_previews", "raw")
 
+# name -> (folder, sprite width, sprite height).
+#
+# These are PIXEL sizes at the game's 640x360 base resolution, not display
+# sizes: the viewport is scaled up x2 as a whole, so a 64x41 card art is 64x41
+# actual pixels and drawing it any larger would just blur it. Downsampling
+# this hard is what makes a render into a sprite -- at 64px wide nothing
+# survives but silhouette and one colour decision per few pixels, which is
+# exactly the discipline pixel art imposes and the reason it reads as made
+# rather than generated.
 SETS = {
-    "cards": "assets/icons/card_art",
-    "enemies": "assets/icons/enemies",
-    "relics": "assets/icons/relics",
+    "cards": ("assets/icons/card_art", 64, 38),
+    "enemies": ("assets/icons/enemies", 52, 52),
+    "relics": ("assets/icons/relics", 16, 16),
 }
 
 # The game's light model, from game/theme/palette.gd. Shadows are cold and
@@ -65,8 +74,11 @@ RAMP = [
     (1.00, (0xf4, 0xef, 0xe4)),   # BONE
 ]
 
-# Enough to pull a render toward illustration, not so much that it banks.
-POSTERISE = 6
+# The whole palette, as an ordered ramp of RGB. Every pixel in the game's art
+# is snapped to one of these -- that is what a pixel-art palette IS, and it is
+# also the thing that makes forty-six independently generated images look like
+# one set rather than like forty-six images.
+LEVELS = 10
 
 # The generated sources are mostly black background with a lit subject, so a
 # straight mapping buries the subject in the bottom of the ramp and every
@@ -94,6 +106,19 @@ def ramp_lut():
     return reds + greens + blues
 
 
+def palette(lut):
+    """The RAMP sampled at LEVELS steps, as a flat Pillow palette."""
+    entries = []
+    for i in range(LEVELS):
+        at = round(255 * i / (LEVELS - 1))
+        entries += [lut[at], lut[256 + at], lut[512 + at]]
+    # Pillow wants 256 entries; the tail repeats the last so nothing maps to
+    # an undefined slot.
+    while len(entries) < 768:
+        entries += entries[-3:]
+    return entries
+
+
 def stash(set_name, rel_dir):
     """Copies the generator's output aside the first time, so re-running the
     treatment never compounds on an already-treated image."""
@@ -109,29 +134,39 @@ def stash(set_name, rel_dir):
     return raw_dir, src_dir
 
 
-def unify(set_name, rel_dir, lut, colour):
+def unify(set_name, spec, lut, colour):
+    rel_dir, out_w, out_h = spec
     raw_dir, out_dir = stash(set_name, rel_dir)
+    pal_image = Image.new("P", (1, 1))
+    pal_image.putpalette(palette(lut))
     count = 0
     for name in sorted(os.listdir(raw_dir)):
         if not name.endswith(".png"):
             continue
         src = Image.open(os.path.join(raw_dir, name)).convert("RGB")
-        # Colour goes first: it is most of what makes the set look assembled
-        # from different games.
+
+        # Colour first: divergent palettes are most of what makes a generated
+        # set look assembled from different games.
         grey = ImageOps.grayscale(src)
-        # Same contrast range for every asset, so none reads as murky next to
-        # one that reads as blown out.
         grey = ImageOps.autocontrast(grey, cutoff=1)
         grey = grey.point([min(255, round(255.0 * (i / 255.0) ** GAMMA)) for i in range(256)])
-        if POSTERISE:
-            grey = ImageOps.posterize(grey, POSTERISE)
+
+        # Down to sprite size with a box filter, which averages honestly, and
+        # only then to the palette. Doing it the other way round quantises a
+        # thousand pixels that are about to be thrown away and leaves the few
+        # that survive looking dithered.
+        grey = grey.resize((out_w, out_h), Image.BOX)
         toned = ImageOps.colorize(grey, black="#04050a", white="#f4efe4")
         toned = toned.convert("RGB").point(lut)
         if colour > 0.0:
-            toned = Image.blend(toned, src, colour)
+            small = src.resize((out_w, out_h), Image.BOX)
+            toned = Image.blend(toned, small, colour)
+        # Snap every pixel to the game's palette. No dithering: dither is
+        # noise at this size, and noise is what "cheap" looks like.
+        toned = toned.quantize(palette=pal_image, dither=Image.NONE).convert("RGB")
         toned.save(os.path.join(out_dir, name))
         count += 1
-    print("%-8s %2d assets -> %s" % (set_name, count, rel_dir))
+    print("%-8s %2d sprites at %dx%d -> %s" % (set_name, count, out_w, out_h, rel_dir))
     return count
 
 

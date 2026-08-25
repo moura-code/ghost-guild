@@ -19,12 +19,12 @@ signal floor_clicked(floor: int)
 
 const TOP_INSET := 0.06
 const BOTTOM_INSET := 0.42
-const WALL := 3.0
-const SLAB := 3.0
+const WALL := 2.0
+const SLAB := 2.0
 const MAX_MARKS := 8
 ## Fixed gutters either side of the shaft for the floor number and the rate.
-const NUMBER_COLUMN := 52.0
-const RATE_COLUMN := 96.0
+const NUMBER_COLUMN := 26.0
+const RATE_COLUMN := 48.0
 
 var floors: int = 10
 var hovered: int = 0
@@ -39,7 +39,7 @@ var _rates: Dictionary = {}
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	custom_minimum_size = Vector2(560.0, 380.0)
+	custom_minimum_size = Vector2(280.0, 190.0)
 
 
 func bind(campaign: Campaign) -> void:
@@ -158,7 +158,11 @@ func _layout() -> void:
 			var span := minf(rect.size.x - 40.0, float(marks.size()) * 30.0)
 			var start := rect.position.x + (rect.size.x - span) * 0.5
 			mark.visible = dug
-			mark.size = GhostMark.BASE_SIZE
+			# Nearer floors are nearer the viewer. A ghost drawn the same size
+			# on floor 1 and floor 10 fights the shaft's perspective and flattens
+			# it back into a list.
+			var near := 1.0 - float(floor - 1) / float(maxi(1, floors - 1))
+			mark.size = GhostMark.BASE_SIZE * lerpf(1.0, 1.7, near)
 			mark.position = Vector2(start + float(i) * 30.0, foot - GhostMark.BASE_SIZE.y)
 
 
@@ -287,10 +291,38 @@ func _draw() -> void:
 					Vector2(rect.size.x - 4.0, pool / 12.0 + 1.0)),
 					Color(Palette.GHOST.r, Palette.GHOST.g, Palette.GHOST.b, 0.11 * glow * t))
 
-		# The slab they stand on, and the shadow it throws into the chamber.
+		# The floor of the room, in perspective.
+		#
+		# A flat bar across the bottom of a rectangle is a chart axis. A
+		# trapezoid narrowing toward the back is a floor you are looking down
+		# onto, and it is most of what turns ten stacked rectangles into ten
+		# rooms one above another.
 		var slab := accent if reachable else Palette.STONE_EDGE
+		var back := rect.size.x * 0.14
+		var deep_y := rect.end.y - rect.size.y * 0.26
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(rect.position.x, rect.end.y),
+			Vector2(rect.end.x, rect.end.y),
+			Vector2(rect.end.x - back, deep_y),
+			Vector2(rect.position.x + back, deep_y)]),
+			Color(slab.r * 0.22, slab.g * 0.22, slab.b * 0.24, 0.55 + light * 0.35))
+		# The lit front lip of it, which is what gives the floor an edge to
+		# stand on rather than a fade into the wall.
 		draw_rect(Rect2(Vector2(rect.position.x, rect.end.y - SLAB), Vector2(rect.size.x, SLAB)),
 			Color(slab.r, slab.g, slab.b, 0.20 + light * 0.55))
+
+		# A lantern bracketed to the near wall of every floor you can reach.
+		# The ghosts stand in what it throws, and it is the reason there is
+		# any light down here at all.
+		var flame := 0.82 + 0.18 * sin((_time + float(floor) * 1.9) * 3.3)
+		var lamp := Vector2(rect.position.x + WALL + 5.0, rect.position.y + rect.size.y * 0.34)
+		for i in 5:
+			var t := float(i) / 4.0
+			draw_circle(lamp, (4.0 + t * rect.size.y * 0.55) * flame,
+				Color(Palette.LANTERN.r, Palette.LANTERN.g, Palette.LANTERN.b,
+					0.055 * (1.0 - t) * (0.35 + light * 0.65) * flame))
+		draw_circle(lamp, 2.6 * flame,
+			Color(Palette.LANTERN.r, Palette.LANTERN.g, Palette.LANTERN.b, 0.95 * flame))
 
 		# Walls, catching the light on their inner faces.
 		var wall_light := Color(Palette.EDGE_LIGHT.r, Palette.EDGE_LIGHT.g,

@@ -10,8 +10,8 @@ extends RefCounted
 
 ## Wide enough for a two-column row, narrow enough that a line of text is
 ## still comfortable to read.
-const COLUMN_WIDTH := 720.0
-const WIDE_COLUMN := 900.0
+const COLUMN_WIDTH := 360.0
+const WIDE_COLUMN := 450.0
 
 
 ## Wraps `content` in a centred column of at most `width` and returns the
@@ -40,10 +40,10 @@ static func centre(label: Label) -> Label:
 ## size it is, rather than having simply run out of content.
 static func section(text: String, accent: Color = Palette.SOUL) -> Control:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
+	row.add_theme_constant_override("separation", 5)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var bar := Panel.new()
-	bar.custom_minimum_size = Vector2(3.0, 17.0)
+	bar.custom_minimum_size = Vector2(2.0, 9.0)
 	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	bar.add_theme_stylebox_override("panel", UiTheme.fill_box(accent))
 	row.add_child(bar)
@@ -69,10 +69,10 @@ static func plate(content: Control, width: float = WIDE_COLUMN) -> Control:
 		UiTheme.panel_box(Color(Palette.VOID.r, Palette.VOID.g, Palette.VOID.b, 0.55),
 			Palette.STONE_EDGE))
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 20)
-	margin.add_theme_constant_override("margin_right", 20)
-	margin.add_theme_constant_override("margin_top", 15)
-	margin.add_theme_constant_override("margin_bottom", 15)
+	margin.add_theme_constant_override("margin_left", 10)
+	margin.add_theme_constant_override("margin_right", 10)
+	margin.add_theme_constant_override("margin_top", 7)
+	margin.add_theme_constant_override("margin_bottom", 7)
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	margin.add_child(content)
 	panel.add_child(margin)
