@@ -17,8 +17,8 @@ extends Control
 
 signal floor_clicked(floor: int)
 
-const TOP_INSET := 0.10
-const BOTTOM_INSET := 0.30
+const TOP_INSET := 0.06
+const BOTTOM_INSET := 0.42
 const WALL := 3.0
 const SLAB := 3.0
 const MAX_MARKS := 8
@@ -150,11 +150,14 @@ func _layout() -> void:
 		rate.position = Vector2(size.x - RATE_COLUMN + 10.0, rect.position.y + rect.size.y * 0.5 - 9.0)
 
 		var marks: Array = _marks[floor]
+		# Nobody stands inside undug rock.
+		var dug := floor <= CampaignEngine.reach(_campaign)
 		var foot := rect.end.y - SLAB
 		for i in marks.size():
 			var mark: GhostMark = marks[i]
 			var span := minf(rect.size.x - 40.0, float(marks.size()) * 30.0)
 			var start := rect.position.x + (rect.size.x - span) * 0.5
+			mark.visible = dug
 			mark.size = GhostMark.BASE_SIZE
 			mark.position = Vector2(start + float(i) * 30.0, foot - GhostMark.BASE_SIZE.y)
 
@@ -174,6 +177,14 @@ func _gui_input(event: InputEvent) -> void:
 
 
 ## Which floor a point falls in, or 0 for none. The negative case matters:
+## The stone filling an unexcavated floor. This is the tapered chamber, not
+## the full gutter-to-gutter rock: filling the gutters made floors 2-10 one
+## flat wall of constant width and erased the perspective that is the only
+## thing telling the player the shaft goes *down*.
+func solid_rect(floor: int) -> Rect2:
+	return chamber_rect(floor)
+
+
 ## int() truncates toward zero, so a point above the shaft would otherwise
 ## come back as floor 1.
 func _floor_at(at: Vector2) -> int:
@@ -196,17 +207,55 @@ func _draw() -> void:
 		var light := light_at(floor)
 		var reachable := floor <= waypoint
 
-		# The rock the chamber is cut into. Translucent, not opaque: the
-		# crypt wall behind the whole screen should read through it, so the
-		# shaft looks cut into that wall rather than pasted on top of it.
-		draw_rect(Rect2(Vector2(NUMBER_COLUMN, rect.position.y),
-			Vector2(size.x - NUMBER_COLUMN - RATE_COLUMN, rect.size.y)),
-			Color(Palette.VOID.r, Palette.VOID.g, Palette.VOID.b, 0.55))
+		# The rock the shaft is cut through.
+		var rock := Rect2(Vector2(NUMBER_COLUMN, rect.position.y),
+			Vector2(size.x - NUMBER_COLUMN - RATE_COLUMN, rect.size.y))
+		draw_rect(rock, Color(Palette.VOID.r, Palette.VOID.g, Palette.VOID.b, 0.55))
+
+		if not reachable:
+			rock = solid_rect(floor)
+			# Below your reach the shaft has not been dug. Solid stone, with
+			# the courses of it showing -- an unlit empty room looks exactly
+			# like a lit one nobody is standing in, and nine of those in a
+			# column is the void problem wearing a tower.
+			# Solid stone is LIGHTER than an open chamber, not darker: it
+			# catches what light there is instead of swallowing it. Filling
+			# it dark just made floors 2-10 one black slab.
+			var solid := 0.86 - float(floor) * 0.045
+			draw_rect(rock, Color(Palette.STONE_HIGH.r * solid, Palette.STONE_HIGH.g * solid,
+				Palette.STONE_HIGH.b * solid, 1.0))
+			var courses := 3
+			var course_h := rock.size.y / float(courses)
+			for c in courses:
+				var y := rock.position.y + course_h * float(c)
+				# A lit top edge and a dark joint under it: that pairing is
+				# what makes a flat fill read as a laid course of stone.
+				draw_rect(Rect2(Vector2(rock.position.x, y), Vector2(rock.size.x, 1.0)),
+					Color(Palette.EDGE_LIGHT.r, Palette.EDGE_LIGHT.g, Palette.EDGE_LIGHT.b,
+						0.22 * solid))
+				draw_rect(Rect2(Vector2(rock.position.x, y + 1.0), Vector2(rock.size.x, 2.0)),
+					Color(0.0, 0.0, 0.0, 0.35))
+				# Staggered vertical joints, so it reads as masonry.
+				var joints := 6
+				for j in range(1, joints):
+					var offset := 0.5 if c % 2 == 0 else 0.0
+					var jx := rock.position.x + rock.size.x * (float(j) + offset) / float(joints)
+					if jx >= rock.end.x:
+						continue
+					draw_rect(Rect2(Vector2(jx, y + 2.0), Vector2(2.0, course_h - 2.0)),
+						Color(0.0, 0.0, 0.0, 0.30))
+			continue
 
 		# The chamber itself: darker than the rock, lit from above.
 		var air := Palette.STONE_RAISED
 		var lit := 0.35 + light * 0.65
 		draw_rect(rect, Color(air.r * lit, air.g * lit, air.b * lit, 0.92))
+		# Its back wall catches the light near the ceiling and falls away.
+		for i in 6:
+			var t := float(i) / 5.0
+			draw_rect(Rect2(Vector2(rect.position.x, rect.position.y + rect.size.y * t / 6.0 * 6.0),
+				Vector2(rect.size.x, rect.size.y / 6.0 + 1.0)),
+				Color(0.0, 0.0, 0.02, 0.05 + t * 0.16))
 
 		# Its saturation, as light pooling in the chamber rather than a bar.
 		var saturation := _campaign.ladder.saturation(floor, bal, mods)
@@ -235,10 +284,6 @@ func _draw() -> void:
 		draw_rect(Rect2(rect.position, Vector2(WALL, rect.size.y)), wall_light)
 		draw_rect(Rect2(Vector2(rect.end.x - WALL, rect.position.y), Vector2(WALL, rect.size.y)),
 			wall_light)
-
-		# Unexcavated: below your reach the shaft has not been opened.
-		if not reachable:
-			draw_rect(rect, Color(Palette.VOID.r, Palette.VOID.g, Palette.VOID.b, 0.55))
 
 		if floor == hovered:
 			draw_rect(rect, Color(Palette.SOUL.r, Palette.SOUL.g, Palette.SOUL.b, 0.05))

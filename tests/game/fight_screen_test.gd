@@ -269,3 +269,24 @@ func test_the_hand_clears_the_hero_panel() -> void:
 	var hero_right := s._hero.position.x + HeroPanel.PANEL_SIZE.x
 	for i in run.fight.hand.size():
 		assert_float(s._card_views[i].position.x) 			.override_failure_message("card %d overlaps the hero panel" % i) 			.is_greater_equal(hero_right)
+
+
+## A fanned hand where the card in front covers its neighbour's rules text is
+## a hand the player has to hover card by card to read. Overlapping the
+## margins is fine and is what makes it a fan; overlapping the text is not.
+func test_a_full_hand_fans_without_covering_its_own_rules_text() -> void:
+	var g := _game()
+	var run := _fight(g)
+	var s: FightScreen = auto_free(FightScreen.new())
+	add_child(s)
+	s.size = Vector2(1280.0, 720.0)
+	s.bind(g, run)
+	await await_idle_frame()
+	await await_idle_frame()
+	assert_int(s._card_views.size()).is_greater(1)
+	var safe := CardView.text_safe_step()
+	for i in range(1, s._card_views.size()):
+		var gap: float = s._card_views[i].position.x - s._card_views[i - 1].position.x
+		assert_float(gap) \
+			.override_failure_message("card %d sits %.0fpx from its neighbour; %.0f is the closest that still leaves the rules readable" % [i, gap, safe]) \
+			.is_greater_equal(safe)

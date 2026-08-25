@@ -241,3 +241,31 @@ func test_the_ground_lifts_again_back_in_the_guild() -> void:
 	g.finish_run()
 	await await_idle_frame()
 	assert_float(m._atmosphere.depth).is_equal(0.0)
+
+
+## The wallet is shell furniture, not Ladder furniture. Before the visual
+## overhaul it was built inside LadderScreen, so the Guild and the Séance --
+## the only two screens in the game where Soul is spent -- showed the player
+## no balance at all. Affordability was inferable only from a greyed button.
+func test_the_wallet_is_visible_on_every_idle_tab() -> void:
+	var g := _game()
+	var m := _main(g)
+	await await_idle_frame()
+	for tab in ["ladder", "guild", "seance", "hero"]:
+		m._apply_tab(tab)
+		await await_idle_frame()
+		assert_bool(m._wallet.visible) \
+			.override_failure_message("no Soul balance on the %s tab" % tab) \
+			.is_true()
+		assert_bool(m._wallet.is_visible_in_tree()).is_true()
+
+
+func test_the_wallet_goes_away_underground() -> void:
+	# The tabs are the guild, and you are not in the guild while you are
+	# down a hole: the run owns the whole window.
+	var g := _game()
+	var m := _main(g)
+	await await_idle_frame()
+	g.start_run(1)
+	await await_idle_frame()
+	assert_bool(m._wallet.visible).is_false()

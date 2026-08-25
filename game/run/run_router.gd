@@ -138,6 +138,15 @@ func _refresh_body(run: RunState) -> void:
 	_continue.visible = false
 
 
+## Whichever phase panel is showing. MainScreen asks so it can point the
+## atmosphere's light at what the player is actually looking at.
+func current_panel() -> Control:
+	for panel in [_fight, _choice, _exit, _map]:
+		if panel != null and panel.visible:
+			return panel
+	return null
+
+
 func _on_continue() -> void:
 	var run := game.campaign.run
 	if run == null or not run.is_over():

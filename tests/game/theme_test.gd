@@ -14,6 +14,34 @@ func test_text_and_ground_are_opaque_and_ghosts_are_translucent_cyan() -> void:
 	assert_float(Palette.GHOST.b).is_greater(Palette.GHOST.r)
 
 
+## The light model (visual-overhaul spec §3.1). These assert the *rules* the
+## palette has to obey, because appearance cannot be asserted and the failure
+## that produced this overhaul was a rule failure: every stone colour sat
+## between 4% and 42% luminance, so nothing separated from anything.
+func test_the_value_ladder_climbs_without_ties() -> void:
+	var ladder := [Palette.ABYSS, Palette.STONE, Palette.STONE_RAISED,
+		Palette.STONE_HIGH, Palette.STONE_EDGE, Palette.BONE]
+	for i in range(1, ladder.size()):
+		assert_float(Palette.luma(ladder[i])).is_greater(Palette.luma(ladder[i - 1]))
+
+
+func test_the_value_ladder_spans_most_of_the_range() -> void:
+	# The whole point of the overhaul. A palette whose darkest and lightest
+	# are 40% apart renders as fog no matter what is drawn with it.
+	assert_float(Palette.luma(Palette.BONE) - Palette.luma(Palette.ABYSS)).is_greater(0.80)
+
+
+func test_light_is_warm_and_only_ghosts_are_cool() -> void:
+	# Warm light against cold shadow is the contrast the art direction runs
+	# on; a single hue is what it used to run on.
+	assert_float(Palette.EDGE_LIGHT.r).is_greater(Palette.EDGE_LIGHT.b)
+	assert_float(Palette.LANTERN.r).is_greater(Palette.LANTERN.b)
+	# Ghost cyan is the only cool accent, so nothing competes with it.
+	assert_float(Palette.GHOST.b).is_greater(Palette.GHOST.r)
+	for c in [Palette.STONE, Palette.STONE_RAISED, Palette.STONE_HIGH, Palette.BONE]:
+		assert_float((c as Color).b - (c as Color).r).is_less(0.10)
+
+
 func test_the_theme_builds_with_the_stone_palette() -> void:
 	var t := UiTheme.build()
 	assert_object(t).is_not_null()

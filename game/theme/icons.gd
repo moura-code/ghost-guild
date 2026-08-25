@@ -9,18 +9,36 @@ extends RefCounted
 ## degrade to text, never to a crash.
 
 const ROOT := "res://assets/icons"
+## Tried in order. PNG first so a delivered piece of real art replaces the
+## CC BY placeholder glyph of the same id without a code change -- which is
+## the contract ART_BRIEF.md makes to whoever is drawing, and which this
+## loader quietly broke for as long as it only looked for `.svg`.
+const EXTENSIONS := [".png", ".svg"]
 
 static var _cache: Dictionary = {}
 
 
-## `category` is one of enemies, status, relics, card, ui.
+## The file backing an icon, or "" if nothing was delivered for it. Takes the
+## root so it can be tested against files a test wrote rather than against
+## the shipped asset tree.
+static func resolve(category: String, ident: String, root: String = ROOT) -> String:
+	for extension in EXTENSIONS:
+		var path := "%s/%s/%s%s" % [root, category, ident, extension]
+		# ResourceLoader knows about res:// imports; FileAccess covers a
+		# plain directory, which is what a test hands us.
+		if ResourceLoader.exists(path) or FileAccess.file_exists(path):
+			return path
+	return ""
+
+
+## `category` is one of enemies, status, relics, card, card_art, ui.
 static func get_icon(category: String, ident: String) -> Texture2D:
 	var key := "%s/%s" % [category, ident]
 	if _cache.has(key):
 		return _cache[key]
-	var path := "%s/%s.svg" % [ROOT, key]
+	var path := resolve(category, ident)
 	var texture: Texture2D = null
-	if ResourceLoader.exists(path):
+	if path != "":
 		texture = load(path) as Texture2D
 	_cache[key] = texture
 	return texture

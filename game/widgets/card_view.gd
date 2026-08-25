@@ -14,7 +14,18 @@ extends PanelContainer
 
 signal pressed(hand_index: int)
 
-const CARD_SIZE := Vector2(158.0, 232.0)
+## Four lines of rules text at FONT_SMALL, which is what the longest cards in
+## the game need -- `ashes`, `death_knell` and `hallowed_strike` all wrap to
+## three, and content is only ever going to get wordier. The card is sized to
+## fit the text rather than the text clipped to fit the card: a card whose
+## rules are cut off mid-sentence is a card the player cannot play, which is
+## what the reward picker was shipping.
+const TEXT_LINES := 4
+const CARD_SIZE := Vector2(158.0, 252.0)
+## How much of the card's width is margin rather than content. Everything the
+## player reads lives inside this inset, which is what makes a fan possible at
+## all: cards may overlap each other's margins, never each other's text.
+const CONTENT_INSET := 18.0
 const ART_SIZE := Vector2(128.0, 82.0)
 const HOVER_LIFT := 14.0
 const HOVER_SCALE := 1.06
@@ -82,7 +93,7 @@ func _build() -> void:
 	add_theme_stylebox_override("panel", UiTheme.card_box(Palette.STONE_RAISED, Palette.STONE_EDGE))
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
-	box.custom_minimum_size = Vector2(CARD_SIZE.x - 18.0, 0.0)
+	box.custom_minimum_size = Vector2(CARD_SIZE.x - CONTENT_INSET, 0.0)
 	add_child(box)
 
 	var head := HBoxContainer.new()
@@ -135,9 +146,25 @@ func _build() -> void:
 	# PanelContainer that becomes the card's height.
 	_text = UiTheme.small("", Palette.BONE_DIM)
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_text.custom_minimum_size = Vector2(0.0, 44.0)
+	_text.custom_minimum_size = Vector2(0.0, text_height())
 	_text.clip_text = true
 	box.add_child(_text)
+
+
+## Room for TEXT_LINES of rules text, measured from the font rather than
+## guessed at, so changing FONT_SMALL cannot silently start clipping cards.
+## The closest two fanned cards may sit and still leave the one behind
+## readable. A card drawn on top covers its neighbour from `step` rightward;
+## the neighbour's text ends half an inset short of its edge, so that half
+## inset is the whole budget for overlap.
+static func text_safe_step() -> float:
+	return CARD_SIZE.x - CONTENT_INSET * 0.5
+
+
+static func text_height() -> float:
+	var font := UiTheme.body_font()
+	var line := font.get_height(UiTheme.FONT_SMALL) if font != null else float(UiTheme.FONT_SMALL) * 1.35
+	return ceilf(line * float(TEXT_LINES))
 
 
 func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -> void:

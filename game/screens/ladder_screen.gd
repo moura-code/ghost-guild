@@ -4,7 +4,6 @@ extends VBoxContainer
 ## section with floor 1 at the top, the ghosts standing in their floors,
 ## saturation as fill, and the Soul counter ticking above it.
 
-const HEADER_SEPARATION := 40
 const ROW_SEPARATION := 1
 ## The tower is a tower: constrained and centred, not a full-width table.
 const TOWER_WIDTH := 660.0
@@ -12,17 +11,11 @@ const TOWER_HEIGHT := 400.0
 
 var game: GameRoot
 
-var _soul: Label
-var _rate: Label
-var _reach: Label
 var _premise: Label
 var _hint: Label
 var _descend: Button
 var _entry: SpinBox
 var _cheapest_cost: float = -1.0
-var _last_shown_soul: int = -1
-var _shown_soul: float = 0.0
-var _soul_tween: Tween
 var _tower: TowerView
 
 
@@ -43,17 +36,9 @@ func bind(g: GameRoot) -> void:
 
 
 func _build() -> void:
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", HEADER_SEPARATION)
-	header.alignment = BoxContainer.ALIGNMENT_CENTER
-	_soul = UiTheme.number("0")
-	_rate = UiTheme.number("0/h", Palette.BONE)
-	_reach = UiTheme.number("1", Palette.BONE)
-	header.add_child(_stat_block(_soul, game.text("ui.soul"), game.text("ui.tip.soul"), "soul"))
-	header.add_child(_stat_block(_rate, game.text("ui.per_hour"), game.text("ui.tip.per_hour"), "ghost"))
-	header.add_child(_stat_block(_reach, game.text("ui.reach"), game.text("ui.tip.reach"), "descend"))
-	add_child(header)
-
+	# Soul, rate and reach are not here any more: they are WalletBar, mounted
+	# by MainScreen above every tab, because the Guild and the Séance need
+	# them at least as much as the Ladder does.
 	# The one line that has to teach the whole premise to someone who has
 	# never seen the game: a dead hero is still working for you.
 	_premise = UiTheme.body("", Palette.BONE_DIM)
@@ -108,27 +93,12 @@ func _build() -> void:
 
 ## A number over its name, with the icon beside the caption rather than the
 ## value -- an icon next to a large number competes with it.
-static func _stat_block(value: Label, caption: String, tip: String, icon: String) -> VBoxContainer:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 0)
-	box.mouse_filter = Control.MOUSE_FILTER_STOP
-	box.tooltip_text = tip
-	box.add_child(value)
-	var foot := HBoxContainer.new()
-	foot.add_theme_constant_override("separation", 4)
-	foot.add_child(Icons.make_rect(Icons.ui(icon), 15.0, Palette.BONE_DIM))
-	foot.add_child(UiTheme.small(caption))
-	box.add_child(foot)
-	return box
-
-
 ## Rebinds the whole shaft. Called on ladder_changed, which every Game
 ## mutator emits.
 func refresh() -> void:
 	if game == null or game.campaign == null:
 		return
 	_tower.bind(game.campaign)
-	_reach.text = str(CampaignEngine.reach(game.campaign))
 	_refresh_premise()
 	_cheapest_cost = _cheapest_upgrade_cost()
 	var reach := CampaignEngine.reach(game.campaign)
@@ -166,53 +136,14 @@ func _on_floor_clicked(floor: int) -> void:
 		_entry.value = float(floor)
 
 
-## The 10 Hz path: numbers only, never a rebind. The tower is static
-## between mutations, so ticking Soul must not touch it.
-func _on_soul_changed(soul: float, rate_per_hour: float) -> void:
-	_rate.text = Num.rate(rate_per_hour)
-	_count_to(soul)
-	_punch_soul(int(soul))
+## The 10 Hz path. The counter itself is WalletBar's job now; what is left
+## here is the one line telling the player whether they can afford anything,
+## and it must stay a numbers-only path -- the tower is static between
+## mutations and a ticking Soul must never rebuild it.
+func _on_soul_changed(soul: float, _rate_per_hour: float) -> void:
 	# One float compare -- the cheapest price is cached by refresh().
 	var affordable := _cheapest_cost >= 0.0 and soul >= _cheapest_cost
 	_hint.text = game.text("ui.hint.spend") if affordable else game.text("ui.hint.wait")
-
-
-## The counter runs up to its new value instead of jumping. On an idle
-## screen the number climbing IS the feedback -- a value that snaps reads
-## as a field being overwritten.
-func _count_to(soul: float) -> void:
-	if not is_inside_tree() or absf(soul - _shown_soul) < 0.01:
-		_shown_soul = soul
-		_soul.text = Num.short(soul)
-		return
-	# A big jump (a run banked, an upgrade bought) is worth watching; the
-	# 10 Hz trickle is not, so it lands almost immediately.
-	var leap := absf(soul - _shown_soul) > maxf(8.0, _shown_soul * 0.05)
-	if _soul_tween != null and _soul_tween.is_valid():
-		_soul_tween.kill()
-	_soul_tween = create_tween()
-	_soul_tween.tween_method(_set_shown_soul, _shown_soul, soul, 0.55 if leap else 0.12) 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-
-
-func _set_shown_soul(value: float) -> void:
-	_shown_soul = value
-	_soul.text = Num.short(value)
-
-
-## A small kick whenever the whole number climbs. It is the only motion on
-## an idle screen, and it is what makes the counter feel like earnings
-## rather than a readout.
-func _punch_soul(whole: int) -> void:
-	if whole == _last_shown_soul:
-		return
-	var first := _last_shown_soul < 0
-	_last_shown_soul = whole
-	if first or not is_inside_tree():
-		return
-	_soul.pivot_offset = _soul.size * Vector2(0.0, 0.5)
-	_soul.scale = Vector2(1.12, 1.12)
-	var tween := create_tween()
-	tween.tween_property(_soul, "scale", Vector2.ONE, 0.16) 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 ## The price of the cheapest upgrade the player has not maxed out, or -1.0

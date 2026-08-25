@@ -93,3 +93,37 @@ func test_the_attribution_file_exists_and_names_the_licences() -> void:
 	assert_str(text).contains("CC BY 3.0")
 	assert_str(text).contains("game-icons.net")
 	assert_str(text).contains("Open Font License")
+
+
+## The art pipeline's delivery contract. ART_BRIEF.md tells an artist to drop
+## `<id>.png` into assets/icons/card_art/ and see it in the game; before this
+## the loader only ever looked for `.svg`, so a delivered PNG silently did
+## nothing. Resolution takes a root so this can be proven against files the
+## test makes itself rather than against shipped assets.
+func _icon_root() -> String:
+	var root := "user://icon_resolve_test"
+	DirAccess.make_dir_recursive_absolute(root + "/card_art")
+	return root
+
+
+func _write(path: String) -> void:
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string("x")
+	f.close()
+
+
+func test_a_delivered_png_wins_over_the_placeholder_svg() -> void:
+	var root := _icon_root()
+	_write(root + "/card_art/both.png")
+	_write(root + "/card_art/both.svg")
+	assert_str(Icons.resolve("card_art", "both", root)).ends_with(".png")
+
+
+func test_an_svg_still_resolves_when_no_png_was_delivered() -> void:
+	var root := _icon_root()
+	_write(root + "/card_art/svg_only.svg")
+	assert_str(Icons.resolve("card_art", "svg_only", root)).ends_with(".svg")
+
+
+func test_an_undelivered_id_resolves_to_nothing() -> void:
+	assert_str(Icons.resolve("card_art", "no_such_card", _icon_root())).is_empty()

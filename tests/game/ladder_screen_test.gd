@@ -53,29 +53,6 @@ func test_the_founder_stands_on_the_top_row() -> void:
 	assert_int((s._tower._marks[2] as Array).size()).is_equal(0)
 
 
-func test_the_header_shows_soul_rate_and_reach() -> void:
-	var g := _game()
-	var s := _screen(g)
-	await await_idle_frame()
-	assert_str(s._rate.text).is_equal("52/h")
-	assert_str(s._reach.text).is_equal("1")
-	assert_str(s._soul.text).is_equal(Num.short(g.displayed_soul()))
-
-
-func test_soul_ticking_updates_the_header_without_rebinding_the_tower() -> void:
-	var g := _game()
-	var s := _screen(g)
-	await await_idle_frame()
-	var before: Rect2 = s._tower.chamber_rect(1)
-	g.clock = func() -> int: return 1000 + 3600
-	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
-	# The counter runs up to its value rather than snapping, so give the
-	# count time to land before reading it.
-	await get_tree().create_timer(0.8).timeout
-	assert_str(s._soul.text).is_equal("52")
-	assert_that(s._tower.chamber_rect(1)).is_equal(before)
-
-
 func test_placing_an_echo_refreshes_the_tower() -> void:
 	var g := _game()
 	var s := _screen(g)
@@ -114,16 +91,6 @@ func test_the_premise_follows_the_deepest_ghost() -> void:
 	s.refresh()
 	await await_idle_frame()
 	assert_str(s._premise.text).contains("Floor 3")
-
-
-func test_the_header_numbers_explain_themselves_on_hover() -> void:
-	var g := _game()
-	var s := _screen(g)
-	await await_idle_frame()
-	assert_str((s._soul.get_parent() as Control).tooltip_text).is_equal(g.text("ui.tip.soul"))
-	assert_str((s._rate.get_parent() as Control).tooltip_text).is_equal(g.text("ui.tip.per_hour"))
-	assert_str((s._reach.get_parent() as Control).tooltip_text).is_equal(g.text("ui.tip.reach"))
-	assert_str((s._soul.get_parent() as Control).tooltip_text).is_not_equal("ui.tip.soul")
 
 
 func test_the_hint_says_to_wait_when_nothing_is_affordable() -> void:
@@ -214,49 +181,6 @@ func test_a_chosen_floor_survives_a_refresh() -> void:
 	assert_float(s._entry.value).is_equal(4.0)
 
 
-func test_the_soul_counter_kicks_when_the_whole_number_climbs() -> void:
-	var g := _game()
-	var s := _screen(g)
-	await await_idle_frame()
-	# The first paint must not kick, or the screen jumps on open.
-	assert_that(s._soul.scale).is_equal(Vector2.ONE)
-	g.clock = func() -> int: return 1000 + 3600
-	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
-	assert_float(s._soul.scale.x).is_greater(1.0)
-
-
-func test_the_counter_settles_back_after_the_kick() -> void:
-	var g := _game()
-	var s := _screen(g)
-	await await_idle_frame()
-	g.clock = func() -> int: return 1000 + 3600
-	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
-	await get_tree().create_timer(0.3).timeout
-	assert_float(s._soul.scale.x).is_equal_approx(1.0, 0.02)
-
-
-func test_a_tick_that_does_not_move_the_whole_number_does_not_kick() -> void:
-	var g := _game()
-	var s := _screen(g)
-	await await_idle_frame()
-	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
-	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
-	assert_that(s._soul.scale).is_equal(Vector2.ONE)
-
-
-func test_the_counter_runs_up_rather_than_snapping() -> void:
-	var g := _game()
-	var s := _screen(g)
-	await await_idle_frame()
-	g.clock = func() -> int: return 1000 + 3600
-	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
-	# Immediately after the value changes the counter has not arrived yet --
-	# that is the whole point of it running up.
-	assert_float(s._shown_soul).is_less(52.0)
-	await get_tree().create_timer(0.8).timeout
-	assert_float(s._shown_soul).is_equal_approx(52.0, 0.01)
-
-
 func test_clicking_a_reachable_floor_sets_the_entry() -> void:
 	var g := _game()
 	g.campaign.record_depth = 4
@@ -287,3 +211,32 @@ func test_the_shaft_knows_which_floor_a_point_is_in() -> void:
 	assert_int(s._tower._floor_at(Vector2(100.0, h * 4.5))).is_equal(5)
 	assert_int(s._tower._floor_at(Vector2(100.0, h * 9.5))).is_equal(10)
 	assert_int(s._tower._floor_at(Vector2(100.0, -20.0))).is_equal(0)
+
+
+## The shaft's perspective is the only thing that says "down" (spec §9). The
+## masonry fill for unexcavated floors was drawn gutter-to-gutter instead of
+## into the tapered chamber, which flattened floors 2-10 into one wall and is
+## why the Ladder stopped reading as a tower.
+func test_unexcavated_stone_is_cut_to_the_shaft_not_the_gutters() -> void:
+	var g := _game()
+	var s: LadderScreen = auto_free(LadderScreen.new())
+	s.bind(g)
+	add_child(s)
+	await await_idle_frame()
+	var tower := s._tower
+	tower.size = Vector2(560.0, 380.0)
+	for floor in [1, 5, 10]:
+		assert_float(tower.solid_rect(floor).size.x) \
+			.override_failure_message("floor %d's stone spills past the shaft" % floor) \
+			.is_less_equal(tower.chamber_rect(floor).size.x)
+
+
+func test_the_shaft_still_narrows_with_depth_where_it_is_undug() -> void:
+	var g := _game()
+	var s: LadderScreen = auto_free(LadderScreen.new())
+	s.bind(g)
+	add_child(s)
+	await await_idle_frame()
+	var tower := s._tower
+	tower.size = Vector2(560.0, 380.0)
+	assert_float(tower.solid_rect(10).size.x).is_less(tower.solid_rect(1).size.x)

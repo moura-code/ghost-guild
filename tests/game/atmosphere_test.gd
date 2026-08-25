@@ -92,3 +92,56 @@ func test_depth_reaches_the_shader_as_the_hero_descends() -> void:
 	assert_float(float(a._material.get_shader_parameter("depth"))).is_equal(0.0)
 	a.set_floor(10, 10)
 	assert_float(float(a._material.get_shader_parameter("depth"))).is_equal(1.0)
+
+
+## The focus rule (visual-overhaul spec §3.2). Every screen declares where
+## its content lives and the ground falls away outside it, which is what
+## gives a screen a subject. Asserted on the shader parameter, never on the
+## render: appearance is judged from the contact sheet, not from a test.
+func test_no_focus_declared_lights_the_whole_frame() -> void:
+	var a := _atmos()
+	await await_idle_frame()
+	# A screen that declares nothing must look exactly as it did before the
+	# focus rule existed, or adding it silently darkens twelve screens.
+	assert_float(a._material.get_shader_parameter("focus_strength")).is_equal(0.0)
+
+
+func test_a_focus_rect_reaches_the_shader_as_a_normalised_centre() -> void:
+	var a := _atmos()
+	await await_idle_frame()
+	a.focus_on(Rect2(Vector2(320.0, 180.0), Vector2(640.0, 360.0)))
+	var centre: Vector2 = a._material.get_shader_parameter("focus_centre")
+	assert_float(centre.x).is_equal_approx(0.5, 0.001)
+	assert_float(centre.y).is_equal_approx(0.5, 0.001)
+	assert_float(a._material.get_shader_parameter("focus_strength")).is_greater(0.0)
+
+
+func test_an_off_centre_focus_moves_the_light_with_it() -> void:
+	var a := _atmos()
+	await await_idle_frame()
+	a.focus_on(Rect2(Vector2(0.0, 0.0), Vector2(320.0, 180.0)))
+	var centre: Vector2 = a._material.get_shader_parameter("focus_centre")
+	assert_float(centre.x).is_equal_approx(0.125, 0.001)
+	assert_float(centre.y).is_equal_approx(0.125, 0.001)
+
+
+func test_clearing_the_focus_restores_the_open_frame() -> void:
+	var a := _atmos()
+	await await_idle_frame()
+	a.focus_on(Rect2(Vector2(100.0, 100.0), Vector2(200.0, 200.0)))
+	a.clear_focus()
+	assert_float(a._material.get_shader_parameter("focus_strength")).is_equal(0.0)
+
+
+func test_a_focus_set_before_layout_survives_being_resized() -> void:
+	# Screens declare their focus in _build(), before the container has sized
+	# them. If the rect is normalised once and forgotten, every screen focuses
+	# on the wrong place at the size it actually renders at.
+	var a: Atmosphere = auto_free(Atmosphere.new())
+	add_child(a)
+	a.focus_on(Rect2(Vector2(0.0, 0.0), Vector2(64.0, 36.0)))
+	a.size = Vector2(1280.0, 720.0)
+	await await_idle_frame()
+	var centre: Vector2 = a._material.get_shader_parameter("focus_centre")
+	assert_float(centre.x).is_equal_approx(0.025, 0.001)
+	assert_float(centre.y).is_equal_approx(0.025, 0.001)

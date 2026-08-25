@@ -27,7 +27,11 @@ const HAND_BOTTOM := 76.0
 ## The hand's corridor: clear of the hero panel on the left and the
 ## end-turn button on the right, at any window size.
 const GAP_TO_PANEL := 12.0
-const END_TURN_ROOM := 170.0
+## Just enough to clear the End Turn button, which is anchored 144px from the
+## right and 128px wide. It used to reserve 170, and those spare 20px were the
+## difference between a hand that fans readably and one where every card
+## covers its neighbour's rules text.
+const END_TURN_ROOM := 150.0
 ## Where the enemies stand, and how tall the table under the hand is.
 const ENEMY_TOP := 34.0
 const TABLE_HEIGHT := 240.0
@@ -393,10 +397,12 @@ func _fan(count: int) -> void:
 	var left := _hero.position.x + HeroPanel.PANEL_SIZE.x + GAP_TO_PANEL
 	var right := size.x - END_TURN_ROOM
 	var corridor := maxf(card.x, right - left)
-	# At least three quarters of a card between neighbours: below that the
-	# names disappear behind the card in front and the hand is unreadable.
+	# Never closer than the card's own text allows. The previous floor was
+	# three quarters of a card, which protected the names and let the card in
+	# front eat the rules text of the one behind it -- so a five-card hand
+	# could not be read without hovering each card in turn.
 	var step := clampf((corridor - card.x) / maxf(1.0, float(count - 1)),
-		card.x * 0.74, card.x * FAN_SPREAD)
+		CardView.text_safe_step(), card.x * FAN_SPREAD)
 	# Where the fan sits. The minimum step above can make the hand wider
 	# than the corridor at small window sizes, so the centre is pushed right
 	# until the leftmost card clears the hero panel -- readable cards matter

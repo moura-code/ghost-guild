@@ -11,27 +11,39 @@ palette and the space each piece has to fill are all visible.
 
 ## The look, in one paragraph
 
-An underground card game about dying on purpose. Near-black wet stone,
-bone-white text, one accent colour per biome, and ghosts in translucent
-cyan — the only genuinely bright thing on screen. Restrained and
-typographic rather than spectacular. References: Cultist Simulator, Luck be
-a Landlord, Darkest Dungeon's palette without its line weight.
+An underground card game about dying on purpose. Near-black wet stone, warm
+lantern light, bone-white text, one accent colour per biome, and ghosts in
+translucent cyan — the only genuinely bright thing on screen. Restrained and
+typographic rather than spectacular, but never flat: the frame runs from true
+black to bone, and every screen has one lit subject. References: Cultist
+Simulator, Luck be a Landlord, Darkest Dungeon's palette without its line
+weight.
 
 ### Palette (exact, from `game/theme/palette.gd`)
 
+The game is lit by lanterns: **light is warm, shadow is cold and nearly
+black**. The ladder below spans true black to bone on purpose -- an earlier
+palette sat entirely in the middle and every screen read as fog.
+
 | Role | Hex |
 |---|---|
-| Stone (background) | `#0b0d10` |
-| Stone raised (panels) | `#14181d` |
-| Stone edge (borders) | `#232a31` |
-| Bone (primary text) | `#e8e2d4` |
-| Bone dim | `#8f8a7e` |
-| Soul (currency, highlights) | `#cfe8ff` |
-| Ghost (spirits) | `rgba(107,235,255,0.72)` |
-| Prepared (gold) | `#ffdb73` |
-| Restless (warning) | `#ff7359` |
-| Danger | `#d9534f` |
-| Catacombs accent | `#cfc6a8` |
+| Abyss (what everything falls off to) | `#04050a` |
+| Stone (background) | `#0d0f16` |
+| Stone raised (panels) | `#161a24` |
+| Stone high | `#2b2f3d` |
+| Stone edge (borders) | `#454a5c` |
+| Lit edge (lantern) | `#c9a86a` |
+| Lantern (light on a surface) | `#ffe6b0` |
+| Bone (primary text) | `#f4efe4` |
+| Bone dim | `#9a9488` |
+| Soul (currency, highlights) | `#9fd8ff` |
+| Ghost (spirits) | `rgba(115,240,255,0.85)` |
+| Prepared (gold) | `#ffc93c` |
+| Restless (warning) | `#ff5a5a` |
+| Catacombs accent | `#e0d3a4` |
+
+**Ghost cyan is the only cool accent in the game.** Nothing else may compete
+with it: it is what the game is about.
 
 ## What is needed, in priority order
 
@@ -39,12 +51,13 @@ a Landlord, Darkest Dungeon's palette without its line weight.
 
 **Drop into `assets/icons/card_art/<card_id>.png`.**
 
-- **122 x 74 px** at 1x, deliver at 2x (244 x 148) — a wide letterbox slot
+- **128 x 82 px** at 1x, deliver at 2x (256 x 164) — a wide letterbox slot
   above the card name.
 - PNG with transparency, or a full-bleed image; both work.
-- Must read at 122 px wide. That is the whole constraint: no fine detail
+- Must read at 128 px wide. That is the whole constraint: no fine detail
   survives, so silhouette and one clear focal shape.
-- Currently shows the card's type icon as a stand-in.
+- Every card already has a CC BY game-icons.net glyph standing in, so the
+  slot is never empty. Dropping a PNG with the same id replaces it.
 
 | id | type | rarity | name |
 |---|---|---|---|
@@ -139,20 +152,29 @@ Sizes Steam wants: 616x353 (main), 460x215 (small), 1920x620 (hero),
 
 - **UI frames, buttons, panels, bars** — all drawn in code and reactive.
 - **Backgrounds** — a shader draws lit stone that responds to depth.
-- **Fonts and icons** — Cinzel, Inter, and 57 game-icons.net pieces are in
+- **Fonts and icons** — Cinzel, Inter, and 97 game-icons.net pieces are in
   and credited in `ATTRIBUTION.md`.
 - **Animation** — motion is code: hit flash, squash, death fade, card fan
   and deal, screen shake, wipes. Deliver static art; the game moves it.
 
-## Placeholders currently in the build
+## What is already in the build
 
-`assets/backdrops/` holds three AI-generated biome stills, heavily darkened
-and blurred, used as faint underlays. They are placeholders and are
-flagged as such — see `assets/backdrops/README.md`. If you would rather
-supply real ones the slot is `<biome_id>.webp`, 1280x720.
+`assets/icons/` holds 97 game-icons.net glyphs (CC BY 3.0, credited in
+`ATTRIBUTION.md`) covering every card, enemy, relic, status and UI symbol, so
+nothing is ever missing -- a delivery replaces a placeholder, it never fills
+a hole.
+
+There are no backdrop images. An AI-generated still at low alpha read as a
+rendering glitch, so it was removed; `game/theme/crypt.gdshader` draws the
+room -- arches, pillars, masonry, lantern light -- procedurally instead.
 
 ## Delivery
 
 Filenames must match the ids above exactly — that is the whole wiring. PNG
-throughout except backdrops (WebP). If a file is absent the game falls back
-silently, so partial deliveries are safe to drop in and look at.
+throughout. The loader tries `<id>.png` first and falls back to the shipped
+`<id>.svg`, so partial deliveries are safe to drop in and look at, and a
+misnamed file simply does nothing rather than breaking the build.
+
+(Until 2026-08-24 the loader only ever looked for `.svg`, which meant a
+delivered PNG silently did nothing. Fixed in `game/theme/icons.gd`; the
+contract above is now true and `tests/game/assets_test.gd` pins it.)

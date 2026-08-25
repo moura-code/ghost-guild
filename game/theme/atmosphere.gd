@@ -19,6 +19,13 @@ var depth: float = 0.0:
 var _ground: ColorRect
 var _motes: CPUParticles2D
 var _material: ShaderMaterial
+## Where this screen's content lives, in local pixels. Kept in pixels rather
+## than normalised because screens declare it during _build(), before any
+## container has sized them -- normalising once would focus every screen on
+## the wrong place at the size it actually renders at.
+var _focus: Rect2 = Rect2()
+var _has_focus: bool = false
+var _focus_strength: float = 0.0
 
 
 func _init() -> void:
@@ -35,6 +42,12 @@ func _build() -> void:
 	if shader != null:
 		_material = ShaderMaterial.new()
 		_material.shader = shader
+		# The light model lives in Palette; the shader's own defaults are only
+		# a fallback so it is legible standalone. Pushing them here keeps one
+		# source of truth for "what colour is stone".
+		_material.set_shader_parameter("stone", Palette.STONE)
+		_material.set_shader_parameter("deep", Palette.ABYSS)
+		_material.set_shader_parameter("lantern", Palette.LANTERN)
 		_ground.material = _material
 	else:
 		# A missing shader must not take the game down with it.
@@ -65,9 +78,50 @@ func _make_motes() -> CPUParticles2D:
 	return p
 
 
+## Declares where this screen's content lives. The ground falls away outside
+## it, which is what gives a screen a subject -- the review that produced this
+## overhaul found twelve screens where the background was as loud as the
+## content and nothing said "look here".
+##
+## `strength` is how far outside the rect falls, 0 to 1. The default is short
+## of 1 on purpose: the frame should recede, not vanish, or the arches and
+## masonry that make the room a place go with it.
+func focus_on(rect: Rect2, strength: float = 0.82) -> void:
+	_focus = rect
+	_has_focus = rect.size.x > 0.0 and rect.size.y > 0.0
+	_focus_strength = clampf(strength, 0.0, 1.0)
+	_apply_focus()
+
+
+func clear_focus() -> void:
+	_has_focus = false
+	_focus_strength = 0.0
+	_apply_focus()
+
+
+## Re-normalises the stored pixel rect against the current size. Called again
+## on every resize, so a focus declared before layout lands correctly once the
+## container gets round to sizing the screen.
+func _apply_focus() -> void:
+	if _material == null:
+		return
+	if not _has_focus or size.x <= 0.0 or size.y <= 0.0:
+		_material.set_shader_parameter("focus_strength", 0.0)
+		return
+	var centre := (_focus.position + _focus.size * 0.5) / size
+	# The lit core has to clear the content, so it is sized off the longer
+	# side of the rect with a margin -- a focus that crops the thing it is
+	# pointing at is worse than no focus at all.
+	var radius := maxf(_focus.size.x / size.x, _focus.size.y / size.y) * 0.5 * 1.15
+	_material.set_shader_parameter("focus_centre", centre)
+	_material.set_shader_parameter("focus_radius", radius)
+	_material.set_shader_parameter("focus_strength", _focus_strength)
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
 		_fit_motes()
+		_apply_focus()
 
 
 func _fit_motes() -> void:

@@ -28,6 +28,7 @@ var _run_view: RunView
 var _epitaph: EpitaphScreen
 var _atmosphere: Atmosphere
 var _transition: Transition
+var _wallet: WalletBar
 
 
 func _ready() -> void:
@@ -79,6 +80,12 @@ func _build() -> void:
 	_tab_bar.tab_pressed.connect(show_tab)
 	column.add_child(_tab_bar)
 
+	# Soul, income and reach, above whichever tab is showing. It lived inside
+	# the Ladder before, which left the two screens that spend Soul with no
+	# way to show how much you had.
+	_wallet = WalletBar.new()
+	column.add_child(_wallet)
+
 	_body = Control.new()
 	_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -94,6 +101,7 @@ func _build() -> void:
 		_screens[id] = _make_screen(id)
 	_tab_bar.accent = Palette.biome_accent(game.campaign.biome_id)
 	_tab_bar.build_tabs(nav)
+	_wallet.bind(game)
 
 	# A live run takes over the whole window: the tabs are the guild, and
 	# you are not in the guild while you are underground.
@@ -177,6 +185,9 @@ func _apply_tab(id: String) -> void:
 		if wrapper != null:
 			wrapper.visible = on
 	_tab_bar.select(id)
+	# The light follows the tab: each screen puts its content somewhere
+	# different, and a focus left pointing at the last one is worse than none.
+	_refresh_focus()
 	_enter(_screens[id] as Control)
 
 
@@ -205,11 +216,14 @@ func _refresh_run_visibility() -> void:
 	_run_view.visible = in_run and not mourning
 	_tab_bar.visible = not in_run and not mourning
 	_body.visible = not in_run and not mourning
+	if _wallet != null:
+		_wallet.visible = not in_run and not mourning
 	if _run_view.visible:
 		_run_view.refresh()
 
 
-## The ground darkens as the hero descends and lifts again in the guild.
+## The ground darkens as the hero descends and lifts again in the guild, and
+## the light gathers wherever the screen on top put its content.
 func _refresh_atmosphere(in_run: bool) -> void:
 	if _atmosphere == null:
 		return
@@ -218,6 +232,35 @@ func _refresh_atmosphere(in_run: bool) -> void:
 		_atmosphere.set_floor(game.campaign.run.floor, game.campaign.biome().last_floor)
 	else:
 		_atmosphere.set_floor(1, game.campaign.biome().last_floor)
+	_refresh_focus()
+
+
+## Asks whichever screen is on top where its content lives and points the
+## light at it. A screen that does not answer gets an open frame, so this is
+## additive: nothing goes dark because a screen has not been recomposed yet.
+func _refresh_focus() -> void:
+	if _atmosphere == null:
+		return
+	var top := _top_screen()
+	if top == null or not top.has_method("focus_rect"):
+		_atmosphere.clear_focus()
+		return
+	var rect: Rect2 = top.call("focus_rect")
+	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
+		_atmosphere.clear_focus()
+		return
+	# Screens answer in their own coordinates; the atmosphere sits behind the
+	# whole window, so the rect has to be carried across.
+	var offset := top.global_position - _atmosphere.global_position
+	_atmosphere.focus_on(Rect2(rect.position + offset, rect.size))
+
+
+func _top_screen() -> Control:
+	if _epitaph != null and _epitaph.visible:
+		return _epitaph
+	if _run_view != null and _run_view.visible:
+		return _run_view.current_panel()
+	return _screens.get(current_tab, null) as Control
 
 
 ## A run that left a ghost earns the epitaph beat before the guild comes
