@@ -84,7 +84,7 @@ func _build() -> void:
 	# pulse in unison like a row of LEDs.
 	var candles := HBoxContainer.new()
 	candles.alignment = BoxContainer.ALIGNMENT_CENTER
-	candles.add_theme_constant_override("separation", 130)
+	candles.add_theme_constant_override("separation", 62)
 	for i in 3:
 		candles.add_child(Prop.of(Prop.Kind.CANDLE, i * 5 + 1))
 	add_child(candles)
@@ -96,8 +96,8 @@ func focus_rect() -> Rect2:
 	if _list == null or not _list.is_inside_tree():
 		return Rect2()
 	var box := _list.get_global_rect()
-	return Rect2(box.position - global_position - Vector2(120.0, 90.0),
-		box.size + Vector2(240.0, 180.0))
+	return Rect2(box.position - global_position - Vector2(60.0, 45.0),
+		box.size + Vector2(120.0, 90.0))
 
 
 ## One rite, as a tablet: what it is, and what it costs.

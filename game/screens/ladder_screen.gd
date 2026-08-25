@@ -6,8 +6,8 @@ extends VBoxContainer
 
 const ROW_SEPARATION := 1
 ## The tower is a tower: constrained and centred, not a full-width table.
-const TOWER_WIDTH := 660.0
-const TOWER_HEIGHT := 400.0
+const TOWER_WIDTH := 330.0
+const TOWER_HEIGHT := 214.0
 
 var game: GameRoot
 
@@ -71,7 +71,7 @@ func _build() -> void:
 	descent_row.add_child(_entry)
 
 	_descend = Button.new()
-	_descend.custom_minimum_size = Vector2(150.0, 40.0)
+	_descend.custom_minimum_size = Vector2(72.0, 20.0)
 	_descend.pressed.connect(_on_descend)
 	descent_row.add_child(_descend)
 	add_child(descent_row)
@@ -118,8 +118,8 @@ func focus_rect() -> Rect2:
 	if _tower == null or not _tower.is_inside_tree():
 		return Rect2()
 	var box := _tower.get_global_rect()
-	return Rect2(box.position - global_position - Vector2(60.0, 30.0),
-		box.size + Vector2(120.0, 60.0))
+	return Rect2(box.position - global_position - Vector2(30.0, 15.0),
+		box.size + Vector2(60.0, 30.0))
 
 
 ## Names the deepest true ghost, because that one is both the waypoint and

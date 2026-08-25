@@ -13,7 +13,7 @@ extends VBoxContainer
 
 const GAP := 26.0
 ## Room for the doors, the floor they stand on and the path across it.
-const CORRIDOR_HEIGHT := 344.0
+const CORRIDOR_HEIGHT := 150.0
 const DOOR_TOP := 30.0
 
 var game: GameRoot
@@ -51,7 +51,7 @@ func _build() -> void:
 	add_child(_path)
 
 	_enter = Button.new()
-	_enter.custom_minimum_size = Vector2(300.0, 48.0)
+	_enter.custom_minimum_size = Vector2(140.0, 22.0)
 	_enter.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_enter.add_theme_stylebox_override("normal", UiTheme.primary_box(Palette.SOUL))
 	_enter.pressed.connect(_on_enter)

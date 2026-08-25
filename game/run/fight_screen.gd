@@ -173,7 +173,7 @@ func _draw_stage() -> void:
 	# A shaft of lantern light down the middle of the room. The band between
 	# the enemies and the hand was dead space; lighting it gives the fight a
 	# centre and puts the floating damage numbers somewhere lit.
-	var shaft := 320.0
+	var shaft := 160.0
 	for i in 30:
 		var t := float(i) / 29.0
 		var half := lerpf(shaft * 0.35, shaft, t)
@@ -183,7 +183,7 @@ func _draw_stage() -> void:
 	# A pool of lantern light under the enemies, brightest at the centre.
 	for i in 22:
 		var t := float(i) / 21.0
-		var half := lerpf(150.0, 480.0, t)
+		var half := lerpf(75.0, 240.0, t)
 		var alpha := (1.0 - t) * 0.055
 		draw_rect(Rect2(Vector2(size.x * 0.5 - half, floor_y - 2.0 - t * 26.0),
 			Vector2(half * 2.0, 2.0)), Color(glow.r, glow.g, glow.b, alpha))
@@ -191,7 +191,7 @@ func _draw_stage() -> void:
 	# The floor they stand on: a lit ellipse, fading out at both ends. A rule
 	# across the whole window read as a divider between two sections rather
 	# than as ground.
-	var pool := 430.0
+	var pool := 215.0
 	var steps := 46
 	for j in steps:
 		var u := float(j) / float(steps - 1)

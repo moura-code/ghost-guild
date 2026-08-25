@@ -6,7 +6,7 @@ extends VBoxContainer
 
 const STAT_IDS := ["might", "wit", "vigor", "focus"]
 ## A whole starting deck has to fit on the sheet without scrolling.
-const DECK_CARD_SCALE := 0.46
+const DECK_CARD_SCALE := 0.42
 
 var game: GameRoot
 
@@ -38,7 +38,7 @@ func _build() -> void:
 	# The hero stands at the top of their own sheet. Every other screen in
 	# the game now has a figure on it; a page of labels looked like the
 	# options menu by comparison.
-	_figure = Icons.make_rect(Icons.ui("hero"), 92.0, Palette.BONE)
+	_figure = Icons.make_rect(Icons.ui("hero"), 40.0, Palette.BONE)
 	_figure.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	add_child(_figure)
 
@@ -50,7 +50,7 @@ func _build() -> void:
 	add_child(_vitals)
 
 	var stat_row := HBoxContainer.new()
-	stat_row.add_theme_constant_override("separation", 34)
+	stat_row.add_theme_constant_override("separation", 12)
 	stat_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	for stat in STAT_IDS:
 		# Each stat in its own chip, so the four read as a set of readings
@@ -59,7 +59,7 @@ func _build() -> void:
 		_stats[stat] = value
 		var box := VBoxContainer.new()
 		box.add_theme_constant_override("separation", 0)
-		box.custom_minimum_size = Vector2(84.0, 0.0)
+		box.custom_minimum_size = Vector2(42.0, 0.0)
 		box.add_child(value)
 		box.add_child(ScreenLayout.centre(UiTheme.small(game.text("stat.%s.name" % stat))))
 		var chip := PanelContainer.new()
@@ -112,8 +112,8 @@ func focus_rect() -> Rect2:
 	if _figure == null or not _figure.is_inside_tree():
 		return Rect2()
 	var box := _figure.get_global_rect()
-	return Rect2(box.position - global_position - Vector2(150.0, 40.0),
-		box.size + Vector2(300.0, 320.0))
+	return Rect2(box.position - global_position - Vector2(75.0, 20.0),
+		box.size + Vector2(150.0, 160.0))
 
 
 func _class_name_key(class_id: String) -> String:
@@ -134,7 +134,7 @@ func _refresh_relics(hero: Hero) -> void:
 	for relic_id in hero.relics:
 		var name := game.text(_relic_name_key(String(relic_id)))
 		names.append(name)
-		var plate := Icons.make_plate(Icons.relic(String(relic_id)), 34.0,
+		var plate := Icons.make_plate(Icons.relic(String(relic_id)), 17.0,
 			Palette.BONE, Palette.PLATE_NEUTRAL, Palette.EDGE_LIGHT)
 		plate.tooltip_text = name
 		plate.mouse_filter = Control.MOUSE_FILTER_STOP

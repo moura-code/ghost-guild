@@ -60,12 +60,12 @@ func _build() -> void:
 	var vigil := HBoxContainer.new()
 	vigil.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vigil.alignment = BoxContainer.ALIGNMENT_CENTER
-	vigil.add_theme_constant_override("separation", 780)
+	vigil.add_theme_constant_override("separation", 420)
 	vigil.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for i in 2:
 		var stand := VBoxContainer.new()
 		stand.alignment = BoxContainer.ALIGNMENT_CENTER
-		stand.add_theme_constant_override("separation", 20)
+		stand.add_theme_constant_override("separation", 8)
 		stand.add_child(Prop.of(Prop.Kind.CANDLE, i * 6 + 2))
 		stand.add_child(Prop.of(Prop.Kind.SKULL, i))
 		stand.add_child(Prop.of(Prop.Kind.BONES, i * 3))
@@ -73,7 +73,7 @@ func _build() -> void:
 	add_child(vigil)
 
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 18)
+	box.add_theme_constant_override("separation", 7)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(box)
@@ -121,7 +121,7 @@ func _build() -> void:
 	box.add_child(_rite)
 
 	_dismiss = Button.new()
-	_dismiss.custom_minimum_size = Vector2(220.0, 44.0)
+	_dismiss.custom_minimum_size = Vector2(104.0, 22.0)
 	_dismiss.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_dismiss.pressed.connect(func() -> void: dismissed.emit())
 	box.add_child(_dismiss)
@@ -165,8 +165,8 @@ func focus_rect() -> Rect2:
 	if _name == null or not _name.is_inside_tree():
 		return Rect2()
 	var box := _name.get_global_rect()
-	return Rect2(box.position - global_position - Vector2(160.0, 60.0),
-		box.size + Vector2(320.0, 300.0))
+	return Rect2(box.position - global_position - Vector2(80.0, 30.0),
+		box.size + Vector2(160.0, 150.0))
 
 
 static func _has_rite(p_result: Dictionary) -> bool:

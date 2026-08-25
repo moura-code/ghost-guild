@@ -73,17 +73,17 @@ static func build() -> Theme:
 	t.set_stylebox("panel", "PanelContainer", StoneBox.make(Palette.STONE_RAISED))
 	t.set_stylebox("panel", "Panel", StoneBox.make(Palette.STONE, 3.0, false))
 
-	var rest := StoneBox.make(Palette.STONE_HIGH, 5.0)
+	var rest := StoneBox.make(Palette.STONE_HIGH, 2.0)
 	rest.lit = Palette.STONE_EDGE
 	t.set_stylebox("normal", "Button", rest)
 	# Hover lights the slab warm, the way a lantern would. Ghost cyan belongs
 	# to the dead and to nothing else, and a button borrowing it was the
 	# game's brightest colour competing with its own subject.
-	var hover := StoneBox.make(Palette.STONE_EDGE, 5.0)
+	var hover := StoneBox.make(Palette.STONE_EDGE, 2.0)
 	hover.accent = Color(Palette.EDGE_LIGHT.r, Palette.EDGE_LIGHT.g, Palette.EDGE_LIGHT.b, 0.65)
 	t.set_stylebox("hover", "Button", hover)
 	# Pushed into the wall: the bevel inverts, so the light is underneath.
-	var down := StoneBox.make(Palette.STONE, 5.0)
+	var down := StoneBox.make(Palette.STONE, 2.0)
 	down.pressed = true
 	t.set_stylebox("pressed", "Button", down)
 	var off := StoneBox.make(Palette.STONE, 3.0, false)
@@ -134,7 +134,7 @@ static func panel_box(bg: Color, border: Color = Palette.STONE_EDGE) -> StoneBox
 	box.lit = Palette.STONE_EDGE
 	box.shade = Color(Palette.ABYSS.r, Palette.ABYSS.g, Palette.ABYSS.b, 0.9)
 	box.groove = border
-	box.set_content_margin_all(11)
+	box.set_content_margin_all(5)
 	return box
 
 
@@ -164,9 +164,9 @@ static func card_box(bg: Color, border: Color) -> StoneBox:
 static func row_box(bg: Color) -> StoneBox:
 	var box := StoneBox.make(bg, 3.0, false)
 	box.lit = Palette.STONE_EDGE
-	box.set_content_margin_all(9)
-	box.content_margin_top = 5
-	box.content_margin_bottom = 5
+	box.set_content_margin_all(5)
+	box.content_margin_top = 2
+	box.content_margin_bottom = 2
 	return box
 
 
@@ -186,13 +186,13 @@ static func bar_box() -> StoneBox:
 ## catalogue row is the loudest "unfinished" tell a UI can have.
 static func primary_box(accent: Color) -> StoneBox:
 	var box := StoneBox.make(
-		Color(accent.r * 0.30, accent.g * 0.26, accent.b * 0.34, 1.0), 5.0)
+		Color(accent.r * 0.30, accent.g * 0.26, accent.b * 0.34, 1.0), 2.0)
 	# The accent lights the carved edge itself rather than outlining the
 	# shape: this is the slab the lantern is pointed at.
 	box.lit = Color(accent.r, accent.g, accent.b, 0.85)
 	box.accent = Color(accent.r, accent.g, accent.b, 0.55)
 	box.groove = Palette.ABYSS
-	box.set_content_margin_all(11)
+	box.set_content_margin_all(5)
 	return box
 
 
@@ -202,8 +202,8 @@ static func primary_box(accent: Color) -> StoneBox:
 static func list_row_box(hovered: bool = false) -> StyleBox:
 	if hovered:
 		var box := StoneBox.make(Palette.STONE_RAISED, 3.0, false)
-		box.set_content_margin_all(9)
-		box.content_margin_left = 14
+		box.set_content_margin_all(4)
+		box.content_margin_left = 7
 		return box
 	# At rest a catalogue row is a rule, not a slab. Forty carved plaques
 	# stacked in a list is noise; the carving is what marks the one under
@@ -212,8 +212,8 @@ static func list_row_box(hovered: bool = false) -> StyleBox:
 	sb.bg_color = Color(0, 0, 0, 0)
 	sb.border_color = Color(Palette.STONE_EDGE.r, Palette.STONE_EDGE.g, Palette.STONE_EDGE.b, 0.45)
 	sb.border_width_bottom = 1
-	sb.set_content_margin_all(9)
-	sb.content_margin_left = 14
+	sb.set_content_margin_all(4)
+	sb.content_margin_left = 7
 	return sb
 
 
@@ -223,8 +223,8 @@ static func pip_box(bg: Color, border: Color) -> StyleBoxFlat:
 	sb.bg_color = bg
 	sb.border_color = border
 	sb.set_border_width_all(1)
-	sb.set_corner_radius_all(15)
-	sb.set_content_margin_all(2)
+	sb.set_corner_radius_all(8)
+	sb.set_content_margin_all(1)
 	return sb
 
 

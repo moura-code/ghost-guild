@@ -18,7 +18,11 @@ signal buy_pressed(id: String)
 ## Sized so a group fits one row and both groups fit one screen with nothing
 ## to scroll -- that is the whole point of the wall, and a tablet ten pixels
 ## too wide puts half the guild below the fold again.
-const PLAQUE_SIZE := Vector2(85.0, 76.0)
+## Height is what the tallest tablet actually measures, not a wish: names
+## like "Lantern Discipline" wrap to two lines at this width, and declaring
+## a size the content overruns is how the second group ended up below the
+## fold twice.
+const PLAQUE_SIZE := Vector2(85.0, 90.0)
 const COLUMNS := 6
 
 var upgrade_id: String = ""
@@ -39,13 +43,13 @@ func _build() -> void:
 	custom_minimum_size = PLAQUE_SIZE
 	add_theme_stylebox_override("panel", UiTheme.panel_box(Palette.STONE_RAISED))
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 4)
+	column.add_theme_constant_override("separation", 2)
 	column.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(column)
 
 	# The glyph is the biggest thing on the tablet: at a wall of ten, the
 	# player finds the one they want by its shape, not by reading ten names.
-	_icon = Icons.make_plate(null, 16.0, Palette.BONE, Palette.PLATE_NEUTRAL,
+	_icon = Icons.make_plate(null, 14.0, Palette.BONE, Palette.PLATE_NEUTRAL,
 		Palette.STONE_EDGE)
 	_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	column.add_child(_icon)

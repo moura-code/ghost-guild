@@ -84,7 +84,7 @@ func _build() -> void:
 	# gives the light somewhere to come from and the eye something to sit on.
 	_decor = HBoxContainer.new()
 	_decor.alignment = BoxContainer.ALIGNMENT_CENTER
-	_decor.add_theme_constant_override("separation", 620)
+	_decor.add_theme_constant_override("separation", 330)
 	_decor.add_child(Prop.of(Prop.Kind.CANDLE, 3))
 	_decor.add_child(Prop.of(Prop.Kind.CANDLE, 8))
 	add_child(_decor)
@@ -162,8 +162,8 @@ func focus_rect() -> Rect2:
 	var box: Rect2 = _options.get_global_rect()
 	if _fan != null and _fan.is_inside_tree() and _fan.visible and _fan.size.x > 0.0:
 		box = box.merge(_fan.get_global_rect())
-	return Rect2(box.position - global_position - Vector2(110.0, 90.0),
-		box.size + Vector2(220.0, 170.0))
+	return Rect2(box.position - global_position - Vector2(55.0, 45.0),
+		box.size + Vector2(110.0, 85.0))
 
 
 ## What one option reads as, and how to take it, without a test having to

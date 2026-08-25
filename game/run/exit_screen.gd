@@ -92,17 +92,17 @@ func _build() -> void:
 	choices.alignment = BoxContainer.ALIGNMENT_CENTER
 
 	_push = Button.new()
-	_push.custom_minimum_size = Vector2(180.0, 48.0)
+	_push.custom_minimum_size = Vector2(88.0, 22.0)
 	_push.pressed.connect(func() -> void: _decide("push"))
 	choices.add_child(_push)
 
 	_retreat = Button.new()
-	_retreat.custom_minimum_size = Vector2(180.0, 48.0)
+	_retreat.custom_minimum_size = Vector2(88.0, 22.0)
 	_retreat.pressed.connect(func() -> void: _decide("retreat"))
 	choices.add_child(_retreat)
 
 	_watch = Button.new()
-	_watch.custom_minimum_size = Vector2(310.0, 48.0)
+	_watch.custom_minimum_size = Vector2(150.0, 22.0)
 	_watch.pressed.connect(func() -> void: _decide("watch"))
 	choices.add_child(_watch)
 	add_child(choices)
@@ -111,7 +111,7 @@ func _build() -> void:
 ## One reading: an icon, the value, and what it means underneath.
 static func _reading(value: Label, caption: String, icon: String) -> PanelContainer:
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(210.0, 96.0)
+	panel.custom_minimum_size = Vector2(102.0, 46.0)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER

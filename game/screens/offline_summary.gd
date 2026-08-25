@@ -52,20 +52,20 @@ func _build() -> void:
 	add_child(centre)
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(460.0, 0.0)
+	card.custom_minimum_size = Vector2(230.0, 0.0)
 	card.add_theme_stylebox_override("panel",
 		UiTheme.panel_box(Palette.STONE, Palette.STONE_EDGE))
 	centre.add_child(card)
 
 	var pad := MarginContainer.new()
-	pad.add_theme_constant_override("margin_left", 26)
-	pad.add_theme_constant_override("margin_right", 26)
-	pad.add_theme_constant_override("margin_top", 22)
-	pad.add_theme_constant_override("margin_bottom", 22)
+	pad.add_theme_constant_override("margin_left", 12)
+	pad.add_theme_constant_override("margin_right", 12)
+	pad.add_theme_constant_override("margin_top", 10)
+	pad.add_theme_constant_override("margin_bottom", 10)
 	card.add_child(pad)
 
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
+	box.add_theme_constant_override("separation", 4)
 	pad.add_child(box)
 
 	_title = ScreenLayout.centre(UiTheme.title(""))
@@ -75,7 +75,7 @@ func _build() -> void:
 	var earned_row := HBoxContainer.new()
 	earned_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	earned_row.add_theme_constant_override("separation", 8)
-	earned_row.add_child(Icons.make_rect(Icons.ui("soul"), 26.0, Palette.SOUL))
+	earned_row.add_child(Icons.make_rect(Icons.ui("soul"), 13.0, Palette.SOUL))
 	_earned = UiTheme.number("0")
 	earned_row.add_child(_earned)
 	box.add_child(earned_row)
@@ -87,13 +87,13 @@ func _build() -> void:
 	# to feel like finding the guild still lit.
 	var flames := HBoxContainer.new()
 	flames.alignment = BoxContainer.ALIGNMENT_CENTER
-	flames.add_theme_constant_override("separation", 300)
+	flames.add_theme_constant_override("separation", 150)
 	flames.add_child(Prop.of(Prop.Kind.CANDLE, 2))
 	flames.add_child(Prop.of(Prop.Kind.CANDLE, 9))
 	box.add_child(flames)
 
 	_button = Button.new()
-	_button.custom_minimum_size = Vector2(200.0, 42.0)
+	_button.custom_minimum_size = Vector2(96.0, 20.0)
 	_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_button.add_theme_stylebox_override("normal", UiTheme.primary_box(Palette.SOUL))
 	_button.pressed.connect(func() -> void: dismissed.emit())

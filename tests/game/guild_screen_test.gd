@@ -149,8 +149,10 @@ func test_the_wall_holds_a_whole_group_abreast() -> void:
 func test_both_groups_of_tablets_fit_the_window_without_scrolling() -> void:
 	# Two group plates, each a header plus one row of tablets, has to clear
 	# 720 minus the nav bar and the wallet above it.
-	var group_height := 30.0 + UpgradePlaque.PLAQUE_SIZE.y + 60.0
-	assert_float(2.0 * group_height).is_less(720.0 - 150.0)
+	# In 640x360 units now, and measured against what the shell leaves: the
+	# nav bar and the wallet above the body take roughly 70 of the 360.
+	var group_height := 15.0 + UpgradePlaque.PLAQUE_SIZE.y + 30.0
+	assert_float(2.0 * group_height).is_less(360.0 - 70.0)
 
 
 ## The tablets are a fixed height so the wall stays a wall, which means the

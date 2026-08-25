@@ -9,7 +9,7 @@ const GROUP_ORDER := ["hero", "ghosts"]
 ## own margins. Too narrow and the flow wraps, which puts the second group
 ## below the fold and the screen starts scrolling again.
 const WALL_GAP := 5.0
-const WALL_WIDTH := UpgradePlaque.COLUMNS * UpgradePlaque.PLAQUE_SIZE.x 	+ (UpgradePlaque.COLUMNS - 1) * WALL_GAP + 34.0
+const WALL_WIDTH := UpgradePlaque.COLUMNS * UpgradePlaque.PLAQUE_SIZE.x 	+ (UpgradePlaque.COLUMNS - 1) * WALL_GAP + 44.0
 
 var game: GameRoot
 var rows: Dictionary = {}
@@ -74,7 +74,7 @@ func _add_group(group: String) -> void:
 	wall.add_theme_constant_override("v_separation", int(WALL_GAP))
 	wall.alignment = FlowContainer.ALIGNMENT_CENTER
 	var section := VBoxContainer.new()
-	section.add_theme_constant_override("separation", 9)
+	section.add_theme_constant_override("separation", 4)
 	section.add_child(ScreenLayout.section(game.text("ui.group.%s" % group),
 		Palette.SOUL if group == "hero" else Palette.GHOST))
 	section.add_child(wall)
