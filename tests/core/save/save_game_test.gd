@@ -98,7 +98,9 @@ func test_load_missing_or_corrupt_returns_null() -> void:
 func test_migrate_raises_the_version() -> void:
 	var d := SaveGame.migrate({"campaign_seed": 1})
 	assert_int(d["version"]).is_equal(SaveGame.VERSION)
-	assert_int(SaveGame.migrate({"version": 1, "campaign_seed": 1})["version"]).is_equal(1)
+	# A save already at the current version is left where it is. Written against
+	# VERSION rather than a literal, so the next bump does not break this.
+	assert_int(SaveGame.migrate({"version": SaveGame.VERSION, "campaign_seed": 1})["version"]).is_equal(SaveGame.VERSION)
 
 
 func test_load_and_catch_up_banks_offline_soul() -> void:
@@ -129,3 +131,30 @@ func test_load_falls_back_to_a_backup_when_the_main_file_is_corrupt() -> void:
 	var back := SaveGame.load_campaign(TestFixtures.content(), PATH)
 	assert_object(back).is_not_null()
 	assert_float(back.soul).is_equal(7.0)
+
+
+func test_version_one_saves_learn_which_nodes_were_done() -> void:
+	var old := {
+		"version": 1,
+		"run": {
+			"nodes": [{"kind": "rest"}, {"kind": "rest"}, {"kind": "rest"}],
+			"node_index": 2,
+		},
+	}
+	var migrated := SaveGame.migrate(old)
+	assert_int(int(migrated["version"])).is_equal(SaveGame.VERSION)
+	assert_array(migrated["run"]["resolved"]).is_equal([true, true, false])
+
+
+func test_migration_leaves_a_save_with_no_run_alone() -> void:
+	var migrated := SaveGame.migrate({"version": 1, "run": {}})
+	assert_int(int(migrated["version"])).is_equal(SaveGame.VERSION)
+	assert_bool((migrated["run"] as Dictionary).has("resolved")).is_false()
+
+
+func test_migration_does_not_overwrite_flags_it_already_has() -> void:
+	var migrated := SaveGame.migrate({
+		"version": 1,
+		"run": {"nodes": [{"kind": "rest"}, {"kind": "rest"}], "node_index": 0, "resolved": [false, true]},
+	})
+	assert_array(migrated["run"]["resolved"]).is_equal([false, true])

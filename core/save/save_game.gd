@@ -5,7 +5,7 @@ extends RefCounted
 ## falls back through the backups before giving up. The only file I/O
 ## in core/.
 
-const VERSION := 1
+const VERSION := 2
 const DEFAULT_PATH := "user://saves/slot1.json"
 const BACKUPS := 2
 
@@ -57,9 +57,30 @@ static func migrate(d: Dictionary) -> Dictionary:
 		match version:
 			0:
 				pass
+			1:
+				_fill_run_resolved(out)
 		version += 1
 		out["version"] = version
 	return out
+
+
+## Version 2 gave every node its own resolved flag so a floor can be walked in
+## any order. A version 1 run always cleared its nodes in index order, so
+## everything before node_index is exactly what was already done. A save that
+## already carries flags is left alone, so this is safe to run twice.
+static func _fill_run_resolved(d: Dictionary) -> void:
+	var raw: Variant = d.get("run", {})
+	if not (raw is Dictionary):
+		return
+	var run: Dictionary = raw
+	if run.is_empty() or run.has("resolved"):
+		return
+	var nodes: Array = run.get("nodes", [])
+	var index := int(run.get("node_index", 0))
+	var flags: Array = []
+	for i in nodes.size():
+		flags.append(i < index)
+	run["resolved"] = flags
 
 
 static func load_and_catch_up(content: Content, now: int, path: String = DEFAULT_PATH) -> Dictionary:
