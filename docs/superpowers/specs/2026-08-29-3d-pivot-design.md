@@ -145,11 +145,25 @@ that fills it from `node_index` for saves written before the pivot.
   the balance simulator, all four demo tools and every core test that *applies*
   an `enter` reproduce today's behaviour exactly.
 
-  One assertion is a deliberate exception. `tests/core/run/run_flow_test.gd:15`
-  asserts `legal_actions(run) == [{"kind": "enter"}]`, which encodes the old
-  single-action contract directly; it becomes one offer per unresolved node. That
-  is the contract change itself, not a regression, and it is the only existing
-  test assertion the pivot's `core/` change edits.
+  Five assertions are a deliberate exception, and they fall into two groups.
+  `tests/core/run/run_flow_test.gd:15` asserts
+  `legal_actions(run) == [{"kind": "enter"}]`, which encodes the old
+  single-action contract directly; it becomes one offer per unresolved node.
+
+  The other four (`run_flow_test`, `run_nodes_test`, `run_save_test`,
+  `save_game_test`) assert `node_index == 1` after the first node finishes.
+  **`node_index` used to carry two meanings** — "the node being played" during a
+  node, and "the node you will play next" between them, because `_advance`
+  walked it forward. Per-node flags make the second meaning vestigial, and
+  leaving the pointer advanced would be worse than dropping it: the 3D layer
+  would read `current_node()` between rooms and get a room the player never
+  chose. So `node_index` keeps one meaning, and those four assertions now assert
+  what replaced them — the node is resolved and `next_unresolved()` is 1 —
+  which is strictly stronger than the pointer check.
+
+  None of this changes behaviour. Measured on 2026-08-29 against a `main`
+  worktree, `run_demo -- 1 7` and `balance_sim -- 20 4` produce **byte-identical
+  output** on both branches.
 - `_advance` marks `resolved[node_index] = true`; if any node is unresolved the
   phase returns to `node`, otherwise it becomes `exit` and emits `floor_cleared`
   as it does today.
