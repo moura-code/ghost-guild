@@ -79,3 +79,54 @@ static func connect_rooms(layout: FloorLayout, rng: Rng) -> void:
 		if absi(a - b) < 2:
 			continue
 		carve_corridor(layout, layout.room_center(a), layout.room_center(b), rng.randi_range(STREAM, 0, 1) == 0)
+
+
+## Any solid cell touching walkable floor becomes wall; everything else stays
+## void and never gets geometry. Diagonals count: a corner left void is a gap
+## you can see straight through in a first-person view, and it is exactly the
+## seam a modular kit cannot hide. Run this after every corridor is carved, or
+## a later corridor punches a hole through a wall ring already built.
+static func add_walls(layout: FloorLayout) -> void:
+	var around := [
+		Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1),
+		Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1),
+	]
+	for y in layout.height:
+		for x in layout.width:
+			if layout.cell(x, y) != FloorLayout.Cell.VOID:
+				continue
+			for step in around:
+				if layout.cell(x + step.x, y + step.y) == FloorLayout.Cell.FLOOR:
+					layout.set_cell(x, y, FloorLayout.Cell.WALL)
+					break
+
+
+## You come in at the first room and the stairs go in the room furthest from
+## it, so a floor has a direction even though you may walk it in any order.
+## The encounters take the rooms in between, shuffled, so a room's size and
+## shape never telegraph what is waiting in it.
+static func assign_roles(layout: FloorLayout, node_count: int, rng: Rng) -> void:
+	layout.entry_room = 0
+	var entry := layout.room_center(0)
+	var stairs := -1
+	var furthest := -1
+	for i in range(1, layout.rooms.size()):
+		var c := layout.room_center(i)
+		var distance := absi(c.x - entry.x) + absi(c.y - entry.y)
+		if distance > furthest:
+			furthest = distance
+			stairs = i
+	layout.stairs_room = stairs
+	var free: Array = []
+	for i in layout.rooms.size():
+		if i != layout.entry_room and i != layout.stairs_room:
+			free.append(i)
+	rng.shuffle(STREAM, free)
+	var out: Array = []
+	for i in node_count:
+		# generate() always places node_count + 2 rooms, so `free` has exactly
+		# one room per node. The wrap is for a caller that asked for more nodes
+		# than the 3x3 partition can seat: doubling up is bad, stranding an
+		# encounter is worse.
+		out.append(int(free[i % free.size()]) if not free.is_empty() else layout.entry_room)
+	layout.node_rooms = out

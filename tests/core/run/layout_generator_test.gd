@@ -89,3 +89,64 @@ func test_reachability_stops_at_rock() -> void:
 	assert_int(seen.size()).is_equal(2)
 	assert_bool(seen.has(Vector2i(5, 5))).is_false()
 	assert_dict(layout.reachable_from(Vector2i(9, 9))).is_empty()
+
+
+func _walled(seed: int, node_count: int = 3) -> FloorLayout:
+	var layout := _carved(seed, node_count + 2)
+	LayoutGenerator.add_walls(layout)
+	LayoutGenerator.assign_roles(layout, node_count, Rng.new(seed))
+	return layout
+
+
+func test_no_walkable_cell_ever_touches_the_void() -> void:
+	for seed in 12:
+		var layout := _walled(seed)
+		for y in layout.height:
+			for x in layout.width:
+				if not layout.is_walkable(x, y):
+					continue
+				for dy in [-1, 0, 1]:
+					for dx in [-1, 0, 1]:
+						assert_int(layout.cell(x + dx, y + dy)).is_not_equal(FloorLayout.Cell.VOID)
+
+
+func test_walls_only_go_where_they_are_needed() -> void:
+	var layout := FloorLayout.create(10, 10)
+	layout.set_cell(5, 5, FloorLayout.Cell.FLOOR)
+	LayoutGenerator.add_walls(layout)
+	assert_int(layout.cell(4, 4)).is_equal(FloorLayout.Cell.WALL)
+	assert_int(layout.cell(6, 5)).is_equal(FloorLayout.Cell.WALL)
+	assert_int(layout.cell(5, 5)).is_equal(FloorLayout.Cell.FLOOR)
+	assert_int(layout.cell(0, 0)).is_equal(FloorLayout.Cell.VOID)
+	assert_int(layout.cell(3, 5)).is_equal(FloorLayout.Cell.VOID)
+
+
+func test_the_stairs_are_never_where_you_came_in() -> void:
+	for seed in 12:
+		var layout := _walled(seed)
+		assert_int(layout.entry_room).is_equal(0)
+		assert_int(layout.stairs_room).is_not_equal(layout.entry_room)
+		assert_bool(layout.stairs_room >= 0).is_true()
+
+
+func test_every_encounter_gets_a_room_of_its_own() -> void:
+	for seed in 12:
+		var layout := _walled(seed)
+		assert_array(layout.node_rooms).has_size(3)
+		var seen: Dictionary = {}
+		for raw in layout.node_rooms:
+			var room := int(raw)
+			assert_bool(seen.has(room)).is_false()
+			seen[room] = true
+			assert_int(room).is_not_equal(layout.entry_room)
+			assert_int(room).is_not_equal(layout.stairs_room)
+
+
+func test_the_stairs_go_in_the_room_furthest_from_the_door() -> void:
+	var layout := _walled(5)
+	var entry := layout.room_center(layout.entry_room)
+	var stairs := layout.room_center(layout.stairs_room)
+	var furthest := absi(stairs.x - entry.x) + absi(stairs.y - entry.y)
+	for i in layout.rooms.size():
+		var c := layout.room_center(i)
+		assert_bool(absi(c.x - entry.x) + absi(c.y - entry.y) <= furthest).is_true()
