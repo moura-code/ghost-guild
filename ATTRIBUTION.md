@@ -174,3 +174,27 @@ photograph sits against a sprite.
 The generator is deterministic from a fixed seed, so re-running it produces
 byte-identical files and a regenerated sound never silently becomes a
 different one.
+
+## PBR materials — ambientCG, CC0 1.0
+
+<https://ambientcg.com> · <https://creativecommons.org/publicdomain/zero/1.0/>
+
+CC0 is a public-domain dedication: no attribution is legally owed for these.
+They are listed anyway, because knowing where a texture came from is how the
+next one gets picked to match it, and because §7 of the 3D pivot spec makes
+provenance part of the pipeline rather than an afterthought.
+
+Downloaded at 1K-JPG and reduced to the five maps Godot uses — colour, OpenGL
+normal, roughness, ambient occlusion, displacement. The DirectX normal, the
+`.usdc`, `.blend`, `.mtlx` and the vendor `.tres` were discarded.
+
+- `assets/materials/bricks100/` — *Bricks100*, wall masonry
+- `assets/materials/pavingstones119/` — *PavingStones119*, floor
+- `assets/materials/rock051/` — *Rock051*, ceiling and rough-cut rock
+- `assets/materials/planks037a/` — *Planks037A*, wood for doors and props
+
+Only PavingStones119 publishes a real-world size (115 cm); the other three
+report zero, so their tiling is an art call rather than a measurement. That is
+worth remembering, because one texel density across the kit is the single
+discipline that stops mixed CC0 sources reading as an asset flip, and for
+three of these four it has to be judged by eye.
