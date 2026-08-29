@@ -318,4 +318,9 @@ func _notification(what: int) -> void:
 		return
 	if game != null and game.is_booted:
 		game.save()
+		# The room is still playing at this point and a looping stream never
+		# finishes on its own, so it has to be told to stop before the tree
+		# comes down.
+		if game.sfx != null:
+			game.sfx.release()
 	quit_action.call()

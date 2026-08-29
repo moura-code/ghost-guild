@@ -103,6 +103,80 @@ def after(first, second, gap=0.0):
     return first + pad + second
 
 
+def loop_sine(cycles, seconds, gain, phase=0.0):
+    """A sine that completes a whole number of cycles in `seconds`.
+
+    That is the entire trick to a seamless loop: any partial whose frequency
+    is an integer multiple of 1/length ends exactly where it started, so the
+    join is inaudible without a crossfade. Frequencies are therefore chosen
+    as cycle counts rather than as hertz.
+    """
+    total = int(RATE * seconds)
+    return [math.sin(2.0 * math.pi * (cycles * i / total + phase)) * gain
+            for i in range(total)]
+
+
+def loop_noise(seconds, gain, rng, colour=0.06):
+    """A noise bed that loops. Noise cannot be made periodic, so this
+    generates twice the length and crossfades the second half over the first
+    -- the join lands in the middle of the fade where both halves are equally
+    present and neither is a seam."""
+    total = int(RATE * seconds)
+    raw = []
+    last = 0.0
+    for i in range(total * 2):
+        last += (rng.uniform(-1.0, 1.0) - last) * colour
+        raw.append(last)
+    out = [0.0] * total
+    for i in range(total):
+        t = i / total
+        out[i] = (raw[i] * (1.0 - t) + raw[i + total] * t) * gain
+    return out
+
+
+def drip(at, seconds, length, gain, rng):
+    """One water drop, placed inside the loop. Kept well clear of both ends:
+    a transient crossing the join is the one thing the crossfade cannot
+    hide."""
+    total = int(RATE * length)
+    out = [0.0] * total
+    start = int(RATE * at)
+    body = int(RATE * seconds)
+    phase = 0.0
+    for i in range(body):
+        if start + i >= total:
+            break
+        t = i / max(1, body - 1)
+        # A drip is a fast downward pitch bend, which is what separates it
+        # from a beep.
+        freq = 1400.0 - 900.0 * t
+        phase += freq / RATE
+        out[start + i] = math.sin(2.0 * math.pi * phase) * gain * (1.0 - t) ** 3.0
+    return out
+
+
+def build_ambience(rng):
+    """Room tone. One eight-second loop, quiet enough to be noticed only when
+    it stops -- which is the whole job of ambience. A crypt is not silent, it
+    is still, and the difference between the two is what makes a drawn room
+    feel occupied rather than merely lit."""
+    length = 8.0
+    return {
+        "amb_crypt": mix(
+            # A low drone, two notes a fifth apart, plus a breathing overtone.
+            loop_sine(cycles=440, seconds=length, gain=0.055),   # 55 Hz
+            loop_sine(cycles=660, seconds=length, gain=0.030),   # 82.5 Hz
+            loop_sine(cycles=1320, seconds=length, gain=0.012),
+            # Air moving. The bed is what stops the drone reading as a hum.
+            loop_noise(length, gain=0.030, rng=rng),
+            # Two drips, off the beat from each other so the loop does not
+            # announce its own length.
+            drip(1.7, 0.22, length, 0.085, rng),
+            drip(5.3, 0.19, length, 0.065, rng),
+        ),
+    }
+
+
 def build(rng):
     """id -> samples. Kept in one place so the whole palette is visible at
     once and no two sounds accidentally occupy the same register."""
@@ -177,6 +251,7 @@ def write(name, samples):
 def main():
     rng = random.Random(SEED)
     sounds = build(rng)
+    sounds.update(build_ambience(random.Random(SEED + 1)))
     wanted = sys.argv[1:] or list(sounds)
     unknown = [w for w in wanted if w not in sounds]
     if unknown:

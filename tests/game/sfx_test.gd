@@ -137,3 +137,53 @@ func test_voicing_twice_does_not_double_up_the_click() -> void:
 	UiTheme.voice_buttons(root, s)
 	UiTheme.voice_buttons(root, s)
 	assert_int(b.pressed.get_connections().size()).is_equal(1)
+
+
+## Room tone. Its whole job is to be unnoticed until it stops, which makes it
+## exactly the thing that breaks silently, so the wiring is pinned.
+func test_the_room_has_a_tone_and_it_loops() -> void:
+	var s := _sfx()
+	await await_idle_frame()
+	s.start_ambience()
+	assert_bool(s._ambience.playing) 		.override_failure_message("the room is silent").is_true()
+	var stream := s._ambience.stream as AudioStreamWAV
+	assert_object(stream).is_not_null()
+	# The loop is set at import time (edit/loop_mode=1), not at runtime:
+	# mutating the shared cached resource meant holding a copy past shutdown,
+	# which leaked the stream and its playback at exit.
+	assert_int(stream.loop_mode) 		.override_failure_message("ambience would play once and stop") 		.is_equal(AudioStreamWAV.LOOP_FORWARD)
+
+
+func test_starting_the_room_twice_does_not_stack_two_of_them() -> void:
+	var s := _sfx()
+	await await_idle_frame()
+	s.start_ambience()
+	s.start_ambience()
+	assert_int(s.get_children().filter(func(c): return c == s._ambience).size()).is_equal(1)
+	assert_bool(s._ambience.playing).is_true()
+
+
+func test_the_room_sits_under_the_effects() -> void:
+	# Loud ambience is the fastest way to make a player turn the sound off.
+	assert_float(Sfx.AMBIENCE_LEVEL).is_less(1.0)
+	assert_float(Sfx.AMBIENCE_LEVEL).is_greater(0.0)
+
+
+func test_ducking_pulls_the_room_down_and_lets_it_back_up() -> void:
+	var s := _sfx()
+	await await_idle_frame()
+	s.start_ambience()
+	var full := s._ambience.volume_db
+	s.duck(0.3)
+	assert_float(s._ambience.volume_db) \
+		.override_failure_message("duck did not lower the room").is_less(full)
+	await get_tree().create_timer(0.75).timeout
+	assert_float(s._ambience.volume_db).is_equal_approx(full, 0.5)
+
+
+func test_muting_silences_the_room_too() -> void:
+	var s := _sfx()
+	await await_idle_frame()
+	s.start_ambience()
+	s.muted = true
+	assert_bool(s._ambience.playing).is_false()

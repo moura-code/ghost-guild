@@ -137,7 +137,9 @@ static func should_show(p_result: Dictionary) -> bool:
 
 func bind(g: GameRoot, p_result: Dictionary) -> void:
 	if g != null and g.sfx != null:
-		# The one sound in the game allowed to take a whole second.
+		# The one sound in the game allowed to take a whole second -- and the
+		# room gets out of its way for it.
+		g.sfx.duck()
 		g.sfx.play("epitaph")
 	game = g
 	result = p_result

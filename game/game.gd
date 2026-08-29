@@ -48,6 +48,9 @@ func boot() -> Dictionary:
 	if sfx == null:
 		sfx = Sfx.new()
 		add_child(sfx)
+		# Deferred: the pool builds itself in _ready, which has not run yet on
+		# the frame the node is added.
+		sfx.start_ambience.call_deferred()
 	content = Content.load_from(CONTENT_ROOT)
 	if not content.load_errors.is_empty():
 		push_error("boot: content failed to load: %s" % ", ".join(content.load_errors))
