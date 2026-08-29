@@ -210,10 +210,15 @@ Decision 3 asks for textured PBR realism. That is achievable solo, but only as a
 failure: it happens when sources disagree about texel density, physical scale
 and colour grading. The pipeline exists to force agreement.
 
-- **Modular kit** — `assets/kit/`: roughly twelve pieces on a 4 m grid (floor,
-  ceiling, wall, wall with arch, corner, column, doorway, stair, well head, and
-  biome variants), sharing three tiling materials. This is how studios build
-  dungeons: simple geometry, infinite corridors, one material budget.
+- **Modular kit** — `game/world/kit.gd`: the pieces are procedural (plane, box)
+  on a **3 m grid**, sharing three tiling materials at one texel density. 4 m
+  was the first guess and it is wrong: a 24×24 grid at 4 m is 96 m across, and a
+  4 m-wide corridor reads as a hall rather than a crypt. This is still how
+  studios build dungeons — simple geometry, infinite corridors, one material
+  budget — it just skips the authoring step there is no artist for. Authored
+  geometry (wall with arch, corner, column, doorway, stair, well head, biome
+  variants) is a later upgrade that swaps `Kit`'s mesh functions and nothing
+  else; `assets/kit/` does not exist yet, deliberately.
 - **CC0 materials** — `assets/materials/`: PBR sets (albedo, normal, roughness,
   AO) from ambientCG and Poly Haven, both CC0, resampled to **one texel
   density**. Materials carry most of the realism; the supply is effectively
@@ -240,6 +245,7 @@ animated enemy is reachable in days, not after months of environment work.
 game/
   game.gd            GameRoot — unchanged contract, still the only core↔tree bridge
   world/
+    crawl.gd             the scene root: binds GameRoot, builds the floor you are on
     dungeon_builder.gd   FloorLayout -> geometry, lights, nav, anchors
     kit.gd               the modular piece catalogue and its materials
     player.gd            CharacterBody3D: walk, look, interact, torch
