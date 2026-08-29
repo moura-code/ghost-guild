@@ -30,6 +30,7 @@ var hand: HandView
 var animator: FightAnimator3D
 var vitals: HeroPanel
 var bodies: Array[EnemyBody] = []
+var tags: Array[EnemyTag] = []
 ## Hand index -> whether that card needs an enemy chosen. Mirrors the engine.
 var playable: Dictionary = {}
 
@@ -170,6 +171,8 @@ func check_over() -> void:
 	player.look_enabled = true
 	hud.set_pointer(false)
 	hand.clear()
+	for t in tags:
+		(t as EnemyTag).visible = false
 	fight_finished.emit()
 
 
@@ -180,6 +183,10 @@ func refresh() -> void:
 	_recompute_playable(f)
 	vitals.bind(game.content, f)
 	hand.show_hand(f, playable)
+	for t in tags:
+		var tag: EnemyTag = t
+		if tag.index < f.enemies.size():
+			tag.bind(game.content, f, tag.index)
 	for b in bodies:
 		var alive := b.index < f.enemies.size() and f.enemies[b.index].alive
 		if not alive and not b.dying:
@@ -256,6 +263,13 @@ func _build_hud() -> void:
 	_banner = TurnBanner.new()
 	hud.ui.add_child(_banner)
 
+	# One tag per enemy, above the hand so a card never covers the number you
+	# are deciding against.
+	for b in bodies:
+		var tag := EnemyTag.create((b as EnemyBody).index)
+		hud.ui.add_child(tag)
+		tags.append(tag)
+
 
 func _on_card_pressed(hand_index: int) -> void:
 	var f := fight()
@@ -292,6 +306,21 @@ func _after_action() -> void:
 		check_over()
 		return
 	refresh()
+
+
+## The tags follow the bodies every frame: a recoiling enemy that leaves its
+## health bar behind reads as a bug before it reads as a hit.
+func _process(_delta: float) -> void:
+	if _finished or hud == null:
+		return
+	var anchor := anchors()
+	for t in tags:
+		var tag: EnemyTag = t
+		var body := body_of(tag.index)
+		if body == null or body.dying:
+			tag.visible = false
+			continue
+		tag.place(anchor.get(tag.index, Vector2.ZERO))
 
 
 func _on_shake(strength: float) -> void:

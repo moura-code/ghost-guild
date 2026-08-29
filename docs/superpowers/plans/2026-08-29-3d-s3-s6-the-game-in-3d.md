@@ -265,7 +265,7 @@ and is standing in your well when you get home.
 
 | | |
 |---|---|
-| Suite | **675 test cases, 75 suites, 0 failures, exit 0** |
+| Suite | **682 test cases, 76 suites, 0 failures, exit 0** |
 | Peak before deletion | 780 across 82 suites |
 | Deleted | 17 source files + 10 suites — the 2D world and the 2D navigation |
 | `game/` | 7,486 → ~5,900 lines, reorganised into `world/`, `fight/`, `hud/` |
@@ -355,6 +355,10 @@ skulls inside four of them. Both are furniture, not world. Restored.
   adding it before the staging existed would have been guessing. `Sfx` is wired
   and 2D.
 - **No performance number on anything but an RTX 5080.**
+- **`EnemyTag` was nearly forgotten.** The plan's file table listed it and the
+  task list did not, so the fight was built without any way to read an enemy's
+  health or intent -- unplayable, and the suite would never have said so. Caught
+  by re-reading the plan against the tree at the end. Built and covered.
 - `tools/spike_crypt.gd` and `assets/_spike/` remain: `crawl_shot.gd` supersedes
   the spike for environments, but the spike's `_actor` path is still the only
   rigged-model probe and the enemy question is still open.
