@@ -147,3 +147,19 @@ func test_a_cleared_hand_forgets_what_was_hovered() -> void:
 	h.hover(0)
 	h.clear()
 	assert_int(h.hovered).is_equal(-1)
+
+
+func test_cards_are_not_left_touching_edge_to_edge() -> void:
+	# A step capped at the card's own width leaves a five-card hand mushy at
+	# rest, however good the hover is.
+	var seats := HandView.fan(5, Rect2(60.0, 0.0, 500.0, 360.0))
+	for i in range(1, seats.size()):
+		var step: float = float(seats[i]["position"].x) - float(seats[i - 1]["position"].x)
+		assert_float(step).is_greater(HandView.card_size().x * 1.05)
+
+
+func test_the_hand_leaves_room_for_the_vitals_and_the_end_turn_button() -> void:
+	# A guessed gutter put the vitals plate straight over the first card.
+	var h := _hand()
+	assert_float(h.hand_area().position.x).is_greater_equal(HeroPanel.PANEL_SIZE.x)
+	assert_float(h.hand_area().end.x).is_less(640.0)

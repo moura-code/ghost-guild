@@ -15,12 +15,15 @@ extends RefCounted
 ## underground photography has a cold fill -- sky bounce, damp, distance -- and
 ## it is what makes torchlight look like fire instead of like a brightness
 ## setting.
-const AMBIENT_TOP := 0.34
-const AMBIENT_BOTTOM := 0.16
+## 0.34 went too far the other way and turned the whole crypt blue-grey. The
+## fill exists to keep the shadows from being black, not to compete with the
+## torches: warm has to win wherever a torch reaches.
+const AMBIENT_TOP := 0.22
+const AMBIENT_BOTTOM := 0.11
 const FOG_TOP := 0.020
 const FOG_BOTTOM := 0.055
 ## The cold half of the palette. Warm torches against this is the whole look.
-const FILL_TOP := Color(0.34, 0.47, 0.72)
+const FILL_TOP := Color(0.38, 0.48, 0.70)
 const FILL_BOTTOM := Color(0.20, 0.28, 0.52)
 
 

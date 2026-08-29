@@ -48,7 +48,9 @@ func _init() -> void:
 	_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_name)
 
-	_intent = UiTheme.small("", Palette.DANGER)
+	# Bright, not blood-red: the intent sits on a dark plate over dark stone,
+	# and a dark warm red on that is a number you have to lean in to read.
+	_intent = UiTheme.small("", Palette.BONE)
 	_intent.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_intent.position = Vector2(0.0, 20.0)
 	_intent.size = Vector2(WIDTH, 11.0)
@@ -101,7 +103,7 @@ func _draw() -> void:
 	# straight on lit stone, and a red bar with nothing behind it reads as a
 	# stripe painted on the wall rather than as that creature's health.
 	var plate := Palette.ABYSS
-	plate.a = 0.62
+	plate.a = 0.78
 	draw_rect(Rect2(-3.0, -1.0, WIDTH + 6.0, size.y + 2.0), plate)
 
 	var top := 12.0

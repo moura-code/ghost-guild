@@ -79,10 +79,13 @@ func _ready() -> void:
 	# so the hero carries one and it is deliberately short.
 	torch = OmniLight3D.new()
 	torch.name = "Torch"
-	torch.light_color = Color(1.0, 0.72, 0.42)
-	torch.light_energy = 2.6
-	torch.omni_range = Kit.CELL * 3.0
-	torch.omni_attenuation = 1.6
+	torch.light_color = Color(1.0, 0.70, 0.38)
+	# Strong enough that the ground at your feet is warm. With the cold fill
+	# raised, a weak hero torch left everything within arm's reach blue -- the
+	# one place the player's own light should be winning.
+	torch.light_energy = 4.4
+	torch.omni_range = Kit.CELL * 3.4
+	torch.omni_attenuation = 1.5
 	torch.position = Vector3(0.25, -0.15, 0.0)
 	head.add_child(torch)
 

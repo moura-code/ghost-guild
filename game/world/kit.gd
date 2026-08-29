@@ -33,8 +33,8 @@ const MAT_ROOT := "res://assets/materials/"
 ## Knocks the red down hard and the blue barely at all, so the stone cools
 ## without going dark. A tint that lowers all three channels just dims the
 ## room, which is the opposite of the problem being solved.
-const STONE_TINT := Color(0.74, 0.84, 0.96)
-const FLOOR_TINT := Color(0.78, 0.85, 0.95)
+const STONE_TINT := Color(0.80, 0.86, 0.94)
+const FLOOR_TINT := Color(0.84, 0.88, 0.94)
 
 static var _cache: Dictionary = {}
 

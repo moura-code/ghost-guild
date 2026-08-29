@@ -11,7 +11,10 @@ extends Control
 signal card_pressed(hand_index: int)
 
 const FAN_ARC := 0.048
-const FAN_SPREAD := 1.02
+## How far apart cards may sit, as a multiple of a card's width. Was 1.02,
+## which capped the step at the card's own width and left a five-card hand
+## touching edge to edge -- unreadable at rest, however good the hover is.
+const FAN_SPREAD := 1.32
 const FAN_LIFT := 6.0
 ## How far the bottom of the cards sits above the bottom of the area.
 const BOTTOM := 6.0
@@ -133,8 +136,10 @@ func hand_area() -> Rect2:
 	return Rect2(Vector2(LEFT_GUTTER, 0.0), Vector2(maxf(CardView.CARD_SIZE.x, size.x - LEFT_GUTTER - RIGHT_GUTTER), size.y))
 
 
-const LEFT_GUTTER := 60.0
-const RIGHT_GUTTER := 74.0
+## Measured from the widgets that actually sit there, not guessed. A guessed
+## 60 put the vitals plate straight over the first card.
+const LEFT_GUTTER := HeroPanel.PANEL_SIZE.x + 34.0
+const RIGHT_GUTTER := 84.0
 
 
 ## The hovered card grows and lifts clear of its neighbours, and it is drawn

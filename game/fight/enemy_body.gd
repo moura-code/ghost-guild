@@ -74,11 +74,14 @@ func _build_mesh(def: EnemyDef) -> void:
 	# Bone against wet stone. Cold, slightly emissive so a creature at the edge
 	# of the torchlight is a shape rather than nothing at all -- the dark is
 	# meant to be threatening, not empty.
-	_material.albedo_color = Color(0.62, 0.60, 0.54)
-	_material.roughness = 0.85
+	# Old bone, not white plastic. The first version was 0.62 grey with a cool
+	# emission on top, and under the new fill light it read as a shop mannequin
+	# -- brighter than the stone around it, which nothing in a crypt should be.
+	_material.albedo_color = Color(0.42, 0.39, 0.33)
+	_material.roughness = 0.94
 	_material.emission_enabled = true
-	_material.emission = Color(0.30, 0.36, 0.44)
-	_material.emission_energy_multiplier = 0.12
+	_material.emission = Color(0.36, 0.40, 0.46)
+	_material.emission_energy_multiplier = 0.05
 
 	var capsule := CapsuleMesh.new()
 	capsule.radius = _height * 0.20
@@ -148,4 +151,4 @@ func die() -> void:
 func set_highlight(on: bool) -> void:
 	if _material == null:
 		return
-	_material.emission_energy_multiplier = HIGHLIGHT_ENERGY if on else 0.12
+	_material.emission_energy_multiplier = HIGHLIGHT_ENERGY if on else 0.05

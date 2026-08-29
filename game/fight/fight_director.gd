@@ -309,19 +309,24 @@ func _build_hud() -> void:
 	hand.card_pressed.connect(_on_card_pressed)
 	_hud_layer.add_child(hand)
 
+	# The vitals get a plate of their own. Over a lit 3D room the bar, the orbs
+	# and the numbers were floating loose on stone -- each one legible, the
+	# group reading as debris rather than as a panel.
+	var vitals_plate := PanelContainer.new()
+	vitals_plate.name = "Vitals"
+	vitals_plate.add_theme_stylebox_override("panel", UiTheme.panel_box(Palette.STONE))
+	vitals_plate.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	vitals_plate.grow_horizontal = Control.GROW_DIRECTION_END
+	vitals_plate.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	vitals_plate.offset_left = 8.0
+	vitals_plate.offset_top = -HeroPanel.PANEL_SIZE.y - 14.0
+	vitals_plate.offset_right = 8.0 + HeroPanel.PANEL_SIZE.x + 10.0
+	vitals_plate.offset_bottom = -8.0
+	_hud_layer.add_child(vitals_plate)
+
 	vitals = HeroPanel.new()
-	# Sized and anchored rather than positioned: left to itself the panel
-	# stretches to whatever the parent gives it, and its bars and orbs are
-	# drawn against a size it never agreed to.
-	vitals.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	vitals.grow_horizontal = Control.GROW_DIRECTION_END
-	vitals.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	vitals.size = HeroPanel.PANEL_SIZE
-	vitals.offset_left = 10.0
-	vitals.offset_top = -HeroPanel.PANEL_SIZE.y - 10.0
-	vitals.offset_right = 10.0 + HeroPanel.PANEL_SIZE.x
-	vitals.offset_bottom = -10.0
-	_hud_layer.add_child(vitals)
+	vitals.custom_minimum_size = HeroPanel.PANEL_SIZE
+	vitals_plate.add_child(vitals)
 
 	_end_turn = Button.new()
 	_end_turn.text = game.text("ui.fight.end_turn")
