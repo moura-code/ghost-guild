@@ -142,8 +142,14 @@ that fills it from `node_index` for saves written before the pivot.
   shape does not change.
 - `{"kind": "enter"}` **without** an index keeps meaning "the lowest unresolved
   node". This is the compatibility hinge: `RunAutopilot` emits the bare form, so
-  every existing core test, the balance simulator and all four demo tools
-  reproduce today's behaviour exactly and stay green.
+  the balance simulator, all four demo tools and every core test that *applies*
+  an `enter` reproduce today's behaviour exactly.
+
+  One assertion is a deliberate exception. `tests/core/run/run_flow_test.gd:15`
+  asserts `legal_actions(run) == [{"kind": "enter"}]`, which encodes the old
+  single-action contract directly; it becomes one offer per unresolved node. That
+  is the contract change itself, not a regression, and it is the only existing
+  test assertion the pivot's `core/` change edits.
 - `_advance` marks `resolved[node_index] = true`; if any node is unresolved the
   phase returns to `node`, otherwise it becomes `exit` and emits `floor_cleared`
   as it does today.
