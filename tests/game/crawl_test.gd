@@ -228,8 +228,11 @@ func test_walking_into_a_fight_room_stages_it_instead_of_skipping_it() -> void:
 	assert_object(c.director).is_not_null()
 	assert_str(c.game.campaign.run.phase).is_equal("fight")
 	assert_array(c.director.bodies).is_not_empty()
-	assert_bool(c.player.frozen).is_true()
 	assert_int(c.director.hand.visible_count()).is_greater(0)
+	# You keep your body during a fight now -- you can walk the room, you just
+	# cannot leave it.
+	assert_bool(c.player.frozen).is_false()
+	assert_object(c.director.get_node_or_null("Ring")).is_not_null()
 
 
 func test_the_staged_fight_stands_its_enemies_in_the_room_you_walked_into() -> void:

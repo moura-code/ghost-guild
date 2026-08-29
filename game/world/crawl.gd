@@ -28,6 +28,13 @@ var guild: GuildRoom
 var choice: ChoiceScreen
 var exit_panel: ExitScreen
 var epitaph: EpitaphScreen
+var pause: PauseMenu
+var options: OptionsMenu
+var settings: Settings
+## Where settings are read from and written to. Overridable for the same
+## reason save_path is: a test that writes the real file changes the
+## developer's mouse sensitivity.
+var settings_path: String = Settings.PATH
 var markers: Array[EncounterMarker] = []
 var stairs: EncounterMarker
 ## The station the player is standing in, or null.
@@ -69,7 +76,9 @@ func bind(g: GameRoot) -> void:
 		if not bool(result["ok"]):
 			push_error("crawl: boot failed: %s" % result["reason"])
 			return
+	settings = Settings.load_from(settings_path)
 	_build_hud()
+	settings.apply(player)
 	if not g.run_changed.is_connected(_sync):
 		g.run_changed.connect(_sync)
 	_sync()
@@ -102,6 +111,17 @@ func _build_hud() -> void:
 	epitaph = EpitaphScreen.new()
 	epitaph.dismissed.connect(_on_epitaph_dismissed)
 	_host(epitaph)
+
+	pause = PauseMenu.new()
+	pause.resumed.connect(close_panel)
+	pause.options_requested.connect(_open_options)
+	pause.quit_requested.connect(_quit)
+	_host(pause)
+
+	options = OptionsMenu.new()
+	options.closed.connect(_open_pause)
+	options.changed.connect(_on_settings_changed)
+	_host(options)
 
 	for id in [GuildRoom.TABLE, GuildRoom.CIRCLE, GuildRoom.DESK, GuildRoom.WELL]:
 		var screen := _guild_panel(String(id))
@@ -145,6 +165,7 @@ func open(screen: Control) -> void:
 		player.frozen = screen != null
 		player.look_enabled = screen == null
 	hud.set_pointer(screen != null)
+	hud.set_dim(screen != null)
 	if crosshair != null:
 		# No reticle while a panel owns the cursor: you are pointing at a
 		# button, not at the room.
@@ -495,16 +516,47 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact") and not panel_open() and focused != null:
 		focused.use()
 		return
-	# Escape closes a panel before it does anything else. A panel you can only
-	# leave by finishing it is a panel that traps the player.
-	if event.is_action_pressed("ui_cancel") and panel_open() and _can_close(panel):
+	if not event.is_action_pressed("ui_cancel"):
+		return
+	# ONE rule for Escape, because it used to mean three different things
+	# depending on who saw the key first: close the topmost thing that can be
+	# closed, and if nothing is open, pause.
+	if not panel_open():
+		_open_pause()
+	elif panel == options:
+		_open_pause()
+	elif _can_close(panel):
 		close_panel()
 
 
-## The guild's panels can be walked away from. A run's panels cannot: leaving
-## a reward unchosen would strand the run in a phase with nothing to do.
+## A run's phase panels cannot be walked away from -- leaving a reward
+## unchosen would strand the run in a phase with nothing to do -- but pausing
+## over them is always allowed, which is what the pause branch above is for.
 func _can_close(screen: Control) -> bool:
 	return screen != choice and screen != exit_panel and screen != epitaph
+
+
+func _open_pause() -> void:
+	pause.build(game.content, game.campaign != null and game.campaign.run != null)
+	open(pause)
+
+
+func _open_options() -> void:
+	options.build(game.content, settings)
+	open(options)
+
+
+func _on_settings_changed(s: Settings) -> void:
+	s.apply(player)
+	s.save(settings_path)
+
+
+func _quit() -> void:
+	if game != null and game.is_booted:
+		game.save()
+		if game.sfx != null:
+			game.sfx.release()
+	quit_action.call()
 
 
 ## The quit path used to live on MainScreen, which the pivot stopped booting.

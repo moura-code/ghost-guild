@@ -91,11 +91,36 @@ func test_it_stands_a_body_up_for_every_enemy() -> void:
 	assert_int(d.bodies[1].index).is_equal(1)
 
 
-func test_beginning_a_fight_freezes_you_and_frees_the_mouse() -> void:
+func test_a_fight_leaves_you_in_your_body_but_frees_the_mouse_for_the_cards() -> void:
+	# You can walk the room during a fight. The movement is atmospheric, not
+	# tactical: core/combat has no concept of space, so where you stand cannot
+	# change the rules -- and promising positional agency without delivering it
+	# would be worse than the freeze it replaces.
 	var d := _director(_game())
-	assert_bool(d.player.frozen).is_true()
+	assert_bool(d.player.frozen).is_false()
 	assert_bool(d.player.look_enabled).is_false()
 	assert_bool(d.hud.pointer_free).is_true()
+
+
+func test_you_are_fenced_into_the_room_you_are_fighting_in() -> void:
+	# Walking off down the corridor mid-fight is not "atmospheric".
+	var d := _director(_game())
+	var ring: StaticBody3D = d.get_node("Ring")
+	assert_int(ring.collision_layer).is_equal(DungeonBuilder.LAYER_WORLD)
+	var walls := 0
+	for child in ring.get_children():
+		if child is CollisionShape3D:
+			walls += 1
+	assert_int(walls).is_equal(4)
+
+
+func test_the_fence_comes_down_when_the_fight_ends() -> void:
+	var g := _game()
+	var d := _director(g, ["bone_rat"])
+	TestFixtures.autofight(g.campaign.run)
+	d.check_over()
+	await await_idle_frame()
+	assert_object(d.get_node_or_null("Ring")).is_null()
 
 
 func test_the_hand_you_are_holding_is_on_screen() -> void:

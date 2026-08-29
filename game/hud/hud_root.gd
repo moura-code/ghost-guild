@@ -18,6 +18,8 @@ const REFERENCE := Vector2(640.0, 360.0)
 ## The space panels lay out in. Add children here, never to the layer.
 var ui: Control
 var panel: Control
+## Darkens the room behind whatever panel is open.
+var dim: ColorRect
 ## What this layer last asked the pointer to do. Recorded because
 ## Input.set_mouse_mode does not stick under --headless -- there is no window
 ## to capture a cursor into, so it reads back VISIBLE whatever it was told --
@@ -34,6 +36,16 @@ static func scale_for(viewport: Vector2) -> float:
 
 
 func _init() -> void:
+	# Behind everything, and added first so it stays there. A panel over a lit
+	# 3D room competes with the room for every pixel; bone-white text on bright
+	# ochre stone is legible in spite of the background rather than because of
+	# it.
+	dim = ColorRect.new()
+	dim.name = "Dim"
+	dim.color = Color(0.02, 0.03, 0.05, 0.0)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(dim)
+
 	ui = Control.new()
 	ui.name = "Ui"
 	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -48,11 +60,30 @@ func _ready() -> void:
 			viewport.size_changed.connect(_on_resized)
 
 
+const DIM_ALPHA := 0.72
+const DIM_SECONDS := 0.12
+
+
 func fit(viewport: Vector2) -> void:
 	var k := scale_for(viewport)
 	ui.scale = Vector2(k, k)
 	ui.position = Vector2.ZERO
 	ui.size = viewport / k
+	if dim != null:
+		dim.position = Vector2.ZERO
+		dim.size = viewport
+
+
+## Fades the room down behind a panel and back up when it closes.
+func set_dim(on: bool) -> void:
+	if dim == null:
+		return
+	var to := DIM_ALPHA if on else 0.0
+	if not is_inside_tree():
+		dim.color.a = to
+		return
+	var tween := create_tween()
+	tween.tween_property(dim, "color:a", to, DIM_SECONDS)
 
 
 func has_panel() -> bool:

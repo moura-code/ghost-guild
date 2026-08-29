@@ -13,6 +13,7 @@ func before_test() -> void:
 	DirAccess.make_dir_recursive_absolute("user://test_saves")
 	for suffix in ["", ".bak1", ".bak2"]:
 		DirAccess.remove_absolute(TMP + suffix)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(TMP_CFG))
 
 
 func after_test() -> void:
@@ -31,9 +32,15 @@ func _game() -> GameRoot:
 	return g
 
 
+const TMP_CFG := "user://test_saves/crawl_walkthrough_test.cfg"
+
+
 func _crawl(g: GameRoot) -> Crawl:
 	var c: Crawl = auto_free(Crawl.new())
 	c.game = g
+	# Set before the tree sees it, like `game`: otherwise the crawl reads and
+	# writes the developer's real settings.cfg.
+	c.settings_path = TMP_CFG
 	add_child(c)
 	c.bind(g)
 	return c
@@ -136,3 +143,67 @@ func test_you_cannot_walk_into_the_well() -> void:
 	var cell := Kit.world_to_cell(c.player.position)
 	assert_vector(cell).override_failure_message("fell down the well").is_not_equal(GuildRoom.WELL_CELL)
 	assert_bool(c.player.is_on_floor()).is_true()
+
+
+## Escape used to mean three different things depending on which node saw the
+## key first. Now it means one thing: close the topmost thing that can be
+## closed, and if nothing is open, pause.
+func _escape(c: Crawl) -> void:
+	var key := InputEventAction.new()
+	key.action = "ui_cancel"
+	key.pressed = true
+	c.player._unhandled_input(key)
+	c._unhandled_input(key)
+
+
+func test_escape_in_an_empty_room_pauses() -> void:
+	var c := _crawl(_game())
+	assert_bool(c.panel_open()).is_false()
+	_escape(c)
+	assert_object(c.panel).is_same(c.pause)
+	assert_bool(c.player.frozen).is_true()
+
+
+func test_escape_out_of_the_pause_menu_gives_you_the_game_back() -> void:
+	var c := _crawl(_game())
+	_escape(c)
+	c.pause.press(PauseMenu.RESUME)
+	assert_bool(c.panel_open()).is_false()
+	assert_bool(c.player.frozen).is_false()
+	assert_bool(c.hud.pointer_free).is_false()
+
+
+func test_options_open_from_pause_and_escape_walks_back_up_one_level() -> void:
+	var c := _crawl(_game())
+	_escape(c)
+	c.pause.press(PauseMenu.OPTIONS)
+	assert_object(c.panel).is_same(c.options)
+	_escape(c)
+	# Back to the pause menu, not straight out into the room.
+	assert_object(c.panel).is_same(c.pause)
+
+
+func test_escape_over_a_guild_panel_closes_the_panel_first() -> void:
+	var c := _crawl(_game())
+	var station := c.guild.station(GuildRoom.DESK)
+	station.enter(c.player)
+	station.use()
+	assert_bool(c.panel_open()).is_true()
+	_escape(c)
+	assert_bool(c.panel_open()).is_false()
+
+
+func test_changing_a_setting_reaches_the_body_and_is_written_down() -> void:
+	var c := _crawl(_game())
+	_escape(c)
+	c.pause.press(PauseMenu.OPTIONS)
+	(c.options.sliders["sensitivity"] as HSlider).value = 2.0
+	assert_float(c.player.sensitivity_scale).is_equal_approx(2.0, 0.001)
+	assert_float(Settings.load_from(TMP_CFG).sensitivity).is_equal_approx(2.0, 0.001)
+
+
+func test_a_panel_darkens_the_room_behind_it() -> void:
+	var c := _crawl(_game())
+	_escape(c)
+	await await_millis(220)
+	assert_float(c.hud.dim.color.a).is_greater(0.4)

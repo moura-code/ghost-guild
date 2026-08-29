@@ -244,3 +244,15 @@ ui.use.circle,Step into the seance circle
 ui.use.desk,Read the hero ledger
 ui.use.well,Look down the well
 ui.use.close,Back
+ui.menu.paused,Paused
+ui.menu.resume,Resume
+ui.menu.options,Options
+ui.menu.abandon,Abandon the run
+ui.menu.quit,Quit to desktop
+ui.menu.back,Back
+ui.options.sensitivity,Mouse sensitivity
+ui.options.invert_y,Invert look
+ui.options.fov,Field of view
+ui.options.volume,Volume
+ui.options.fullscreen,Fullscreen
+ui.hint.close,Esc to close

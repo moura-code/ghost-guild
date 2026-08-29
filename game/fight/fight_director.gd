@@ -21,6 +21,9 @@ const SPACING := 1.35
 ## group rather than a wall.
 const BACK_STEP := 0.45
 const TURN_SECONDS := 0.35
+## How much room you get during a fight, in metres. Wide enough to circle the
+## thing you are fighting, tight enough that you cannot leave.
+const ARENA := 7.0
 const SHAKE_SECONDS := 0.22
 
 var game: GameRoot
@@ -79,13 +82,40 @@ func begin(g: GameRoot, h: HudRoot, p: Player, at: Vector3) -> void:
 	# obediently looked at the geometric centre of the floor.
 	_face(_centroid(at))
 
-	# Frozen and pointing at the fight: the cards need the cursor, and a body
-	# that can still walk away mid-fight is a body that will.
-	player.frozen = true
+	# You stay in your body. The cards need the cursor, so the mouse is free,
+	# but you can still walk around the room and look at what you are fighting.
+	#
+	# The movement is ATMOSPHERIC, not tactical, and the difference matters:
+	# core/combat is a pure state machine with no concept of space -- no
+	# positions, no range, no line of sight -- so where you stand cannot change
+	# the rules without a redesign of the combat AND the economy that is
+	# balanced against it. Promising positional agency and not delivering it
+	# would be worse than the freeze it replaces. What this buys is that the
+	# fight stops feeling like the game paused and put a menu over the room.
+	player.frozen = false
 	player.look_enabled = false
+	_fence(at)
 	_build_hud()
 	hud.set_pointer(true)
 	refresh()
+
+
+## An invisible wall around the fight. You can walk the room; you cannot walk
+## out of it and down the corridor while something is swinging at you.
+func _fence(at: Vector3) -> void:
+	var body := StaticBody3D.new()
+	body.name = "Ring"
+	body.collision_layer = DungeonBuilder.LAYER_WORLD
+	body.collision_mask = 0
+	add_child(body)
+	var half := ARENA * 0.5
+	for step in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		var shape := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(0.4, Kit.WALL_H, ARENA) if step.y == 0 else Vector3(ARENA, Kit.WALL_H, 0.4)
+		shape.shape = box
+		shape.position = Vector3(at.x + float(step.x) * half, Kit.WALL_H * 0.5, at.z + float(step.y) * half)
+		body.add_child(shape)
 
 
 func fight() -> FightState:
@@ -178,6 +208,9 @@ func check_over() -> void:
 	_finished = true
 	player.frozen = false
 	player.look_enabled = true
+	var ring := get_node_or_null("Ring")
+	if ring != null:
+		ring.queue_free()
 	hud.set_pointer(false)
 	hand.clear()
 	for t in tags:

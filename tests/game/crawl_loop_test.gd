@@ -81,11 +81,15 @@ func test_whatever_room_you_walk_into_something_hosts_it() -> void:
 	if run.phase == "fight":
 		assert_object(c.director).is_not_null()
 		assert_int(c.director.hand.visible_count()).is_greater(0)
+		# A fight leaves you in your body, fenced into the room.
+		assert_bool(c.player.frozen).is_false()
+		assert_object(c.director.get_node_or_null("Ring")).is_not_null()
 	else:
 		assert_bool(ChoiceScreen.handles(run.phase)).override_failure_message("phase %s had no host" % run.phase).is_true()
 		assert_bool(c.choice.visible).is_true()
-	# Either way you are held in place until you have dealt with it.
-	assert_bool(c.player.frozen).is_true()
+		# A panel holds you still: walking away from an unchosen reward would
+		# strand the run in a phase with nothing to do.
+		assert_bool(c.player.frozen).is_true()
 
 
 func test_a_fight_room_still_stages_a_fight_and_its_reward_is_a_panel() -> void:

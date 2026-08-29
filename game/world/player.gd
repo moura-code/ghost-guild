@@ -33,6 +33,9 @@ var look_enabled: bool = true
 ## applies -- a frozen body should stand on the floor, not hang in the air --
 ## so this zeroes the wish vector rather than the whole physics step.
 var frozen: bool = false
+## Set from Settings. Multiplies the authored SENSITIVITY.
+var sensitivity_scale: float = 1.0
+var invert_y: bool = false
 
 var _pitch: float = 0.0
 
@@ -117,8 +120,10 @@ func _physics_process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and look_enabled and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		var motion: InputEventMouseMotion = event
-		rotate_y(-motion.relative.x * SENSITIVITY)
-		_pitch = clamp_pitch(_pitch - motion.relative.y * SENSITIVITY)
+		var speed := SENSITIVITY * sensitivity_scale
+		rotate_y(-motion.relative.x * speed)
+		var dy := motion.relative.y * speed
+		_pitch = clamp_pitch(_pitch + (dy if invert_y else -dy))
 		head.rotation.x = _pitch
 		return
 	# Escape gives the mouse back rather than quitting: a captured cursor with

@@ -74,3 +74,27 @@ func test_showing_a_panel_frees_the_pointer_so_it_can_be_clicked() -> void:
 	h.set_pointer(false)
 	h.show_panel(Control.new())
 	assert_bool(h.pointer_free).is_true()
+
+
+func test_a_panel_darkens_the_room_behind_it() -> void:
+	# Bone-white text on bright ochre stone is legible in spite of the
+	# background rather than because of it.
+	var h := _hud()
+	h.fit(Vector2(1280.0, 720.0))
+	assert_float(h.dim.color.a).is_equal(0.0)
+	h.set_dim(true)
+	await await_millis(220)
+	assert_float(h.dim.color.a).is_equal_approx(HudRoot.DIM_ALPHA, 0.05)
+	h.set_dim(false)
+	await await_millis(220)
+	assert_float(h.dim.color.a).is_equal_approx(0.0, 0.05)
+
+
+func test_the_dim_covers_the_whole_window_not_the_scaled_space() -> void:
+	var h := _hud()
+	h.fit(Vector2(1280.0, 720.0))
+	assert_vector(h.dim.size).is_equal_approx(Vector2(1280.0, 720.0), Vector2.ONE * 0.01)
+
+
+func test_the_dim_never_swallows_a_click() -> void:
+	assert_int(_hud().dim.mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
