@@ -360,18 +360,25 @@ func _leave_dungeon() -> void:
 	_built_floor = -1
 
 
+## Both guarded against a guild that is on its way out. Descending frees the
+## guild, and the Area3D the player was standing in emits body_exited AFTER
+## that -- on the frame the player stops overlapping it -- so the handler runs
+## with `guild` already null. It happens every single time you take the well
+## down, which is why it is worth a guard rather than an assert.
 func _on_station_focused(_id: String) -> void:
-	for s in guild.stations:
-		if (s as Interactable).focus:
-			focused = s
-	_refresh_prompt()
+	_refocus()
 
 
 func _on_station_blurred(_id: String) -> void:
+	_refocus()
+
+
+func _refocus() -> void:
 	focused = null
-	for s in guild.stations:
-		if (s as Interactable).focus:
-			focused = s
+	if guild != null and is_instance_valid(guild):
+		for s in guild.stations:
+			if (s as Interactable).focus:
+				focused = s
 	_refresh_prompt()
 
 

@@ -119,3 +119,20 @@ func test_finishing_a_run_brings_you_home() -> void:
 		c._on_epitaph_dismissed()
 	assert_int(c.place).is_equal(Crawl.Place.GUILD)
 	assert_object(c.guild).is_not_null()
+
+
+func test_leaving_the_guild_while_standing_in_a_station_does_not_crash() -> void:
+	# Descending frees the guild, and the Area3D the player was standing in
+	# emits body_exited afterwards -- so the handler runs with `guild` already
+	# null. It happened on every descent and no test saw it, because the tests
+	# call enter/leave without tearing the guild down in between.
+	var g := _game()
+	var c := _crawl(g)
+	var station := c.guild.station(GuildRoom.TABLE)
+	station.enter(c.player)
+	assert_object(c.focused).is_not_null()
+	g.start_run(1)
+	assert_object(c.guild).is_null()
+	station.leave(c.player)
+	assert_object(c.focused).is_null()
+	assert_bool(c.prompts.has_prompt()).is_false()
