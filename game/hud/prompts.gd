@@ -23,9 +23,12 @@ func _init() -> void:
 	banner = Label.new()
 	banner.name = "Banner"
 	banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	banner.anchor_right = 1.0
-	banner.offset_top = 48.0
+	# Anchored across the full width, not to a centre point: with
+	# PRESET_CENTER_TOP the label's own left edge is what gets centred, so a
+	# centre-aligned string inside it lands right of the middle.
+	banner.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	banner.offset_top = 42.0
+	banner.offset_bottom = 60.0
 	banner.modulate.a = 0.0
 	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(banner)
@@ -33,10 +36,9 @@ func _init() -> void:
 	prompt = Label.new()
 	prompt.name = "Prompt"
 	prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	prompt.anchor_right = 1.0
-	prompt.offset_top = -96.0
-	prompt.offset_bottom = -80.0
+	prompt.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	prompt.offset_top = -118.0
+	prompt.offset_bottom = -100.0
 	prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(prompt)
 
@@ -69,3 +71,11 @@ func has_prompt() -> bool:
 
 func is_announcing() -> bool:
 	return banner.modulate.a > 0.0
+
+
+## Takes the banner down immediately. A floor announcement that is still
+## fading when a panel opens ends up printed across it.
+func hush() -> void:
+	if _banner_tween != null and _banner_tween.is_valid():
+		_banner_tween.kill()
+	banner.modulate.a = 0.0

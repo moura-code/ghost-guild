@@ -11,8 +11,10 @@ extends RefCounted
 ## texture.
 
 const LAYER_WORLD := 1
-const TORCH_COLOR := Color(1.0, 0.66, 0.32)
-const TORCH_ENERGY := 5.0
+const TORCH_COLOR := Color(1.0, 0.62, 0.26)
+## Was 5.0, which clipped the near wall to white. A torch should be the
+## warmest thing in the frame, not the least saturated.
+const TORCH_ENERGY := 3.6
 ## How far out of its wall the flame hangs, in cells.
 const TORCH_OUT := 0.62
 const GROUND_THICKNESS := 1.0
@@ -113,8 +115,8 @@ static func torch_light(layout: FloorLayout, anchor: Vector2i) -> OmniLight3D:
 		(anchor.y + out_dir.y * TORCH_OUT) * Kit.CELL)
 	light.light_color = TORCH_COLOR
 	light.light_energy = TORCH_ENERGY
-	light.omni_range = Kit.CELL * 4.5
-	light.omni_attenuation = 1.4
+	light.omni_range = Kit.CELL * 5.0
+	light.omni_attenuation = 1.1
 	light.shadow_enabled = true
 	return light
 

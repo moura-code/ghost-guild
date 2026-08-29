@@ -9,10 +9,19 @@ extends RefCounted
 ## how much light there is inside it, which is "depth is the threat"
 ## (spec §2.3) expressed as numbers.
 
-const AMBIENT_TOP := 0.085
-const AMBIENT_BOTTOM := 0.030
-const FOG_TOP := 0.026
-const FOG_BOTTOM := 0.075
+## Fill light. Was 0.085 and the crypt read as one flat orange: with almost no
+## ambient, the ONLY light was the torches, so every surface was some value of
+## the same warm hue and the image had no colour contrast at all. Real
+## underground photography has a cold fill -- sky bounce, damp, distance -- and
+## it is what makes torchlight look like fire instead of like a brightness
+## setting.
+const AMBIENT_TOP := 0.34
+const AMBIENT_BOTTOM := 0.16
+const FOG_TOP := 0.020
+const FOG_BOTTOM := 0.055
+## The cold half of the palette. Warm torches against this is the whole look.
+const FILL_TOP := Color(0.34, 0.47, 0.72)
+const FILL_BOTTOM := Color(0.20, 0.28, 0.52)
 
 
 static func depth_of(floor: int, last_floor: int) -> float:
@@ -25,23 +34,50 @@ static func environment(depth: float) -> Environment:
 	var d := clampf(depth, 0.0, 1.0)
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.015, 0.015, 0.022)
+	env.background_color = Color(0.02, 0.03, 0.05)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	# Cold ambient against warm torchlight: the contrast is what makes a torch
 	# read as a torch instead of as the room's brightness.
-	env.ambient_light_color = Color(0.30, 0.36, 0.48).lerp(Color(0.16, 0.20, 0.34), d)
+	env.ambient_light_color = FILL_TOP.lerp(FILL_BOTTOM, d)
 	env.ambient_light_energy = lerpf(AMBIENT_TOP, AMBIENT_BOTTOM, d)
+
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.14, 0.15, 0.20).lerp(Color(0.07, 0.07, 0.11), d)
+	# Exponential, NOT depth. FOG_MODE_DEPTH ignores fog_density entirely and
+	# uses fog_depth_begin/end instead, so switching to it silently turned the
+	# fog off over the twenty metres a corridor actually spans.
+	env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
+	env.fog_light_color = Color(0.16, 0.22, 0.36).lerp(Color(0.07, 0.10, 0.19), d)
 	env.fog_density = lerpf(FOG_TOP, FOG_BOTTOM, d)
+	# Fog that takes colour from the lights in it, so a torch down a corridor
+	# glows through the haze instead of being flattened by it.
+	env.fog_light_energy = 1.0
+	env.fog_sky_affect = 0.0
+
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_white = 4.0
+	# Was 4.0, and every torch clipped to white -- a blown highlight has no
+	# colour, so the brightest thing in the frame was also the least warm.
+	env.tonemap_white = 8.0
+	env.tonemap_exposure = 1.0
+
 	env.ssao_enabled = true
-	env.ssao_intensity = 2.5
-	env.ssao_radius = 1.2
+	env.ssao_intensity = 1.8
+	env.ssao_radius = 1.0
+	env.ssil_enabled = true
+	env.ssil_intensity = 0.5
+
 	env.glow_enabled = true
-	env.glow_intensity = 0.5
-	env.glow_bloom = 0.15
+	env.glow_intensity = 0.85
+	env.glow_bloom = 0.12
+	env.glow_strength = 1.1
+	env.glow_hdr_threshold = 1.1
+	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
+
+	# The last 10%: a little more colour than the render gives, and a black
+	# point that is actually black. One place, for the whole game.
+	env.adjustment_enabled = true
+	env.adjustment_saturation = 1.18
+	env.adjustment_contrast = 1.06
+	env.adjustment_brightness = 1.0
 	return env
 
 
@@ -58,10 +94,14 @@ static func world_environment(depth: float) -> WorldEnvironment:
 ## the guild and the crypt have to look like the same game.
 static func guild_environment() -> Environment:
 	var env := environment(0.0)
-	env.ambient_light_color = Color(0.42, 0.40, 0.44)
-	env.ambient_light_energy = 0.22
-	env.fog_light_color = Color(0.22, 0.20, 0.21)
-	env.fog_density = 0.010
+	# Warmer and brighter than any crypt floor, and the fog pulled right back:
+	# the guild is the only safe place in the game and it has to read that way
+	# before a word is on screen.
+	env.ambient_light_color = Color(0.46, 0.44, 0.46)
+	env.ambient_light_energy = 0.55
+	env.fog_light_color = Color(0.26, 0.24, 0.24)
+	env.fog_density = 0.008
+	env.adjustment_saturation = 1.10
 	return env
 
 

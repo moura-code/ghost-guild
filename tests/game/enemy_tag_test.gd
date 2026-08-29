@@ -68,3 +68,35 @@ func test_the_tag_floats_above_the_head_it_was_given() -> void:
 
 func test_it_never_swallows_a_click_meant_for_a_card() -> void:
 	assert_int(_tag().mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
+
+
+func test_two_tags_landing_on_the_same_spot_are_pushed_apart() -> void:
+	# Two enemies at similar depth project to nearly the same point, and the
+	# tags stack until neither is readable. A screenshot found this; this
+	# keeps it found.
+	var spread := EnemyTag.spread([Vector2(300.0, 200.0), Vector2(310.0, 202.0)])
+	assert_float(absf(float(spread[0].y) - float(spread[1].y))).is_greater_equal(EnemyTag.STACK_GAP - 0.01)
+
+
+func test_tags_that_are_already_apart_are_left_alone() -> void:
+	var input := [Vector2(100.0, 100.0), Vector2(400.0, 300.0)]
+	var spread := EnemyTag.spread(input)
+	assert_vector(spread[0]).is_equal(input[0])
+	assert_vector(spread[1]).is_equal(input[1])
+
+
+func test_three_stacked_tags_all_end_up_readable() -> void:
+	var spread := EnemyTag.spread([Vector2(300.0, 200.0), Vector2(302.0, 201.0), Vector2(298.0, 199.0)])
+	var ys: Array = []
+	for p in spread:
+		ys.append(float(p.y))
+	ys.sort()
+	for i in range(1, ys.size()):
+		assert_float(float(ys[i]) - float(ys[i - 1])).is_greater_equal(EnemyTag.STACK_GAP - 0.01)
+
+
+func test_spreading_keeps_every_tag_and_its_order() -> void:
+	var spread := EnemyTag.spread([Vector2(0.0, 50.0), Vector2(0.0, 51.0)])
+	assert_array(spread).has_size(2)
+	# The one that was higher stays higher.
+	assert_float(float(spread[0].y)).is_less(float(spread[1].y))

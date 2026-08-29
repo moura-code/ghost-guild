@@ -11,9 +11,15 @@ extends Control
 ## The projection is done by whoever owns the camera and handed in through
 ## `place`, so this node knows nothing about 3D.
 
-const WIDTH := 92.0
-const BAR_HEIGHT := 5.0
+## Narrow on purpose. A bar as wide as the creature is tall stops reading as
+## "that thing's health" and starts reading as a stripe across the room.
+const WIDTH := 58.0
+const BAR_HEIGHT := 4.0
 const GAP := 2.0
+## Two enemies at similar depth project to nearly the same point, and their
+## tags stack until neither is readable. This is the smallest vertical
+## distance two tags may end up apart.
+const STACK_GAP := 30.0
 
 var index: int = -1
 
@@ -33,19 +39,19 @@ static func create(enemy_index: int) -> EnemyTag:
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	custom_minimum_size = Vector2(WIDTH, 34.0)
+	custom_minimum_size = Vector2(WIDTH, 32.0)
 	size = custom_minimum_size
 
 	_name = UiTheme.small("", Palette.BONE)
 	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_name.size = Vector2(WIDTH, 10.0)
+	_name.size = Vector2(WIDTH, 11.0)
 	_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_name)
 
 	_intent = UiTheme.small("", Palette.DANGER)
 	_intent.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_intent.position = Vector2(0.0, 22.0)
-	_intent.size = Vector2(WIDTH, 10.0)
+	_intent.position = Vector2(0.0, 20.0)
+	_intent.size = Vector2(WIDTH, 11.0)
 	_intent.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_intent)
 
@@ -91,13 +97,42 @@ func place(at: Vector2) -> void:
 
 
 func _draw() -> void:
+	# A backing plate under the whole tag. Without it the text and the bar sit
+	# straight on lit stone, and a red bar with nothing behind it reads as a
+	# stripe painted on the wall rather than as that creature's health.
+	var plate := Palette.ABYSS
+	plate.a = 0.62
+	draw_rect(Rect2(-3.0, -1.0, WIDTH + 6.0, size.y + 2.0), plate)
+
 	var top := 12.0
-	var bar := Rect2(0.0, top, WIDTH, BAR_HEIGHT)
-	draw_rect(bar, Palette.ABYSS)
+	draw_rect(Rect2(0.0, top, WIDTH, BAR_HEIGHT), Palette.STONE)
 	var fraction := clampf(float(_hp) / float(_max_hp), 0.0, 1.0)
 	draw_rect(Rect2(0.0, top, WIDTH * fraction, BAR_HEIGHT), Palette.DANGER)
+	draw_rect(Rect2(0.0, top, WIDTH, BAR_HEIGHT), Palette.STONE_EDGE, false, 1.0)
 	if _block > 0:
 		# Block sits on top of the health rather than beside it: it is the
 		# part of the bar you have to get through first.
 		var width := WIDTH * clampf(float(_block) / float(_max_hp), 0.0, 1.0)
 		draw_rect(Rect2(0.0, top - GAP - BAR_HEIGHT, width, BAR_HEIGHT), Palette.SOUL)
+
+
+## Pushes tags apart that would otherwise land on top of each other. Takes the
+## projected points in draw order and returns the points to actually use.
+##
+## Pure, because this is a geometry bug that a screenshot found and a test
+## should keep found: three enemies in a line project to three points a few
+## pixels apart, and stacked tags are worse than no tags.
+static func spread(points: Array) -> Array:
+	var order: Array = []
+	for i in points.size():
+		order.append(i)
+	order.sort_custom(func(a: int, b: int) -> bool: return float(points[a].y) < float(points[b].y))
+	var out: Array = points.duplicate()
+	var last := -1e9
+	for i in order:
+		var at: Vector2 = out[i]
+		if at.y - last < STACK_GAP:
+			at.y = last + STACK_GAP
+			out[i] = at
+		last = at.y
+	return out

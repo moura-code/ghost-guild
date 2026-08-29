@@ -39,6 +39,7 @@ var playable: Dictionary = {}
 ## director, so freeing the director does not free them -- and a second fight
 ## would otherwise deal a second hand next to the first one, forever.
 var _hud_layer: Control
+var _crosshair: Crosshair
 var _end_turn: Button
 var _banner: TurnBanner
 var _finished: bool = false
@@ -73,7 +74,10 @@ func begin(g: GameRoot, h: HudRoot, p: Player, at: Vector3) -> void:
 	if facing.length_squared() < 0.0001:
 		facing = -p.global_transform.basis.z
 	_stage(at, facing)
-	_face(at)
+	# Face what you are fighting, not the middle of the room. Walking in from a
+	# corner put the enemies off to one side of the screen while the camera
+	# obediently looked at the geometric centre of the floor.
+	_face(_centroid(at))
 
 	# Frozen and pointing at the fight: the cards need the cursor, and a body
 	# that can still walk away mid-fight is a body that will.
@@ -224,6 +228,17 @@ func _stage(at: Vector3, facing: Vector3) -> void:
 		bodies.append(body)
 
 
+## The middle of the group, on the floor. Falls back to the room centre when
+## there is nobody to look at.
+func _centroid(fallback: Vector3) -> Vector3:
+	if bodies.is_empty():
+		return fallback
+	var sum := Vector3.ZERO
+	for b in bodies:
+		sum += b.global_position
+	return sum / float(bodies.size())
+
+
 ## Turns the player to face the group. Tweened rather than snapped: the head
 ## whipping round is the difference between "a fight started" and "the screen
 ## changed".
@@ -262,17 +277,37 @@ func _build_hud() -> void:
 	_hud_layer.add_child(hand)
 
 	vitals = HeroPanel.new()
-	vitals.position = Vector2(8.0, hud.ui.size.y - HeroPanel.PANEL_SIZE.y - 8.0)
+	# Sized and anchored rather than positioned: left to itself the panel
+	# stretches to whatever the parent gives it, and its bars and orbs are
+	# drawn against a size it never agreed to.
+	vitals.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	vitals.grow_horizontal = Control.GROW_DIRECTION_END
+	vitals.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	vitals.size = HeroPanel.PANEL_SIZE
+	vitals.offset_left = 10.0
+	vitals.offset_top = -HeroPanel.PANEL_SIZE.y - 10.0
+	vitals.offset_right = 10.0 + HeroPanel.PANEL_SIZE.x
+	vitals.offset_bottom = -10.0
 	_hud_layer.add_child(vitals)
 
 	_end_turn = Button.new()
 	_end_turn.text = game.text("ui.fight.end_turn")
-	_end_turn.position = Vector2(hud.ui.size.x - 70.0, hud.ui.size.y - 30.0)
+	# Anchored, not positioned by arithmetic: the button auto-sizes to its
+	# text, and the arithmetic version put its left edge 70px from the right
+	# of the screen and let the rest run off the side.
+	_end_turn.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_end_turn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_end_turn.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_end_turn.offset_right = -10.0
+	_end_turn.offset_bottom = -10.0
 	_end_turn.pressed.connect(end_turn)
 	_hud_layer.add_child(_end_turn)
 
 	_banner = TurnBanner.new()
 	_hud_layer.add_child(_banner)
+
+	_crosshair = Crosshair.new()
+	_hud_layer.add_child(_crosshair)
 
 	# One tag per enemy, above the hand so a card never covers the number you
 	# are deciding against.
@@ -324,14 +359,22 @@ func _after_action() -> void:
 func _process(_delta: float) -> void:
 	if _finished or hud == null:
 		return
+	# The reticle reports whether the click would land on an enemy, which is
+	# the only aiming this game has.
+	if _crosshair != null:
+		_crosshair.set_target(hand != null and hand.selected >= 0 and target_under(hud.ui.get_global_mouse_position() * _hud_scale()) >= 0)
 	var anchor := anchors()
+	var points: Array = []
 	for t in tags:
-		var tag: EnemyTag = t
+		points.append(anchor.get((t as EnemyTag).index, Vector2.ZERO))
+	points = EnemyTag.spread(points)
+	for i in tags.size():
+		var tag: EnemyTag = tags[i]
 		var body := body_of(tag.index)
 		if body == null or body.dying:
 			tag.visible = false
 			continue
-		tag.place(anchor.get(tag.index, Vector2.ZERO))
+		tag.place(points[i])
 
 
 func _on_shake(strength: float) -> void:
@@ -372,3 +415,11 @@ func _exit_tree() -> void:
 	if _hud_layer != null and is_instance_valid(_hud_layer):
 		_hud_layer.queue_free()
 		_hud_layer = null
+
+
+## The HUD is a scaled space over the real viewport, so a mouse position read
+## in HUD coordinates has to be scaled back up before a camera ray can use it.
+func _hud_scale() -> float:
+	if player == null or player.camera == null or not player.camera.is_inside_tree():
+		return 1.0
+	return HudRoot.scale_for(player.camera.get_viewport().get_visible_rect().size)

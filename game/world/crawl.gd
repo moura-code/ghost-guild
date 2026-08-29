@@ -22,6 +22,7 @@ var layout: FloorLayout
 var player: Player
 var hud: HudRoot
 var prompts: Prompts
+var crosshair: Crosshair
 var director: FightDirector
 var guild: GuildRoom
 var choice: ChoiceScreen
@@ -87,6 +88,9 @@ func _build_hud() -> void:
 	prompts = Prompts.new()
 	hud.ui.add_child(prompts)
 
+	crosshair = Crosshair.new()
+	hud.ui.add_child(crosshair)
+
 	# Built once and toggled, not rebuilt per phase: a shop refreshes on every
 	# purchase, and rebuilding the panel each time would throw away the scroll
 	# position along with the node.
@@ -141,8 +145,15 @@ func open(screen: Control) -> void:
 		player.frozen = screen != null
 		player.look_enabled = screen == null
 	hud.set_pointer(screen != null)
+	if crosshair != null:
+		# No reticle while a panel owns the cursor: you are pointing at a
+		# button, not at the room.
+		crosshair.visible = screen == null
 	if screen != null:
 		prompts.clear_prompt()
+		# A floor announcement still fading when a panel opens ends up printed
+		# across it.
+		prompts.hush()
 
 
 func close_panel() -> void:
@@ -460,6 +471,24 @@ func _place_player(at: Vector3) -> void:
 ## is always somewhere you can stand.
 func _stand_in(room_index: int) -> Vector3:
 	return Kit.cell_to_world(layout.room_center(room_index))
+
+
+## The reticle opens on anything you could act on: a station in the guild, a
+## room you have not cleared, the stairs once they are open.
+func _process(_delta: float) -> void:
+	if crosshair == null or not crosshair.visible:
+		return
+	crosshair.set_target(focused != null or _looking_at_a_door())
+
+
+func _looking_at_a_door() -> bool:
+	if player == null or player.camera == null or place != Place.DUNGEON:
+		return false
+	var space := get_world_3d().direct_space_state
+	var from := player.camera.global_position
+	var query := PhysicsRayQueryParameters3D.create(from, from - player.camera.global_transform.basis.z * 6.0)
+	query.collision_mask = EncounterMarker.LAYER_INTERACTABLE
+	return not space.intersect_ray(query).is_empty()
 
 
 func _unhandled_input(event: InputEvent) -> void:

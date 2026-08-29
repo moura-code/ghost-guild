@@ -79,6 +79,13 @@ func _pick_a_fight(game: GameRoot, crawl: Crawl) -> void:
 	run.phase = "node"
 	crawl.build_floor()
 	await process_frame
+	# Stand where the player would be standing: they walk IN, so they are just
+	# inside the room's edge, not across the floor in the entry room. Staging
+	# from the wrong place is how a shot lies about the composition.
+	var room := crawl.layout.room_of_node(0)
+	var centre := Kit.cell_to_world(crawl.layout.room_center(room))
+	crawl.player.place_at(centre - Vector3(0.0, 0.0, Kit.CELL * 1.4), 0.0)
+	await process_frame
 	(crawl.markers[0] as EncounterMarker).report(crawl.player)
 	await process_frame
 

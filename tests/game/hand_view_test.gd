@@ -28,7 +28,7 @@ func test_one_card_sits_in_the_middle_and_does_not_tilt() -> void:
 	assert_array(seats).has_size(1)
 	var seat: Dictionary = seats[0]
 	assert_float(float(seat["angle"])).is_equal(0.0)
-	var centre_x := float(seat["position"].x) + CardView.CARD_SIZE.x * 0.5
+	var centre_x := float(seat["position"].x) + HandView.card_size().x * 0.5
 	assert_float(centre_x).is_equal_approx(_area().position.x + _area().size.x * 0.5, 0.5)
 
 
@@ -61,7 +61,7 @@ func test_cards_never_overlap_closer_than_their_text_allows() -> void:
 	var seats := HandView.fan(10, _area())
 	for i in range(1, seats.size()):
 		var step: float = float(seats[i]["position"].x) - float(seats[i - 1]["position"].x)
-		assert_float(step).is_greater_equal(CardView.text_safe_step() - 0.01)
+		assert_float(step).is_greater_equal(CardView.text_safe_step() * HandView.CARD_SCALE - 0.01)
 
 
 func test_the_hand_stays_inside_the_area_it_was_given() -> void:
@@ -69,7 +69,7 @@ func test_the_hand_stays_inside_the_area_it_was_given() -> void:
 	for raw in seats:
 		var seat: Dictionary = raw
 		assert_float(float(seat["position"].x)).is_greater_equal(_area().position.x - 0.01)
-		assert_float(float(seat["position"].y) + CardView.CARD_SIZE.y).is_less_equal(_area().end.y + 0.01)
+		assert_float(float(seat["position"].y) + HandView.card_size().y).is_less_equal(_area().end.y + 0.01)
 
 
 func test_an_empty_hand_seats_nobody() -> void:
@@ -116,3 +116,34 @@ func test_selecting_one_card_deselects_the_others() -> void:
 	assert_bool(h.views[0].selected).is_false()
 	h.select(-1)
 	assert_bool(h.views[1].selected).is_false()
+
+
+func test_the_hand_leaves_the_room_visible() -> void:
+	# Cards were authored for a screen they owned. Over a live 3D room a
+	# full-size five-card hand hides the enemies completely -- the fight
+	# covering up the fight.
+	var seats := HandView.fan(5, Rect2(0.0, 0.0, 640.0, 360.0))
+	var top := 1e9
+	for raw in seats:
+		top = minf(top, float((raw as Dictionary)["position"].y))
+	assert_float(top).override_failure_message("the hand reaches too far up the screen").is_greater(360.0 * 0.5)
+	assert_float(HandView.card_size().y).is_less(CardView.CARD_SIZE.y)
+
+
+func test_hovering_a_card_lifts_it_and_drops_the_last_one() -> void:
+	var h := _hand()
+	h.show_hand(_fight(["strike", "brace", "strike"]), {})
+	h.hover(1)
+	assert_int(h.hovered).is_equal(1)
+	h.hover(2)
+	assert_int(h.hovered).is_equal(2)
+	h.hover(-1)
+	assert_int(h.hovered).is_equal(-1)
+
+
+func test_a_cleared_hand_forgets_what_was_hovered() -> void:
+	var h := _hand()
+	h.show_hand(_fight(["strike"]), {})
+	h.hover(0)
+	h.clear()
+	assert_int(h.hovered).is_equal(-1)

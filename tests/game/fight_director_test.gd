@@ -202,3 +202,19 @@ func test_a_finished_fight_takes_its_interface_off_the_screen() -> void:
 			left += 1
 	assert_int(left).is_equal(before - 1)
 	add_child(d)
+
+
+func test_you_end_up_facing_what_you_are_fighting() -> void:
+	# Walking in from a corner used to leave the enemies off to one side while
+	# the camera obediently looked at the geometric centre of the floor.
+	var g := _game()
+	var d := _director(g, ["bone_rat", "shambler"])
+	# The turn is tweened, not snapped -- the head whipping round is the
+	# difference between "a fight started" and "the screen changed".
+	await await_millis(int(FightDirector.TURN_SECONDS * 1000.0) + 250)
+	var forward := -d.player.global_transform.basis.z
+	for b in d.bodies:
+		var to_body: Vector3 = (b as EnemyBody).global_position - d.player.global_position
+		to_body.y = 0.0
+		assert_float(forward.normalized().dot(to_body.normalized())).override_failure_message(
+			"enemy %d is not in front of the player" % (b as EnemyBody).index).is_greater(0.35)

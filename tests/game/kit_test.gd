@@ -55,3 +55,14 @@ func test_cell_and_world_are_the_same_place_read_two_ways() -> void:
 func test_a_point_inside_a_cell_reads_as_that_cell() -> void:
 	var middle := Kit.cell_to_world(Vector2i(5, 6)) + Vector3(Kit.CELL * 0.4, 1.7, -Kit.CELL * 0.4)
 	assert_vector(Kit.world_to_cell(middle)).is_equal(Vector2i(5, 6))
+
+
+func test_the_stone_is_grey_so_the_light_can_be_the_colour() -> void:
+	# The CC0 sets are warm sandstone, and under warm torchlight that made every
+	# pixel in the game a value of the same orange. Tinting the albedo cool-grey
+	# pulls the colour out of the texture so it comes from the lighting: warm
+	# where the torches reach, cold in the fill, contrast between them.
+	for m in [Kit.wall_material(), Kit.floor_material(), Kit.ceiling_material()]:
+		assert_float(m.albedo_color.b).override_failure_message(
+			"the stone tint is warm, so the room can only ever be orange").is_greater_equal(m.albedo_color.r)
+		assert_float(m.albedo_color.r).is_less(1.0)

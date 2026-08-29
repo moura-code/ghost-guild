@@ -21,20 +21,34 @@ const WALL_H := 3.2
 ## is (spec §7).
 const TEXEL := 2.0
 const MAT_ROOT := "res://assets/materials/"
+## The CC0 stone sets are warm sandstone. Under warm torchlight that made
+## every pixel in the game some value of the same orange -- no colour contrast
+## anywhere, which is exactly what "muy sombrio y poco atractivo" describes.
+##
+## Tinting the albedo cool-grey pulls the colour OUT of the texture so it comes
+## from the lighting instead: warm where the torches reach, cold blue in the
+## fill, real contrast between them. This is the cheapest, biggest single
+## change to how the game looks, and it is a colourist's move, not a hack --
+## a stone wall is grey, and it looks orange because it is lit by fire.
+## Knocks the red down hard and the blue barely at all, so the stone cools
+## without going dark. A tint that lowers all three channels just dims the
+## room, which is the opposite of the problem being solved.
+const STONE_TINT := Color(0.74, 0.84, 0.96)
+const FLOOR_TINT := Color(0.78, 0.85, 0.95)
 
 static var _cache: Dictionary = {}
 
 
 static func floor_material() -> StandardMaterial3D:
-	return _material("floor", "pavingstones119", Vector2(CELL, CELL))
+	return _material("floor", "pavingstones119", Vector2(CELL, CELL), FLOOR_TINT)
 
 
 static func wall_material() -> StandardMaterial3D:
-	return _material("wall", "bricks100", Vector2(CELL, WALL_H))
+	return _material("wall", "bricks100", Vector2(CELL, WALL_H), STONE_TINT)
 
 
 static func ceiling_material() -> StandardMaterial3D:
-	return _material("ceiling", "rock051", Vector2(CELL, CELL))
+	return _material("ceiling", "rock051", Vector2(CELL, CELL), STONE_TINT)
 
 
 static func floor_mesh() -> PlaneMesh:
@@ -71,10 +85,11 @@ static func world_to_cell(at: Vector3) -> Vector2i:
 ## uv scale can be solved for TEXEL metres per repeat on both axes. Godot maps
 ## a PlaneMesh and each BoxMesh face across 0..1, so the span is exactly the
 ## face's dimensions.
-static func _material(key: String, folder: String, span: Vector2) -> StandardMaterial3D:
+static func _material(key: String, folder: String, span: Vector2, tint: Color = Color.WHITE) -> StandardMaterial3D:
 	if _cache.has(key):
 		return _cache[key]
 	var m := StandardMaterial3D.new()
+	m.albedo_color = tint
 	m.albedo_texture = load(MAT_ROOT + folder + "/color.jpg")
 	m.normal_enabled = true
 	m.normal_texture = load(MAT_ROOT + folder + "/normal.jpg")
