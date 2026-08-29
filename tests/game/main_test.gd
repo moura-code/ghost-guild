@@ -90,10 +90,13 @@ func test_the_theme_is_applied_at_the_root() -> void:
 	assert_int(m.theme.default_font_size).is_equal(UiTheme.FONT_BODY)
 
 
-func test_the_main_scene_loads_and_is_the_project_entry_point() -> void:
+## The 3D pivot moved the entry point to res://game/crawl.tscn. This scene
+## still loads and this screen still works -- it is deleted when the 3D screen
+## that replaces it exists, not before -- but it is no longer what boots.
+func test_the_main_scene_still_loads_even_though_it_no_longer_boots() -> void:
 	var packed: PackedScene = load("res://game/main.tscn")
 	assert_object(packed).is_not_null()
-	assert_str(ProjectSettings.get_setting("application/run/main_scene", "")).is_equal("res://game/main.tscn")
+	assert_str(ProjectSettings.get_setting("application/run/main_scene", "")).is_not_equal("res://game/main.tscn")
 
 
 func test_it_does_not_seize_quit_handling_unless_it_owns_the_autoload() -> void:

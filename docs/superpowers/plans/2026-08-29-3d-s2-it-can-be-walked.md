@@ -246,6 +246,16 @@ cmd //c "tools\\test.cmd tests"
 
 Expected: exit 0, **619 tests** (614 + 5). If a 2D UI suite fails because it depended on a 640×360 viewport, that is a real finding: record which suite and why in this plan before fixing it, and prefer fixing the test over restoring the viewport — the viewport is gone on purpose.
 
+**What happened:** 619 tests, **one** failure — `tests/game/main_test.gd:96`,
+`test_the_main_scene_loads_and_is_the_project_entry_point`, which asserted
+`application/run/main_scene == "res://game/main.tscn"`. Nothing to do with the
+viewport: it is the one test that encoded *which screen boots*, and the pivot
+changed that answer. Renamed to
+`test_the_main_scene_still_loads_even_though_it_no_longer_boots` and inverted
+to `is_not_equal`, keeping the `load()` assertion — the 2D screen still has to
+build until the 3D screen that replaces it exists. Add
+`tests/game/main_test.gd` to the Step 7 commit.
+
 - [ ] **Step 7: Commit**
 
 ```bash
