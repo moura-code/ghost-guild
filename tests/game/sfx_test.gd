@@ -92,13 +92,13 @@ func test_the_bridge_owns_one_pool_of_voices() -> void:
 
 
 func test_the_animator_is_silent_without_a_sound_bank() -> void:
-	# Screens are built without a GameRoot in tests and in the screenshot
-	# tool. A missing Sfx has to be silence, not a crash mid-fight.
-	var a: FightAnimator = auto_free(FightAnimator.new())
+	# Built without a GameRoot in tests and in the screenshot tool. A missing
+	# Sfx has to be silence, not a crash mid-fight.
+	var a: FightAnimator3D = auto_free(FightAnimator3D.new())
 	add_child(a)
-	a.bind(TestFixtures.content())
+	a.bind(TestFixtures.content(), null)
 	assert_object(a.sfx).is_null()
-	a.play([{"type": "damage", "target": "enemy", "index": 0, "amount": 12}], {})
+	a.play([{"type": "damage", "target": "enemy", "index": 0, "amount": 12}])
 	await await_idle_frame()
 	assert_bool(is_instance_valid(a)).is_true()
 
@@ -106,7 +106,7 @@ func test_the_animator_is_silent_without_a_sound_bank() -> void:
 func test_a_heavy_blow_and_a_light_one_are_different_sounds() -> void:
 	# The ear and the eye use the same threshold, so the blows that shake the
 	# screen are the blows that sound heavy.
-	assert_int(Sfx.BIG_HIT).is_equal(FightAnimator.BIG_HIT)
+	assert_int(Sfx.BIG_HIT).is_equal(FightAnimator3D.BIG_HIT)
 
 
 func test_every_button_in_a_screen_gets_a_voice() -> void:

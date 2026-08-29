@@ -80,7 +80,7 @@ Net: about **1,900 lines deleted**, not 7,000, and roughly 24 test suites become
 
 **Tests:** scale at 1280×720 is 2.0 and at 1920×1080 is 3.0; a window narrower than 640 does not scale below 1.0; `ui` is sized so its bottom-right lands on the window's; showing a panel frees the previous one and leaves exactly one child; `set_pointer(true)` releases the mouse and `false` captures it.
 
-- [ ] Write `tests/game/hud_root_test.gd` · run it, watch it fail · write `game/hud/hud_root.gd` · run it green · commit.
+- [x] Write `tests/game/hud_root_test.gd` · run it, watch it fail · write `game/hud/hud_root.gd` · run it green · commit.
 
 ### Task 2: `HandView` — the cards, over the room
 
@@ -98,7 +98,7 @@ Net: about **1,900 lines deleted**, not 7,000, and roughly 24 test suites become
 
 **Tests:** a five-card hand makes five views bound to the five cards; the fan is symmetric about the centre and its outer cards are rotated outward; a one-card hand is centred and unrotated; unplayable cards are marked; pressing a view re-emits with its hand index; selecting one deselects the rest; showing a shorter hand frees the extra views.
 
-- [ ] Write the test · fail · implement · green · commit.
+- [x] Write the test · fail · implement · green · commit.
 
 ### Task 3: `EnemyBody` — the thing in the room
 
@@ -116,7 +116,7 @@ Net: about **1,900 lines deleted**, not 7,000, and roughly 24 test suites become
 
 **Tests:** a body is created per enemy with its index; the stand-in's height scales with the enemy's hp so two enemy kinds differ; the head point is above the origin and inside the body; recoil moves it and it returns; `die()` sets `dying` and it stops being clickable; it sits on the enemy layer with a collision shape a camera ray can hit.
 
-- [ ] Write the test · fail · implement · green · commit.
+- [x] Write the test · fail · implement · green · commit.
 
 ### Task 4: `FightAnimator3D` — the event stream, in the room
 
@@ -133,7 +133,7 @@ Net: about **1,900 lines deleted**, not 7,000, and roughly 24 test suites become
 
 **Tests:** each event type produces the number, colour and beat the 2D animator produced (the existing `fight_animator_test.gd` assertions are the specification and are ported); a fully-absorbed hit still spawns a "blocked" beat; shake scales with damage and clamps at `SHAKE_MAX`; a big hit or a death adds hit-stop; `hit_landed` fires per blow, not per turn; an event whose anchor is missing is counted but spawns nothing; `finished` fires once, after the last beat.
 
-- [ ] Write the test · fail · implement · green · commit.
+- [x] Write the test · fail · implement · green · commit.
 
 ### Task 5: `FightDirector` — staging and the turn
 
@@ -151,7 +151,7 @@ Net: about **1,900 lines deleted**, not 7,000, and roughly 24 test suites become
 
 **Tests:** three enemies get three bodies on an arc, all in front of the player and none inside another; `stage_points` is symmetric and its spacing does not depend on `at`; the player is frozen and the mouse released on `begin`, and both are restored on the last enemy dying; playing a card forwards exactly one action through `run_action` and no other write reaches the run; ending the turn forwards `end_turn`; a card played with one living enemy needs no target; `fight_finished` fires once when the fight ends; a dead body stops answering `target_under`.
 
-- [ ] Write the test · fail · implement · green · commit.
+- [x] Write the test · fail · implement · green · commit.
 
 ### Task 6: Wire it into `Crawl`
 
@@ -161,7 +161,7 @@ Net: about **1,900 lines deleted**, not 7,000, and roughly 24 test suites become
 
 **Tests:** walking into a fight room stages bodies and shows the hand instead of auto-resolving; winning returns control to the player and resolves the marker; the run's phase moves `node → fight → …` through the engine only; the floor banner announces on `floor_built`.
 
-- [ ] Write the tests · fail · implement · green · **full suite** · commit.
+- [x] Write the tests · fail · implement · green · **full suite** · commit.
 
 ---
 
@@ -175,7 +175,7 @@ Net: about **1,900 lines deleted**, not 7,000, and roughly 24 test suites become
 
 **Tests:** every phase the run can be in has a host and none falls through to the autopilot; a reward is taken through `run_action` and the panel closes; the descent draft shows on run start instead of being auto-picked; the stairs interactable only opens at phase `exit`; choosing `push` builds the next floor and the fog is denser; `retreat` and `watch` end the run.
 
-- [ ] Write the tests · fail · implement · green · **full suite** · commit.
+- [x] Write the tests · fail · implement · green · **full suite** · commit.
 
 ---
 
@@ -193,7 +193,7 @@ Net: about **1,900 lines deleted**, not 7,000, and roughly 24 test suites become
 
 **Tests:** focus fires on approach and blur on leaving; pressing E only fires while focused; a ghost figure carries its ghost's id and stands on the floor; it is not solid — you walk through your dead, you do not bump into them.
 
-- [ ] Write the tests · fail · implement · green · commit.
+- [x] Write the tests · fail · implement · green · commit.
 
 ### Task 9: `GuildRoom` and `WellView`
 
@@ -203,7 +203,7 @@ Net: about **1,900 lines deleted**, not 7,000, and roughly 24 test suites become
 
 **Tests:** the room is enclosed and every station stands on walkable floor; the four stations have distinct ids; the well is a hole you can look down and not fall through; the tower has one disc per floor of the biome and one figure per ghost, on the floor its record names; a ghost on a floor beyond the tower's depth is clamped rather than dropped; the guild grade is brighter and less foggy than floor 1's.
 
-- [ ] Write the tests · fail · implement · green · commit.
+- [x] Write the tests · fail · implement · green · commit.
 
 ### Task 10: `Crawl` becomes two places
 
@@ -213,7 +213,7 @@ Net: about **1,900 lines deleted**, not 7,000, and roughly 24 test suites become
 
 **Tests:** booting with no run builds the guild and not a dungeon; using the ladder starts a run and builds floor 1; finishing a run returns you to the guild; each station opens its own panel and closes it on Escape; the offline summary shows once and only when there is something to show; your ghosts are standing in the well.
 
-- [ ] Write the tests · fail · implement · green · **full suite** · commit.
+- [x] Write the tests · fail · implement · green · **full suite** · commit.
 
 ---
 
@@ -227,7 +227,7 @@ Net: about **1,900 lines deleted**, not 7,000, and roughly 24 test suites become
 
 **Tests:** a run that ends in death raises a ghost figure at the player's position before the panel shows; a retreat shows no epitaph and no figure — nobody was left behind; dismissing returns to the guild; the new ghost is in the well's tower on the floor it died on.
 
-- [ ] Write the tests · fail · implement · green · commit.
+- [x] Write the tests · fail · implement · green · commit.
 
 ---
 
@@ -241,7 +241,7 @@ Net: about **1,900 lines deleted**, not 7,000, and roughly 24 test suites become
 
 **Steps:** delete the world/navigation files and suites · run the full suite · boot the game and walk guild → dungeon → fight → death → guild · take three shots (guild, corridor, fight) · record the stage 3–6 results in this plan · commit.
 
-- [ ] Delete · full suite green · boot and walk it · shots · record · commit.
+- [x] Delete · full suite green · boot and walk it · shots · record · commit.
 
 ## Self-review
 
@@ -250,3 +250,111 @@ Net: about **1,900 lines deleted**, not 7,000, and roughly 24 test suites become
 **Placeholder scan.** Every task names its files, its produced interfaces, its decisions and its tests. Implementation bodies are not transcribed: the author is the executor, holds the full context, and the project owner has asked for inline execution over hand-off. This is a deliberate departure from the skill's default and is the only one.
 
 **Type consistency.** `HudRoot.ui` is the parent every panel and `HandView` attaches to. `FightDirector` consumes `HudRoot`, `Player` and `EnemyBody`, and hands `FightAnimator3D` a screen-space anchor supplier — the same `{"hero": Vector2, 0: Vector2, …}` shape `fight_animator.gd` already documents, so the ported assertions still mean what they meant. `EnemyBody.LAYER_ENEMY = 8` and `Interactable.LAYER_INTERACTABLE = 4` are bit values on layers 4 and 3, matching the constant already in `encounter_marker.gd`. `Ghost` is the existing `core/ghosts/ghost.gd`; `GhostFigure.ghost_id` matches its `id`.
+
+---
+
+## Stages 3–6 executed
+
+**2026-08-29, branch `3d-pivot`.** All twelve tasks done. The pivot is complete:
+you boot into the guild, walk to the well, descend, walk a generated crypt in
+first person, fight with cards in the room you are standing in, take the
+rewards, decide at the stairs, and when you die a ghost rises where you fell
+and is standing in your well when you get home.
+
+### The numbers
+
+| | |
+|---|---|
+| Suite | **675 test cases, 75 suites, 0 failures, exit 0** |
+| Peak before deletion | 780 across 82 suites |
+| Deleted | 17 source files + 10 suites — the 2D world and the 2D navigation |
+| `game/` | 7,486 → ~5,900 lines, reorganised into `world/`, `fight/`, `hud/` |
+| Simulation | `run_demo`, `campaign_demo`, `balance_sim` **byte-identical to `main`**, same exit codes |
+| Shots | `docs/shots/2026-08-29-stage2-corridor.png`, `-stage3-fight.png`, `-stage5-guild.png` |
+
+`core/` and `data/` were not touched. Not one line, across four stages.
+
+### What the shots show
+
+- **Corridor** — stone at one texel density on floor, wall and ceiling; torch
+  pools with dark between them; fog closing the far end. Unchanged from stage 2
+  and still the answer to "does this read as a commercial game".
+- **Fight** — three enemies at three visibly different sizes, standing in the
+  corridor, lit by the torch, casting real shadows, at human scale. The
+  arrangement is `FightDirector.stage_points`, not a mock-up. The creatures are
+  visibly capsule-and-sphere placeholders, which is the honest state of the one
+  unsolved problem.
+- **Guild** — warm room, cold well. A stone rim, a shaft with real walls, rings
+  going down and two of your dead glowing on one of them.
+
+### The ruling that reshaped the work
+
+Spec §3.2 said every screen under `game/screens/` and `game/run/` was deleted.
+That was written before implementation and it was wrong. **The spec's own
+argument for keeping cards in 2D is an argument about text and choice, not
+about cards.** A shop list, a rest menu, an exit decision and a ladder of
+twenty ghosts are the same object as a card: things you read and choose from.
+
+So the line moved: the 2D **world** and the 2D **navigation** were deleted, and
+the 2D **panels and furniture** were kept and re-hosted in `HudRoot`. Rewriting
+eight working, tested panels to say the same words in a different file is not
+progress. The spec has been corrected in place.
+
+Two files proved the point by breaking the build when deleted: `StoneBox` is
+the StyleBox every panel's theme is made of, and `Prop` draws the candles and
+skulls inside four of them. Both are furniture, not world. Restored.
+
+### What went wrong
+
+1. **`Input.set_mouse_mode(CAPTURED)` does not stick headless** — there is no
+   window to capture a cursor into, so it reads back `VISIBLE` whatever it was
+   told. Same class as the stage 2 MultiMesh finding. `HudRoot` now records
+   `pointer_free` and the test asserts the intent.
+2. **Combat events are not on `run.events`.** `RunEngine.apply` returns them to
+   the caller but only appends *run-level* events to the run's log; a played
+   card is recorded on `run.fight.events`. Two director tests asserted the wrong
+   log and passed for the wrong reason until they didn't.
+3. **`elite` and `boss` are fights too.** A test that filtered node kinds by
+   `== "fight"` walked into an elite room and reported "phase fight had no
+   host". The implementation was right — it checks the phase the engine landed
+   in — and the test was rewritten to do the same, so it cannot go stale when a
+   fourth fight kind is added.
+4. **The well was a solid pillar.** `add_walls` fills any void cell ringed by
+   floor, so punching the hole before the wall pass produced a stone column in
+   the middle of the guild. Found by looking at the render, not by a test.
+   Punched after the pass now, with a `WellHead` rim for collision (the
+   builder's ground slab runs under the whole room, so without a rim you walk
+   out over the shaft on invisible floor) and a ceiling patch (ceiling tiles
+   follow floor cells, so the well left a skylight in a crypt).
+5. **The well showed the void.** With no shaft geometry the hole rendered the
+   environment's background colour. Added a `CULL_FRONT` box at the kit's texel
+   density.
+6. **The tower was life-size.** Twenty floors down a three-metre shaft with
+   1.72 m ghosts fills the well and kills the depth. The tower is a diorama now
+   (`FIGURE_SCALE`).
+7. **Six tests encoded the scaffolding they were written against.** Stage 2's
+   crawl tests assumed walking into a room resolved it and the stairs pushed you
+   down; stage 4 made both false on purpose. Rewritten, not weakened.
+
+### What is not true yet
+
+- **The enemies are placeholders.** Capsule-and-sphere stand-ins sized off hp.
+  Everything around them is finished and model-agnostic — staging, targeting,
+  the animator, the death fall — and swapping in a creature is
+  `EnemyBody._build_mesh` plus an `AnimationPlayer`. This is the same open
+  question stage 0 raised and it is the only one left. See `ART_BRIEF.md`.
+- **Ghosts are placeholders too**, on the same terms.
+- **The guild needs an art-direction pass.** The stations are lit boxes and the
+  well head is a plain rim. It is structurally right and visually unfinished,
+  and it is the shot the store page opens on, so it will need real attention.
+- **Mouselook, feel and pacing are unverified.** No test can move a mouse. Card
+  timing, turn rhythm, walk speed, mouse sensitivity and whether the fight
+  freeze reads as intentional are all open until somebody plays it.
+- **3D positional audio was deliberately deferred** (spec §8 mentions it under
+  `theme/sfx.gd`). It needs the source positions the staging produces, and
+  adding it before the staging existed would have been guessing. `Sfx` is wired
+  and 2D.
+- **No performance number on anything but an RTX 5080.**
+- `tools/spike_crypt.gd` and `assets/_spike/` remain: `crawl_shot.gd` supersedes
+  the spike for environments, but the spike's `_actor` path is still the only
+  rigged-model probe and the enemy question is still open.

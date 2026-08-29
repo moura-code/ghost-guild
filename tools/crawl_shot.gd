@@ -80,6 +80,9 @@ func _init() -> void:
 	lamp.omni_attenuation = 1.6
 	cam.add_child(lamp)
 
+	if args.has("fight"):
+		_stand_enemies(world, cam)
+
 	print("crawl_shot: floors=%d walls=%d torches=%d boxes=%d" % [
 		counts["floors"], counts["walls"], counts["torches"], counts["boxes"]])
 
@@ -130,3 +133,20 @@ func _guild_shot(_layout: FloorLayout) -> Array:
 	var well := Kit.cell_to_world(GuildRoom.WELL_CELL)
 	var from := well + Vector3(0.0, 2.9, 1.75)
 	return [from, well + Vector3(0.0, -5.5, 0.0)]
+
+
+## Three enemies staged the way FightDirector stages them, so the fight shot
+## is the real arrangement and not a guess at it.
+func _stand_enemies(world: Node3D, cam: Camera3D) -> void:
+	var content := Content.load_from("res://data")
+	var facing := -cam.global_transform.basis.z
+	facing.y = 0.0
+	var at := cam.global_position + facing.normalized() * (Kit.CELL * 1.6)
+	at.y = 0.0
+	var points := FightDirector.stage_points(3, at, facing)
+	var ids := ["bone_rat", "hollow_knight", "shambler"]
+	for i in 3:
+		var body := EnemyBody.create(content.enemies[ids[i]], i)
+		world.add_child(body)
+		body.global_position = points[i]
+		body.look_at_from_position(points[i], Vector3(cam.global_position.x, points[i].y, cam.global_position.z), Vector3.UP)

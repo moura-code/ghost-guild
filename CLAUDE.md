@@ -59,6 +59,16 @@ the roguelite, dead heroes become idle-farming ghosts.
   a no-op there and reads back identity -- so geometry maths live in pure functions
   (`DungeonBuilder.instance_transforms`) that a test can actually read. Physics and
   `Input.action_press` DO work headless, so walking and collision are testable.
+- `game/` is the presentation layer and is 3D: `game/world/` (`crawl.gd` is the
+  scene root and the ONLY file that holds a `GameRoot`; kit, dungeon builder,
+  player, markers, interactables, guild, well, ghost figures), `game/fight/`
+  (enemy bodies, staging, the event-driven animator) and `game/hud/` (the 2D
+  layer over the live 3D room: cards, panels, prompts). `game/theme/` and
+  `game/widgets/` are kept 2D furniture.
+- **Nothing under `game/` writes to `RunState`.** The one channel from the world
+  to the simulation is `GameRoot.run_action` -> `RunEngine.apply`.
+- Panels stay 2D over the 3D world. A card -- or a shop list, or a ladder of
+  twenty ghosts -- rendered in perspective is one you cannot read.
 - `core/run/` is the roguelite layer (Hero, RunState + RunEngine, FloorGenerator,
   Rewards, RunProjection, RunAutopilot); `core/ghosts/` (Ghost, Strength, Ladder,
   YieldSimulator), `core/economy/` (Upgrades, Production, Seance, BalanceSim),

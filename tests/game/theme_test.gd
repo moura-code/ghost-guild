@@ -81,23 +81,7 @@ func test_hovering_a_button_lights_it_like_a_lantern() -> void:
 	assert_float(Palette.luma(hover.fill)).is_greater(Palette.luma(normal.fill))
 
 
-## The whole frame is snapped to the palette (pixel-art pivot, 2026-08-24).
-## Asserted as "the shader is loaded and running", not by reading pixels:
-## if it fails to load the game still plays, and that failure has to surface
-## somewhere other than by eye.
-func test_the_palette_snap_covers_the_whole_frame() -> void:
-	var layer: PaletteLayer = auto_free(PaletteLayer.new())
-	add_child(layer)
-	await await_idle_frame()
-	assert_bool(layer.is_active()) \
-		.override_failure_message("the palette snap shader did not load") \
-		.is_true()
-	assert_int(layer._rect.mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
-
-
-func test_the_snap_sits_above_everything_the_game_draws() -> void:
-	# Godot draws CanvasLayers in order. A snap below anything snaps a frame
-	# that is missing whatever drew after it.
-	var layer: PaletteLayer = auto_free(PaletteLayer.new())
-	assert_int(layer.layer).is_greater(0)
-	assert_int(layer.layer).is_equal(PaletteLayer.LAYER)
+## The palette snap died with the pixel-art direction (3D pivot, 2026-08-29):
+## a whole-frame colour quantise over a PBR crypt is the one thing that would
+## guarantee it looks cheap. What replaced it is Grade -- one Environment, one
+## ACES tonemap, over everything -- and grade_test covers that.

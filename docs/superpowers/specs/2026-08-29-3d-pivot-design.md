@@ -74,9 +74,24 @@ Every `Control`-based screen goes. Four things are rescued:
 | `game/widgets/card_view.gd` | **Cards stay 2D on a HUD.** A card rendered in perspective is a card you cannot read. This is a deliberate design position, not a shortcut. |
 
 Explicitly deleted: `palette_layer.gd` (whole-frame palette snap), `atmosphere.gd`
-(the 2D shader ground), `props.gd`, `stone_box.gd`, `tower_view.gd`,
-`doorway_view.gd`, `ghost_line.gd`, `ghost_mark.gd`, `screen_layout.gd`,
-`transition.gd`, and every screen under `game/screens/` and `game/run/`.
+(the 2D shader ground) and its three shaders, `doorway_view.gd`,
+`enemy_view.gd`, `nav_bar.gd`, `transition.gd`, `main.gd`/`main.tscn`,
+`run_router.gd`, `floor_map_screen.gd`, `fight_screen.gd` and
+`fight_animator.gd`.
+
+**Corrected on 2026-08-29 during stage 3-6 execution.** This list originally
+also named `props.gd`, `stone_box.gd`, `tower_view.gd`, `ghost_line.gd`,
+`ghost_mark.gd`, `screen_layout.gd` and "every screen under `game/screens/`
+and `game/run/`". That was wrong, and wrong for a reason worth recording: the
+spec's own argument for keeping cards in 2D -- "a card rendered in perspective
+is a card you cannot read" -- is an argument about **text and choice**, not
+about cards. A shop list, a rest menu, an exit decision and a ladder of twenty
+ghosts are the same object. So the line is drawn between the 2D **world** and
+2D **navigation** (deleted -- 3D is the world now, and you walk to places
+instead of switching tabs) and the 2D **panels and furniture** (kept, re-hosted
+in `HudRoot`). `StoneBox` and `Prop` in particular are panel furniture, not
+world widgets, and deleting them broke every kept panel. Net: about 1,900 lines
+deleted rather than 7,486.
 
 The pixel-art direction dies with `PaletteLayer`. `ART_BRIEF.md` is rewritten;
 `ATTRIBUTION.md` is extended, not replaced — the fonts and icons stay credited.
