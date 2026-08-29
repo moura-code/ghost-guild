@@ -276,6 +276,7 @@ func build_floor() -> void:
 	_built_floor = run.floor
 	DungeonBuilder.build(layout, _world)
 	_world.add_child(Grade.world_environment(Grade.depth_of(run.floor, run.biome().last_floor)))
+	_dress()
 	_place_player(_stand_in(layout.entry_room))
 
 	# Your dead are standing on the floor they died on, in the corridors you
@@ -302,6 +303,19 @@ func build_floor() -> void:
 	prompts.announce(game.text("ui.run.floor").replace("{floor}", str(run.floor)))
 	print("crawl: floor %d, %d rooms, %d encounters left" % [run.floor, layout.rooms.size(), markers.size()])
 	floor_built.emit(run.floor)
+
+
+## Props against the walls. A boxy empty room reads as a prototype however
+## good the lighting is.
+func _dress() -> void:
+	var run := game.campaign.run
+	# The entry room's centre is where you spawn, and a stairs room you cannot
+	# cross is a floor you cannot leave.
+	var keep_clear: Array = [layout.room_center(layout.entry_room), layout.room_center(layout.stairs_room)]
+	for entry in Dressing.plan(layout, run.sub_rng("dressing", run.floor), keep_clear):
+		var prop := Dressing.spawn(entry)
+		if prop != null:
+			_world.add_child(prop)
 
 
 ## Your dead stand on the floor they died on. Never in a room that still has

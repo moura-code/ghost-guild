@@ -90,6 +90,17 @@ func build(campaign: Campaign) -> void:
 		if id != WELL:
 			add_child(_plinth(Kit.cell_to_world(cells[id]), String(id)))
 
+	# The guild gets the same dressing the crypt does, from a fixed seed: it is
+	# one room the player comes home to a thousand times, so it should look the
+	# same every time.
+	var keep_clear: Array = [spawn_cell(), WELL_CELL]
+	for id in cells:
+		keep_clear.append(cells[id])
+	for entry in Dressing.plan(layout, Rng.new(20260829), keep_clear):
+		var prop := Dressing.spawn(entry)
+		if prop != null:
+			add_child(prop)
+
 	_build_well_head()
 	_patch_ceiling_over_the_well()
 
