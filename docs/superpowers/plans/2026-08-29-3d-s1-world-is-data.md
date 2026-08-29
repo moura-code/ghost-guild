@@ -8,6 +8,8 @@
 
 **Tech Stack:** Godot 4.7.2, GDScript with static typing, GdUnit4, no engine randomness.
 
+**Status:** executed and complete on 2026-08-29 — 614 tests green, demos byte-identical to `main`.
+
 **Spec:** `docs/superpowers/specs/2026-08-29-3d-pivot-design.md` (§5 for the `core/run/` change, §6 for the layout module, §10 for testing)
 
 ## Global Constraints
@@ -65,7 +67,7 @@ Copied from `CLAUDE.md` and the spec. Every task's requirements implicitly inclu
 - Consumes: nothing from earlier tasks.
 - Produces: `RunState.resolved: Array`, `RunState.is_resolved(index: int) -> bool`, `RunState.resolve(index: int) -> void`, `RunState.next_unresolved() -> int`. Task 2 calls all three methods; Task 3 migrates the `"resolved"` key in `to_dict`'s output.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/core/run/run_routing_test.gd`:
 
@@ -118,12 +120,12 @@ func test_resolved_flags_survive_a_save_round_trip() -> void:
 	assert_int(back.next_unresolved()).is_equal(0)
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run/run_routing_test.gd"`
 Expected: FAIL — `Invalid call. Nonexistent function 'next_unresolved' in base 'RefCounted (RunState)'`.
 
-- [ ] **Step 3: Add the field and its accessors**
+- [x] **Step 3: Add the field and its accessors**
 
 In `core/run/run_state.gd`, add the field next to `node_index`:
 
@@ -169,7 +171,7 @@ func next_unresolved() -> int:
 	return -1
 ```
 
-- [ ] **Step 4: Serialise it**
+- [x] **Step 4: Serialise it**
 
 In `to_dict()`, add the key next to `node_index`. The mid-fight rewind needs no special handling: `to_dict` already rewinds `phase` and `fight_counter` to before the fight, and the node being fought is not marked resolved until the fight finishes, so the flags are already correct at that moment.
 
@@ -186,7 +188,7 @@ In `from_dict()`, read it next to `node_index`:
 		run.resolved.append(bool(flag))
 ```
 
-- [ ] **Step 5: Keep the fixtures in step**
+- [x] **Step 5: Keep the fixtures in step**
 
 In `tests/helpers/fixtures.gd`, `set_nodes` writes `nodes` directly and is used by most run tests. Reset the flags with them:
 
@@ -198,17 +200,17 @@ static func set_nodes(run: RunState, nodes: Array) -> void:
 	run.phase = "node"
 ```
 
-- [ ] **Step 6: Run the test to verify it passes**
+- [x] **Step 6: Run the test to verify it passes**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run/run_routing_test.gd"`
 Expected: PASS, 5 test cases, exit code 0.
 
-- [ ] **Step 7: Run the run and save suites for regressions**
+- [x] **Step 7: Run the run and save suites for regressions**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run"` then `cmd //c "tools\\test.cmd tests/core/save"`
 Expected: PASS both, exit code 0. Nothing should have changed behaviour yet — this task only adds state.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add core/run/run_state.gd core/run/run_state.gd.uid \
@@ -241,7 +243,7 @@ EOF
 - Consumes: `RunState.is_resolved(index)`, `RunState.resolve(index)`, `RunState.next_unresolved()` from Task 1.
 - Produces: the action `{"kind": "enter", "index": int}`. `{"kind": "enter"}` with no index still resolves to `next_unresolved()`. Task 8 adds `RunEngine.layout_for(run)` to the same file.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `tests/core/run/run_routing_test.gd`:
 
@@ -302,12 +304,12 @@ func test_a_resolved_or_missing_room_cannot_be_entered() -> void:
 	assert_str(run.phase).is_equal("node")
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run/run_routing_test.gd"`
 Expected: FAIL — `test_every_unresolved_node_is_on_offer` reports `[{kind:enter}]` against the expected three-entry array.
 
-- [ ] **Step 3: Offer one entry per unresolved node**
+- [x] **Step 3: Offer one entry per unresolved node**
 
 In `core/run/run_engine.gd`, `legal_actions`, replace the `"node"` branch:
 
@@ -325,7 +327,7 @@ with:
 					out.append({"kind": "enter", "index": i})
 ```
 
-- [ ] **Step 4: Route the action to the chosen node**
+- [x] **Step 4: Route the action to the chosen node**
 
 In `apply`, replace the `"node"` branch:
 
@@ -364,7 +366,7 @@ static func _enter_node(run: RunState, index: int) -> void:
 
 The rest of `_enter_node`'s body is unchanged. Its error branch already calls `_advance(run)`, which stays correct.
 
-- [ ] **Step 5: Mark the node done and hold the stairs**
+- [x] **Step 5: Mark the node done and hold the stairs**
 
 Replace `_advance`:
 
@@ -401,12 +403,12 @@ In `_enter_floor`, clear the flags when the new floor's nodes are written:
 	run.phase = "node"
 ```
 
-- [ ] **Step 6: Run the test to verify it passes**
+- [x] **Step 6: Run the test to verify it passes**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run/run_routing_test.gd"`
 Expected: PASS, 10 test cases, exit code 0.
 
-- [ ] **Step 7: Update the one assertion that encoded the old contract**
+- [x] **Step 7: Update the one assertion that encoded the old contract**
 
 `tests/core/run/run_flow_test.gd:15` asserts the single-action shape. Replace:
 
@@ -424,7 +426,7 @@ with:
 	])
 ```
 
-- [ ] **Step 8: Run the full suite**
+- [x] **Step 8: Run the full suite**
 
 Run: `cmd //c "tools\\test.cmd tests"`
 Expected: PASS, exit code 0, **586 test cases** (576 baseline + 5 from Task 1 + 5 from Task 2).
@@ -438,7 +440,7 @@ Four suites fail on the first run — `run_flow_test`, `run_nodes_test`, `run_sa
 
 (in `run_save_test` the receiver is `back`, in `save_game_test` it is `back.run`). Behaviour is unaffected: `save_game_test` still applies a bare `enter` then `rest_heal` after its round trip and lands on the right node, because `resolved` survives serialisation.
 
-- [ ] **Step 9: Verify the demos still agree**
+- [x] **Step 9: Verify the demos still agree**
 
 Run:
 
@@ -449,7 +451,7 @@ Run:
 
 Expected: `run_demo` exits 0; `balance_sim` exits **1**, on the pre-existing `watch_beats_corpse` finding. Capture both outputs and diff them against the same commands run in a `main` worktree — they must be **byte-identical**. These drive `core/` through the bare `enter` action, so this is the real proof that the contract change is backwards compatible. Note that `$?` after a pipe reports the pipe's status, so redirect to a file rather than piping to `tail`.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add core/run/run_engine.gd core/run/run_engine.gd.uid \
@@ -483,7 +485,7 @@ EOF
 - Consumes: the `"resolved"` key written by `RunState.to_dict` in Task 1.
 - Produces: `SaveGame.VERSION == 2`. No later task depends on this.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `tests/core/save/save_game_test.gd`:
 
@@ -515,12 +517,12 @@ func test_migration_does_not_overwrite_flags_it_already_has() -> void:
 	assert_array(migrated["run"]["resolved"]).is_equal([false, true])
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `cmd //c "tools\\test.cmd tests/core/save/save_game_test.gd"`
 Expected: FAIL — the migrated run has no `"resolved"` key.
 
-- [ ] **Step 3: Bump the version and add the migration**
+- [x] **Step 3: Bump the version and add the migration**
 
 In `core/save/save_game.gd`, change the constant:
 
@@ -559,17 +561,17 @@ static func _fill_run_resolved(d: Dictionary) -> void:
 	run["resolved"] = flags
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `cmd //c "tools\\test.cmd tests/core/save/save_game_test.gd"`
 Expected: PASS, exit code 0.
 
-- [ ] **Step 5: Run the save and campaign suites**
+- [x] **Step 5: Run the save and campaign suites**
 
 Run: `cmd //c "tools\\test.cmd tests/core/save"` then `cmd //c "tools\\test.cmd tests/core/campaign_test.gd"`
 Expected: PASS both, exit code 0.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add core/save/save_game.gd core/save/save_game.gd.uid tests/core/save/save_game_test.gd
@@ -597,7 +599,7 @@ EOF
 - Consumes: nothing.
 - Produces: `class_name FloorLayout`, `enum Cell { VOID, FLOOR, WALL }` (VOID is 0 so a fresh grid is void), `FloorLayout.create(width: int, height: int) -> FloorLayout`, and the fields `width`, `height`, `cells: PackedByteArray`, `rooms: Array` (of `{"x": int, "y": int, "w": int, "h": int}`), `entry_room: int`, `stairs_room: int`, `node_rooms: Array`, `torch_anchors: Array` (of `Vector2i`), `ghost_anchors: Array` (of `Vector2i`). Methods: `in_bounds(x, y) -> bool`, `cell(x, y) -> int`, `set_cell(x, y, value) -> void`, `is_walkable(x, y) -> bool`, `room_rect(index) -> Dictionary`, `room_center(index) -> Vector2i`, `room_of_node(node_index) -> int`. Tasks 5–8 fill these fields; Stage 2's builder reads them.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/core/run/floor_layout_test.gd`:
 
@@ -667,12 +669,12 @@ func test_nodes_map_to_rooms() -> void:
 	assert_int(layout.room_of_node(9)).is_equal(-1)
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run/floor_layout_test.gd"`
 Expected: FAIL — `Identifier "FloorLayout" not declared in the current scope`.
 
-- [ ] **Step 3: Write the data object**
+- [x] **Step 3: Write the data object**
 
 Create `core/run/floor_layout.gd`:
 
@@ -750,12 +752,12 @@ func room_of_node(node_index: int) -> int:
 	return int(node_rooms[node_index])
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run/floor_layout_test.gd"`
 Expected: PASS, 7 test cases, exit code 0.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add core/run/floor_layout.gd core/run/floor_layout.gd.uid \
@@ -785,7 +787,7 @@ EOF
 - Consumes: `FloorLayout.create`, `FloorLayout.rooms`, `FloorLayout.room_center` from Task 4; `Rng.randi_range(name, from, to)` and `Rng.shuffle(name, items)`.
 - Produces: `class_name LayoutGenerator`, constants `STREAM := "layout"`, `GRID := 24`, `BLOCK := 8`, `BLOCKS_PER_SIDE := 3`, `ROOM_MIN := 3`, `ROOM_MAX := 6`, and `LayoutGenerator.place_rooms(layout: FloorLayout, count: int, rng: Rng) -> void`. Tasks 6–8 add `carve_rooms`, `connect_rooms`, `add_walls`, `assign_roles`, `place_anchors` and `generate` to this file.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/core/run/layout_generator_test.gd`:
 
@@ -837,12 +839,12 @@ func test_placement_is_deterministic_and_varies_by_seed() -> void:
 	assert_int(seen.size()).is_greater(1)
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run/layout_generator_test.gd"`
 Expected: FAIL — `Identifier "LayoutGenerator" not declared in the current scope`.
 
-- [ ] **Step 3: Write the placer**
+- [x] **Step 3: Write the placer**
 
 Create `core/run/layout_generator.gd`:
 
@@ -888,12 +890,12 @@ static func place_rooms(layout: FloorLayout, count: int, rng: Rng) -> void:
 	layout.rooms = rooms
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run/layout_generator_test.gd"`
 Expected: PASS, 4 test cases, exit code 0.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add core/run/layout_generator.gd core/run/layout_generator.gd.uid \
@@ -925,7 +927,7 @@ EOF
 - Consumes: `LayoutGenerator.place_rooms` from Task 5.
 - Produces: `LayoutGenerator.carve_rooms(layout) -> void`, `LayoutGenerator.carve_corridor(layout, a: Vector2i, b: Vector2i, horizontal_first: bool) -> void`, `LayoutGenerator.connect_rooms(layout, rng) -> void`, and `FloorLayout.reachable_from(start: Vector2i) -> Dictionary` (keys are `Vector2i`). Tasks 7 and 8 call `reachable_from` in their tests.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `tests/core/run/layout_generator_test.gd`:
 
@@ -976,12 +978,12 @@ func test_reachability_stops_at_rock() -> void:
 	assert_dict(layout.reachable_from(Vector2i(9, 9))).is_empty()
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run/layout_generator_test.gd"`
 Expected: FAIL — `Invalid call. Nonexistent function 'carve_rooms' in base 'GDScript'`.
 
-- [ ] **Step 3: Add reachability to the data object**
+- [x] **Step 3: Add reachability to the data object**
 
 Append to `core/run/floor_layout.gd`:
 
@@ -1006,7 +1008,7 @@ func reachable_from(start: Vector2i) -> Dictionary:
 	return seen
 ```
 
-- [ ] **Step 4: Carve and connect**
+- [x] **Step 4: Carve and connect**
 
 Append to `core/run/layout_generator.gd`:
 
@@ -1052,12 +1054,12 @@ static func connect_rooms(layout: FloorLayout, rng: Rng) -> void:
 		carve_corridor(layout, layout.room_center(a), layout.room_center(b), rng.randi_range(STREAM, 0, 1) == 0)
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run/layout_generator_test.gd"`
 Expected: PASS, 8 test cases, exit code 0.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add core/run/layout_generator.gd core/run/floor_layout.gd tests/core/run/layout_generator_test.gd
@@ -1088,7 +1090,7 @@ EOF
 - Consumes: `carve_rooms`, `connect_rooms` from Task 6.
 - Produces: `LayoutGenerator.add_walls(layout) -> void` and `LayoutGenerator.assign_roles(layout, node_count: int, rng: Rng) -> void`, which set `entry_room`, `stairs_room` and `node_rooms`. Task 8 calls both from `generate`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `tests/core/run/layout_generator_test.gd`:
 
@@ -1154,12 +1156,12 @@ func test_the_stairs_go_in_the_room_furthest_from_the_door() -> void:
 		assert_bool(absi(c.x - entry.x) + absi(c.y - entry.y) <= furthest).is_true()
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run/layout_generator_test.gd"`
 Expected: FAIL — `Invalid call. Nonexistent function 'add_walls' in base 'GDScript'`.
 
-- [ ] **Step 3: Ring the floor in wall**
+- [x] **Step 3: Ring the floor in wall**
 
 Append to `core/run/layout_generator.gd`:
 
@@ -1184,7 +1186,7 @@ static func add_walls(layout: FloorLayout) -> void:
 					break
 ```
 
-- [ ] **Step 4: Hand out the roles**
+- [x] **Step 4: Hand out the roles**
 
 Append to `core/run/layout_generator.gd`:
 
@@ -1220,12 +1222,12 @@ static func assign_roles(layout: FloorLayout, node_count: int, rng: Rng) -> void
 	layout.node_rooms = out
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run/layout_generator_test.gd"`
 Expected: PASS, 13 test cases, exit code 0.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add core/run/layout_generator.gd tests/core/run/layout_generator_test.gd
@@ -1256,7 +1258,7 @@ EOF
 - Consumes: everything from Tasks 4–7, and `RunState.sub_rng(tag, n)`.
 - Produces: `LayoutGenerator.place_anchors(layout, rng) -> void`, `LayoutGenerator.generate(node_count: int, rng: Rng) -> FloorLayout`, and `RunEngine.layout_for(run: RunState) -> FloorLayout`. Stage 2's `game/world/dungeon_builder.gd` calls `RunEngine.layout_for`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `tests/core/run/layout_generator_test.gd`:
 
@@ -1318,12 +1320,12 @@ func test_a_run_asks_its_floor_for_a_shape() -> void:
 	assert_bool(RunEngine.layout_for(run).rooms == once.rooms).is_false()
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run/layout_generator_test.gd"`
 Expected: FAIL — `Invalid call. Nonexistent function 'generate' in base 'GDScript'`.
 
-- [ ] **Step 3: Dress the floor**
+- [x] **Step 3: Dress the floor**
 
 Append to `core/run/layout_generator.gd`:
 
@@ -1353,7 +1355,7 @@ static func place_anchors(layout: FloorLayout, rng: Rng) -> void:
 	layout.ghost_anchors = ghosts
 ```
 
-- [ ] **Step 4: Put the whole pipeline behind one call**
+- [x] **Step 4: Put the whole pipeline behind one call**
 
 Append to `core/run/layout_generator.gd`:
 
@@ -1372,7 +1374,7 @@ static func generate(node_count: int, rng: Rng) -> FloorLayout:
 	return layout
 ```
 
-- [ ] **Step 5: Let a run ask for its floor's shape**
+- [x] **Step 5: Let a run ask for its floor's shape**
 
 In `core/run/run_engine.gd`, add after `exit_summary`:
 
@@ -1385,17 +1387,17 @@ static func layout_for(run: RunState) -> FloorLayout:
 	return LayoutGenerator.generate(run.nodes.size(), run.sub_rng("layout", run.floor))
 ```
 
-- [ ] **Step 6: Run the test to verify it passes**
+- [x] **Step 6: Run the test to verify it passes**
 
 Run: `cmd //c "tools\\test.cmd tests/core/run/layout_generator_test.gd"`
 Expected: PASS, 18 test cases, exit code 0.
 
-- [ ] **Step 7: Run the full suite**
+- [x] **Step 7: Run the full suite**
 
 Run: `cmd //c "tools\\test.cmd tests"`
 Expected: PASS, exit code 0, **614 test cases** (576 baseline + 38 added across Tasks 1–8: 5, 5, 3, 7, 4, 4, 5, 5).
 
-- [ ] **Step 8: Verify the demos and the balance invariants one more time**
+- [x] **Step 8: Verify the demos and the balance invariants one more time**
 
 Run:
 
@@ -1407,7 +1409,7 @@ Run:
 
 Expected: `run_demo` and `campaign_demo` exit 0; `balance_sim` exits **1** on the pre-existing finding. All three outputs must be byte-identical to the same commands run in a `main` worktree. This is the stage's acceptance check: the game's economy is provably unchanged by everything above.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add core/run/layout_generator.gd core/run/run_engine.gd tests/core/run/layout_generator_test.gd
