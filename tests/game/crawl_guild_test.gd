@@ -138,3 +138,14 @@ func test_leaving_the_guild_while_standing_in_a_station_does_not_crash() -> void
 	station.leave(c.player)
 	assert_object(c.focused).is_null()
 	assert_bool(c.prompts.has_prompt()).is_false()
+
+
+func test_you_come_home_facing_the_well() -> void:
+	# It is the way down, the pitch image, and the only thing in the room worth
+	# looking at first.
+	var c := _crawl(_game())
+	var forward := -c.player.global_transform.basis.z
+	var to_well := Kit.cell_to_world(GuildRoom.WELL_CELL) - c.player.global_position
+	to_well.y = 0.0
+	assert_float(forward.normalized().dot(to_well.normalized())).override_failure_message(
+		"spawned facing away from the well").is_greater(0.8)

@@ -277,7 +277,7 @@ func build_floor() -> void:
 	DungeonBuilder.build(layout, _world)
 	_world.add_child(Grade.world_environment(Grade.depth_of(run.floor, run.biome().last_floor)))
 	_dress()
-	_place_player(_stand_in(layout.entry_room))
+	_place_player(_stand_in(layout.entry_room), _open_facing(layout.room_center(layout.entry_room)))
 
 	# Your dead are standing on the floor they died on, in the corridors you
 	# walk back down. This is the pivot's first pillar (spec §2.1) and the
@@ -425,7 +425,10 @@ func _enter_guild() -> void:
 		station.focused.connect(_on_station_focused)
 		station.blurred.connect(_on_station_blurred)
 		station.used.connect(_on_station_used)
-	_place_player(guild.spawn_point())
+	# Facing the well: it is the way down, the pitch image, and the only thing
+	# in the room worth looking at first.
+	var to_well := Kit.cell_to_world(GuildRoom.WELL_CELL) - guild.spawn_point()
+	_place_player(guild.spawn_point(), atan2(-to_well.x, -to_well.z))
 	close_panel()
 	_refresh_marks()
 	prompts.clear_objective()
@@ -542,12 +545,32 @@ func _on_epitaph_dismissed() -> void:
 
 # ------------------------------------------------------------------ plumbing
 
-func _place_player(at: Vector3) -> void:
+func _place_player(at: Vector3, yaw: float = 0.0) -> void:
 	if player == null:
 		player = Player.new()
 		player.name = "Player"
 		add_child(player)
-	player.place_at(at, 0.0)
+	player.place_at(at, yaw)
+
+
+## Which way to face on arrival: down the longest open run from where you are
+## standing. Spawning nose-to-the-wall is the first thing the player sees and
+## it reads as the game being broken before they have taken a step.
+func _open_facing(cell: Vector2i) -> float:
+	var best := 0.0
+	var best_run := -1
+	var steps: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
+	for step in steps:
+		var run := 0
+		var at := cell + step
+		while layout.is_walkable(at.x, at.y) and run < 40:
+			run += 1
+			at += step
+		if run > best_run:
+			best_run = run
+			# Godot yaw 0 looks down -Z, and +Y turns left.
+			best = atan2(float(-step.x), float(-step.y))
+	return best
 
 
 ## The centre of a room, on the floor. Room centres are always carved, so this

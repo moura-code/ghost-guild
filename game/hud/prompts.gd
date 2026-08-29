@@ -30,8 +30,8 @@ func _init() -> void:
 	# PRESET_CENTER_TOP the label's own left edge is what gets centred, so a
 	# centre-aligned string inside it lands right of the middle.
 	banner.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	banner.offset_top = 42.0
-	banner.offset_bottom = 60.0
+	banner.offset_top = 54.0
+	banner.offset_bottom = 72.0
 	banner.modulate.a = 0.0
 	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(banner)

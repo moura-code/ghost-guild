@@ -198,3 +198,17 @@ report zero, so their tiling is an art call rather than a measurement. That is
 worth remembering, because one texel density across the kit is the single
 discipline that stops mixed CC0 sources reading as an asset flip, and for
 three of these four it has to be judged by eye.
+
+## 3D props — Poly Haven, CC0 1.0
+
+Eight models under `assets/props/`, glTF at 1K textures, downloaded from
+<https://polyhaven.com> on 2026-08-29. Poly Haven publishes everything under
+CC0 1.0 Universal: no attribution is required, and this section exists because
+knowing where an asset came from is worth more than the licence demands.
+
+`gothic_statue`, `marble_bust_01`, `wooden_barrels_01`, `wooden_crate_01`,
+`ceramic_vase_01`, `antique_ceramic_vase_01`, `boulder_01`, `wooden_bucket_01`.
+
+They arrive at true real-world scale — the statue is 1.74 m, an urn 0.4 m — so
+none of them were resized to fit the kit. That is the "one physical scale"
+rule in the spec doing its job rather than a lucky coincidence.

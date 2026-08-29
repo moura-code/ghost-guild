@@ -316,3 +316,14 @@ func test_the_floor_says_how_much_of_it_is_left() -> void:
 	var c := _crawl()
 	assert_bool(c.prompts.has_objective()).is_true()
 	assert_bool(c.prompts.objective.text.begins_with("ui.")).is_false()
+
+
+func test_you_do_not_spawn_nose_to_the_wall() -> void:
+	# The first thing the player sees. Facing a wall reads as the game being
+	# broken before they have taken a step.
+	var c := _crawl()
+	var cell := Kit.world_to_cell(c.player.position)
+	var forward := -c.player.global_transform.basis.z
+	var ahead := cell + Vector2i(roundi(forward.x), roundi(forward.z))
+	assert_bool(c.layout.is_walkable(ahead.x, ahead.y)).override_failure_message(
+		"spawned facing stone at %s" % ahead).is_true()
