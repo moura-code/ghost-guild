@@ -10,6 +10,9 @@ signal floor_built(floor: int)
 var game: GameRoot
 var layout: FloorLayout
 var player: Player
+var hud: HudRoot
+var prompts: Prompts
+var director: FightDirector
 var markers: Array[EncounterMarker] = []
 var stairs: EncounterMarker
 
@@ -46,10 +49,22 @@ func bind(g: GameRoot) -> void:
 		if not bool(result["ok"]):
 			push_error("crawl: boot failed: %s" % result["reason"])
 			return
+	_build_hud()
 	if g.campaign.run == null:
 		g.start_run(1)
 	_settle_to_node()
 	build_floor()
+
+
+func _build_hud() -> void:
+	if hud != null:
+		return
+	hud = HudRoot.new()
+	hud.name = "Hud"
+	add_child(hud)
+	prompts = Prompts.new()
+	hud.ui.add_child(prompts)
+	hud.set_pointer(false)
 
 
 func build_floor() -> void:
@@ -94,6 +109,8 @@ func build_floor() -> void:
 	_world.add_child(stairs)
 	_refresh_stairs()
 
+	if prompts != null:
+		prompts.announce(game.text("ui.run.floor").replace("{floor}", str(run.floor)))
 	print("crawl: floor %d, %d rooms, %d encounters left" % [run.floor, layout.rooms.size(), markers.size()])
 	floor_built.emit(run.floor)
 
@@ -103,11 +120,43 @@ func _on_marker_entered(index: int) -> void:
 	if run == null or run.phase != "node":
 		return
 	game.run_action({"kind": "enter", "index": index})
-	# STAGE 2 SCAFFOLDING. Walking into a room puts the run into "fight",
-	# "reward", "event", "rest" or "shop", and stage 2 has no screen for any
-	# of them, so the autopilot plays them out. Stage 3 replaces this with the
-	# fight staged where you are standing; stage 4 with the other rooms.
+	if run.phase == "fight":
+		_stage_fight(index)
+		return
+	# STAGE 2 SCAFFOLDING, still standing for the non-fight rooms: reward,
+	# event, rest and shop have no panel yet, so the autopilot plays them out.
+	# Task 7 of the stage 3-6 plan removes this and the function it calls.
 	_settle_to_node()
+	_close_room()
+
+
+## The fight happens where you are standing. The camera does not cut away.
+func _stage_fight(index: int) -> void:
+	if director != null:
+		director.queue_free()
+	director = FightDirector.new()
+	director.name = "Fight"
+	add_child(director)
+	director.fight_finished.connect(_on_fight_finished.bind(index), CONNECT_ONE_SHOT)
+	director.begin(game, hud, player, _stand_in(layout.room_of_node(index)))
+
+
+func _on_fight_finished(_index: int) -> void:
+	if director != null:
+		director.queue_free()
+		director = null
+	# Whatever the fight left behind -- a reward, a dead hero -- is still
+	# handled by the stage 2 scaffolding until task 7.
+	_settle_to_node()
+	_close_room()
+
+
+## Marks every node the engine now considers resolved, and re-checks the
+## stairs. Called after anything that can finish a room.
+func _close_room() -> void:
+	var run := game.campaign.run
+	if run == null:
+		return
 	for m in markers:
 		var marker: EncounterMarker = m
 		if run.is_resolved(marker.index):
@@ -142,6 +191,9 @@ func _settle_to_node() -> void:
 	while run != null and not run.is_over() and run.phase != "node" and run.phase != "exit" and guard < 200:
 		guard += 1
 		if run.phase == "fight":
+			# Only reachable from a fight the player did not start by walking
+			# in -- an event that picks one, say. A staged fight never gets
+			# here, because _on_marker_entered returns before settling.
 			_play_fight(run)
 			continue
 		var action := _autopilot.choose(run)

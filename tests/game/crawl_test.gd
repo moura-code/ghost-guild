@@ -96,7 +96,22 @@ func test_walking_into_a_room_enters_that_node_and_only_that_node() -> void:
 	var entries := TestFixtures.run_events_of(run, "node_enter")
 	assert_array(entries).has_size(1)
 	assert_int(int(entries[0]["index"])).is_equal(chosen)
-	assert_bool(run.is_resolved(chosen)).is_true()
+	# The node is entered, not finished: a fight room now stages a fight and
+	# waits for it to be played. Only the room you walked into is touched.
+	assert_str(run.phase).is_not_equal("node")
+	for i in run.nodes.size():
+		if i != chosen:
+			assert_bool(run.is_resolved(i)).is_false()
+
+
+## Walks into a room and sees it through, however it resolves. A fight room
+## stages a fight and stays staged until it is played, so a test that wants a
+## cleared floor has to actually play it.
+func _clear(c: Crawl, marker: EncounterMarker) -> void:
+	marker.report(c.player)
+	if c.director != null:
+		TestFixtures.autofight(c.game.campaign.run)
+		c.director.check_over()
 
 
 func test_clearing_every_room_unlocks_the_stairs() -> void:
@@ -107,7 +122,7 @@ func test_clearing_every_room_unlocks_the_stairs() -> void:
 		var marker: EncounterMarker = m
 		if run.is_over():
 			break
-		marker.report(c.player)
+		_clear(c, marker)
 	if run.is_over():
 		return  # The hero died on the way; the stairs question is moot.
 	assert_str(run.phase).is_equal("exit")
@@ -121,7 +136,7 @@ func test_taking_the_stairs_builds_the_next_floor() -> void:
 	for m in c.markers.duplicate():
 		if run.is_over():
 			return
-		(m as EncounterMarker).report(c.player)
+		_clear(c, m as EncounterMarker)
 	if run.is_over() or run.phase != "exit" or not RunEngine.can_push(run):
 		return
 	var before := c.layout
@@ -141,7 +156,7 @@ func test_the_world_only_changes_the_run_through_the_engine() -> void:
 	var before := run.events.size()
 	c.build_floor()
 	assert_int(run.events.size()).is_equal(before)
-	(c.markers[0] as EncounterMarker).report(c.player)
+	_clear(c, c.markers[0] as EncounterMarker)
 	assert_int(run.events.size()).is_greater(before)
 
 
@@ -172,3 +187,48 @@ func test_a_crawl_that_does_not_own_the_autoload_does_not_seize_quit() -> void:
 	assert_bool(c.manages_quit).is_false()
 	c.notification(NOTIFICATION_WM_CLOSE_REQUEST)
 	assert_array(quits).is_empty()
+
+
+## Stage 3: walking into a fight room stages a fight rather than resolving it
+## behind your back.
+func _fight_marker(c: Crawl) -> EncounterMarker:
+	var run := c.game.campaign.run
+	for m in c.markers:
+		var marker: EncounterMarker = m
+		if String(run.nodes[marker.index].get("kind", "")) == "fight":
+			return marker
+	return null
+
+
+func test_walking_into_a_fight_room_stages_it_instead_of_skipping_it() -> void:
+	var c := _crawl()
+	var marker := _fight_marker(c)
+	if marker == null:
+		return  # This floor drew no fight; the other tests cover the rest.
+	marker.report(c.player)
+	assert_object(c.director).is_not_null()
+	assert_str(c.game.campaign.run.phase).is_equal("fight")
+	assert_array(c.director.bodies).is_not_empty()
+	assert_bool(c.player.frozen).is_true()
+	assert_int(c.director.hand.visible_count()).is_greater(0)
+
+
+func test_the_staged_fight_stands_its_enemies_in_the_room_you_walked_into() -> void:
+	var c := _crawl()
+	var marker := _fight_marker(c)
+	if marker == null:
+		return
+	var room := c.layout.room_of_node(marker.index)
+	marker.report(c.player)
+	var centre := Kit.cell_to_world(c.layout.room_center(room))
+	for b in c.director.bodies:
+		var body: EnemyBody = b
+		assert_float(body.global_position.distance_to(centre)).is_less(4.0)
+
+
+func test_the_hud_exists_and_announces_the_floor() -> void:
+	var c := _crawl()
+	assert_object(c.hud).is_not_null()
+	assert_object(c.prompts).is_not_null()
+	assert_bool(c.prompts.is_announcing()).is_true()
+	assert_str(c.prompts.banner.text).is_equal(c.game.text("ui.run.floor").replace("{floor}", "1"))
