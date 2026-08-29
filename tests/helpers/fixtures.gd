@@ -75,6 +75,7 @@ static func autofight(run: RunState) -> void:
 static func set_nodes(run: RunState, nodes: Array) -> void:
 	run.nodes = nodes
 	run.node_index = 0
+	run.resolved = []
 	run.phase = "node"
 
 

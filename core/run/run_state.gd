@@ -12,6 +12,10 @@ var entry_floor: int = 1
 var floor: int = 1
 var nodes: Array = []
 var node_index: int = 0
+## One flag per node, so a floor can be walked in any order. `node_index`
+## still means "the node being played"; this is what says which ones are
+## behind you.
+var resolved: Array = []
 var phase: String = "descent"
 var fight: FightState
 var fight_counter: int = 0
@@ -70,6 +74,38 @@ func current_node() -> Dictionary:
 	return nodes[node_index]
 
 
+## The flags always match the node list. Nodes get written from three places --
+## the floor generator, a loaded save, and the test fixtures -- and a flag array
+## that has drifted out of step is a silent wrong answer rather than a crash, so
+## every reader sizes it first instead of trusting whoever wrote nodes last.
+func _sync_resolved() -> void:
+	if resolved.size() == nodes.size():
+		return
+	var out: Array = []
+	for i in nodes.size():
+		out.append(bool(resolved[i]) if i < resolved.size() else false)
+	resolved = out
+
+
+func is_resolved(index: int) -> bool:
+	_sync_resolved()
+	return index >= 0 and index < resolved.size() and bool(resolved[index])
+
+
+func resolve(index: int) -> void:
+	_sync_resolved()
+	if index >= 0 and index < resolved.size():
+		resolved[index] = true
+
+
+func next_unresolved() -> int:
+	_sync_resolved()
+	for i in resolved.size():
+		if not bool(resolved[i]):
+			return i
+	return -1
+
+
 func hero_snapshot() -> HeroSnapshot:
 	return hero.snapshot(stat_bonus)
 
@@ -84,6 +120,7 @@ func to_dict() -> Dictionary:
 		"floor": floor,
 		"nodes": nodes.duplicate(true),
 		"node_index": node_index,
+		"resolved": resolved.duplicate(),
 		"phase": "node" if in_fight else phase,
 		"fight_counter": fight_counter - 1 if in_fight else fight_counter,
 		"coin": coin,
@@ -112,6 +149,8 @@ static func from_dict(p_content: Content, d: Dictionary) -> RunState:
 	var nodes_raw: Array = d.get("nodes", [])
 	run.nodes = nodes_raw.duplicate(true)
 	run.node_index = int(d.get("node_index", 0))
+	for flag in d.get("resolved", []):
+		run.resolved.append(bool(flag))
 	run.phase = String(d.get("phase", "node"))
 	run.fight_counter = int(d.get("fight_counter", 0))
 	run.coin = int(d.get("coin", 0))
