@@ -21,7 +21,8 @@ Copied from `CLAUDE.md` and the spec. Every task's requirements implicitly inclu
 - Nothing in `core/` reads the clock.
 - **Commit every `.gd.uid` sidecar alongside its `.gd` file.** Godot writes the sidecar during the `--import` pass that `tools\test.cmd` runs first, so the order is always: write the file → run the tests → `git add` both.
 - Test command, from Git Bash: `cmd //c "tools\\test.cmd <dir-or-file>"`. Exit code 0 on success. The full suite takes about 2min 45s; a single file takes a few seconds.
-- Baseline to preserve: **576 test cases across 60 suites, green.** Task 2 edits exactly one existing assertion (`tests/core/run/run_flow_test.gd:15`) by design; nothing else may go red.
+- Baseline to preserve: **576 test cases across 60 suites, green.** Task 2 edits five existing assertions across four files by design (see its Step 7); nothing else may go red.
+- **`balance_sim` exits 1 on `main` and must keep exiting 1** — its `watch_beats_corpse` invariant is a known untuned balance finding, not a broken build. The acceptance criterion for the demos is therefore *output identical to `main`*, not exit 0. Compare with a throwaway worktree: `git worktree add <tmp> main`, import it headlessly, run the same command in both, `diff`.
 - Every commit ends with the repo's two trailers:
 
   ```
@@ -426,7 +427,16 @@ with:
 - [ ] **Step 8: Run the full suite**
 
 Run: `cmd //c "tools\\test.cmd tests"`
-Expected: PASS, exit code 0, **581 test cases** (576 baseline + 5 from Task 1 + 5 from Task 2, less none). If any suite other than `run_flow_test` needed changing, stop and report it — that would mean the bare-`enter` compatibility hinge is not holding.
+Expected: PASS, exit code 0, **586 test cases** (576 baseline + 5 from Task 1 + 5 from Task 2).
+
+Four suites fail on the first run — `run_flow_test`, `run_nodes_test`, `run_save_test` and `save_game_test` each assert `node_index == 1` after the first node finishes. That is one cause, not four bugs: `_advance` used to walk `node_index` forward, so between nodes it pointed at the next one. With per-node flags that pointer is vestigial, and leaving it advanced would hand the 3D layer a room the player never chose, so `node_index` keeps its single meaning. Replace each of the four with the state that carries the meaning now:
+
+```gdscript
+	assert_bool(run.is_resolved(0)).is_true()
+	assert_int(run.next_unresolved()).is_equal(1)
+```
+
+(in `run_save_test` the receiver is `back`, in `save_game_test` it is `back.run`). Behaviour is unaffected: `save_game_test` still applies a bare `enter` then `rest_heal` after its round trip and lands on the right node, because `resolved` survives serialisation.
 
 - [ ] **Step 9: Verify the demos still agree**
 
@@ -437,7 +447,7 @@ Run:
 "$GODOT_BIN" --headless --path . -s tools/balance_sim.gd -- 20 4
 ```
 
-Expected: both exit 0, and `balance_sim` reports its §12 invariants passing. These drive `core/` through the bare `enter` action, so they are the real proof that the contract change is backwards compatible.
+Expected: `run_demo` exits 0; `balance_sim` exits **1**, on the pre-existing `watch_beats_corpse` finding. Capture both outputs and diff them against the same commands run in a `main` worktree — they must be **byte-identical**. These drive `core/` through the bare `enter` action, so this is the real proof that the contract change is backwards compatible. Note that `$?` after a pipe reports the pipe's status, so redirect to a file rather than piping to `tail`.
 
 - [ ] **Step 10: Commit**
 
@@ -1383,7 +1393,7 @@ Expected: PASS, 18 test cases, exit code 0.
 - [ ] **Step 7: Run the full suite**
 
 Run: `cmd //c "tools\\test.cmd tests"`
-Expected: PASS, exit code 0, **599 test cases** (576 baseline + 23 added across Tasks 1–8).
+Expected: PASS, exit code 0, **614 test cases** (576 baseline + 38 added across Tasks 1–8: 5, 5, 3, 7, 4, 4, 5, 5).
 
 - [ ] **Step 8: Verify the demos and the balance invariants one more time**
 
@@ -1395,7 +1405,7 @@ Run:
 "$GODOT_BIN" --headless --path . -s tools/balance_sim.gd -- 40 6
 ```
 
-Expected: all three exit 0, and `balance_sim` reports the §12 invariants passing. This is the stage's acceptance check: the game's economy is provably unchanged by everything above.
+Expected: `run_demo` and `campaign_demo` exit 0; `balance_sim` exits **1** on the pre-existing finding. All three outputs must be byte-identical to the same commands run in a `main` worktree. This is the stage's acceptance check: the game's economy is provably unchanged by everything above.
 
 - [ ] **Step 9: Commit**
 
@@ -1421,8 +1431,8 @@ EOF
 
 ## Stage 1 acceptance
 
-- `cmd //c "tools\\test.cmd tests"` exits 0 with 599 test cases.
-- `run_demo`, `campaign_demo` and `balance_sim` all exit 0, and `balance_sim` reports the §12 invariants passing — the economy is unchanged.
+- `cmd //c "tools\\test.cmd tests"` exits 0 with 614 test cases.
+- `run_demo`, `campaign_demo` and `balance_sim` produce output byte-identical to `main` — the economy is unchanged. `balance_sim` still exits 1 on its known `watch_beats_corpse` finding, exactly as it does on `main`.
 - A floor's three encounters can be entered in any order, and the exit still waits for all three.
 - `RunEngine.layout_for(run)` returns a connected floor whose entry, stairs and every encounter room are reachable from one another, identical for a given run and floor.
 - No file under `game/` has been touched, and no 3D code exists yet.
