@@ -20,6 +20,12 @@ the roguelite, dead heroes become idle-farming ghosts.
   Plays autopilot runs with the ghost economy between them and a save/load round trip.
 - Balance sim: `"$GODOT_BIN" --headless --path . -s tools/balance_sim.gd -- [runs] [sim_fights]`.
   Prints typical-deck yield per floor and the spec §12 invariants; exit 1 when one fails.
+  It exits 1 on `main` too, on the known untuned `watch_beats_corpse` finding, so the
+  regression criterion is byte-identical output against `main`, not the exit code.
+- Crawl shot: `"$GODOT_BIN" --path . --rendering-method forward_plus --resolution 1280x720 -s tools/crawl_shot.gd -- <out.png> [seed] [frames] [depth] [diag]`.
+  Renders one generated floor with the shipped kit, builder and grade and saves a PNG.
+  Runs windowed on purpose: `--headless` has no framebuffer to read. `diag` floods the
+  scene with flat light, which is how a broken build is told apart from a dark room.
 
 ## core/ rules
 
@@ -48,6 +54,11 @@ the roguelite, dead heroes become idle-farming ghosts.
   strings are keys resolved against `data/strings/en.csv`.
 - The shipped slice content is validated by
   `tests/core/content/slice_content_test.gd`.
+- The suite runs `--headless`, so it never exercises the renderer. Anything handed
+  to the RenderingServer is invisible to it -- `MultiMesh.set_instance_transform` is
+  a no-op there and reads back identity -- so geometry maths live in pure functions
+  (`DungeonBuilder.instance_transforms`) that a test can actually read. Physics and
+  `Input.action_press` DO work headless, so walking and collision are testable.
 - `core/run/` is the roguelite layer (Hero, RunState + RunEngine, FloorGenerator,
   Rewards, RunProjection, RunAutopilot); `core/ghosts/` (Ghost, Strength, Ladder,
   YieldSimulator), `core/economy/` (Upgrades, Production, Seance, BalanceSim),

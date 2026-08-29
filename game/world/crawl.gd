@@ -13,6 +13,13 @@ var player: Player
 var markers: Array[EncounterMarker] = []
 var stairs: EncounterMarker
 
+## True only when this crawl picked up the /root/Game autoload, i.e. it is the
+## shipped scene rather than one a test built. Saving on quit is the autoload
+## owner's job and nobody else's.
+var manages_quit: bool = false
+## Injectable so a test can exercise the close path without killing the runner.
+var quit_action: Callable = func() -> void: get_tree().quit()
+
 var _world: Node3D
 var _autopilot := RunAutopilot.new()
 var _fight_autopilot := Autopilot.new()
@@ -27,6 +34,8 @@ func _ready() -> void:
 		return
 	var autoload := get_node_or_null("/root/Game")
 	if autoload is GameRoot:
+		manages_quit = true
+		get_tree().auto_accept_quit = false
 		bind(autoload as GameRoot)
 
 
@@ -160,3 +169,17 @@ func _refresh_stairs() -> void:
 	var open := game.campaign.run != null and game.campaign.run.phase == "exit"
 	stairs.visible = open
 	stairs.monitoring = open
+
+
+## The quit path used to live on MainScreen, which the pivot stopped booting.
+## Without this the game does not save when you close the window, and the
+## looping ambience is still playing when the tree comes down -- which is what
+## the two leaked AudioStream instances at exit were.
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_WM_CLOSE_REQUEST or not manages_quit:
+		return
+	if game != null and game.is_booted:
+		game.save()
+		if game.sfx != null:
+			game.sfx.release()
+	quit_action.call()

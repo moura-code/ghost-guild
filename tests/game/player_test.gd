@@ -79,3 +79,55 @@ func test_gravity_puts_the_player_on_the_ground() -> void:
 	await await_millis(600)
 	assert_bool(p.is_on_floor()).override_failure_message("player never landed, y=%f" % p.position.y).is_true()
 	assert_float(p.position.y).is_equal_approx(0.0, 0.15)
+
+
+## The two below press real keys. The suite cannot move a mouse, but
+## Input.action_press and the physics server both work under --headless, so
+## "does WASD actually move the body, and do walls actually stop it" is
+## answerable here rather than only by hand.
+func _floor_under(p: Player) -> void:
+	var ground: StaticBody3D = auto_free(StaticBody3D.new())
+	ground.collision_layer = DungeonBuilder.LAYER_WORLD
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(60.0, 1.0, 60.0)
+	cs.shape = box
+	cs.position = Vector3(0.0, -0.5, 0.0)
+	ground.add_child(cs)
+	add_child(ground)
+
+
+func test_holding_forward_walks_the_body_forward() -> void:
+	var p := _player()
+	_floor_under(p)
+	p.place_at(Vector3.ZERO, 0.0)
+	await await_millis(200)
+	Input.action_press("move_forward")
+	await await_millis(500)
+	Input.action_release("move_forward")
+	# -Z is forward, and half a second at 3.6 m/s is over a metre even with
+	# the acceleration ramp.
+	assert_float(p.position.z).override_failure_message("did not walk, z=%f" % p.position.z).is_less(-1.0)
+	assert_float(absf(p.position.x)).is_less(0.05)
+
+
+func test_a_wall_stops_you() -> void:
+	var p := _player()
+	_floor_under(p)
+	var wall: StaticBody3D = auto_free(StaticBody3D.new())
+	wall.collision_layer = DungeonBuilder.LAYER_WORLD
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(20.0, Kit.WALL_H, 1.0)
+	cs.shape = box
+	cs.position = Vector3(0.0, Kit.WALL_H * 0.5, -3.0)
+	wall.add_child(cs)
+	add_child(wall)
+	p.place_at(Vector3.ZERO, 0.0)
+	await await_millis(200)
+	Input.action_press("move_forward")
+	await await_millis(1200)
+	Input.action_release("move_forward")
+	# The wall's near face is at z = -2.5 and the capsule is RADIUS thick.
+	assert_float(p.position.z).override_failure_message("walked through the wall, z=%f" % p.position.z).is_greater(-2.5 - Player.RADIUS - 0.1)
+	assert_float(p.position.z).is_less(-1.0)

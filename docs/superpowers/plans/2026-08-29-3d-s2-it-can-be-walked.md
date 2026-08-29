@@ -1955,3 +1955,108 @@ git commit -m "feat(3d): a shot of the real crawl, and the stage 2 record"
 **Placeholder scan.** Every code step carries the actual code. Every test step carries the actual assertions. Two steps say "if this fails, do X" — Task 5 Step 4 and Task 7 Step 4 — and both name the specific failure, the specific cause and the specific decision, rather than "handle errors".
 
 **Type consistency.** `Kit.CELL`/`WALL_H`/`TEXEL` are used by name in Tasks 4, 5, 6, 7, 8 and defined in 2. `DungeonBuilder.LAYER_WORLD = 1` is consumed by `Player` in Task 5. `Player.LAYER_PLAYER = 2` is consumed by `EncounterMarker` in Task 6. `EncounterMarker.LAYER_INTERACTABLE = 4` is layer 3's bit value — the constant name says the layer, the value says the bit, and the test asserts the value; that is the trap in this file and it is asserted rather than commented. `EncounterMarker.create(index, room)` takes the room rect dictionary that `FloorLayout.room_rect` returns, with keys `x`,`y`,`w`,`h` — the same shape `LayoutGenerator.place_rooms` writes. `marker.report(body)` is the name used by both the signal connection and every test. `Grade.depth_of(floor, last_floor)` matches `Atmosphere.set_floor`'s existing 2D convention, so the two agree about what depth means.
+
+---
+
+## Stage 2 executed
+
+**2026-08-29, branch `3d-pivot`.** All eight tasks done, one commit each.
+
+### The numbers
+
+| | |
+|---|---|
+| Suite | **667 test cases, 70 suites, 0 failures, exit 0** (from 614/61) |
+| New suites | `world_settings` 5, `kit` 6, `grade` 6, `dungeon_builder` 9, `player` 11, `encounter_marker` 5, `crawl` 11 = **53** |
+| Changed suite | `main_test` — 1 assertion inverted (the entry point moved) |
+| Screenshot | `docs/shots/2026-08-29-stage2-corridor.png`, seed 3, depth 0.35 |
+| Floor 1, seed 3 | 124 floor cells, 140 wall cells, 13 torches, 58 merged collision boxes, 5 rooms |
+
+The plan predicted 651. The extra 16 are tests that were not foreseen and that
+each caught or pinned something real; they are listed under their tasks above
+and in "What went wrong" below.
+
+### The look
+
+The corridor shot is the real `Kit`, `DungeonBuilder`, `Grade` and `Player`
+torch — not the stage 0 spike, which is now superseded for environments. It
+reads as a crypt: stone repeats at the same scale on floor, wall and ceiling,
+the torch pools warm against cold ambient, the far end falls into fog, and the
+ceiling is lit rather than black. Answer to the stage 0 question, on shipped
+code this time: **yes, the environment pipeline works with no artist.**
+
+One thing the shot shows that is worth watching: the near wall is close to
+blowing out, because the camera stands beside it and carries the torch. In the
+game the player is usually mid-corridor, so it is milder — but the hero torch's
+2.6 energy is at the top of its useful range.
+
+### The five walk checks
+
+Interactive walking is not something this session can do, so four of the five
+were converted into assertions and one was answered by booting the real game.
+
+1. **Spawn inside a room, not inside stone** — `crawl_test.test_the_player_starts_in_the_entry_room` asserts the spawn cell is the entry room's centre and is walkable. ✅
+2. **WASD moves you where you are looking** — `player_test.test_holding_forward_walks_the_body_forward` presses the real action and asserts the body travelled over a metre on −Z with no drift on X. `Input.action_press` and the physics server both work headless. ✅ Mouselook itself is still unverified: the suite cannot move a mouse. The maths (`wish_direction`, `clamp_pitch`) are asserted; the *feel* is not.
+3. **Walls stop you** — `player_test.test_a_wall_stops_you` walks into a wall for 1.2 s and asserts the body stopped one capsule radius short instead of passing through. ✅
+4. **Walking into a room resolves it, clearing three unlocks the stairs** — `crawl_test` asserts one `node_enter` per marker with the chosen index, `phase == "exit"` after the third, and the stairs marker becoming visible. Verified end to end by a throwaway probe as well: floor 1 → three rooms → phase `exit` → stairs → floor 2. ✅
+5. **The shipped scene boots** — `godot --path . --quit-after 180` prints `Vulkan 1.4.341 - Forward+` and `crawl: floor 1, 5 rooms, 3 encounters left`, exit 0. ✅
+
+### The simulation is untouched
+
+`git worktree add ../game-main main`, then the same three tools on both trees:
+
+| Tool | `3d-pivot` | `main` | Output |
+|---|---|---|---|
+| `run_demo -- 1 7` | exit 0 | exit 0 | **IDENTICAL** |
+| `campaign_demo -- 5 3` | exit 0 | exit 0 | **IDENTICAL** |
+| `balance_sim -- 20 4` | exit 1 | exit 1 | **IDENTICAL** |
+
+`balance_sim` exits 1 on both, on the known untuned `watch_beats_corpse`
+finding. A fresh worktree needs `--import` before any `-s` script run or every
+`class_name` fails to resolve.
+
+### What went wrong
+
+Five things, none of which the plan predicted, and four of which a green suite
+would have hidden:
+
+1. **`MultiMesh.set_instance_transform` is a no-op under `--headless`.** Read
+   back, every transform is identity. The first version of the builder put the
+   entire crypt at the origin and the test passed. Fixed by extracting
+   `DungeonBuilder.instance_transforms()`. Full write-up under Task 4.
+2. **`Crawl._ready` stole the bind from the tests**, which meant every crawl
+   test booted the real `/root/Game` autoload against the real save path and
+   built the floor twice. Green throughout. Fixed by claiming `game` before
+   `add_child`, and pinned by a test. Write-up under Task 7.
+3. **A deferred-freed `World` renamed its replacement.** `queue_free` is
+   deferred, so `add_child` renamed the incoming floor to dodge the collision
+   and `get_node("World")` returned the outgoing one. Fixed by renaming the old
+   node before freeing it.
+4. **The quit path disappeared with the entry point.** `MainScreen._notification`
+   saved the game and released the ambience on window close; moving `main_scene`
+   to `crawl.tscn` dropped both, so **closing the game stopped saving**. The only
+   symptom was `2 ObjectDB instances were leaked at exit` — `AudioStreamWAV` and
+   `AudioStreamPlaybackWAV`, the looping ambience. Restored on `Crawl` with
+   `manages_quit` + an injectable `quit_action`, mirroring `MainScreen`, and
+   covered by two tests. **This is the one that would have shipped.**
+5. **`Vector3` components are 32-bit.** `assert_float(mesh.size.y).is_equal(3.2)`
+   fails with "Expecting 3.200000 but was 3.200000". Every geometry comparison
+   in this stage uses `is_equal_approx`.
+
+### What is not true yet
+
+- **Mouselook is unverified.** Nothing in the suite can move a mouse. Sensitivity,
+  pitch feel and whether the Escape toggle behaves are open until someone plays it.
+- **There is no performance number.** 124 floor cells + 140 walls + 13
+  shadow-casting omni lights renders fine on an RTX 5080; that says nothing about
+  a minimum-spec machine, and 13 shadowed lights per floor is the first thing to
+  measure when it matters.
+- **The stairs and the auto-resolve are scaffolding**, marked as such in
+  `crawl.gd`. Walking into a room silently plays the encounter out with
+  `RunAutopilot` because there is no fight screen yet. Stage 3 removes the first,
+  stage 4 the second.
+- **Nothing in `game/` was deleted.** The 2D screens still compile and their 24
+  suites still run; they go when their replacements exist.
+- `tools/spike_crypt.gd` and `assets/_spike/` stay for now. `crawl_shot.gd`
+  supersedes the spike for environments, but the spike's `_actor` path is still
+  the only rigged-model probe and the enemy question is still open.

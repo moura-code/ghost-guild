@@ -150,3 +150,25 @@ func _unique(values: Array) -> Array:
 	for v in values:
 		seen[v] = true
 	return seen.keys()
+
+
+## The entry point owns saving on quit. Moving the entry point from MainScreen
+## to Crawl silently dropped it, and the only symptom was two leaked
+## AudioStream instances in the exit log -- not a failing test.
+func test_closing_the_window_saves_the_game_and_stops_the_sound() -> void:
+	var c := _crawl()
+	c.manages_quit = true
+	var quits: Array = []
+	c.quit_action = func() -> void: quits.append(true)
+	c.notification(NOTIFICATION_WM_CLOSE_REQUEST)
+	assert_array(quits).has_size(1)
+	assert_bool(FileAccess.file_exists(_save_path)).is_true()
+
+
+func test_a_crawl_that_does_not_own_the_autoload_does_not_seize_quit() -> void:
+	var c := _crawl()
+	var quits: Array = []
+	c.quit_action = func() -> void: quits.append(true)
+	assert_bool(c.manages_quit).is_false()
+	c.notification(NOTIFICATION_WM_CLOSE_REQUEST)
+	assert_array(quits).is_empty()
