@@ -76,7 +76,7 @@ Nothing is deleted from `game/` in this stage. The 2D screens stop being reachab
 - Consumes: nothing.
 - Produces: input actions `move_forward`, `move_back`, `move_left`, `move_right`, `sprint`, `interact`; 3D physics layers `1=world`, `2=player`, `3=interactable`, `4=ghost`; `rendering/renderer/rendering_method == "forward_plus"`. Every later task depends on these names.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/game/world_settings_test.gd`:
 
@@ -119,7 +119,7 @@ func test_the_game_boots_into_the_crawl() -> void:
 	assert_str(String(ProjectSettings.get_setting("application/run/main_scene"))).is_equal("res://game/crawl.tscn")
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 ```
 cmd //c "tools\\test.cmd tests/game/world_settings_test.gd"
@@ -127,7 +127,7 @@ cmd //c "tools\\test.cmd tests/game/world_settings_test.gd"
 
 Expected: five failures — `gl_compatibility`, viewport 640, no actions, no layer names, main scene is `main.tscn`.
 
-- [ ] **Step 3: Edit `project.godot`**
+- [x] **Step 3: Edit `project.godot`**
 
 Replace the `[display]` block (comment included — the pixel-art rationale is no longer true and a stale comment is worse than none):
 
@@ -209,7 +209,7 @@ interact={
 
 Physical keycodes: 87=W, 83=S, 65=A, 68=D, 69=E, 4194325=Shift. `physical_keycode` rather than `keycode` so WASD stays in the same place on an AZERTY keyboard.
 
-- [ ] **Step 4: Create the scene the main scene setting points at**
+- [x] **Step 4: Create the scene the main scene setting points at**
 
 `main_scene` naming a file that does not exist is a boot failure, so the scene lands here even though its script arrives in Task 7. Create `game/crawl.tscn`:
 
@@ -230,7 +230,7 @@ extends Node3D
 ## Placeholder — Task 7 of the stage 2 plan replaces this with the real root.
 ```
 
-- [ ] **Step 5: Run the new suite**
+- [x] **Step 5: Run the new suite**
 
 ```
 cmd //c "tools\\test.cmd tests/game/world_settings_test.gd"
@@ -238,7 +238,7 @@ cmd //c "tools\\test.cmd tests/game/world_settings_test.gd"
 
 Expected: 5 passing.
 
-- [ ] **Step 6: Run the whole suite — this is the step that matters**
+- [x] **Step 6: Run the whole suite — this is the step that matters**
 
 ```
 cmd //c "tools\\test.cmd tests"
@@ -256,7 +256,7 @@ to `is_not_equal`, keeping the `load()` assertion — the 2D screen still has to
 build until the 3D screen that replaces it exists. Add
 `tests/game/main_test.gd` to the Step 7 commit.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add project.godot game/crawl.tscn game/world/crawl.gd game/world/crawl.gd.uid tests/game/world_settings_test.gd tests/game/world_settings_test.gd.uid
@@ -281,7 +281,7 @@ git commit -m "feat(3d): the project renders Forward+ and has a movement input m
   - `Kit.cell_to_world(cell: Vector2i) -> Vector3` (floor level, y = 0)
   - `Kit.world_to_cell(at: Vector3) -> Vector2i`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/game/kit_test.gd`:
 
@@ -343,7 +343,7 @@ func test_a_point_inside_a_cell_reads_as_that_cell() -> void:
 	assert_vector(Kit.world_to_cell(middle)).is_equal(Vector2i(5, 6))
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 ```
 cmd //c "tools\\test.cmd tests/game/kit_test.gd"
@@ -351,7 +351,7 @@ cmd //c "tools\\test.cmd tests/game/kit_test.gd"
 
 Expected: parse failure — `Kit` is not a known class.
 
-- [ ] **Step 3: Write `game/world/kit.gd`**
+- [x] **Step 3: Write `game/world/kit.gd`**
 
 ```gdscript
 class_name Kit
@@ -443,7 +443,7 @@ static func _material(key: String, folder: String, span: Vector2) -> StandardMat
 	return m
 ```
 
-- [ ] **Step 4: Run the test**
+- [x] **Step 4: Run the test**
 
 ```
 cmd //c "tools\\test.cmd tests/game/kit_test.gd"
@@ -451,7 +451,7 @@ cmd //c "tools\\test.cmd tests/game/kit_test.gd"
 
 Expected: 6 passing.
 
-- [ ] **Step 5: Correct the spec**
+- [x] **Step 5: Correct the spec**
 
 In `docs/superpowers/specs/2026-08-29-3d-pivot-design.md` §7, the bullet currently reads "roughly twelve pieces on a 4 m grid". Replace the sentence with:
 
@@ -464,7 +464,7 @@ In `docs/superpowers/specs/2026-08-29-3d-pivot-design.md` §7, the bullet curren
   nothing else — `assets/kit/` does not exist yet, deliberately.
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add game/world/kit.gd game/world/kit.gd.uid tests/game/kit_test.gd tests/game/kit_test.gd.uid docs/superpowers/specs/2026-08-29-3d-pivot-design.md
@@ -486,7 +486,7 @@ git commit -m "feat(3d): one kit, one texel density, three metres per cell"
   - `Grade.environment(depth: float) -> Environment`
   - `Grade.world_environment(depth: float) -> WorldEnvironment`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/game/grade_test.gd`:
 
@@ -536,7 +536,7 @@ func test_the_world_environment_carries_the_environment() -> void:
 	assert_int(we.environment.tonemap_mode).is_equal(Environment.TONE_MAPPER_ACES)
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 ```
 cmd //c "tools\\test.cmd tests/game/grade_test.gd"
@@ -544,7 +544,7 @@ cmd //c "tools\\test.cmd tests/game/grade_test.gd"
 
 Expected: parse failure — `Grade` is not a known class.
 
-- [ ] **Step 3: Write `game/theme/grade.gd`**
+- [x] **Step 3: Write `game/theme/grade.gd`**
 
 ```gdscript
 class_name Grade
@@ -600,7 +600,7 @@ static func world_environment(depth: float) -> WorldEnvironment:
 	return we
 ```
 
-- [ ] **Step 4: Run the test**
+- [x] **Step 4: Run the test**
 
 ```
 cmd //c "tools\\test.cmd tests/game/grade_test.gd"
@@ -608,7 +608,7 @@ cmd //c "tools\\test.cmd tests/game/grade_test.gd"
 
 Expected: 6 passing.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/theme/grade.gd game/theme/grade.gd.uid tests/game/grade_test.gd tests/game/grade_test.gd.uid
@@ -630,7 +630,7 @@ git commit -m "feat(3d): one grade for the whole game, darker the deeper you go"
   - `DungeonBuilder.wall_boxes(layout: FloorLayout) -> Array` of `Rect2i` (merged horizontal wall runs)
   - `DungeonBuilder.LAYER_WORLD := 1` (bit value, i.e. layer 1)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/game/dungeon_builder_test.gd`:
 
@@ -758,7 +758,7 @@ func test_building_the_same_layout_twice_produces_the_same_world() -> void:
 	assert_dict(DungeonBuilder.build(_generated(), a)).is_equal(DungeonBuilder.build(_generated(), b))
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 ```
 cmd //c "tools\\test.cmd tests/game/dungeon_builder_test.gd"
@@ -766,7 +766,7 @@ cmd //c "tools\\test.cmd tests/game/dungeon_builder_test.gd"
 
 Expected: parse failure — `DungeonBuilder` is not a known class.
 
-- [ ] **Step 3: Write `game/world/dungeon_builder.gd`**
+- [x] **Step 3: Write `game/world/dungeon_builder.gd`**
 
 ```gdscript
 class_name DungeonBuilder
@@ -922,7 +922,7 @@ static func _collision(layout: FloorLayout, boxes: Array) -> StaticBody3D:
 	return body
 ```
 
-- [ ] **Step 4: Run the test**
+- [x] **Step 4: Run the test**
 
 ```
 cmd //c "tools\\test.cmd tests/game/dungeon_builder_test.gd"
@@ -951,7 +951,7 @@ This is fact 2 at the top of this plan meeting a concrete wall. Anything under
 suite; the maths have to be pulled out to a plain array first or they are not
 tested at all.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/world/dungeon_builder.gd game/world/dungeon_builder.gd.uid tests/game/dungeon_builder_test.gd tests/game/dungeon_builder_test.gd.uid
@@ -976,7 +976,7 @@ git commit -m "feat(3d): a floor layout becomes geometry, collision and torchlig
   - `player.place_at(at: Vector3, yaw: float) -> void`
   - `player.head: Node3D`, `player.camera: Camera3D`, `player.torch: OmniLight3D`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/game/player_test.gd`:
 
@@ -1064,7 +1064,7 @@ func test_gravity_puts_the_player_on_the_ground() -> void:
 	assert_float(p.position.y).is_equal_approx(0.0, 0.15)
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 ```
 cmd //c "tools\\test.cmd tests/game/player_test.gd"
@@ -1072,7 +1072,7 @@ cmd //c "tools\\test.cmd tests/game/player_test.gd"
 
 Expected: parse failure — `Player` is not a known class.
 
-- [ ] **Step 3: Write `game/world/player.gd`**
+- [x] **Step 3: Write `game/world/player.gd`**
 
 ```gdscript
 class_name Player
@@ -1200,7 +1200,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		capture_mouse(Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED)
 ```
 
-- [ ] **Step 4: Run the test**
+- [x] **Step 4: Run the test**
 
 ```
 cmd //c "tools\\test.cmd tests/game/player_test.gd"
@@ -1208,7 +1208,7 @@ cmd //c "tools\\test.cmd tests/game/player_test.gd"
 
 Expected: 9 passing. `test_gravity_puts_the_player_on_the_ground` is the one that can be flaky — it depends on physics frames actually running under the headless runner. If it fails with "player never landed" **and** `y` is unchanged at 2.5, physics is not ticking in the runner: delete that one test and note here that landing is verified by Task 8's screenshot instead. Do not weaken the other eight to make it pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/world/player.gd game/world/player.gd.uid tests/game/player_test.gd tests/game/player_test.gd.uid
@@ -1232,7 +1232,7 @@ git commit -m "feat(3d): a first-person body that walks, looks and carries a tor
   - `marker.resolve() -> void`
   - `marker.index: int`, `marker.resolved: bool`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/game/encounter_marker_test.gd`:
 
@@ -1301,7 +1301,7 @@ func test_a_resolved_marker_is_inert_and_invisible() -> void:
 	assert_bool(m.visible).is_false()
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 ```
 cmd //c "tools\\test.cmd tests/game/encounter_marker_test.gd"
@@ -1309,7 +1309,7 @@ cmd //c "tools\\test.cmd tests/game/encounter_marker_test.gd"
 
 Expected: parse failure — `EncounterMarker` is not a known class.
 
-- [ ] **Step 3: Write `game/world/encounter_marker.gd`**
+- [x] **Step 3: Write `game/world/encounter_marker.gd`**
 
 ```gdscript
 class_name EncounterMarker
@@ -1385,7 +1385,7 @@ func resolve() -> void:
 	visible = false
 ```
 
-- [ ] **Step 4: Run the test**
+- [x] **Step 4: Run the test**
 
 ```
 cmd //c "tools\\test.cmd tests/game/encounter_marker_test.gd"
@@ -1393,7 +1393,7 @@ cmd //c "tools\\test.cmd tests/game/encounter_marker_test.gd"
 
 Expected: 5 passing.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/world/encounter_marker.gd game/world/encounter_marker.gd.uid tests/game/encounter_marker_test.gd tests/game/encounter_marker_test.gd.uid
@@ -1416,7 +1416,7 @@ git commit -m "feat(3d): a room you walk into reports which encounter it is"
   - `crawl.layout: FloorLayout`, `crawl.player: Player`, `crawl.markers: Array`
   - signal `floor_built(floor: int)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/game/crawl_test.gd`:
 
@@ -1558,7 +1558,7 @@ func _unique(values: Array) -> Array:
 	return seen.keys()
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 ```
 cmd //c "tools\\test.cmd tests/game/crawl_test.gd"
@@ -1566,7 +1566,7 @@ cmd //c "tools\\test.cmd tests/game/crawl_test.gd"
 
 Expected: failures on `bind` not existing (the Task 1 placeholder has no members).
 
-- [ ] **Step 3: Write `game/world/crawl.gd`**, replacing the placeholder entirely
+- [x] **Step 3: Write `game/world/crawl.gd`**, replacing the placeholder entirely
 
 ```gdscript
 class_name Crawl
@@ -1728,7 +1728,7 @@ func _refresh_stairs() -> void:
 	stairs.monitoring = open
 ```
 
-- [ ] **Step 4: Run the test**
+- [x] **Step 4: Run the test**
 
 ```
 cmd //c "tools\\test.cmd tests/game/crawl_test.gd"
@@ -1740,7 +1740,7 @@ Two failure modes to expect and how to read them:
 - **`test_the_player_starts_in_the_entry_room` fails on the cell** — `_stand_in` uses `room_center`, which is integer division, so it is always inside the rect. If it is not walkable, that is a `core/` layout bug and it is fixed in `core/run/layout_generator.gd`, test-first, not papered over here.
 - **`test_walking_into_a_room_enters_that_node...` sees more than one `node_enter`** — `_autoresolve` is settling past the node it just entered and into the next one. `_settle_to_node` must stop at phase `node`; check the loop condition.
 
-- [ ] **Step 5: Run the whole suite**
+- [x] **Step 5: Run the whole suite**
 
 ```
 cmd //c "tools\\test.cmd tests"
@@ -1767,7 +1767,7 @@ a wall stands on the floor rather than sinking into it) and one in `crawl_test`
    the collision, leaving `get_node("World")` pointing at the floor on its way
    out. Fixed by renaming the outgoing node to `OldWorld` before freeing it.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add game/world/crawl.gd game/world/crawl.gd.uid tests/game/crawl_test.gd tests/game/crawl_test.gd.uid
@@ -1788,7 +1788,7 @@ A green headless suite is not evidence that a 3D game looks right or walks right
 - Consumes: `LayoutGenerator`, `DungeonBuilder`, `Kit`, `Grade`, `Player`.
 - Produces: `"$GODOT_BIN" --path . --rendering-method forward_plus --resolution 1280x720 -s tools/crawl_shot.gd -- <out.png> [seed] [frames]`
 
-- [ ] **Step 1: Write `tools/crawl_shot.gd`**
+- [x] **Step 1: Write `tools/crawl_shot.gd`**
 
 ```gdscript
 extends SceneTree
@@ -1879,7 +1879,7 @@ func _corridor_shot(layout: FloorLayout) -> Array:
 	return [from, to]
 ```
 
-- [ ] **Step 2: Take the picture**
+- [x] **Step 2: Take the picture**
 
 ```bash
 "$GODOT_BIN" --path . --rendering-method forward_plus --resolution 1280x720 \
@@ -1890,7 +1890,7 @@ Create `docs/shots/` first if it does not exist. Look at the PNG. It must show: 
 
 If the frame is black, the fault is almost always one of: no `WorldEnvironment` (nothing to see), the camera facing a wall, or a ceiling plane facing the wrong way. Add a `diag` argument that raises `ambient_light_energy` to 1.2 and disables fog before assuming the build is broken.
 
-- [ ] **Step 3: Walk it — the part no test can do**
+- [x] **Step 3: Walk it — the part no test can do**
 
 ```bash
 "$GODOT_BIN" --path .
@@ -1903,7 +1903,7 @@ Check, and write the answer for each into Step 5 below:
 4. Walking into a lit room prints `crawl: floor N` a moment later — the encounter resolved and the marker went dark.
 5. Clearing all three rooms makes the stairs room's marker appear; walking into it builds floor 2 and the fog is thicker.
 
-- [ ] **Step 4: Prove the simulation is untouched**
+- [x] **Step 4: Prove the simulation is untouched**
 
 The pivot's whole claim is that presentation changed and the game did not. Re-run the three headless integration tools and compare against `main`:
 
@@ -1921,11 +1921,11 @@ git worktree add ../game-main main
 diff s2_run.txt main_run.txt && echo IDENTICAL
 ```
 
-- [ ] **Step 5: Record what actually happened**
+- [x] **Step 5: Record what actually happened**
 
 Append a `## Stage 2 executed` section to this plan with: the final test count, the screenshot path, a one-line answer to each of the five walk checks in Step 3, the diff results from Step 4, and anything that had to change from what this plan says. **Write down what is not true**: any check that failed, any test that had to be dropped, any deviation. A plan that only records successes is not a record.
 
-- [ ] **Step 6: Document the tool in `CLAUDE.md`**
+- [x] **Step 6: Document the tool in `CLAUDE.md`**
 
 Under `## Environment`, after the balance sim entry:
 
@@ -1935,7 +1935,7 @@ Under `## Environment`, after the balance sim entry:
   Runs windowed on purpose: `--headless` has no framebuffer to read.
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add tools/crawl_shot.gd tools/crawl_shot.gd.uid docs/shots CLAUDE.md docs/superpowers/plans/2026-08-29-3d-s2-it-can-be-walked.md
