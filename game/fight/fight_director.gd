@@ -34,6 +34,11 @@ var tags: Array[EnemyTag] = []
 ## Hand index -> whether that card needs an enemy chosen. Mirrors the engine.
 var playable: Dictionary = {}
 
+## Everything this director puts on the HUD lives under one node, so it can
+## all be taken down together. The widgets are children of the HUD, not of the
+## director, so freeing the director does not free them -- and a second fight
+## would otherwise deal a second hand next to the first one, forever.
+var _hud_layer: Control
 var _end_turn: Button
 var _banner: TurnBanner
 var _finished: bool = false
@@ -237,37 +242,43 @@ func _face(at: Vector3) -> void:
 
 
 func _build_hud() -> void:
+	_hud_layer = Control.new()
+	_hud_layer.name = "FightHud"
+	_hud_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hud_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hud.ui.add_child(_hud_layer)
+
 	animator = FightAnimator3D.new()
 	animator.bind(game.content, game.sfx)
 	animator.anchors_supplier = anchors
 	animator.body_supplier = func(i: int) -> Node3D: return body_of(i)
 	animator.shake_requested.connect(_on_shake)
 	animator.finished.connect(check_over)
-	hud.ui.add_child(animator)
+	_hud_layer.add_child(animator)
 
 	hand = HandView.new()
 	hand.bind(game.content)
 	hand.card_pressed.connect(_on_card_pressed)
-	hud.ui.add_child(hand)
+	_hud_layer.add_child(hand)
 
 	vitals = HeroPanel.new()
 	vitals.position = Vector2(8.0, hud.ui.size.y - HeroPanel.PANEL_SIZE.y - 8.0)
-	hud.ui.add_child(vitals)
+	_hud_layer.add_child(vitals)
 
 	_end_turn = Button.new()
 	_end_turn.text = game.text("ui.fight.end_turn")
 	_end_turn.position = Vector2(hud.ui.size.x - 70.0, hud.ui.size.y - 30.0)
 	_end_turn.pressed.connect(end_turn)
-	hud.ui.add_child(_end_turn)
+	_hud_layer.add_child(_end_turn)
 
 	_banner = TurnBanner.new()
-	hud.ui.add_child(_banner)
+	_hud_layer.add_child(_banner)
 
 	# One tag per enemy, above the hand so a card never covers the number you
 	# are deciding against.
 	for b in bodies:
 		var tag := EnemyTag.create((b as EnemyBody).index)
-		hud.ui.add_child(tag)
+		_hud_layer.add_child(tag)
 		tags.append(tag)
 
 
@@ -352,3 +363,12 @@ func _discard_corner() -> Vector2:
 func _sound(id: String) -> void:
 	if game != null and game.sfx != null:
 		game.sfx.play(id)
+
+
+## The hand, the vitals, the end-turn button and the tags are children of the
+## HUD rather than of this node, so they do not go when it does. They have to
+## be taken down explicitly or every fight leaves its interface on screen.
+func _exit_tree() -> void:
+	if _hud_layer != null and is_instance_valid(_hud_layer):
+		_hud_layer.queue_free()
+		_hud_layer = null

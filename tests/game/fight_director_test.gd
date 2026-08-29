@@ -178,3 +178,27 @@ func test_the_anchors_it_hands_the_animator_name_the_hero_and_every_enemy() -> v
 	assert_bool(anchors.has("hero")).is_true()
 	assert_bool(anchors.has(0)).is_true()
 	assert_bool(anchors.has(1)).is_true()
+
+
+func test_a_finished_fight_takes_its_interface_off_the_screen() -> void:
+	# The hand, the vitals and the end-turn button are children of the HUD,
+	# not of the director, so freeing the director does not free them. Without
+	# an explicit teardown a second fight deals a second hand beside the first
+	# one, forever.
+	var g := _game()
+	var hud := _hud()
+	var d: FightDirector = auto_free(FightDirector.new())
+	add_child(d)
+	_fight_run(g, ["bone_rat"])
+	d.begin(g, hud, _player(), Vector3(9.0, 0.0, 12.0))
+	var before := hud.ui.get_child_count()
+	assert_int(before).is_greater(0)
+	remove_child(d)
+	d._exit_tree()
+	await await_idle_frame()
+	var left := 0
+	for child in hud.ui.get_children():
+		if is_instance_valid(child):
+			left += 1
+	assert_int(left).is_equal(before - 1)
+	add_child(d)

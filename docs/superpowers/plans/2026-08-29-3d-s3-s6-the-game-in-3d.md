@@ -265,7 +265,7 @@ and is standing in your well when you get home.
 
 | | |
 |---|---|
-| Suite | **682 test cases, 76 suites, 0 failures, exit 0** |
+| Suite | **690 test cases, 77 suites, 0 failures, exit 0** |
 | Peak before deletion | 780 across 82 suites |
 | Deleted | 17 source files + 10 suites — the 2D world and the 2D navigation |
 | `game/` | 7,486 → ~5,900 lines, reorganised into `world/`, `fight/`, `hud/` |
@@ -355,6 +355,15 @@ skulls inside four of them. Both are furniture, not world. Restored.
   adding it before the staging existed would have been guessing. `Sfx` is wired
   and 2D.
 - **No performance number on anything but an RTX 5080.**
+- **Two bugs that only a person playing would ever have hit**, found by
+  auditing the input path rather than by a test, and now covered by
+  `crawl_walkthrough_test.gd` which drives the real scene with real key
+  presses: (a) `_unhandled_input` reaches children before parents, so `Player`
+  grabbed Escape and recaptured the cursor before `Crawl` could close the
+  panel — a panel you cannot click; (b) the fight's HUD widgets are children of
+  `HudRoot`, not of `FightDirector`, so freeing the director left the hand, the
+  vitals and the end-turn button on screen forever and a second fight dealt a
+  second hand beside the first.
 - **`EnemyTag` was nearly forgotten.** The plan's file table listed it and the
   task list did not, so the fight was built without any way to read an enemy's
   health or intent -- unplayable, and the suite would never have said so. Caught

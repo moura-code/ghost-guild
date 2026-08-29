@@ -123,5 +123,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	# Escape gives the mouse back rather than quitting: a captured cursor with
 	# no way out is the fastest way to make a build feel broken.
-	if event.is_action_pressed("ui_cancel"):
+	#
+	# Not while frozen, though. _unhandled_input reaches children before
+	# parents, so a body that grabbed Escape here would recapture the cursor
+	# before Crawl ever saw the key -- and a panel you cannot click is worse
+	# than a cursor you cannot free.
+	if event.is_action_pressed("ui_cancel") and not frozen:
 		capture_mouse(Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED)

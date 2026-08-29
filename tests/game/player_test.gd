@@ -131,3 +131,17 @@ func test_a_wall_stops_you() -> void:
 	# The wall's near face is at z = -2.5 and the capsule is RADIUS thick.
 	assert_float(p.position.z).override_failure_message("walked through the wall, z=%f" % p.position.z).is_greater(-2.5 - Player.RADIUS - 0.1)
 	assert_float(p.position.z).is_less(-1.0)
+
+
+func test_escape_does_not_steal_the_cursor_back_from_a_panel() -> void:
+	# _unhandled_input reaches children before parents, so a frozen body that
+	# grabbed Escape here would recapture the cursor before Crawl saw the key
+	# -- and a panel you cannot click is worse than a cursor you cannot free.
+	var p := _player()
+	p.frozen = true
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	var escape := InputEventAction.new()
+	escape.action = "ui_cancel"
+	escape.pressed = true
+	p._unhandled_input(escape)
+	assert_int(Input.get_mouse_mode()).is_equal(Input.MOUSE_MODE_VISIBLE)
