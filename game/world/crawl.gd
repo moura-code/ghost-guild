@@ -23,6 +23,7 @@ var player: Player
 var hud: HudRoot
 var prompts: Prompts
 var crosshair: Crosshair
+var compass: Compass
 var director: FightDirector
 var guild: GuildRoom
 var choice: ChoiceScreen
@@ -100,6 +101,9 @@ func _build_hud() -> void:
 	crosshair = Crosshair.new()
 	hud.ui.add_child(crosshair)
 
+	compass = Compass.new()
+	hud.ui.add_child(compass)
+
 	# Built once and toggled, not rebuilt per phase: a shop refreshes on every
 	# purchase, and rebuilding the panel each time would throw away the scroll
 	# position along with the node.
@@ -115,6 +119,7 @@ func _build_hud() -> void:
 	pause = PauseMenu.new()
 	pause.resumed.connect(close_panel)
 	pause.options_requested.connect(_open_options)
+	pause.abandon_requested.connect(_abandon_run)
 	pause.quit_requested.connect(_quit)
 	_host(pause)
 
@@ -170,6 +175,8 @@ func open(screen: Control) -> void:
 		# No reticle while a panel owns the cursor: you are pointing at a
 		# button, not at the room.
 		crosshair.visible = screen == null
+	if compass != null:
+		compass.visible = screen == null
 	if screen != null:
 		prompts.clear_prompt()
 		# A floor announcement still fading when a panel opens ends up printed
@@ -270,6 +277,8 @@ func build_floor() -> void:
 	stairs.entered.connect(_on_stairs_entered)
 	_world.add_child(stairs)
 	_refresh_stairs()
+	_refresh_marks()
+	_refresh_objective()
 
 	prompts.announce(game.text("ui.run.floor").replace("{floor}", str(run.floor)))
 	print("crawl: floor %d, %d rooms, %d encounters left" % [run.floor, layout.rooms.size(), markers.size()])
@@ -353,6 +362,8 @@ func _close_room() -> void:
 		if run.is_resolved(marker.index):
 			marker.resolve()
 	_refresh_stairs()
+	_refresh_marks()
+	_refresh_objective()
 
 
 func _refresh_stairs() -> void:
@@ -383,6 +394,8 @@ func _enter_guild() -> void:
 		station.used.connect(_on_station_used)
 	_place_player(guild.spawn_point())
 	close_panel()
+	_refresh_marks()
+	prompts.clear_objective()
 	place_changed.emit(place)
 
 
@@ -513,9 +526,58 @@ func _stand_in(room_index: int) -> Vector3:
 ## The reticle opens on anything you could act on: a station in the guild, a
 ## room you have not cleared, the stairs once they are open.
 func _process(_delta: float) -> void:
+	if player != null and compass != null and compass.visible:
+		compass.look(player.global_position, player.rotation.y)
 	if crosshair == null or not crosshair.visible:
 		return
 	crosshair.set_target(focused != null or _looking_at_a_door())
+
+
+## What still wants something from you, as compass marks. The stairs only
+## appear once they can actually be used: a mark pointing at a locked door is
+## a mark that lies.
+func _refresh_marks() -> void:
+	if compass == null:
+		return
+	var out: Array = []
+	if place == Place.GUILD and guild != null:
+		for station in guild.stations:
+			out.append({"at": (station as Interactable).position, "kind": "ghost"})
+		compass.set_marks(out)
+		return
+	var run := game.campaign.run
+	if run == null or layout == null:
+		compass.set_marks([])
+		return
+	for i in run.nodes.size():
+		if not run.is_resolved(i):
+			out.append({"at": Kit.cell_to_world(layout.room_center(layout.room_of_node(i))), "kind": "encounter"})
+	if run.phase == "exit":
+		out.append({"at": Kit.cell_to_world(layout.room_center(layout.stairs_room)), "kind": "stairs"})
+	compass.set_marks(out)
+
+
+## The one line that says what the floor still wants. Without it the compass
+## shows marks and never says what they are.
+func _refresh_objective() -> void:
+	if prompts == null or place != Place.DUNGEON:
+		return
+	var run := game.campaign.run
+	if run == null:
+		return
+	if run.phase == "exit":
+		prompts.show_objective(game.text("ui.run.stairs_open"))
+		return
+	var left := 0
+	for i in run.nodes.size():
+		if not run.is_resolved(i):
+			left += 1
+	if left <= 0:
+		prompts.clear_objective()
+	elif left == 1:
+		prompts.show_objective(game.text("ui.run.one_room_left"))
+	else:
+		prompts.show_objective(game.text("ui.run.rooms_left").replace("{n}", str(left)))
 
 
 func _looking_at_a_door() -> bool:
@@ -565,6 +627,17 @@ func _open_options() -> void:
 func _on_settings_changed(s: Settings) -> void:
 	s.apply(player)
 	s.save(settings_path)
+
+
+## Giving up goes through RunEngine like everything else. The engine ends it
+## as a retreat from whatever phase you were in, including mid-fight.
+func _abandon_run() -> void:
+	close_panel()
+	var run := game.campaign.run
+	if run == null or run.is_over():
+		return
+	game.run_action({"kind": "abandon"})
+	_sync()
 
 
 func _quit() -> void:

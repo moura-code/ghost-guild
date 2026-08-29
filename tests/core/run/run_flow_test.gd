@@ -187,3 +187,59 @@ func test_turn_cap_loss_is_a_death_with_zero_hp() -> void:
 	assert_dict(run.stats.measured(1)).contains_key_value("fights", 1)
 	assert_str(run.outcome["cause"]).is_equal("turn_cap")
 	assert_str(run.outcome["killer"]).is_equal("")
+
+
+## Giving up. A run you cannot leave is a run that traps the player, and
+## "quit the game and never come back" is the workaround they use instead.
+func test_you_can_give_up_from_any_phase() -> void:
+	for phase in ["node", "reward", "rest", "shop", "event", "exit"]:
+		var run := TestFixtures.new_run()
+		TestFixtures.set_nodes(run, [{"kind": "rest"}])
+		run.phase = phase
+		RunEngine.apply(run, {"kind": "abandon"})
+		assert_bool(run.is_over()).override_failure_message(
+			"could not give up from phase %s" % phase).is_true()
+		assert_str(String(run.outcome["kind"])).is_equal("retreat")
+
+
+func test_you_can_give_up_in_the_middle_of_a_fight() -> void:
+	var run := TestFixtures.new_run()
+	TestFixtures.set_nodes(run, [{"kind": "fight", "enemies": ["bone_rat"]}])
+	RunEngine.apply(run, {"kind": "enter"})
+	assert_str(run.phase).is_equal("fight")
+	RunEngine.apply(run, {"kind": "abandon"})
+	assert_bool(run.is_over()).is_true()
+	assert_object(run.fight).is_null()
+
+
+func test_giving_up_keeps_what_you_banked_and_earns_nothing_new() -> void:
+	var run := TestFixtures.new_run()
+	TestFixtures.set_nodes(run, [{"kind": "rest"}])
+	run.soul = 12.0
+	run.coin = 30
+	RunEngine.apply(run, {"kind": "abandon"})
+	var rate := float(run.content.balance.get("coin_to_soul", 0.1))
+	assert_float(float(run.outcome["soul"])).is_equal_approx(12.0 + 30.0 * rate, 0.001)
+
+
+func test_giving_up_is_never_offered_to_the_autopilot() -> void:
+	# If it were in legal_actions the balance simulator would start abandoning
+	# runs, and every §12 invariant would be measuring a different game.
+	# "shop" and "event" are left out: legal_actions reads run.shop and
+	# run.event_id, which only a real node sets, so forcing the phase alone
+	# would be testing the fixture rather than the engine.
+	for phase in ["node", "reward", "rest", "exit"]:
+		var run := TestFixtures.new_run()
+		TestFixtures.set_nodes(run, [{"kind": "rest"}])
+		run.phase = phase
+		for action in RunEngine.legal_actions(run):
+			assert_str(String(action.get("kind", ""))).is_not_equal("abandon")
+
+
+func test_giving_up_twice_changes_nothing() -> void:
+	var run := TestFixtures.new_run()
+	TestFixtures.set_nodes(run, [{"kind": "rest"}])
+	RunEngine.apply(run, {"kind": "abandon"})
+	var events := run.events.size()
+	RunEngine.apply(run, {"kind": "abandon"})
+	assert_int(run.events.size()).is_equal(events)

@@ -207,3 +207,27 @@ func test_a_panel_darkens_the_room_behind_it() -> void:
 	_escape(c)
 	await await_millis(220)
 	assert_float(c.hud.dim.color.a).is_greater(0.4)
+
+
+func test_you_can_give_up_a_run_from_the_pause_menu() -> void:
+	var g := _game()
+	var c := _crawl(g)
+	g.start_run(1)
+	var guard := 0
+	while g.campaign.run != null and g.campaign.run.phase == "descent" and guard < 20:
+		guard += 1
+		c.choice.take(0)
+	assert_int(c.place).is_equal(Crawl.Place.DUNGEON)
+	_escape(c)
+	assert_bool(c.pause.buttons.has(PauseMenu.ABANDON)).is_true()
+	c.pause.press(PauseMenu.ABANDON)
+	# The engine ended it as a retreat, the epitaph did not fire (nobody was
+	# left behind), and you are home.
+	assert_int(c.place).is_equal(Crawl.Place.GUILD)
+	assert_object(g.campaign.run).is_null()
+
+
+func test_the_guild_pause_menu_has_nothing_to_give_up() -> void:
+	var c := _crawl(_game())
+	_escape(c)
+	assert_bool(c.pause.buttons.has(PauseMenu.ABANDON)).is_false()

@@ -12,6 +12,9 @@ const BANNER_FADE := 0.5
 
 var banner: Label
 var prompt: Label
+## What the floor still wants from you. Sits under the compass, because a
+## compass with marks on it and no words is an instrument nobody reads.
+var objective: Label
 
 var _banner_tween: Tween
 
@@ -41,6 +44,16 @@ func _init() -> void:
 	prompt.offset_bottom = -100.0
 	prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(prompt)
+
+	objective = Label.new()
+	objective.name = "Objective"
+	objective.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	objective.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	objective.offset_top = Compass.TOP + Compass.HEIGHT + 1.0
+	objective.offset_bottom = Compass.TOP + Compass.HEIGHT + 17.0
+	objective.modulate = Palette.BONE_DIM
+	objective.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(objective)
 
 
 ## Rises, holds, fades. Announced on arrival rather than pinned to a corner:
@@ -79,3 +92,15 @@ func hush() -> void:
 	if _banner_tween != null and _banner_tween.is_valid():
 		_banner_tween.kill()
 	banner.modulate.a = 0.0
+
+
+func show_objective(text_value: String) -> void:
+	objective.text = text_value
+
+
+func clear_objective() -> void:
+	objective.text = ""
+
+
+func has_objective() -> bool:
+	return objective.text != ""

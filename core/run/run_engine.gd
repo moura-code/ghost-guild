@@ -79,6 +79,22 @@ static func apply(run: RunState, action: Dictionary) -> Array:
 	var start := run.events.size()
 	var kind := String(action.get("kind", ""))
 	var combat_events: Array = []
+	# Giving up is legal from anywhere, including mid-fight. A run you cannot
+	# leave is a run that traps the player, and "quit the game and never come
+	# back" is the workaround they will use instead.
+	#
+	# It resolves as a retreat, which the economy already prices: the hero
+	# lives, you keep the Soul and coin banked so far, and nothing new is
+	# earned. That makes abandoning strictly worse than playing on unless you
+	# are about to die -- which is exactly what a retreat is for -- so it adds
+	# no new dominant strategy to balance.
+	#
+	# Deliberately NOT in legal_actions: the autopilot must never choose it, or
+	# the balance simulator would start abandoning runs and every §12 invariant
+	# would be measuring a different game.
+	if kind == "abandon":
+		_end_run(run, "retreat")
+		return run.events.slice(start)
 	match run.phase:
 		"descent":
 			_apply_descent(run, kind, action)

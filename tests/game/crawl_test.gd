@@ -271,3 +271,46 @@ func test_your_dead_do_not_stand_inside_the_thing_you_are_fighting() -> void:
 			assert_vector(cell).override_failure_message(
 				"a ghost is standing in unresolved room %d" % i).is_not_equal(
 				c.layout.room_center(c.layout.room_of_node(i)))
+
+
+func test_the_compass_points_at_every_room_that_still_wants_something() -> void:
+	# The fix for the worst thing about playing this: three rooms in a 24x24
+	# grid and no way to know where any of them were.
+	var c := _crawl()
+	var run := c.game.campaign.run
+	assert_array(c.compass.marks).has_size(run.nodes.size())
+	for m in c.compass.marks:
+		assert_str(String((m as Dictionary)["kind"])).is_equal("encounter")
+
+
+func test_a_cleared_room_stops_being_pointed_at() -> void:
+	var c := _crawl()
+	var before := c.compass.marks.size()
+	_clear(c, c.markers[0] as EncounterMarker)
+	if c.game.campaign.run.is_over():
+		return
+	assert_int(c.compass.marks.size()).is_less(before)
+
+
+func test_the_stairs_are_only_pointed_at_once_they_open() -> void:
+	# A mark pointing at a locked door is a mark that lies.
+	var c := _crawl()
+	var run := c.game.campaign.run
+	for m in c.compass.marks:
+		assert_str(String((m as Dictionary)["kind"])).is_not_equal("stairs")
+	for m in c.markers.duplicate():
+		if run.is_over():
+			return
+		_clear(c, m as EncounterMarker)
+	if run.is_over() or run.phase != "exit":
+		return
+	var kinds: Array = []
+	for m in c.compass.marks:
+		kinds.append(String((m as Dictionary)["kind"]))
+	assert_array(kinds).contains(["stairs"])
+
+
+func test_the_floor_says_how_much_of_it_is_left() -> void:
+	var c := _crawl()
+	assert_bool(c.prompts.has_objective()).is_true()
+	assert_bool(c.prompts.objective.text.begins_with("ui.")).is_false()

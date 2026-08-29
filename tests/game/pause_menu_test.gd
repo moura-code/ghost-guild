@@ -17,13 +17,13 @@ func test_it_offers_resume_options_and_quit() -> void:
 	assert_bool(m.buttons.has(PauseMenu.QUIT)).is_true()
 
 
-func test_there_is_no_abandon_button_because_the_engine_has_no_abandon() -> void:
-	# The only way out of a run in core/ is the exit decision at phase "exit".
-	# An "abandon" action is an economy question -- does the hero die, is the
-	# Soul banked -- and a pause menu does not get to decide that. A dead
-	# button is worse than a missing one.
-	for m in [_menu(false), _menu(true)]:
-		assert_bool(m.buttons.has("abandon")).is_false()
+func test_the_guild_has_no_run_to_give_up() -> void:
+	# A dead button is worse than a missing one.
+	assert_bool(_menu(false).buttons.has(PauseMenu.ABANDON)).is_false()
+
+
+func test_underground_you_can_give_up() -> void:
+	assert_bool(_menu(true).buttons.has(PauseMenu.ABANDON)).is_true()
 
 
 func test_every_button_says_something_real() -> void:
@@ -40,10 +40,11 @@ func test_each_button_reports_what_it_is() -> void:
 	var heard: Array = []
 	m.resumed.connect(func() -> void: heard.append("resume"))
 	m.options_requested.connect(func() -> void: heard.append("options"))
+	m.abandon_requested.connect(func() -> void: heard.append("abandon"))
 	m.quit_requested.connect(func() -> void: heard.append("quit"))
-	for id in [PauseMenu.RESUME, PauseMenu.OPTIONS, PauseMenu.QUIT]:
+	for id in [PauseMenu.RESUME, PauseMenu.OPTIONS, PauseMenu.ABANDON, PauseMenu.QUIT]:
 		m.press(String(id))
-	assert_array(heard).is_equal(["resume", "options", "quit"])
+	assert_array(heard).is_equal(["resume", "options", "abandon", "quit"])
 
 
 func test_rebuilding_does_not_stack_two_menus() -> void:

@@ -7,12 +7,14 @@ extends PanelContainer
 
 signal resumed()
 signal options_requested()
+signal abandon_requested()
 signal quit_requested()
 
 ## Ids so a test can name a button without matching on its label, which is a
 ## translated string and will change.
 const RESUME := "resume"
 const OPTIONS := "options"
+const ABANDON := "abandon"
 const QUIT := "quit"
 
 var buttons: Dictionary = {}
@@ -38,16 +40,13 @@ func _init() -> void:
 	margins.add_child(_column)
 
 
-## `in_run` is taken and currently unused, and that is deliberate. Abandoning a
-## run mid-floor is NOT something core/ supports: the only way out of a run is
-## the exit decision (push / retreat / watch) at phase "exit". Adding an
-## "abandon" action is an economy question -- does the hero die, is the Soul
-## banked, does it count as a death for the ladder -- and an economy question
-## is a design decision, not something a pause menu invents on its own.
+## `in_run` decides whether giving up is on the menu: there is nothing to give
+## up in the guild, and a dead button is worse than a missing one.
 ##
-## Quitting saves mid-run and resumes where you left off, so nothing is
-## trapped. The parameter stays so the menu can grow the item the day that
-## decision is made.
+## Abandoning resolves as a retreat, which the economy already prices -- the
+## hero lives, you keep what you banked, you earn nothing new. That makes it
+## strictly worse than playing on unless you are about to die, which is
+## exactly what a retreat is for, so it adds no new dominant strategy.
 func build(content: Content, in_run: bool) -> void:
 	_in_run = in_run
 	for child in _column.get_children():
@@ -61,6 +60,8 @@ func build(content: Content, in_run: bool) -> void:
 
 	_add(content, RESUME, "ui.menu.resume", resumed)
 	_add(content, OPTIONS, "ui.menu.options", options_requested)
+	if in_run:
+		_add(content, ABANDON, "ui.menu.abandon", abandon_requested)
 	_add(content, QUIT, "ui.menu.quit", quit_requested)
 
 

@@ -256,3 +256,9 @@ ui.options.fov,Field of view
 ui.options.volume,Volume
 ui.options.fullscreen,Fullscreen
 ui.hint.close,Esc to close
+ui.run.rooms_left,{n} rooms still stir
+ui.run.one_room_left,One room still stirs
+ui.run.stairs_open,The stairs are open
+ui.menu.title,Ghost Guild
+ui.menu.continue,Continue
+ui.menu.new,New guild
