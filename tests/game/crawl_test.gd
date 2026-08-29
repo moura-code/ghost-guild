@@ -254,3 +254,20 @@ func test_the_hud_exists_and_announces_the_floor() -> void:
 	assert_object(c.prompts).is_not_null()
 	assert_bool(c.prompts.is_announcing()).is_true()
 	assert_str(c.prompts.banner.text).is_equal(c.game.text("ui.run.floor").replace("{floor}", "1"))
+
+
+func test_your_dead_do_not_stand_inside_the_thing_you_are_fighting() -> void:
+	# Ghost anchors are room centres and so is the fight staging, so a ghost
+	# placed in an unresolved room ends up standing inside the enemy.
+	var c := _crawl()
+	var run := c.game.campaign.run
+	for child in c.get_node("World").get_children():
+		if not (child is GhostFigure):
+			continue
+		var cell := Kit.world_to_cell((child as GhostFigure).position)
+		for i in run.nodes.size():
+			if run.is_resolved(i):
+				continue
+			assert_vector(cell).override_failure_message(
+				"a ghost is standing in unresolved room %d" % i).is_not_equal(
+				c.layout.room_center(c.layout.room_of_node(i)))

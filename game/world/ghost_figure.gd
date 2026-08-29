@@ -42,7 +42,9 @@ func _build() -> void:
 	_material.albedo_color = Color(GLOW.r, GLOW.g, GLOW.b, 0.34)
 	_material.emission_enabled = true
 	_material.emission = GLOW
-	_material.emission_energy_multiplier = 0.9
+	# 0.9 blew out to pure white once the grade got real headroom -- a ghost
+	# should be the brightest thing in a dark corridor, not a light bulb.
+	_material.emission_energy_multiplier = 0.35
 	_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
 	_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 
@@ -73,8 +75,8 @@ func _build() -> void:
 	var lamp := OmniLight3D.new()
 	lamp.name = "Glow"
 	lamp.light_color = GLOW
-	lamp.light_energy = 0.8
-	lamp.omni_range = 2.6
+	lamp.light_energy = 0.55
+	lamp.omni_range = 3.0
 	lamp.position = Vector3(0.0, HEIGHT * 0.6, 0.0)
 	add_child(lamp)
 

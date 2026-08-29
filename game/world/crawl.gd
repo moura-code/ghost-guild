@@ -276,11 +276,27 @@ func build_floor() -> void:
 	floor_built.emit(run.floor)
 
 
+## Your dead stand on the floor they died on. Never in a room that still has
+## an encounter in it: the ghost anchors are room centres and so is the fight
+## staging, so a ghost would end up standing inside the thing you are fighting.
 func _place_ghosts(run: RunState) -> void:
+	var taken: Dictionary = {}
+	for i in run.nodes.size():
+		if not run.is_resolved(i):
+			taken[layout.room_of_node(i)] = true
+	var free: Array = []
+	for anchor in layout.ghost_anchors:
+		var cell: Vector2i = anchor
+		var busy := false
+		for room in taken:
+			if layout.room_center(int(room)) == cell:
+				busy = true
+				break
+		if not busy:
+			free.append(cell)
 	var here := game.campaign.ladder.on_floor(run.floor)
-	for i in mini(here.size(), layout.ghost_anchors.size()):
-		var at := Kit.cell_to_world(layout.ghost_anchors[i])
-		_world.add_child(GhostFigure.create(here[i], at))
+	for i in mini(here.size(), free.size()):
+		_world.add_child(GhostFigure.create(here[i], Kit.cell_to_world(free[i])))
 
 
 func _on_marker_entered(index: int) -> void:
