@@ -10,7 +10,11 @@ extends Node3D
 
 ## Metres between one floor's ring and the next, going down.
 const FLOOR_DROP := 2.6
-const RING_RADIUS := 1.15
+const RING_RADIUS := 0.72
+## The tower is a diorama, not a place: twenty floors have to fit down a
+## three-metre shaft, so the figures on it are scaled the way a model railway
+## scales people. Life-size ghosts fill the well and the depth stops reading.
+const FIGURE_SCALE := 0.4
 ## How many floors are drawn. Below this the shaft just goes dark, which is
 ## more honest than a bottom.
 const MAX_FLOORS := 20
@@ -50,17 +54,22 @@ func build(campaign: Campaign) -> void:
 		var on_floor := campaign.ladder.on_floor(floor)
 		for slot in on_floor.size():
 			var figure := GhostFigure.create(on_floor[slot], ghost_point(floor, slot, on_floor.size()))
+			figure.scale = Vector3.ONE * FIGURE_SCALE
 			add_child(figure)
 			figures.append(figure)
+
+	add_child(_shaft())
 
 	# A shaft that fades rather than ends. The dark at the bottom is the part
 	# of the ladder you have not reached yet.
 	var mouth := OmniLight3D.new()
 	mouth.name = "Mouth"
 	mouth.light_color = Color(0.62, 0.78, 0.95)
-	mouth.light_energy = 1.4
-	mouth.omni_range = 5.0
-	mouth.position = Vector3(0.0, -1.0, 0.0)
+	# Dim and set low. Bright at the mouth washes the near stone flat and
+	# hides the drop; the shaft should be lit by what is standing in it.
+	mouth.light_energy = 0.5
+	mouth.omni_range = 7.0
+	mouth.position = Vector3(0.0, -3.2, 0.0)
 	add_child(mouth)
 
 
@@ -78,13 +87,37 @@ static func clamp_floor(floor: int, depth: int) -> int:
 func _ring(floor: int) -> Node3D:
 	var torus := TorusMesh.new()
 	torus.inner_radius = RING_RADIUS
-	torus.outer_radius = RING_RADIUS + 0.35
+	torus.outer_radius = RING_RADIUS + 0.16
 	var m := StandardMaterial3D.new()
-	m.albedo_color = Color(0.30, 0.28, 0.26)
+	m.albedo_color = Color(0.34, 0.32, 0.30)
 	m.roughness = 0.95
 	var inst := MeshInstance3D.new()
 	inst.name = "Ring%d" % floor
 	inst.mesh = torus
 	inst.material_override = m
 	inst.position = Vector3(0.0, floor_y(floor), 0.0)
+	return inst
+
+
+## The walls of the shaft, seen from inside. Without them the hole shows the
+## environment's background colour instead of stone, and a well you can see
+## the void through is a hole in the level, not a well.
+##
+## One box with front faces culled rather than four planes: a box is one mesh,
+## and the seams four planes leave at the corners are exactly the thing a
+## player notices when leaning over an edge.
+func _shaft() -> MeshInstance3D:
+	var drop := FLOOR_DROP * float(maxi(1, _depth)) + FLOOR_DROP
+	var box := BoxMesh.new()
+	box.size = Vector3(Kit.CELL, drop, Kit.CELL)
+	var m := Kit.wall_material().duplicate()
+	m.cull_mode = BaseMaterial3D.CULL_FRONT
+	# The shaft is taller than a wall, so it needs its own uv scale or the
+	# stone stretches down it. Same TEXEL, different span.
+	m.uv1_scale = Vector3(Kit.CELL / Kit.TEXEL, drop / Kit.TEXEL, 1.0)
+	var inst := MeshInstance3D.new()
+	inst.name = "Shaft"
+	inst.mesh = box
+	inst.material_override = m
+	inst.position = Vector3(0.0, -drop * 0.5, 0.0)
 	return inst

@@ -31,12 +31,32 @@ func _init() -> void:
 	win.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
 	win.size = Vector2i(1280, 720)
 
-	var layout := LayoutGenerator.generate(3, Rng.new(seed_value))
+	var guild := args.has("guild")
 	var world := Node3D.new()
 	win.add_child(world)
-	var counts := DungeonBuilder.build(layout, world)
+	var layout: FloorLayout
+	var counts: Dictionary
+	if guild:
+		# The real guild, built by the real GuildRoom, with a campaign's dead
+		# standing in the well. No save file is touched: the campaign is made
+		# here and thrown away.
+		# GuildRoom.build() builds its own geometry; building the plan here too
+		# would put two floors in the same place.
+		layout = GuildRoom.plan()
+		counts = {"floors": 0, "walls": 0, "torches": 0, "boxes": 0}
+		var campaign := CampaignEngine.new_campaign(Content.load_from("res://data"), seed_value, 1000)
+		for i in 4:
+			var ghost := Ghost.founder(campaign.content, 1000)
+			ghost.floor = 1 + i * 2
+			campaign.ladder.add(ghost)
+		var room := GuildRoom.new()
+		world.add_child(room)
+		room.build(campaign)
+	else:
+		layout = LayoutGenerator.generate(3, Rng.new(seed_value))
+		counts = DungeonBuilder.build(layout, world)
 
-	var env := Grade.environment(depth)
+	var env := Grade.guild_environment() if guild else Grade.environment(depth)
 	if diag:
 		env.fog_enabled = false
 		env.ambient_light_energy = 1.2
@@ -44,7 +64,7 @@ func _init() -> void:
 	we.environment = env
 	world.add_child(we)
 
-	var shot := _corridor_shot(layout)
+	var shot := _guild_shot(layout) if guild else _corridor_shot(layout)
 	var cam := Camera3D.new()
 	cam.fov = 72.0
 	world.add_child(cam)
@@ -98,3 +118,15 @@ func _corridor_shot(layout: FloorLayout) -> Array:
 	to.y = Player.EYE - 0.15
 	print("crawl_shot: corridor %d cells from %s dir %s" % [best_len, best_from, best_dir])
 	return [from, to]
+
+
+## The guild, framed from the doorway looking across the room at the well.
+## This is the shot the store page opens on, so it is the one framing that is
+## hand-chosen rather than found.
+func _guild_shot(_layout: FloorLayout) -> Array:
+	# Standing at the rim, leaning over. The tower of your dead going down the
+	# shaft is the whole pitch, so the shot looks into it rather than at the
+	# room around it.
+	var well := Kit.cell_to_world(GuildRoom.WELL_CELL)
+	var from := well + Vector3(0.0, 2.9, 1.75)
+	return [from, well + Vector3(0.0, -5.5, 0.0)]

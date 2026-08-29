@@ -82,3 +82,30 @@ func test_a_shaft_is_built_even_with_nobody_in_it() -> void:
 	var w := _well(c)
 	assert_array(w.figures).is_empty()
 	assert_array(w.rings).is_not_empty()
+
+
+func test_the_shaft_has_walls_you_see_from_inside() -> void:
+	# Without them the hole shows the environment's background colour, and a
+	# well you can see the void through is a hole in the level.
+	var w := _well(TestFixtures.campaign())
+	var shaft: MeshInstance3D = w.get_node("Shaft")
+	var m: StandardMaterial3D = shaft.material_override
+	assert_int(m.cull_mode).is_equal(BaseMaterial3D.CULL_FRONT)
+	# Deep enough to reach past the last ring.
+	assert_float((shaft.mesh as BoxMesh).size.y).is_greater(absf(WellView.floor_y(w.depth())))
+	# And still at the kit's one texel density (spec §7).
+	assert_float((shaft.mesh as BoxMesh).size.y / m.uv1_scale.y).is_equal_approx(Kit.TEXEL, 0.01)
+
+
+func test_the_tower_is_a_diorama_not_a_place() -> void:
+	# Twenty floors have to fit down a three-metre shaft. Life-size ghosts
+	# fill the well and the depth stops reading.
+	var c := _campaign_with_dead(2)
+	var w := _well(c)
+	for f in w.figures:
+		assert_float((f as GhostFigure).scale.x).is_less(1.0)
+	# And they still fit inside the shaft's walls.
+	for f in w.figures:
+		var figure: GhostFigure = f
+		assert_float(absf(figure.position.x)).is_less(Kit.CELL * 0.5)
+		assert_float(absf(figure.position.z)).is_less(Kit.CELL * 0.5)

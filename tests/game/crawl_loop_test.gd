@@ -23,11 +23,14 @@ func _game() -> GameRoot:
 	return g
 
 
+## Binding lands you in the guild; descending is what starts a run. These
+## tests are about the floor loop, so they descend immediately.
 func _crawl(g: GameRoot) -> Crawl:
 	var c: Crawl = auto_free(Crawl.new())
 	c.game = g
 	add_child(c)
 	c.bind(g)
+	g.start_run(1)
 	return c
 
 

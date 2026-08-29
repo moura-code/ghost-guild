@@ -29,12 +29,19 @@ func _game() -> GameRoot:
 ## picks up the /root/Game autoload when nobody has claimed it, and that
 ## autoload boots against the real save path -- so binding after add_child
 ## would build the floor twice and write over the developer's save.
+## Binding now lands you in the guild -- there is no run until you descend.
+## These are the dungeon's tests, so they descend and take the draft first.
 func _crawl() -> Crawl:
 	var c: Crawl = auto_free(Crawl.new())
 	var g := _game()
 	c.game = g
 	add_child(c)
 	c.bind(g)
+	g.start_run(1)
+	var guard := 0
+	while g.campaign.run != null and g.campaign.run.phase == "descent" and guard < 20:
+		guard += 1
+		c.choice.take(0)
 	return c
 
 
