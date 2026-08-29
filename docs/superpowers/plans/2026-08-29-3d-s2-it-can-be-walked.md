@@ -1746,7 +1746,26 @@ Two failure modes to expect and how to read them:
 cmd //c "tools\\test.cmd tests"
 ```
 
-Expected: exit 0, **651 tests** (614 + 5 + 6 + 6 + 8 + 9 + 5 + 8).
+Expected: exit 0. Actual: **663 tests across 70 suites, exit 0** — higher than
+the 651 this plan predicted, because three tests were added during execution
+that it did not foresee: two in `dungeon_builder_test` (the ceiling faces down;
+a wall stands on the floor rather than sinking into it) and one in `crawl_test`
+(a crawl handed a `GameRoot` does not go looking for the autoload).
+
+**Two bugs found here, both by a probe rather than by the suite:**
+
+1. **`_ready` was stealing the bind.** `Crawl._ready` picks up the `/root/Game`
+   autoload when `game` is null, and the test helper called `add_child` *before*
+   `bind`. So every crawl test booted the **real autoload against the real save
+   path**, built the floor once for it and again for the injected `GameRoot`.
+   The suite was green throughout — it asserted the second build, which was
+   correct. Fixed by assigning `c.game` before `add_child`, the same order
+   `main_test` already used for `MainScreen`, and pinned by a new test.
+2. **The replacement floor lost the name `World`.** `build_floor` frees the old
+   floor with `queue_free`, which is deferred, so for the rest of that frame the
+   old node is still a child — and `add_child` renames the *new* one to dodge
+   the collision, leaving `get_node("World")` pointing at the floor on its way
+   out. Fixed by renaming the outgoing node to `OldWorld` before freeing it.
 
 - [ ] **Step 6: Commit**
 
