@@ -35,6 +35,8 @@ func _crawl() -> Crawl:
 	var c: Crawl = auto_free(Crawl.new())
 	var g := _game()
 	c.game = g
+	# These are the game's tests, not the menu's: start already playing.
+	c.show_title = false
 	add_child(c)
 	c.bind(g)
 	g.start_run(1)

@@ -29,6 +29,7 @@ var guild: GuildRoom
 var choice: ChoiceScreen
 var exit_panel: ExitScreen
 var epitaph: EpitaphScreen
+var title: TitleMenu
 var pause: PauseMenu
 var options: OptionsMenu
 var settings: Settings
@@ -36,6 +37,8 @@ var settings: Settings
 ## reason save_path is: a test that writes the real file changes the
 ## developer's mouse sensitivity.
 var settings_path: String = Settings.PATH
+## Off for tests, which want the game already running rather than a menu.
+var show_title: bool = true
 var markers: Array[EncounterMarker] = []
 var stairs: EncounterMarker
 ## The station the player is standing in, or null.
@@ -54,6 +57,8 @@ var _world: Node3D
 var _built_floor: int = -1
 var _stations: Dictionary = {}
 var _mourning: bool = false
+var _had_save: bool = false
+var _options_came_from_title: bool = false
 
 
 ## Picks up the autoload only if nobody has claimed this node already. Tests
@@ -77,13 +82,20 @@ func bind(g: GameRoot) -> void:
 		if not bool(result["ok"]):
 			push_error("crawl: boot failed: %s" % result["reason"])
 			return
+	_had_save = SaveGame.exists(g.save_path)
 	settings = Settings.load_from(settings_path)
 	_build_hud()
 	settings.apply(player)
 	if not g.run_changed.is_connected(_sync):
 		g.run_changed.connect(_sync)
 	_sync()
-	_maybe_show_offline()
+	if show_title:
+		# Built AFTER _sync, so the world behind the title is the world you are
+		# about to walk back into rather than an empty frame.
+		title.build(g.content, _had_save)
+		open(title)
+	else:
+		_maybe_show_offline()
 
 
 # ---------------------------------------------------------------- the screen
@@ -115,6 +127,13 @@ func _build_hud() -> void:
 	epitaph = EpitaphScreen.new()
 	epitaph.dismissed.connect(_on_epitaph_dismissed)
 	_host(epitaph)
+
+	title = TitleMenu.new()
+	title.continued.connect(_leave_title)
+	title.started_new.connect(_start_new_guild)
+	title.options_requested.connect(_open_options)
+	title.quit_requested.connect(_quit)
+	_host(title)
 
 	pause = PauseMenu.new()
 	pause.resumed.connect(close_panel)
@@ -602,7 +621,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not panel_open():
 		_open_pause()
 	elif panel == options:
-		_open_pause()
+		# Back to whichever menu opened the options, not straight into the room.
+		if _options_came_from_title:
+			title.build(game.content, _had_save)
+			open(title)
+		else:
+			_open_pause()
 	elif _can_close(panel):
 		close_panel()
 
@@ -611,7 +635,27 @@ func _unhandled_input(event: InputEvent) -> void:
 ## unchosen would strand the run in a phase with nothing to do -- but pausing
 ## over them is always allowed, which is what the pause branch above is for.
 func _can_close(screen: Control) -> bool:
-	return screen != choice and screen != exit_panel and screen != epitaph
+	return screen != choice and screen != exit_panel and screen != epitaph and screen != title
+
+
+## Leaving the title is the moment the game actually begins: the offline
+## summary belongs here, not on boot, or it fires behind the menu.
+func _leave_title() -> void:
+	close_panel()
+	_maybe_show_offline()
+
+
+## A new guild throws the campaign away and starts one. Destructive, so it is
+## only reachable from the title -- never from the pause menu, where a
+## mis-click would cost a player their whole ladder.
+func _start_new_guild() -> void:
+	close_panel()
+	game.campaign = CampaignEngine.new_campaign(game.content, game.now(), game.now())
+	place = Place.NONE
+	_leave_dungeon()
+	_leave_guild()
+	game.save()
+	_sync()
 
 
 func _open_pause() -> void:
@@ -620,6 +664,7 @@ func _open_pause() -> void:
 
 
 func _open_options() -> void:
+	_options_came_from_title = panel == title
 	options.build(game.content, settings)
 	open(options)
 

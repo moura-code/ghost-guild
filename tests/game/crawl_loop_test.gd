@@ -28,6 +28,8 @@ func _game() -> GameRoot:
 func _crawl(g: GameRoot) -> Crawl:
 	var c: Crawl = auto_free(Crawl.new())
 	c.game = g
+	# These are the game's tests, not the menu's: start already playing.
+	c.show_title = false
 	add_child(c)
 	c.bind(g)
 	g.start_run(1)

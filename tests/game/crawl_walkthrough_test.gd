@@ -38,6 +38,8 @@ const TMP_CFG := "user://test_saves/crawl_walkthrough_test.cfg"
 func _crawl(g: GameRoot) -> Crawl:
 	var c: Crawl = auto_free(Crawl.new())
 	c.game = g
+	# These are the game's tests, not the menu's: start already playing.
+	c.show_title = false
 	# Set before the tree sees it, like `game`: otherwise the crawl reads and
 	# writes the developer's real settings.cfg.
 	c.settings_path = TMP_CFG
@@ -231,3 +233,53 @@ func test_the_guild_pause_menu_has_nothing_to_give_up() -> void:
 	var c := _crawl(_game())
 	_escape(c)
 	assert_bool(c.pause.buttons.has(PauseMenu.ABANDON)).is_false()
+
+
+## The title is the one panel Escape cannot dismiss into a running game.
+func _titled(g: GameRoot) -> Crawl:
+	var c: Crawl = auto_free(Crawl.new())
+	c.game = g
+	c.settings_path = TMP_CFG
+	add_child(c)
+	c.bind(g)
+	return c
+
+
+func test_the_game_opens_on_its_title() -> void:
+	var c := _titled(_game())
+	assert_object(c.panel).is_same(c.title)
+	assert_bool(c.player == null or c.player.frozen).is_true()
+
+
+func test_escape_cannot_dismiss_the_title_into_a_running_game() -> void:
+	var c := _titled(_game())
+	_escape(c)
+	assert_object(c.panel).is_same(c.title)
+
+
+func test_continue_puts_you_in_the_world() -> void:
+	var c := _titled(_game())
+	c.title.press(TitleMenu.CONTINUE if c.title.buttons.has(TitleMenu.CONTINUE) else TitleMenu.NEW)
+	assert_bool(c.panel_open()).is_false()
+	assert_int(c.place).is_not_equal(Crawl.Place.NONE)
+
+
+func test_a_new_guild_throws_the_old_one_away() -> void:
+	var g := _game()
+	var c := _titled(g)
+	for i in 3:
+		var ghost := Ghost.founder(g.content, 1000)
+		ghost.floor = 2 + i
+		g.campaign.ladder.add(ghost)
+	var before := g.campaign.ladder.ghosts.size()
+	c.title.press(TitleMenu.NEW)
+	assert_int(g.campaign.ladder.ghosts.size()).is_less(before)
+	assert_int(c.place).is_equal(Crawl.Place.GUILD)
+
+
+func test_options_from_the_title_go_back_to_the_title() -> void:
+	var c := _titled(_game())
+	c.title.press(TitleMenu.OPTIONS)
+	assert_object(c.panel).is_same(c.options)
+	_escape(c)
+	assert_object(c.panel).is_same(c.title)
