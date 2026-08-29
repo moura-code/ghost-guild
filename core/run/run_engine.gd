@@ -393,6 +393,14 @@ static func exit_summary(run: RunState, samples: int = -1) -> Dictionary:
 	}
 
 
+## The floor's shape, derived from the run seed rather than stored with it: the
+## same floor of the same run always builds the same crypt, so the layout never
+## goes in the save file and can never disagree with it. Uses its own rng tag,
+## so generating geometry never disturbs the encounter or fight streams.
+static func layout_for(run: RunState) -> FloorLayout:
+	return LayoutGenerator.generate(run.nodes.size(), run.sub_rng("layout", run.floor))
+
+
 static func _apply_exit(run: RunState, kind: String) -> void:
 	match kind:
 		"push":

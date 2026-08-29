@@ -130,3 +130,42 @@ static func assign_roles(layout: FloorLayout, node_count: int, rng: Rng) -> void
 		# encounter is worse.
 		out.append(int(free[i % free.size()]) if not free.is_empty() else layout.entry_room)
 	layout.node_rooms = out
+
+
+## Torches hang on walls that face somewhere walkable, thinned to about one in
+## five so a corridor is lit in pools rather than evenly. The dark between them
+## is the difficulty made physical (spec §2), so the thinning is a design
+## choice, not a performance one.
+static func place_anchors(layout: FloorLayout, rng: Rng) -> void:
+	var torches: Array = []
+	for y in layout.height:
+		for x in layout.width:
+			if layout.cell(x, y) != FloorLayout.Cell.WALL:
+				continue
+			var faces_floor: bool = layout.is_walkable(x + 1, y) \
+				or layout.is_walkable(x - 1, y) \
+				or layout.is_walkable(x, y + 1) \
+				or layout.is_walkable(x, y - 1)
+			if faces_floor and rng.randi_range(STREAM, 0, 4) == 0:
+				torches.append(Vector2i(x, y))
+	layout.torch_anchors = torches
+	var ghosts: Array = []
+	for i in layout.rooms.size():
+		if i != layout.entry_room:
+			ghosts.append(layout.room_center(i))
+	rng.shuffle(STREAM, ghosts)
+	layout.ghost_anchors = ghosts
+
+
+## Two rooms beyond the encounters: the one you come in by and the one the
+## stairs are in. Biome dressing takes a parameter here when there is a second
+## biome to dress; the floor number already reaches this through the seed.
+static func generate(node_count: int, rng: Rng) -> FloorLayout:
+	var layout := FloorLayout.create(GRID, GRID)
+	place_rooms(layout, node_count + 2, rng)
+	carve_rooms(layout)
+	connect_rooms(layout, rng)
+	add_walls(layout)
+	assign_roles(layout, node_count, rng)
+	place_anchors(layout, rng)
+	return layout

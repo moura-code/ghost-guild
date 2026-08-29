@@ -150,3 +150,60 @@ func test_the_stairs_go_in_the_room_furthest_from_the_door() -> void:
 	for i in layout.rooms.size():
 		var c := layout.room_center(i)
 		assert_bool(absi(c.x - entry.x) + absi(c.y - entry.y) <= furthest).is_true()
+
+
+func test_torches_hang_on_walls_that_face_a_walkable_cell() -> void:
+	for seed in 8:
+		var layout := LayoutGenerator.generate(3, Rng.new(seed))
+		assert_array(layout.torch_anchors).is_not_empty()
+		for raw in layout.torch_anchors:
+			var at: Vector2i = raw
+			assert_int(layout.cell(at.x, at.y)).is_equal(FloorLayout.Cell.WALL)
+			var faces_floor: bool = layout.is_walkable(at.x + 1, at.y) \
+				or layout.is_walkable(at.x - 1, at.y) \
+				or layout.is_walkable(at.x, at.y + 1) \
+				or layout.is_walkable(at.x, at.y - 1)
+			assert_bool(faces_floor).is_true()
+
+
+func test_ghosts_stand_anywhere_but_the_way_in() -> void:
+	var layout := LayoutGenerator.generate(3, Rng.new(2))
+	assert_array(layout.ghost_anchors).has_size(layout.rooms.size() - 1)
+	var entry := layout.room_center(layout.entry_room)
+	for raw in layout.ghost_anchors:
+		var at: Vector2i = raw
+		assert_bool(at == entry).is_false()
+		assert_bool(layout.is_walkable(at.x, at.y)).is_true()
+
+
+func test_a_generated_floor_is_whole() -> void:
+	for seed in 20:
+		var layout := LayoutGenerator.generate(3, Rng.new(seed))
+		assert_array(layout.rooms).has_size(5)
+		var seen := layout.reachable_from(layout.room_center(layout.entry_room))
+		assert_bool(seen.has(layout.room_center(layout.stairs_room))).is_true()
+		for i in 3:
+			assert_bool(seen.has(layout.room_center(layout.room_of_node(i)))).is_true()
+
+
+func test_generation_is_deterministic_and_varies_by_seed() -> void:
+	var a := LayoutGenerator.generate(3, Rng.new(6))
+	var b := LayoutGenerator.generate(3, Rng.new(6))
+	assert_bool(a.cells == b.cells).is_true()
+	assert_array(a.rooms).is_equal(b.rooms)
+	assert_array(a.node_rooms).is_equal(b.node_rooms)
+	assert_int(a.stairs_room).is_equal(b.stairs_room)
+	var seen: Dictionary = {}
+	for seed in 20:
+		seen[str(LayoutGenerator.generate(3, Rng.new(seed)).rooms)] = true
+	assert_int(seen.size()).is_greater(1)
+
+
+func test_a_run_asks_its_floor_for_a_shape() -> void:
+	var run := TestFixtures.new_run(1, 1)
+	var once := RunEngine.layout_for(run)
+	var twice := RunEngine.layout_for(run)
+	assert_array(once.rooms).is_equal(twice.rooms)
+	assert_array(once.node_rooms).has_size(run.nodes.size())
+	run.floor = 2
+	assert_bool(RunEngine.layout_for(run).rooms == once.rooms).is_false()
