@@ -37,6 +37,12 @@ func _init() -> void:
 	_build(world, layout)
 	_light(world, layout)
 	var cam := _camera(world, layout)
+	var actor := ""
+	for a in args:
+		if String(a).ends_with(".glb") or String(a).ends_with(".fbx"):
+			actor = String(a)
+	if actor != "":
+		_actor(world, cam, actor)
 	print("spike: %d rooms, entry=%d stairs=%d torches=%d camera=%s" % [
 		layout.rooms.size(), layout.entry_room, layout.stairs_room,
 		layout.torch_anchors.size(), cam.global_position])
@@ -189,3 +195,36 @@ func _camera(world: Node3D, layout: FloorLayout) -> Camera3D:
 		cam.add_child(lamp)
 	print("spike: corridor run %d cells from %s dir %s" % [best_len, best_from, best_dir])
 	return cam
+
+
+## Drops a rigged, animated model into the corridor ahead of the camera to
+## prove the part of the pipeline that cannot be reasoned about: that a
+## skinned mesh imports, animates, takes torchlight and casts a shadow under
+## Forward+. The model is a stand-in -- the art question is separate and is
+## answered by swapping the file, not by changing this code.
+func _actor(world: Node3D, cam: Camera3D, path: String) -> void:
+	var packed: Resource = load(path)
+	if packed == null:
+		print("spike: no actor at " + path)
+		return
+	var inst: Node3D = (packed as PackedScene).instantiate()
+	world.add_child(inst)
+	var ahead := -cam.global_transform.basis.z
+	ahead.y = 0.0
+	inst.global_position = cam.global_position + ahead.normalized() * (CELL * 1.9) - Vector3(0, 1.7, 0)
+	inst.look_at_from_position(inst.global_position, cam.global_position - Vector3(0, 1.7, 0), Vector3.UP)
+	var players := inst.find_children("*", "AnimationPlayer", true, false)
+	var clips: Array = []
+	for p in players:
+		var ap: AnimationPlayer = p
+		clips = ap.get_animation_list()
+		if clips.is_empty():
+			continue
+		ap.play(String(clips[0]))
+		ap.advance(0.55)
+		break
+	var meshes := inst.find_children("*", "MeshInstance3D", true, false)
+	for m in meshes:
+		(m as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	print("spike: actor %s -- %d anim players, clips %s, %d meshes, at %s" % [
+		path.get_file(), players.size(), clips, meshes.size(), inst.global_position])

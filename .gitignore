@@ -15,3 +15,9 @@ Thumbs.db
 art_previews/*.import
 art_previews/comfyui.log
 art_previews/raw/
+
+# Stage 0 spike scratch. assets/_spike/ holds borrowed rigged models used only
+# to prove the animation import path in tools/spike_crypt.gd; they are not
+# game content, carry their own licences, and the directory goes away with the
+# spike.
+assets/_spike/
