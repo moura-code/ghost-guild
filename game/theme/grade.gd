@@ -49,3 +49,23 @@ static func world_environment(depth: float) -> WorldEnvironment:
 	var we := WorldEnvironment.new()
 	we.environment = environment(depth)
 	return we
+
+
+## The guild. The only room in the game that is not a crypt, and it has to
+## read that way before a word is on screen: warmer, brighter, and with the
+## fog pulled back so you can see the far wall. Everything else -- the
+## tonemap, the SSAO, the glow -- is the same grade the dungeon uses, because
+## the guild and the crypt have to look like the same game.
+static func guild_environment() -> Environment:
+	var env := environment(0.0)
+	env.ambient_light_color = Color(0.42, 0.40, 0.44)
+	env.ambient_light_energy = 0.22
+	env.fog_light_color = Color(0.22, 0.20, 0.21)
+	env.fog_density = 0.010
+	return env
+
+
+static func world_environment_guild() -> WorldEnvironment:
+	var we := WorldEnvironment.new()
+	we.environment = guild_environment()
+	return we
