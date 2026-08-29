@@ -27,8 +27,12 @@ const PITCH_LIMIT := 1.45
 var head: Node3D
 var camera: Camera3D
 var torch: OmniLight3D
-## Off while a fight or a menu owns the mouse (stage 3 uses this).
+## Off while a fight or a menu owns the mouse.
 var look_enabled: bool = true
+## Frozen in place while a fight is staged or a panel is open. Gravity still
+## applies -- a frozen body should stand on the floor, not hang in the air --
+## so this zeroes the wish vector rather than the whole physics step.
+var frozen: bool = false
 
 var _pitch: float = 0.0
 
@@ -103,7 +107,7 @@ func read_input() -> Vector2:
 
 func _physics_process(delta: float) -> void:
 	var speed := SPRINT if Input.is_action_pressed("sprint") else SPEED
-	var wish := wish_direction(read_input(), rotation.y) * speed
+	var wish := Vector3.ZERO if frozen else wish_direction(read_input(), rotation.y) * speed
 	velocity.x = move_toward(velocity.x, wish.x, ACCEL * delta)
 	velocity.z = move_toward(velocity.z, wish.z, ACCEL * delta)
 	velocity.y = 0.0 if is_on_floor() else velocity.y - GRAVITY * delta
