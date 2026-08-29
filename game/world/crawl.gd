@@ -4,6 +4,11 @@ extends Node3D
 ## GameRoot. It reads the run, builds the floor that run is on, puts the
 ## player in the entry room, and turns "the player walked in here" into a
 ## RunEngine action. Nothing under it ever writes to RunState (spec §4).
+##
+## Every phase of a run has a host and nothing resolves behind the player's
+## back: a fight is staged in the room, and reward, event, rest, shop and the
+## descent draft are panels on the HUD over the room you are standing in. The
+## stage 2 autopilot scaffolding is gone.
 
 signal floor_built(floor: int)
 
@@ -13,6 +18,8 @@ var player: Player
 var hud: HudRoot
 var prompts: Prompts
 var director: FightDirector
+var choice: ChoiceScreen
+var exit_panel: ExitScreen
 var markers: Array[EncounterMarker] = []
 var stairs: EncounterMarker
 
@@ -24,8 +31,7 @@ var manages_quit: bool = false
 var quit_action: Callable = func() -> void: get_tree().quit()
 
 var _world: Node3D
-var _autopilot := RunAutopilot.new()
-var _fight_autopilot := Autopilot.new()
+var _built_floor: int = -1
 
 
 ## Picks up the autoload only if nobody has claimed this node already. Tests
@@ -52,8 +58,9 @@ func bind(g: GameRoot) -> void:
 	_build_hud()
 	if g.campaign.run == null:
 		g.start_run(1)
-	_settle_to_node()
-	build_floor()
+	if not g.run_changed.is_connected(_sync_phase):
+		g.run_changed.connect(_sync_phase)
+	_sync_phase()
 
 
 func _build_hud() -> void:
@@ -62,14 +69,68 @@ func _build_hud() -> void:
 	hud = HudRoot.new()
 	hud.name = "Hud"
 	add_child(hud)
+
 	prompts = Prompts.new()
 	hud.ui.add_child(prompts)
+
+	# Built once and toggled, not rebuilt per phase: a shop refreshes on every
+	# purchase, and rebuilding the panel each time would throw away the scroll
+	# position along with the node.
+	choice = ChoiceScreen.new()
+	choice.set_anchors_preset(Control.PRESET_FULL_RECT)
+	choice.visible = false
+	hud.ui.add_child(choice)
+
+	exit_panel = ExitScreen.new()
+	exit_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	exit_panel.visible = false
+	exit_panel.decided.connect(_on_exit_decided)
+	hud.ui.add_child(exit_panel)
+
 	hud.set_pointer(false)
+
+
+## The one place that decides what the player is looking at, driven by
+## GameRoot.run_changed -- so a panel that applies an action re-hosts itself
+## without knowing anything about the world behind it.
+func _sync_phase() -> void:
+	var run := game.campaign.run
+	if run == null:
+		return
+	if run.is_over():
+		# STAGE 4 SCAFFOLDING: the death beat is stage 6 and the guild you
+		# return to is stage 5. Until then a finished run banks and a new one
+		# starts, so the loop stays walkable.
+		game.finish_run()
+		game.start_run(1)
+		return
+	if run.phase == "fight":
+		# The director owns the screen and the body while a fight is staged.
+		# It is created by _on_marker_entered immediately after the action
+		# that put the run in this phase, so there is nothing to do here.
+		return
+	if ChoiceScreen.handles(run.phase):
+		# Includes "descent", which happens before there is a floor to stand
+		# in: start_run leaves `nodes` empty until the last offer is taken.
+		_open(choice)
+		return
+	_close_panels()
+	if layout == null or _floor_is_stale(run):
+		build_floor()
+	else:
+		_close_room()
+
+
+## The built world belongs to a different floor than the run is on. Compared
+## by floor number rather than by identity because a floor is rebuilt only on
+## a descent, and a descent is the only thing that changes it.
+func _floor_is_stale(run: RunState) -> bool:
+	return _built_floor != run.floor
 
 
 func build_floor() -> void:
 	var run := game.campaign.run
-	if run == null:
+	if run == null or run.nodes.is_empty():
 		return
 	if _world != null:
 		# Renamed before it goes, because queue_free is deferred: for the rest
@@ -86,6 +147,7 @@ func build_floor() -> void:
 	add_child(_world)
 
 	layout = RunEngine.layout_for(run)
+	_built_floor = run.floor
 	DungeonBuilder.build(layout, _world)
 	_world.add_child(Grade.world_environment(Grade.depth_of(run.floor, run.biome().last_floor)))
 
@@ -122,37 +184,44 @@ func _on_marker_entered(index: int) -> void:
 	game.run_action({"kind": "enter", "index": index})
 	if run.phase == "fight":
 		_stage_fight(index)
-		return
-	# STAGE 2 SCAFFOLDING, still standing for the non-fight rooms: reward,
-	# event, rest and shop have no panel yet, so the autopilot plays them out.
-	# Task 7 of the stage 3-6 plan removes this and the function it calls.
-	_settle_to_node()
-	_close_room()
 
 
 ## The fight happens where you are standing. The camera does not cut away.
 func _stage_fight(index: int) -> void:
 	if director != null:
 		director.queue_free()
+	_close_panels()
 	director = FightDirector.new()
 	director.name = "Fight"
 	add_child(director)
-	director.fight_finished.connect(_on_fight_finished.bind(index), CONNECT_ONE_SHOT)
+	director.fight_finished.connect(_on_fight_finished, CONNECT_ONE_SHOT)
 	director.begin(game, hud, player, _stand_in(layout.room_of_node(index)))
 
 
-func _on_fight_finished(_index: int) -> void:
+func _on_fight_finished() -> void:
 	if director != null:
 		director.queue_free()
 		director = null
-	# Whatever the fight left behind -- a reward, a dead hero -- is still
-	# handled by the stage 2 scaffolding until task 7.
-	_settle_to_node()
-	_close_room()
+	_sync_phase()
+
+
+func _on_stairs_entered(_index: int) -> void:
+	var run := game.campaign.run
+	if run == null or run.phase != "exit":
+		return
+	exit_panel.bind(game, run)
+	_open(exit_panel)
+
+
+func _on_exit_decided(kind: String) -> void:
+	_close_panels()
+	if game.campaign.run == null:
+		return
+	game.run_action({"kind": kind})
 
 
 ## Marks every node the engine now considers resolved, and re-checks the
-## stairs. Called after anything that can finish a room.
+## stairs.
 func _close_room() -> void:
 	var run := game.campaign.run
 	if run == null:
@@ -164,49 +233,35 @@ func _close_room() -> void:
 	_refresh_stairs()
 
 
-func _on_stairs_entered(_index: int) -> void:
+## A panel takes the screen, the cursor and the body at the same time, so
+## "the mouse is free" and "the player cannot walk off mid-choice" can never
+## disagree.
+func _open(panel: Control) -> void:
 	var run := game.campaign.run
-	if run == null or run.phase != "exit":
-		return
-	if not RunEngine.can_push(run):
-		# STAGE 2 SCAFFOLDING: the bottom of the biome. Stage 4 owns the real
-		# exit decision (push / retreat / watch); here it just banks and
-		# starts again so the loop can be walked.
-		game.run_action({"kind": "retreat"})
-		game.finish_run()
-		game.start_run(1)
-		_settle_to_node()
-		build_floor()
-		return
-	game.run_action({"kind": "push"})
-	_settle_to_node()
-	build_floor()
+	if panel == choice and run != null:
+		choice.bind(game, run)
+	choice.visible = panel == choice
+	exit_panel.visible = panel == exit_panel
+	if player != null:
+		player.frozen = true
+		player.look_enabled = false
+	hud.set_pointer(true)
 
 
-## A floor cannot be built while the run is offering descent cards, and stage
-## 2 has no draft screen. The autopilot picks, exactly as the demos do.
-func _settle_to_node() -> void:
-	var run := game.campaign.run
-	var guard := 0
-	while run != null and not run.is_over() and run.phase != "node" and run.phase != "exit" and guard < 200:
-		guard += 1
-		if run.phase == "fight":
-			# Only reachable from a fight the player did not start by walking
-			# in -- an event that picks one, say. A staged fight never gets
-			# here, because _on_marker_entered returns before settling.
-			_play_fight(run)
-			continue
-		var action := _autopilot.choose(run)
-		if action.is_empty():
-			break
-		game.run_action(action)
+func _close_panels() -> void:
+	if choice != null:
+		choice.visible = false
+	if exit_panel != null:
+		exit_panel.visible = false
+	if player != null:
+		player.frozen = false
+		player.look_enabled = true
+	if hud != null:
+		hud.set_pointer(false)
 
 
-func _play_fight(run: RunState) -> void:
-	for action in _fight_autopilot.choose_turn(run.fight):
-		if run.phase != "fight":
-			break
-		game.run_action(action)
+func panel_open() -> bool:
+	return (choice != null and choice.visible) or (exit_panel != null and exit_panel.visible)
 
 
 ## The centre of a room, on the floor. Room centres are always carved, so
@@ -221,6 +276,11 @@ func _refresh_stairs() -> void:
 	var open := game.campaign.run != null and game.campaign.run.phase == "exit"
 	stairs.visible = open
 	stairs.monitoring = open
+	if prompts != null:
+		if open:
+			prompts.show_prompt(game.text("ui.exit.push"))
+		else:
+			prompts.clear_prompt()
 
 
 ## The quit path used to live on MainScreen, which the pivot stopped booting.

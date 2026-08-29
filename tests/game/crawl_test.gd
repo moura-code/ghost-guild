@@ -104,14 +104,24 @@ func test_walking_into_a_room_enters_that_node_and_only_that_node() -> void:
 			assert_bool(run.is_resolved(i)).is_false()
 
 
-## Walks into a room and sees it through, however it resolves. A fight room
-## stages a fight and stays staged until it is played, so a test that wants a
-## cleared floor has to actually play it.
+## Walks into a room and sees it through, however it resolves. Nothing is
+## auto-resolved any more: a fight stays staged until it is played and a
+## reward stays open until it is taken, so a test that wants a cleared floor
+## has to actually play the room.
 func _clear(c: Crawl, marker: EncounterMarker) -> void:
 	marker.report(c.player)
-	if c.director != null:
-		TestFixtures.autofight(c.game.campaign.run)
-		c.director.check_over()
+	var run := c.game.campaign.run
+	var guard := 0
+	while not run.is_over() and run.phase != "node" and run.phase != "exit" and guard < 40:
+		guard += 1
+		if run.phase == "fight":
+			TestFixtures.autofight(run)
+			if c.director != null:
+				c.director.check_over()
+		elif ChoiceScreen.handles(run.phase):
+			c.choice.take(0)
+		else:
+			break
 
 
 func test_clearing_every_room_unlocks_the_stairs() -> void:
@@ -129,21 +139,23 @@ func test_clearing_every_room_unlocks_the_stairs() -> void:
 	assert_bool(c.stairs.visible).is_true()
 
 
-func test_taking_the_stairs_builds_the_next_floor() -> void:
+func test_walking_into_the_stairs_opens_the_exit_decision() -> void:
+	# Stage 4 moved the descent behind a decision: the stairs no longer push
+	# you down, they ask. Pushing and what it builds is covered by
+	# crawl_loop_test.
 	var c := _crawl()
 	var run := c.game.campaign.run
-	var started := run.floor
 	for m in c.markers.duplicate():
 		if run.is_over():
 			return
 		_clear(c, m as EncounterMarker)
-	if run.is_over() or run.phase != "exit" or not RunEngine.can_push(run):
+	if run.is_over() or run.phase != "exit":
 		return
-	var before := c.layout
+	assert_bool(c.exit_panel.visible).is_false()
 	c.stairs.report(c.player)
-	assert_int(c.game.campaign.run.floor).is_equal(started + 1)
-	assert_object(c.layout).is_not_same(before)
-	assert_int(c.get_node("World").get_child_count()).is_greater(0)
+	assert_bool(c.exit_panel.visible).is_true()
+	assert_bool(c.player.frozen).is_true()
+	assert_int(c.game.campaign.run.floor).is_equal(run.floor)
 
 
 func test_the_world_only_changes_the_run_through_the_engine() -> void:
