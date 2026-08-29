@@ -69,3 +69,23 @@ func room_of_node(node_index: int) -> int:
 	if node_index < 0 or node_index >= node_rooms.size():
 		return -1
 	return int(node_rooms[node_index])
+
+
+## Every walkable cell reachable from `start`, as a set keyed by Vector2i.
+## Orthogonal only -- a diagonal gap between two rooms is a wall you can see
+## through, not a door you can walk through.
+func reachable_from(start: Vector2i) -> Dictionary:
+	var seen: Dictionary = {}
+	if not is_walkable(start.x, start.y):
+		return seen
+	var queue: Array = [start]
+	seen[start] = true
+	while not queue.is_empty():
+		var at: Vector2i = queue.pop_back()
+		for step in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var next: Vector2i = at + step
+			if seen.has(next) or not is_walkable(next.x, next.y):
+				continue
+			seen[next] = true
+			queue.append(next)
+	return seen

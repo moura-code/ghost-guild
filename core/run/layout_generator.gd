@@ -38,3 +38,44 @@ static func place_rooms(layout: FloorLayout, count: int, rng: Rng) -> void:
 		var y := slot.y * BLOCK + PAD + rng.randi_range(STREAM, 0, span - h)
 		rooms.append({"x": x, "y": y, "w": w, "h": h})
 	layout.rooms = rooms
+
+
+static func carve_rooms(layout: FloorLayout) -> void:
+	for raw in layout.rooms:
+		var r: Dictionary = raw
+		for y in range(int(r["y"]), int(r["y"]) + int(r["h"])):
+			for x in range(int(r["x"]), int(r["x"]) + int(r["w"])):
+				layout.set_cell(x, y, FloorLayout.Cell.FLOOR)
+
+
+## Both legs are axis-aligned, so the walk below never moves diagonally and can
+## never cut a one-cell diagonal gap you cannot walk through.
+static func carve_corridor(layout: FloorLayout, a: Vector2i, b: Vector2i, horizontal_first: bool) -> void:
+	var corner := Vector2i(b.x, a.y) if horizontal_first else Vector2i(a.x, b.y)
+	_carve_line(layout, a, corner)
+	_carve_line(layout, corner, b)
+
+
+static func _carve_line(layout: FloorLayout, from: Vector2i, to: Vector2i) -> void:
+	var step := Vector2i(signi(to.x - from.x), signi(to.y - from.y))
+	var at := from
+	layout.set_cell(at.x, at.y, FloorLayout.Cell.FLOOR)
+	while at != to:
+		at += step
+		layout.set_cell(at.x, at.y, FloorLayout.Cell.FLOOR)
+
+
+## A chain through every room is what guarantees the floor is connected; the
+## extra links are what make choosing a route a choice, rather than a single
+## corridor with rooms hanging off it.
+static func connect_rooms(layout: FloorLayout, rng: Rng) -> void:
+	for i in range(1, layout.rooms.size()):
+		carve_corridor(layout, layout.room_center(i - 1), layout.room_center(i), rng.randi_range(STREAM, 0, 1) == 0)
+	if layout.rooms.size() < 4:
+		return
+	for _i in 2:
+		var a := rng.randi_range(STREAM, 0, layout.rooms.size() - 1)
+		var b := rng.randi_range(STREAM, 0, layout.rooms.size() - 1)
+		if absi(a - b) < 2:
+			continue
+		carve_corridor(layout, layout.room_center(a), layout.room_center(b), rng.randi_range(STREAM, 0, 1) == 0)
