@@ -35,7 +35,9 @@ static func legal_actions(run: RunState) -> Array:
 				out.append({"kind": "draft_pick", "floor": int(offer["floor"]), "card": card_id})
 			out.append({"kind": "draft_skip", "floor": int(offer["floor"])})
 		"node":
-			out.append({"kind": "enter"})
+			for i in run.nodes.size():
+				if not run.is_resolved(i):
+					out.append({"kind": "enter", "index": i})
 		"fight":
 			out = CombatEngine.legal_actions(run.fight)
 		"reward":
@@ -82,7 +84,9 @@ static func apply(run: RunState, action: Dictionary) -> Array:
 			_apply_descent(run, kind, action)
 		"node":
 			if kind == "enter":
-				_enter_node(run)
+				# No index means "the next one", which is what the autopilot, the
+				# demos and the balance simulator all send.
+				_enter_node(run, int(action.get("index", run.next_unresolved())))
 			else:
 				push_error("run: expected enter, got " + kind)
 		"fight":
@@ -154,11 +158,16 @@ static func _enter_floor(run: RunState) -> void:
 		if String(node["kind"]) == "event":
 			run.used_events.append(String(node["event"]))
 	run.node_index = 0
+	run.resolved = []
 	run.phase = "node"
 	run.emit({"type": "floor_enter", "floor": run.floor, "nodes": kinds})
 
 
-static func _enter_node(run: RunState) -> void:
+static func _enter_node(run: RunState, index: int) -> void:
+	if index < 0 or index >= run.nodes.size() or run.is_resolved(index):
+		push_error("enter: cannot enter node %d" % index)
+		return
+	run.node_index = index
 	var node := run.current_node()
 	var kind := String(node.get("kind", ""))
 	run.emit({"type": "node_enter", "index": run.node_index, "kind": kind})
@@ -237,9 +246,13 @@ static func _apply_reward(run: RunState, kind: String, action: Dictionary) -> vo
 	_advance(run)
 
 
+## The floor exits only when every node is behind you. Keeping the count of
+## encounters per floor fixed is what lets the balance invariants of spec
+## §12 stand unchanged through the pivot -- you choose the order, not the
+## number.
 static func _advance(run: RunState) -> void:
-	if run.node_index < run.nodes.size() - 1:
-		run.node_index += 1
+	run.resolve(run.node_index)
+	if run.next_unresolved() >= 0:
 		run.phase = "node"
 	else:
 		run.phase = "exit"

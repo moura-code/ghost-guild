@@ -12,7 +12,11 @@ func test_start_run_at_floor_one_enters_the_floor() -> void:
 	for ev in run.events:
 		types.append(ev["type"])
 	assert_array(types).contains(["run_start", "floor_enter"])
-	assert_array(RunEngine.legal_actions(run)).is_equal([{"kind": "enter"}])
+	assert_array(RunEngine.legal_actions(run)).is_equal([
+		{"kind": "enter", "index": 0},
+		{"kind": "enter", "index": 1},
+		{"kind": "enter", "index": 2},
+	])
 
 
 func test_descent_offers_one_pick_per_skipped_floor() -> void:
@@ -104,7 +108,8 @@ func test_taking_a_reward_advances_to_the_next_node() -> void:
 	assert_array(run.hero.deck).has_size(11)
 	assert_str(run.hero.deck[10].def_id).is_equal(card_id)
 	assert_str(run.phase).is_equal("node")
-	assert_int(run.node_index).is_equal(1)
+	assert_bool(run.is_resolved(0)).is_true()
+	assert_int(run.next_unresolved()).is_equal(1)
 	assert_dict(run.reward).is_empty()
 
 
