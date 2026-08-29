@@ -930,6 +930,27 @@ cmd //c "tools\\test.cmd tests/game/dungeon_builder_test.gd"
 
 Expected: 8 passing. If `test_a_torch_hangs_in_the_open_cell_in_front_of_its_wall` fails, check `TORCH_OUT` against `Kit.world_to_cell`'s rounding: at 0.62 a light rounds into the neighbouring cell, which is the intent.
 
+**What happened — the finding of this stage.** `MultiMesh.set_instance_transform`
+is a **no-op under `--headless`**: instance transforms are stored on the
+RenderingServer, the dummy driver stores nothing, and `get_instance_transform`
+returns identity for every index. `instance_count` survives, transforms do not.
+An assertion against the MultiMesh would therefore have passed against *any*
+implementation, including one that placed the whole crypt at the origin — which
+is what it did, and is how this was found.
+
+The fix is a better shape than the original: the placement maths moved out into
+`DungeonBuilder.instance_transforms(layout) -> Dictionary` keyed
+`floors`/`ceilings`/`walls`, `build()` consumes it, and the test asserts the
+transforms directly. Two assertions were added that the MultiMesh could never
+have carried: the ceiling's basis actually faces down (`basis.y.y < 0`), and a
+wall stands centred on `WALL_H * 0.5` rather than sinking into the floor. Nine
+tests, not eight.
+
+This is fact 2 at the top of this plan meeting a concrete wall. Anything under
+`game/world/` that hands geometry to the RenderingServer is invisible to the
+suite; the maths have to be pulled out to a plain array first or they are not
+tested at all.
+
 - [ ] **Step 5: Commit**
 
 ```bash
