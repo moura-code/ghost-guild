@@ -27,12 +27,14 @@ const HIGHLIGHT_ENERGY := 1.4
 
 var index: int = -1
 var dying: bool = false
+## The silhouette archetype this creature got. See EnemyShape.
+var shape: int = EnemyShape.Kind.HUMANOID
 
 var _body: Node3D
-var _mesh: MeshInstance3D
 var _material: StandardMaterial3D
 var _height: float = 1.8
 var _recoil: Tween
+var _idle: Tween
 
 
 ## Height in metres. Bound to hp rather than to a per-enemy art field, because
@@ -83,27 +85,35 @@ func _build_mesh(def: EnemyDef) -> void:
 	_material.emission = Color(0.36, 0.40, 0.46)
 	_material.emission_energy_multiplier = 0.05
 
-	var capsule := CapsuleMesh.new()
-	capsule.radius = _height * 0.20
-	capsule.height = _height * 0.78
-	_mesh = MeshInstance3D.new()
-	_mesh.name = "Mesh"
-	_mesh.mesh = capsule
-	_mesh.material_override = _material
-	_mesh.position = Vector3(0.0, _height * 0.39, 0.0)
-	_body.add_child(_mesh)
-
-	var skull := SphereMesh.new()
-	skull.radius = _height * 0.13
-	skull.height = _height * 0.26
-	var head := MeshInstance3D.new()
-	head.name = "Head"
-	head.mesh = skull
-	head.material_override = _material
-	head.position = Vector3(0.0, _height * 0.86, 0.0)
-	_body.add_child(head)
+	# Every enemy used to be this same capsule with a ball on top, so a rat, a
+	# spider, a floating wisp and a stack of skulls were four identical objects
+	# at four sizes. Telling what you are fighting is a rule of the genre.
+	shape = EnemyShape.kind_for(def)
+	_body.position.y = EnemyShape.hover(shape)
+	EnemyShape.build(_body, shape, _height, _material)
 	# The tag is a name the def already has; nothing here invents copy.
 	_body.set_meta("enemy_id", def.id)
+
+
+## Breathing, swaying, drifting -- whatever the archetype does when it is not
+## doing anything. A creature standing perfectly still is a prop, and the whole
+## point of putting it in the room with you is that it is not one.
+func _ready() -> void:
+	_start_idle()
+
+
+func _start_idle() -> void:
+	if _idle != null and _idle.is_valid():
+		_idle.kill()
+	var rest := Vector3(0.0, EnemyShape.hover(shape), 0.0)
+	_body.position = rest
+	var travel := EnemyShape.idle_travel(shape)
+	var half := EnemyShape.idle_seconds(shape) * 0.5
+	_idle = create_tween().set_loops()
+	_idle.tween_property(_body, "position", rest + Vector3(0.0, travel, 0.0), half) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_idle.tween_property(_body, "position", rest, half) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 ## Where a damage number should appear: just above the head, in world space.
@@ -127,11 +137,17 @@ func recoil(amount: int) -> void:
 		return
 	if _recoil != null and _recoil.is_valid():
 		_recoil.kill()
+	# The idle is a looping tween on the same property, so it has to stop or
+	# the two fight over the body and the blow never reads.
+	if _idle != null and _idle.is_valid():
+		_idle.kill()
+	var rest := Vector3(0.0, EnemyShape.hover(shape), 0.0)
 	var back := clampf(float(amount) / 20.0, 0.25, 1.0) * RECOIL_DEPTH
-	_body.position = Vector3(0.0, 0.0, back)
+	_body.position = rest + Vector3(0.0, 0.0, back)
 	_recoil = create_tween()
-	_recoil.tween_property(_body, "position", Vector3.ZERO, RECOIL_SECONDS) \
+	_recoil.tween_property(_body, "position", rest, RECOIL_SECONDS) \
 		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_recoil.tween_callback(_start_idle)
 
 
 ## Falls rather than vanishes. A body that pops out of existence takes the
@@ -142,6 +158,8 @@ func die() -> void:
 	dying = true
 	collision_layer = 0
 	set_highlight(false)
+	if _idle != null and _idle.is_valid():
+		_idle.kill()
 	var fall := create_tween()
 	fall.set_parallel(true)
 	fall.tween_property(self, "rotation:x", -PI * 0.42, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)

@@ -45,7 +45,8 @@ when sources disagree. These are the agreements:
 | Walls, floors, ceilings | **Done.** Procedural boxes and planes with CC0 ambientCG PBR sets | `Kit.floor_mesh` / `wall_mesh` / `ceiling_mesh` |
 | Lighting and fog | **Done.** Torch pools, cold ambient, per-depth fog | `Grade.environment` |
 | The guild | **Done, unpolished.** Room, four stations, well, shaft | `GuildRoom._plinth`, and the well head in `GuildRoom._build_well_head` |
-| **Enemies** | **PLACEHOLDER.** Capsule-and-sphere stand-ins sized off hp | `EnemyBody._build_mesh` + `recoil` / `die` |
+| Props | **Done.** Eight CC0 Poly Haven models, placed by `Dressing` against walls, never blocking a route | `Dressing.CATALOGUE` |
+| **Enemies** | **PLACEHOLDER**, but five distinguishable silhouettes (humanoid, beast, wisp, stack, hulk) with per-archetype idles rather than one capsule for everything | `EnemyShape.build` + `EnemyBody.recoil` / `die` |
 | **Ghosts** | **PLACEHOLDER.** Translucent capsule stand-ins | `GhostFigure._build` |
 | Cards, panels, icons, fonts | **Done**, carried over from the 2D game unchanged | — |
 
