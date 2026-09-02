@@ -148,8 +148,8 @@ func test_auto_draft_takes_a_card_from_the_offer_it_was_given() -> void:
 	# resolved while the game is closed.
 	var content := _content()
 	var hero := Hero.create(content, "sexton", "Maren")
-	var biome: BiomeDef = content.biomes["catacombs"]
-	var offers := DescentDraft.offers(content, hero, biome, 5, 99)
+	var pools := ["sexton", "catacombs"]
+	var offers := DescentDraft.offers(content, hero, pools, 5, 99)
 	assert_int(offers.size()).is_greater(0)
 	for offer in offers:
 		var cards: Array = offer["cards"]
@@ -162,10 +162,10 @@ func test_two_doctrines_do_not_always_draft_the_same_card() -> void:
 	# must disagree at least once -- otherwise the rules are decorative here.
 	var content := _content()
 	var hero := Hero.create(content, "sexton", "Maren")
-	var biome: BiomeDef = content.biomes["catacombs"]
+	var pools := ["sexton", "catacombs"]
 	var disagreed := false
 	for run_seed in [1, 7, 13, 21]:
-		for offer in DescentDraft.offers(content, hero, biome, 10, run_seed):
+		for offer in DescentDraft.offers(content, hero, pools, 10, run_seed):
 			var cards: Array = offer["cards"]
 			if DescentDraft.auto_pick(content, cards, ["strike_first"]) \
 					!= DescentDraft.auto_pick(content, cards, ["hold_the_line"]):
@@ -179,8 +179,8 @@ func test_the_same_doctrine_drafts_the_same_card_every_time() -> void:
 	# the same absence produce a different ghost.
 	var content := _content()
 	var hero := Hero.create(content, "sexton", "Maren")
-	var biome: BiomeDef = content.biomes["catacombs"]
-	for offer in DescentDraft.offers(content, hero, biome, 8, 5):
+	var pools := ["sexton", "catacombs"]
+	for offer in DescentDraft.offers(content, hero, pools, 8, 5):
 		var cards: Array = offer["cards"]
 		var first := DescentDraft.auto_pick(content, cards, ["poison_before_blades"])
 		assert_int(DescentDraft.auto_pick(content, cards, ["poison_before_blades"])).is_equal(first)

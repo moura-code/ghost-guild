@@ -23,6 +23,10 @@ const WALL := 2.0
 const SLAB := 2.0
 const MAX_MARKS := 8
 ## Fixed gutters either side of the shaft for the floor number and the rate.
+## The undug rock at the top of the shaft and at the bottom of it. Never zero:
+## rock the player cannot reach yet is a promise, not a hole.
+const SOLID_NEAR := 0.32
+const SOLID_FAR := 0.11
 const NUMBER_COLUMN := 14.0
 const RATE_COLUMN := 34.0
 
@@ -44,7 +48,7 @@ func _init() -> void:
 
 func bind(campaign: Campaign) -> void:
 	_campaign = campaign
-	floors = campaign.biome().last_floor
+	floors = Biomes.depth(campaign.content)
 	_rebuild()
 	# The container may not have sized this yet, in which case _layout has
 	# nothing to work with; run it again once it has.
@@ -199,9 +203,21 @@ func solid_rect(floor: int) -> Rect2:
 ## out of _draw so the rule that matters can be asserted: the floors you
 ## cannot reach must never outshine the ones you can.
 func undug_colour(floor: int) -> Color:
-	var solid := 0.34 - float(floor) * 0.022
+	var solid := solid_light(floor)
 	return Color(Palette.STONE_HIGH.r * solid, Palette.STONE_HIGH.g * solid,
 		Palette.STONE_HIGH.b * solid, 1.0)
+
+
+## How lit the undug rock on this floor is, 0..1.
+##
+## A fraction of the shaft rather than a fixed step per floor. It was written
+## as `0.34 - floor * 0.022` for a ten-floor shaft, which goes negative at
+## floor 16 -- so the day a second biome made the shaft twenty deep, the
+## bottom four floors turned into a black hole in the middle of the screen
+## that the game's own capsule image is built around.
+func solid_light(floor: int) -> float:
+	var t := float(floor - 1) / float(maxi(1, floors - 1))
+	return lerpf(SOLID_NEAR, SOLID_FAR, t)
 
 
 func chamber_colour(floor: int) -> Color:
@@ -225,7 +241,6 @@ func _draw() -> void:
 		return
 	var bal := _campaign.balance()
 	var mods := _campaign.modifiers()
-	var accent := Palette.biome_accent(_campaign.biome_id)
 	var waypoint := CampaignEngine.reach(_campaign)
 
 	for floor in range(1, floors + 1):
@@ -251,7 +266,7 @@ func _draw() -> void:
 			# Unreached floors are a promise, not the subject. They recede.
 			draw_rect(rock, undug_colour(floor))
 			# How lit this rock is, reused to keep the courses in step with it.
-			var solid := 0.34 - float(floor) * 0.022
+			var solid := solid_light(floor)
 			# Courses, faint. Enough texture that it reads as laid stone
 			# rather than as a hole in the screen, not enough to compete.
 			var courses := 3
@@ -304,7 +319,10 @@ func _draw() -> void:
 		# trapezoid narrowing toward the back is a floor you are looking down
 		# onto, and it is most of what turns ten stacked rectangles into ten
 		# rooms one above another.
-		var slab := accent if reachable else Palette.STONE_EDGE
+		# The colour bands §9 calls the capsule image: the shaft changes colour
+		# where it crosses into another biome, which is the only thing on this
+		# screen that says the descent goes somewhere rather than just down.
+		var slab := Palette.biome_accent(_campaign.biome_at(floor).id) 			if reachable else Palette.STONE_EDGE
 		var back := rect.size.x * 0.14
 		var deep_y := rect.end.y - rect.size.y * 0.26
 		draw_colored_polygon(PackedVector2Array([

@@ -24,10 +24,9 @@ static func is_non_decreasing(values: Array) -> bool:
 func sample_runs() -> Dictionary:
 	var samples: Array = []
 	var per_run: Array = []
-	var biome: BiomeDef = content.biomes["catacombs"]
 	for i in runs:
 		var hero := Hero.create(content, "sexton", "Sim%d" % i)
-		var run := RunEngine.start_run(content, hero, biome.id, 1, hash([seed_base, "balance", i]), true)
+		var run := RunEngine.start_run(content, hero, 1, hash([seed_base, "balance", i]), true)
 		var ap := RunAutopilot.new()
 		ap.survival_samples = 1
 		var guard := 0
@@ -51,12 +50,11 @@ func sample_runs() -> Dictionary:
 
 
 func floor_table(sampled: Dictionary) -> Dictionary:
-	var biome: BiomeDef = content.biomes["catacombs"]
 	var balance := content.balance
 	var by_floor := {}
 	for s in sampled["samples"]:
 		var floor := int(s["floor"])
-		var sim := Strength.simulate(content, s["snapshot"], biome, floor, hash([seed_base, "balance_strength", int(s["run"]), floor]), sim_fights)
+		var sim := Strength.simulate(content, s["snapshot"], Biomes.for_floor(content, floor), floor, hash([seed_base, "balance_strength", int(s["run"]), floor]), sim_fights)
 		var strength := Strength.of_ghost_stats(s["measured"], sim, balance)
 		var row: Dictionary = by_floor.get(floor, {"samples": 0, "strength": 0.0})
 		row["samples"] = int(row["samples"]) + 1

@@ -9,11 +9,15 @@ func test_slice_content_is_valid() -> void:
 
 func test_slice_content_volume() -> void:
 	var c := Content.load_from("res://data")
-	assert_int(c.cards.size()).is_equal(30)
-	assert_int(c.enemies.size()).is_equal(10)
+	# The slice was one biome's worth of everything (spec §7). M2 is growing
+	# toward the launch volume -- ~100 cards, 30 enemies, 3 biomes -- so these
+	# are floors rather than equalities: they still catch a data file that
+	# failed to load, which is what they were actually guarding.
+	assert_int(c.cards.size()).is_greater_equal(30)
+	assert_int(c.enemies.size()).is_greater_equal(10)
 	assert_int(c.relics.size()).is_equal(6)
 	assert_int(c.classes.size()).is_equal(1)
-	assert_int(c.biomes.size()).is_equal(1)
+	assert_int(c.biomes.size()).is_greater_equal(1)
 	assert_int(c.events.size()).is_equal(3)
 	# The M1 slice shipped ten upgrade nodes (spec §7). M2 is growing toward
 	# the forty at launch, so this is a floor rather than an equality: it
@@ -32,8 +36,10 @@ func test_slice_content_volume() -> void:
 			elites += 1
 		elif e.kind == "boss":
 			bosses += 1
-	assert_int(elites).is_equal(1)
-	assert_int(bosses).is_equal(1)
+	# One of each per biome (spec §2: the last node of every tenth floor is
+	# the biome boss), so these track the biome count rather than a constant.
+	assert_int(elites).is_greater_equal(c.biomes.size())
+	assert_int(bosses).is_equal(c.biomes.size())
 
 
 func test_every_upgrade_group_the_spec_names_has_something_in_it() -> void:
@@ -50,11 +56,30 @@ func test_every_upgrade_group_the_spec_names_has_something_in_it() -> void:
 		assert_int(int(groups.get(group, 0))) 			.override_failure_message("upgrade group '%s' is empty" % group).is_greater(0)
 
 
-func test_every_card_belongs_to_a_known_pool() -> void:
+## A card whose pool nothing draws from is a card that cannot be found.
+func test_every_card_belongs_to_a_pool_something_draws_from() -> void:
 	var c := Content.load_from("res://data")
+	var pools: Array[String] = []
+	for id in c.classes:
+		pools.append((c.classes[id] as ClassDef).pool)
+	for id in c.biomes:
+		pools.append((c.biomes[id] as BiomeDef).card_pool)
 	for id in c.cards:
 		var card: CardDef = c.cards[id]
-		assert_bool(card.pool == "sexton" or card.pool == "catacombs").override_failure_message("card %s has pool %s" % [id, card.pool]).is_true()
+		assert_bool(pools.has(card.pool)).override_failure_message(
+			"card %s has pool %s, which nothing draws from" % [id, card.pool]).is_true()
+
+
+## Every biome has an elite table and a boss (spec §2), or its tenth floor
+## generates a node it cannot fill.
+func test_every_biome_can_finish_itself() -> void:
+	var c := Content.load_from("res://data")
+	for id in c.biomes:
+		var b: BiomeDef = c.biomes[id]
+		assert_array(b.elites).override_failure_message("%s has no elites" % id).is_not_empty()
+		assert_array(b.boss).override_failure_message("%s has no boss" % id).is_not_empty()
+		assert_array(b.encounters).override_failure_message("%s has no encounters" % id).is_not_empty()
+		assert_array(b.node_patterns).override_failure_message("%s has no patterns" % id).is_not_empty()
 
 
 ## Every string key the shipped content names resolves to a string.

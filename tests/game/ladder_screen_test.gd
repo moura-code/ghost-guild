@@ -32,7 +32,7 @@ func test_the_tower_has_one_row_per_floor_of_the_biome() -> void:
 	var g := _game()
 	var s := _screen(g)
 	await await_idle_frame()
-	assert_int(s._tower.floors).is_equal(g.campaign.biome().last_floor)
+	assert_int(s._tower.floors).is_equal(Biomes.depth(g.content))
 	# The shaft narrows with depth: that is what makes it read as going
 	# away from the viewer rather than down a page.
 	assert_float(s._tower.chamber_rect(10).size.x).is_less(s._tower.chamber_rect(1).size.x)
@@ -70,7 +70,7 @@ func test_binding_twice_does_not_connect_the_signals_twice() -> void:
 	s.bind(g)
 	await await_idle_frame()
 	assert_int(g.ladder_changed.get_connections().size()).is_equal(1)
-	assert_int(s._tower.floors).is_equal(g.campaign.biome().last_floor)
+	assert_int(s._tower.floors).is_equal(Biomes.depth(g.content))
 
 
 func test_the_premise_line_says_plainly_what_a_ghost_is() -> void:
@@ -266,3 +266,25 @@ func test_undug_rock_gets_darker_the_deeper_it_goes() -> void:
 	await await_idle_frame()
 	var tower := s._tower
 	assert_float(Palette.luma(tower.undug_colour(10))).is_less(Palette.luma(tower.undug_colour(2)))
+
+
+func test_no_floor_of_the_shaft_is_a_hole() -> void:
+	# The undug fade was a fixed step per floor written for a ten-floor shaft,
+	# and it went negative at floor 16 the day the shaft became twenty deep --
+	# a black rectangle in the middle of the game's own capsule image.
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	var tower: TowerView = s._tower
+	for floor in range(1, tower.floors + 1):
+		assert_float(tower.solid_light(floor)).override_failure_message(
+			"floor %d of %d has no light in it at all" % [floor, tower.floors]) \
+			.is_greater(0.05)
+
+
+func test_the_shaft_changes_colour_where_the_biome_does() -> void:
+	# Spec §9's colour bands, which are most of what says the descent goes
+	# somewhere rather than just down.
+	var g := _game()
+	assert_object(Palette.biome_accent(g.campaign.biome_at(1).id)) \
+		.is_not_equal(Palette.biome_accent(g.campaign.biome_at(14).id))

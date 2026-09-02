@@ -31,6 +31,19 @@ const SHAPES := {
 	"plague_bearer": Kind.HUMANOID,
 	"ossuary_warden": Kind.HULK,
 	"mother_of_bones": Kind.HULK,
+
+	# The Fungal Deep. Nothing down here stands up straight except the husk,
+	# which is a Catacombs corpse the fungus took and still walks like one.
+	"spore_hound": Kind.BEAST,
+	"rot_grub": Kind.BEAST,
+	"bloom_wretch": Kind.STACK,
+	"mycelial_husk": Kind.HUMANOID,
+	"cap_thrower": Kind.STACK,
+	"thorn_polyp": Kind.WISP,
+	"flesh_weaver": Kind.BEAST,
+	"deep_lurker": Kind.HULK,
+	"sporemother": Kind.HULK,
+	"the_bloom": Kind.HULK,
 }
 
 

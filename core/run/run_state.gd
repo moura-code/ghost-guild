@@ -7,9 +7,12 @@ extends RefCounted
 var content: Content
 var hero: Hero
 var run_seed: int = 0
-var biome_id: String = ""
 var entry_floor: int = 1
 var floor: int = 1
+## The biome card pools the guild has claimed (spec §5.6), copied in at
+## start_run. A run is a closed system that replays from its seed, so it must
+## not reach back into the ladder mid-run to ask what has been claimed since.
+var claimed_pools: Array[String] = []
 var nodes: Array = []
 var node_index: int = 0
 ## One flag per node, so a floor can be walked in any order. `node_index`
@@ -37,8 +40,15 @@ func emit(event: Dictionary) -> void:
 	events.append(event)
 
 
+## The biome of the floor the run is standing on. A descent crosses into a
+## different one at floor 11, so this is a lookup rather than a field: a run
+## that carried its starting biome would fight Catacombs enemies in the Deep.
 func biome() -> BiomeDef:
-	return content.biomes[biome_id]
+	return Biomes.for_floor(content, floor)
+
+
+func biome_at(p_floor: int) -> BiomeDef:
+	return Biomes.for_floor(content, p_floor)
 
 
 func sub_rng(tag: String, n: int) -> Rng:
@@ -115,9 +125,9 @@ func to_dict() -> Dictionary:
 	return {
 		"version": 1,
 		"run_seed": run_seed,
-		"biome_id": biome_id,
 		"entry_floor": entry_floor,
 		"floor": floor,
+		"claimed_pools": claimed_pools.duplicate(),
 		"nodes": nodes.duplicate(true),
 		"node_index": node_index,
 		"resolved": resolved.duplicate(),
@@ -143,9 +153,10 @@ static func from_dict(p_content: Content, d: Dictionary) -> RunState:
 	run.content = p_content
 	run.hero = Hero.from_dict(d.get("hero", {}))
 	run.run_seed = int(d.get("run_seed", 0))
-	run.biome_id = String(d.get("biome_id", ""))
 	run.entry_floor = int(d.get("entry_floor", 1))
 	run.floor = int(d.get("floor", 1))
+	for pool in d.get("claimed_pools", []):
+		run.claimed_pools.append(String(pool))
 	var nodes_raw: Array = d.get("nodes", [])
 	run.nodes = nodes_raw.duplicate(true)
 	run.node_index = int(d.get("node_index", 0))

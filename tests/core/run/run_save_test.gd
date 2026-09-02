@@ -16,7 +16,7 @@ func test_round_trip_between_nodes() -> void:
 	run.stat_bonus["wit"] = 1
 	var back := _round_trip(run)
 	assert_int(back.run_seed).is_equal(5)
-	assert_str(back.biome_id).is_equal("catacombs")
+	assert_str(back.biome().id).is_equal("catacombs")
 	assert_int(back.entry_floor).is_equal(2)
 	assert_int(back.floor).is_equal(2)
 	assert_str(back.phase).is_equal("node")

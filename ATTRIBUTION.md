@@ -18,6 +18,7 @@ black, which then multiplies to black under any tint). No other changes.
 
 - `assets/icons/enemies/crypt_spider.svg` — *spider-alt*
 - `assets/icons/status/burn.svg` — *flame*
+- `assets/icons/enemies/flesh_weaver.svg` — *spider-face*
 
 ### delapouite
 
@@ -57,6 +58,11 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/ui/ladder.svg` — *ladder*
 - `assets/icons/ui/soul.svg` — *soul*
 - `assets/icons/vitals/discard.svg` — *card-burn*
+- `assets/icons/enemies/the_bloom.svg` — *carnivorous-plant*
+- `assets/icons/card_art/mycelium.svg` — *plant-roots*
+- `assets/icons/card_art/deep_roots.svg` — *tree-roots*
+- `assets/icons/card_art/harvest.svg` — *sickle*
+- `assets/icons/card_art/the_deep_breath.svg` — *lungs*
 
 ### faithtoken
 
@@ -110,6 +116,19 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/ui/seance.svg` — *candle-skull*
 - `assets/icons/vitals/energy.svg` — *lightning-arc*
 - `assets/icons/vitals/turn.svg` — *sands-of-time*
+- `assets/icons/enemies/spore_hound.svg` — *hound*
+- `assets/icons/enemies/rot_grub.svg` — *maggot*
+- `assets/icons/enemies/bloom_wretch.svg` — *spiral-bloom*
+- `assets/icons/enemies/mycelial_husk.svg` — *fleshy-mass*
+- `assets/icons/enemies/cap_thrower.svg` — *spotted-mushroom*
+- `assets/icons/enemies/thorn_polyp.svg` — *thorny-vine*
+- `assets/icons/enemies/deep_lurker.svg` — *curled-tentacle*
+- `assets/icons/enemies/sporemother.svg` — *mushroom-gills*
+- `assets/icons/card_art/cutting_fungus.svg` — *dripping-blade*
+- `assets/icons/card_art/gut_hook.svg` — *meat-hook*
+- `assets/icons/card_art/rupture.svg` — *burst-blob*
+- `assets/icons/card_art/chitin_plate.svg` — *beetle-shell*
+- `assets/icons/card_art/rotbloom.svg` — *spoted-flower*
 
 ### lucasms
 
@@ -124,6 +143,7 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/ui/guild.svg` — *tombstone*
 - `assets/icons/vitals/block.svg` — *shield*
 - `assets/icons/vitals/hp.svg` — *health-normal*
+- `assets/icons/card_art/spore_cloud.svg` — *poison-cloud*
 
 ### skoll
 

@@ -255,7 +255,10 @@ func test_the_hud_exists_and_announces_the_floor() -> void:
 	assert_object(c.hud).is_not_null()
 	assert_object(c.prompts).is_not_null()
 	assert_bool(c.prompts.is_announcing()).is_true()
-	assert_str(c.prompts.banner.text).is_equal(c.game.text("ui.run.floor").replace("{floor}", "1"))
+	# The first floor of a descent names the biome it is in; the ones after it
+	# do not. See Crawl.floor_banner.
+	assert_str(c.prompts.banner.text).contains("Floor 1")
+	assert_str(c.prompts.banner.text).contains(c.game.text("biome.catacombs.name"))
 
 
 func test_your_dead_do_not_stand_inside_the_thing_you_are_fighting() -> void:

@@ -6,7 +6,6 @@ extends RefCounted
 
 var content: Content
 var campaign_seed: int = 0
-var biome_id: String = "catacombs"
 var ladder: Ladder = Ladder.new()
 var upgrades: Upgrades = Upgrades.new()
 var onboarding: Onboarding = Onboarding.new()
@@ -35,8 +34,11 @@ func balance() -> Dictionary:
 	return content.balance
 
 
-func biome() -> BiomeDef:
-	return content.biomes[biome_id]
+## The biome a floor is in. Not a field: a ghost on floor 14 and a ghost on
+## floor 3 are standing in different places, and every projection in the game
+## is handed the floor it cares about.
+func biome_at(floor: int) -> BiomeDef:
+	return Biomes.for_floor(content, floor)
 
 
 func modifiers() -> Dictionary:
@@ -66,7 +68,6 @@ func to_dict() -> Dictionary:
 	return {
 		"version": 1,
 		"campaign_seed": campaign_seed,
-		"biome_id": biome_id,
 		"ladder": ladder.to_dict(),
 		"upgrades": upgrades.to_dict(),
 		"onboarding": onboarding.to_dict(),
@@ -88,7 +89,6 @@ static func from_dict(p_content: Content, d: Dictionary) -> Campaign:
 	var c := Campaign.new()
 	c.content = p_content
 	c.campaign_seed = int(d.get("campaign_seed", 0))
-	c.biome_id = String(d.get("biome_id", "catacombs"))
 	c.ladder = Ladder.from_dict(d.get("ladder", {}))
 	c.upgrades = Upgrades.from_dict(d.get("upgrades", {}))
 	c.onboarding = Onboarding.from_dict(d.get("onboarding", {}))

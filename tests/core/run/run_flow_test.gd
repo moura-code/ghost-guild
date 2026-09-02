@@ -51,8 +51,8 @@ func test_picks_are_granted_once_per_floor_per_hero() -> void:
 
 
 func test_draft_offers_are_deterministic_per_seed() -> void:
-	var a := DescentDraft.offers(TestFixtures.content(), TestFixtures.hero(), TestFixtures.content().biomes["catacombs"], 4, 11)
-	var b := DescentDraft.offers(TestFixtures.content(), TestFixtures.hero(), TestFixtures.content().biomes["catacombs"], 4, 11)
+	var a := DescentDraft.offers(TestFixtures.content(), TestFixtures.hero(), ["sexton", "catacombs"], 4, 11)
+	var b := DescentDraft.offers(TestFixtures.content(), TestFixtures.hero(), ["sexton", "catacombs"], 4, 11)
 	assert_array(a).has_size(3)
 	assert_array(a).is_equal(b)
 

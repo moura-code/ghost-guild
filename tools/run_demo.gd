@@ -14,13 +14,13 @@ func _init() -> void:
 	var args := OS.get_cmdline_user_args()
 	var entry := int(args[0]) if args.size() > 0 else 1
 	var seed_value := int(args[1]) if args.size() > 1 else 1
-	var biome: BiomeDef = content.biomes["catacombs"]
-	if entry < 1 or entry > biome.last_floor:
-		printerr("entry floor must be 1..%d" % biome.last_floor)
+	var depth := Biomes.depth(content)
+	if entry < 1 or entry > depth:
+		printerr("entry floor must be 1..%d" % depth)
 		quit(1)
 		return
 	var hero := Hero.create(content, "sexton", Hero.generate_name(Rng.new(seed_value)))
-	var run := RunEngine.start_run(content, hero, "catacombs", entry, seed_value, true)
+	var run := RunEngine.start_run(content, hero, entry, seed_value, true)
 	var outcome := RunAutopilot.new().play_run(run)
 	for ev in run.events:
 		print(JSON.stringify(ev))

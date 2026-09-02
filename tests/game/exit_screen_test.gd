@@ -149,7 +149,7 @@ func test_retreat_is_refused_with_no_resolve_left() -> void:
 
 func test_the_last_floor_of_the_biome_cannot_be_pushed_past() -> void:
 	var g := _game()
-	var run := _at_exit(g, g.campaign.biome().last_floor)
+	var run := _at_exit(g, Biomes.depth(g.content))
 	var s := _screen(g, run)
 	await await_idle_frame()
 	assert_bool(bool(s.numbers["summary"]["can_push"])).is_false()

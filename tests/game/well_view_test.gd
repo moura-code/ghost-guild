@@ -27,7 +27,7 @@ func test_the_tower_goes_down_not_up() -> void:
 func test_there_is_a_ring_for_every_floor_of_the_biome() -> void:
 	var c := TestFixtures.campaign()
 	var w := _well(c)
-	assert_int(w.depth()).is_equal(c.biome().last_floor)
+	assert_int(w.depth()).is_equal(Biomes.depth(c.content))
 	assert_array(w.rings).has_size(w.depth())
 
 

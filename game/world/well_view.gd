@@ -45,7 +45,7 @@ func build(campaign: Campaign) -> void:
 	figures.clear()
 	if campaign == null:
 		return
-	_depth = clampi(campaign.biome().last_floor, 1, MAX_FLOORS)
+	_depth = clampi(Biomes.depth(campaign.content), 1, MAX_FLOORS)
 
 	for floor in range(1, _depth + 1):
 		var ring := _ring(floor)

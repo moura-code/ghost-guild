@@ -53,13 +53,18 @@ func test_runs_are_deterministic_for_a_seed() -> void:
 
 
 func test_locked_watch_with_no_resolve_still_ends_at_the_last_floor() -> void:
+	# Unkillable and strong enough to actually finish the fights: a hero who
+	# cannot die but also cannot kill loses to the turn cap, which would test
+	# the cap rather than the exit rule this is about.
 	var run := TestFixtures.new_run(1, 2, false)
 	run.hero.resolve = 0
 	run.hero.hp = 100000
 	run.hero.max_hp = 100000
+	run.hero.stats["might"] = 60
+	run.hero.stats["wit"] = 60
 	var ap := _autopilot()
 	ap.push_threshold = 0.0
 	ap.survival_samples = 1
 	var outcome := ap.play_run(run)
 	assert_str(outcome["kind"]).is_equal("watch")
-	assert_int(outcome["floor"]).is_equal(10)
+	assert_int(outcome["floor"]).is_equal(Biomes.depth(TestFixtures.content()))

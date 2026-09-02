@@ -98,7 +98,7 @@ func test_a_simulation_with_doctrine_still_ends() -> void:
 func test_taking_the_watch_records_the_rules_you_chose() -> void:
 	var content := _content()
 	var hero := _hero()
-	var run := RunEngine.start_run(content, hero, "catacombs", 1, 5, true)
+	var run := RunEngine.start_run(content, hero, 1, 5, true)
 	run.phase = "exit"
 	RunEngine.apply(run, {"kind": "watch", "rules": ["hold_the_line", "nurse_the_wound"]})
 	assert_array(run.hero.rules).is_equal(["hold_the_line", "nurse_the_wound"])
@@ -110,7 +110,7 @@ func test_taking_the_watch_without_choosing_keeps_what_the_hero_had() -> void:
 	# death, an autopilot run. None of those may wipe the hero's doctrine.
 	var content := _content()
 	var hero := _hero(["strike_first"])
-	var run := RunEngine.start_run(content, hero, "catacombs", 1, 5, true)
+	var run := RunEngine.start_run(content, hero, 1, 5, true)
 	run.phase = "exit"
 	RunEngine.apply(run, {"kind": "watch"})
 	assert_array(run.hero.rules).is_equal(["strike_first"])
@@ -120,7 +120,7 @@ func test_a_watch_that_names_nonsense_is_cleaned_not_trusted() -> void:
 	# The action comes from the UI, and the UI is the least trustworthy caller
 	# there is. Four rules, a duplicate and a rule that does not exist.
 	var content := _content()
-	var run := RunEngine.start_run(content, _hero(), "catacombs", 1, 5, true)
+	var run := RunEngine.start_run(content, _hero(), 1, 5, true)
 	run.phase = "exit"
 	RunEngine.apply(run, {"kind": "watch",
 		"rules": ["strike_first", "strike_first", "no_such_rule", "hold_the_line", "nurse_the_wound", "spend_everything"]})

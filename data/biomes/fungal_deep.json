@@ -1,0 +1,129 @@
+[
+  {
+    "id": "fungal_deep",
+    "name": "biome.fungal_deep.name",
+    "floors": [
+      11,
+      20
+    ],
+    "card_pool": "fungal_deep",
+    "encounters": [
+      {
+        "floors": [
+          11,
+          13
+        ],
+        "groups": [
+          [
+            "spore_hound"
+          ],
+          [
+            "rot_grub",
+            "rot_grub"
+          ],
+          [
+            "cap_thrower"
+          ],
+          [
+            "bloom_wretch"
+          ],
+          [
+            "spore_hound",
+            "rot_grub"
+          ]
+        ]
+      },
+      {
+        "floors": [
+          14,
+          16
+        ],
+        "groups": [
+          [
+            "mycelial_husk"
+          ],
+          [
+            "bloom_wretch",
+            "cap_thrower"
+          ],
+          [
+            "thorn_polyp",
+            "rot_grub"
+          ],
+          [
+            "flesh_weaver"
+          ],
+          [
+            "spore_hound",
+            "spore_hound",
+            "rot_grub"
+          ]
+        ]
+      },
+      {
+        "floors": [
+          17,
+          20
+        ],
+        "groups": [
+          [
+            "deep_lurker"
+          ],
+          [
+            "flesh_weaver",
+            "cap_thrower"
+          ],
+          [
+            "mycelial_husk",
+            "thorn_polyp"
+          ],
+          [
+            "bloom_wretch",
+            "bloom_wretch",
+            "spore_hound"
+          ]
+        ]
+      }
+    ],
+    "elites": [
+      [
+        "sporemother"
+      ]
+    ],
+    "boss": [
+      "the_bloom"
+    ],
+    "node_patterns": [
+      [
+        "fight",
+        "fight",
+        "elite"
+      ],
+      [
+        "fight",
+        "event",
+        "fight"
+      ],
+      [
+        "fight",
+        "shop",
+        "fight"
+      ],
+      [
+        "fight",
+        "fight",
+        "rest"
+      ],
+      [
+        "fight",
+        "elite",
+        "shop"
+      ],
+      [
+        "event",
+        "fight",
+        "fight"
+      ]
+    ]
+  }
+]

@@ -26,6 +26,19 @@ const FOG_BOTTOM := 0.055
 const FILL_TOP := Color(0.38, 0.48, 0.70)
 const FILL_BOTTOM := Color(0.20, 0.28, 0.52)
 
+## How far a biome shifts the colour of the air, for the fog and for the fill.
+##
+## The grade does not change -- one tonemap, one fog model, one saturation,
+## everywhere, because that is the whole reason mixed CC0 sources read as one
+## game. What changes is the light inside it. Spec §9 gives each biome one
+## accent (ivory, violet, orange) and nothing read them until now.
+const BIOME_FOG_TINT := 0.34
+const BIOME_FILL_TINT := 0.20
+## The biome the game was graded in. The shift is measured from here rather
+## than from neutral, so the Catacombs are an identity by construction and
+## every judgement already made about the look still holds.
+const HOME_BIOME := "catacombs"
+
 
 static func depth_of(floor: int, last_floor: int) -> float:
 	if last_floor <= 1:
@@ -33,7 +46,26 @@ static func depth_of(floor: int, last_floor: int) -> float:
 	return clampf(float(floor - 1) / float(last_floor - 1), 0.0, 1.0)
 
 
-static func environment(depth: float) -> Environment:
+## Moves `base` toward `biome_id`'s accent by `amount`, measured against the
+## home biome's accent -- so passing the home biome (or nothing) returns
+## `base` unchanged, and an unknown id does too.
+static func biome_tint(base: Color, biome_id: String, amount: float) -> Color:
+	# An id with no authored accent leaves the light alone. `biome_accent`
+	# falls back to bone for an unknown id, which is the right answer for a
+	# label and the wrong one here -- it would tint the air toward nothing in
+	# particular for any biome added to the data before the palette.
+	if biome_id == HOME_BIOME or not Palette.BIOME_ACCENTS.has(biome_id):
+		return base
+	var accent := Palette.biome_accent(biome_id)
+	var home := Palette.biome_accent(HOME_BIOME)
+	return Color(
+		clampf(base.r + (accent.r - home.r) * amount, 0.0, 1.0),
+		clampf(base.g + (accent.g - home.g) * amount, 0.0, 1.0),
+		clampf(base.b + (accent.b - home.b) * amount, 0.0, 1.0),
+		base.a)
+
+
+static func environment(depth: float, biome_id: String = "") -> Environment:
 	var d := clampf(depth, 0.0, 1.0)
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
@@ -41,7 +73,7 @@ static func environment(depth: float) -> Environment:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	# Cold ambient against warm torchlight: the contrast is what makes a torch
 	# read as a torch instead of as the room's brightness.
-	env.ambient_light_color = FILL_TOP.lerp(FILL_BOTTOM, d)
+	env.ambient_light_color = biome_tint(FILL_TOP.lerp(FILL_BOTTOM, d), biome_id, BIOME_FILL_TINT)
 	env.ambient_light_energy = lerpf(AMBIENT_TOP, AMBIENT_BOTTOM, d)
 
 	env.fog_enabled = true
@@ -49,7 +81,8 @@ static func environment(depth: float) -> Environment:
 	# uses fog_depth_begin/end instead, so switching to it silently turned the
 	# fog off over the twenty metres a corridor actually spans.
 	env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
-	env.fog_light_color = Color(0.16, 0.22, 0.36).lerp(Color(0.07, 0.10, 0.19), d)
+	env.fog_light_color = biome_tint(
+		Color(0.16, 0.22, 0.36).lerp(Color(0.07, 0.10, 0.19), d), biome_id, BIOME_FOG_TINT)
 	env.fog_density = lerpf(FOG_TOP, FOG_BOTTOM, d)
 	# Fog that takes colour from the lights in it, so a torch down a corridor
 	# glows through the haze instead of being flattened by it.
@@ -84,9 +117,9 @@ static func environment(depth: float) -> Environment:
 	return env
 
 
-static func world_environment(depth: float) -> WorldEnvironment:
+static func world_environment(depth: float, biome_id: String = "") -> WorldEnvironment:
 	var we := WorldEnvironment.new()
-	we.environment = environment(depth)
+	we.environment = environment(depth, biome_id)
 	return we
 
 

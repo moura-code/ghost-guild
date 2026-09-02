@@ -62,7 +62,12 @@ static func hero_for(c: Campaign, floor: int, seed_value: int) -> Hero:
 	var hero := Hero.create(c.content, c.hero.class_id if c.hero != null else "sexton",
 		name, mods["stats"], 1 + int(mods["max_resolve_bonus"]))
 	hero.rules = c.hero.rules.duplicate() if c.hero != null else []
-	for offer in DescentDraft.offers(c.content, hero, c.biome(), floor, seed_value):
+	# The same pools a played run would draft from: a biome the guild has
+	# claimed opens its cards for the guild's own expeditions too.
+	var klass: ClassDef = c.content.classes[hero.class_id]
+	var pools := Biomes.pools_for(c.content, klass.pool,
+		Biomes.claimed_pools(c.content, c.ladder), floor)
+	for offer in DescentDraft.offers(c.content, hero, pools, floor, seed_value):
 		var cards: Array = offer["cards"]
 		if cards.is_empty():
 			continue
@@ -86,7 +91,7 @@ static func plan(c: Campaign, seed_value: int) -> Dictionary:
 		var hero := hero_for(c, floor, seed_value)
 		var ap := Autopilot.with_rules(hero.rules, c.content)
 		var survival := RunProjection.survival_chance(
-			c.content, hero.snapshot(), c.biome(), floor,
+			c.content, hero.snapshot(), c.biome_at(floor), floor,
 			hash([seed_value, "expedition", floor]), samples, ap)
 		if survival >= threshold:
 			best = {"depth": floor, "hero": hero, "survival": survival}
@@ -119,7 +124,7 @@ static func launch(c: Campaign, now: int) -> Dictionary:
 	e.ghost = Ghost.from_expedition(hero, depth, now)
 	# Priced now, once, and never again: `fixed_strength` is what makes
 	# resolution free, and the Founder already uses it for the same reason.
-	var sim := Strength.simulate(c.content, e.ghost.snapshot(), c.biome(), depth,
+	var sim := Strength.simulate(c.content, e.ghost.snapshot(), c.biome_at(depth), depth,
 		hash([seed_value, "strength"]), int(c.balance().get("expedition_sim_fights", 12)), hero.rules)
 	e.ghost.strength = Strength.from_stats(float(sim["win_rate"]), float(sim["avg_turns"]), c.balance())
 	e.ghost.measured = {"fights": 0, "wins": 0, "win_rate": float(sim["win_rate"]), "avg_turns": float(sim["avg_turns"])}

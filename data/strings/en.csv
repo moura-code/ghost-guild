@@ -174,6 +174,7 @@ ui.run.continue,Continue
 ui.run.bank,Bank the run
 ui.run.over,The run is over.
 ui.run.floor,Floor {floor}
+ui.run.floor_biome,Floor {floor} · {biome}
 ui.run.phase.descent,Descending
 ui.run.phase.node,Choose a path
 ui.run.phase.fight,Fight
@@ -311,3 +312,34 @@ ui.expedition.away,{name} is descending to Floor {floor}
 ui.expedition.returns,takes the watch in {time}
 ui.expedition.returned,{name} holds Floor {floor}
 ui.offline.expeditions,Expeditions returned
+biome.fungal_deep.name,The Fungal Deep
+enemy.spore_hound.name,Spore Hound
+enemy.rot_grub.name,Rot Grub
+enemy.bloom_wretch.name,Bloom Wretch
+enemy.mycelial_husk.name,Mycelial Husk
+enemy.cap_thrower.name,Cap Thrower
+enemy.thorn_polyp.name,Thorn Polyp
+enemy.flesh_weaver.name,Flesh Weaver
+enemy.deep_lurker.name,Deep Lurker
+enemy.sporemother.name,Sporemother
+enemy.the_bloom.name,The Bloom
+card.spore_cloud.name,Spore Cloud
+card.spore_cloud.text,Apply {0} Poison to all enemies.
+card.cutting_fungus.name,Cutting Fungus
+card.cutting_fungus.text,Deal {0} damage. Apply {1} Poison.
+card.mycelium.name,Mycelium
+card.mycelium.text,Gain {0} Block and {1} Regen.
+card.gut_hook.name,Gut Hook
+card.gut_hook.text,Deal {0} damage. Apply {1} Vulnerable.
+card.deep_roots.name,Deep Roots
+card.deep_roots.text,Draw {0}. Gain {1} energy. Exhaust.
+card.rupture.name,Rupture
+card.rupture.text,Deal {0} damage. Apply {1} Poison.
+card.chitin_plate.name,Chitin Plate
+card.chitin_plate.text,Gain {0} Block and {1} Thorns.
+card.harvest.name,Harvest
+card.harvest.text,Draw {0}. Heal {1}.
+card.rotbloom.name,Rotbloom
+card.rotbloom.text,Gain {0} Knell.
+card.the_deep_breath.name,The Deep Breath
+card.the_deep_breath.text,Heal {0}. Gain {1} Wit. Exhaust.

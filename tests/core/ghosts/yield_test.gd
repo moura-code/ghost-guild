@@ -35,9 +35,9 @@ func test_yield_is_marginal_over_the_ladder_and_prepared() -> void:
 	assert_float(YieldSimulator.strength_here(c, run)).is_equal(strength)
 
 
-func test_no_next_floor_past_the_slice() -> void:
+func test_no_next_floor_past_the_deepest_biome() -> void:
 	var c := TestFixtures.campaign(1, 1000)
-	var run := _run_at_exit(c, 10)
+	var run := _run_at_exit(c, Biomes.depth(c.content))
 	var n := YieldSimulator.exit_numbers(c, run, 1)
 	assert_bool(n["can_push"]).is_false()
 	assert_float(n["yield_next"]).is_equal(-1.0)

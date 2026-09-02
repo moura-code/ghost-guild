@@ -5,18 +5,20 @@ extends RefCounted
 ## During a fight node, actions are forwarded to CombatEngine.
 
 
-static func start_run(content: Content, hero: Hero, biome_id: String, entry_floor: int, run_seed: int, watch_unlocked: bool) -> RunState:
+static func start_run(content: Content, hero: Hero, entry_floor: int, run_seed: int,
+		watch_unlocked: bool, claimed_pools: Array = []) -> RunState:
 	var run := RunState.new()
 	run.content = content
 	run.hero = hero
 	run.run_seed = run_seed
-	run.biome_id = biome_id
+	for pool in claimed_pools:
+		run.claimed_pools.append(String(pool))
 	run.entry_floor = entry_floor
 	run.floor = entry_floor
 	run.watch_unlocked = watch_unlocked
 	hero.runs += 1
 	run.emit({"type": "run_start", "seed": run_seed, "entry_floor": entry_floor, "hero": hero.name})
-	run.descent_offers = DescentDraft.offers(content, hero, run.biome(), entry_floor, run_seed)
+	run.descent_offers = DescentDraft.offers(content, hero, pools(run), entry_floor, run_seed)
 	for offer in run.descent_offers:
 		run.emit({"type": "draft_offer", "floor": offer["floor"], "cards": offer["cards"]})
 	if run.descent_offers.is_empty():
@@ -234,15 +236,17 @@ static func _finish_fight(run: RunState) -> void:
 		var relic_id := Rewards.relic_offer(run.content, run.hero.relics, rng)
 		if relic_id != "":
 			run.grant_relic(relic_id)
-	var cards := Rewards.card_offer(run.content, _pools(run), rng, run.content.balance, Rewards.OFFER_SIZE, kind == "boss")
+	var cards := Rewards.card_offer(run.content, pools(run), rng, run.content.balance, Rewards.OFFER_SIZE, kind == "boss")
 	run.reward = {"cards": cards.duplicate()}
 	run.phase = "reward"
 	run.emit({"type": "reward_offer", "cards": cards.duplicate()})
 
 
-static func _pools(run: RunState) -> Array:
+## Where this run's card offers are drawn from (spec §5.6). See
+## `Biomes.pools_for`, which the expedition hero's auto-draft shares.
+static func pools(run: RunState) -> Array:
 	var klass: ClassDef = run.content.classes[run.hero.class_id]
-	return [klass.pool, run.biome().card_pool]
+	return Biomes.pools_for(run.content, klass.pool, run.claimed_pools, run.floor)
 
 
 static func _apply_reward(run: RunState, kind: String, action: Dictionary) -> void:
@@ -332,7 +336,7 @@ static func _apply_rest(run: RunState, kind: String, action: Dictionary) -> void
 static func _open_shop(run: RunState) -> void:
 	var balance := run.content.balance
 	var rng := run.sub_rng("shop", run.floor)
-	var cards := Rewards.card_offer(run.content, _pools(run), rng, balance, int(balance.get("shop_card_count", 3)))
+	var cards := Rewards.card_offer(run.content, pools(run), rng, balance, int(balance.get("shop_card_count", 3)))
 	run.shop = {
 		"cards": cards.duplicate(),
 		"relic": Rewards.relic_offer(run.content, run.hero.relics, rng),
@@ -385,8 +389,10 @@ static func _apply_shop(run: RunState, kind: String, action: Dictionary) -> void
 			push_error("run: unknown shop action " + kind)
 
 
+## As deep as the biomes go, not as deep as the current one goes: clearing the
+## last Catacombs floor offers floor 11, which is a different biome, mid-run.
 static func can_push(run: RunState) -> bool:
-	return run.floor < run.biome().last_floor
+	return run.floor < Biomes.depth(run.content)
 
 
 static func can_watch(run: RunState) -> bool:
@@ -397,7 +403,10 @@ static func exit_summary(run: RunState, samples: int = -1) -> Dictionary:
 	var n := samples if samples >= 0 else int(run.content.balance.get("survival_samples", 20))
 	var survival := -1.0
 	if can_push(run):
-		survival = RunProjection.survival_chance(run.content, run.hero_snapshot(), run.biome(), run.floor + 1, run.run_seed, n)
+		# The floor being projected, not the one being stood on -- they are
+		# different biomes on the one floor where this reading matters most.
+		survival = RunProjection.survival_chance(run.content, run.hero_snapshot(),
+			run.biome_at(run.floor + 1), run.floor + 1, run.run_seed, n)
 	return {
 		"floor": run.floor,
 		"measured": run.stats.measured(run.floor),

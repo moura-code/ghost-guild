@@ -40,7 +40,8 @@ func test_push_enters_the_next_floor() -> void:
 
 
 func test_no_push_past_the_last_floor_but_watch_is_always_possible_there() -> void:
-	var run := _at_exit(10, 1, false)
+	var last := Biomes.depth(TestFixtures.content())
+	var run := _at_exit(last, 1, false)
 	var summary := RunEngine.exit_summary(run, 2)
 	assert_bool(summary["can_push"]).is_false()
 	assert_float(summary["survival"]).is_equal(-1.0)
@@ -51,7 +52,7 @@ func test_no_push_past_the_last_floor_but_watch_is_always_possible_there() -> vo
 	assert_array(kinds).is_equal(["retreat", "watch"])
 	RunEngine.apply(run, {"kind": "push"})
 	assert_str(run.phase).is_equal("exit")
-	assert_int(run.floor).is_equal(10)
+	assert_int(run.floor).is_equal(last)
 
 
 func test_retreat_spends_resolve_sets_camp_and_keeps_hp() -> void:

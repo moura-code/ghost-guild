@@ -8,7 +8,8 @@ extends SceneTree
 ##   godot --path . --rendering-method forward_plus --resolution 1280x720 \
 ##         -s tools/hud_shot.gd -- <out.png> <mode> [frames]
 ##
-## Modes: walk, fight, reward, guild, panel, expedition, offline, exit, watch.
+## Modes: walk, fight, reward, guild, panel, expedition, offline, exit, watch,
+## deep, ladder.
 ##
 ## Runs against a throwaway save, so it never touches the player's campaign.
 
@@ -49,6 +50,15 @@ func _init() -> void:
 			game.offline = {"elapsed": 30_000, "counted": 28_800, "capped": true,
 				"soul": 1840.0, "returned": [Ghost.from_expedition(hero, 4, 0)]}
 			crawl._maybe_show_offline()
+		"ladder":
+			# A ghost standing in each biome, so the shaft has both bands.
+			for floor in [4, 14]:
+				var walker := Hero.create(game.content, "sexton", "Deep%d" % floor, {}, 1)
+				game.campaign.ladder.add(Ghost.from_expedition(walker, floor, 0))
+			game.campaign.record_depth = 16
+			var well := crawl.guild.station(GuildRoom.WELL)
+			well.enter(crawl.player)
+			well.use()
 		"panel", "expedition":
 			if mode == "expedition":
 				# One slot in the field and one open, which is the state the
@@ -72,7 +82,9 @@ func _init() -> void:
 				crawl.exit_panel._picker.toggle("poison_before_blades")
 				crawl.exit_panel._picker.toggle("finish_the_wounded")
 		_:
-			_descend(game, crawl)
+			# `deep` walks the second biome instead of the first: the whole
+			# point of a biome is that you can see which one you are in.
+			_descend(game, crawl, 11 if mode == "deep" else 1)
 			if mode == "fight":
 				await _pick_a_fight(game, crawl)
 			elif mode == "reward":
@@ -90,8 +102,11 @@ func _init() -> void:
 	quit()
 
 
-func _descend(game: GameRoot, crawl: Crawl) -> void:
-	game.start_run(1)
+func _descend(game: GameRoot, crawl: Crawl, entry: int = 1) -> void:
+	if entry > 1:
+		# Reach is what gates the entry floor, and reach is the deepest ghost.
+		game.campaign.record_depth = entry
+	game.start_run(entry)
 	var guard := 0
 	while game.campaign.run != null and game.campaign.run.phase == "descent" and guard < 20:
 		guard += 1

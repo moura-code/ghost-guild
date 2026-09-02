@@ -55,6 +55,9 @@ var quit_action: Callable = func() -> void: get_tree().quit()
 
 var _world: Node3D
 var _built_floor: int = -1
+## The biome the last announced floor was in, so crossing into a new one can
+## be announced and walking down inside one cannot.
+var _announced_biome: String = ""
 var _stations: Dictionary = {}
 var _mourning: bool = false
 var _had_save: bool = false
@@ -238,6 +241,9 @@ func _enter_dungeon(run: RunState) -> void:
 		_leave_guild()
 		place = Place.DUNGEON
 		_built_floor = -1
+		# A new descent names where it is arriving, even when that is the
+		# biome the last one ended in.
+		_announced_biome = ""
 		place_changed.emit(place)
 	if run.phase == "fight":
 		# The director owns the screen and the body while a fight is staged.
@@ -278,7 +284,8 @@ func build_floor() -> void:
 	layout = RunEngine.layout_for(run)
 	_built_floor = run.floor
 	DungeonBuilder.build(layout, _world)
-	_world.add_child(Grade.world_environment(Grade.depth_of(run.floor, run.biome().last_floor)))
+	_world.add_child(Grade.world_environment(
+		Grade.depth_of(run.floor, Biomes.depth(run.content)), run.biome().id))
 	_dress()
 	_place_player(_stand_in(layout.entry_room), _open_facing(layout.room_center(layout.entry_room)))
 
@@ -303,9 +310,23 @@ func build_floor() -> void:
 	_refresh_marks()
 	_refresh_objective()
 
-	prompts.announce(game.text("ui.run.floor").replace("{floor}", str(run.floor)))
+	prompts.announce(floor_banner(run))
 	print("crawl: floor %d, %d rooms, %d encounters left" % [run.floor, layout.rooms.size(), markers.size()])
 	floor_built.emit(run.floor)
+
+
+## What the banner says on arriving at this floor.
+##
+## The biome's name only where it is news: on the first floor of a run and on
+## the floor a descent crosses into a different biome. "Floor 4 · The
+## Catacombs" nine times in a row is noise, and the one time it matters -- the
+## step out of the Catacombs and into the Deep -- would read as more of it.
+func floor_banner(run: RunState) -> String:
+	var here := run.biome()
+	if here.id == _announced_biome:
+		return game.text("ui.run.floor").replace("{floor}", str(run.floor))
+	_announced_biome = here.id
+	return game.text("ui.run.floor_biome") 		.replace("{floor}", str(run.floor)) 		.replace("{biome}", game.text(here.name_key))
 
 
 ## Props against the walls. A boxy empty room reads as a prototype however

@@ -42,14 +42,15 @@ static func start_run(c: Campaign, entry_floor: int, now: int) -> RunState:
 			return c.run
 		push_error("start_run: the previous run has not been banked; call finish_run first")
 		return null
-	var deepest := mini(reach(c), c.biome().last_floor)
+	var deepest := mini(reach(c), Biomes.depth(c.content))
 	if entry_floor < 1 or entry_floor > deepest:
 		push_error("start_run: entry floor %d outside 1..%d" % [entry_floor, deepest])
 		return null
 	tick(c, now)
 	c.run_counter += 1
 	var run_seed := hash([c.campaign_seed, "run", c.run_counter])
-	c.run = RunEngine.start_run(c.content, c.hero, c.biome_id, entry_floor, run_seed, c.onboarding.watch_unlocked)
+	c.run = RunEngine.start_run(c.content, c.hero, entry_floor, run_seed,
+		c.onboarding.watch_unlocked, Biomes.claimed_pools(c.content, c.ladder))
 	c.emit({"type": "run_started", "run": c.run_counter, "entry_floor": entry_floor, "seed": run_seed, "at": now})
 	return c.run
 
@@ -90,7 +91,7 @@ static func finish_run(c: Campaign, now: int) -> Dictionary:
 static func strength_for(c: Campaign, ghost: Ghost) -> float:
 	if ghost.fixed_strength:
 		return ghost.strength
-	var sim := Strength.simulate(c.content, ghost.snapshot(), c.biome(), ghost.floor, hash([c.campaign_seed, "strength", ghost.id]), c.sim_fights, ghost.rules)
+	var sim := Strength.simulate(c.content, ghost.snapshot(), c.biome_at(ghost.floor), ghost.floor, hash([c.campaign_seed, "strength", ghost.id]), c.sim_fights, ghost.rules)
 	return Strength.of_ghost_stats(ghost.measured, sim, c.balance())
 
 
