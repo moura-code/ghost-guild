@@ -168,7 +168,11 @@ func test_the_stairs_open_the_exit_decision_and_pushing_builds_the_next_floor() 
 	if not RunEngine.can_push(run):
 		return
 	var started := run.floor
-	c._on_exit_decided("push")
+	# The button, not the callback. The callback is what the panel tells the
+	# crawl AFTER it has applied the decision, and calling it directly was
+	# quietly asserting that applying an exit twice is fine -- which is what
+	# hid `push_error("expected enter, got push")` on every descent.
+	c.exit_panel._push.pressed.emit()
 	assert_int(g.campaign.run.floor).is_equal(started + 1)
 	assert_bool(c.panel_open()).is_false()
 	assert_str(g.campaign.run.phase).is_equal("node")

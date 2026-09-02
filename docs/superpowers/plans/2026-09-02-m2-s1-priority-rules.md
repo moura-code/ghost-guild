@@ -144,3 +144,31 @@ Hexer · Fungal Deep and The Kiln · biome claims · Expeditions · Legends and 
 Blessing · tending beyond restless · hauntings · auto-draft · content to launch
 volume · the first full balance pass. Auto-draft and Expeditions both take "the
 hero's priority rules" as an input, and both are cheaper now than they were.
+
+### The shot, and the two bugs it found
+
+`tools/hud_shot.gd` grew a `watch` mode (and an `exit` mode, which never existed
+either) so the picker could be looked at. Rendering it found two things no test
+could:
+
+1. **The first cut was unusable.** Each rule got a row with its full sentence on
+   it. In the HUD's 640x360 authoring space that is a twelve-row scrolling list
+   with the text clipped mid-word — choosing by scrolling past choices you cannot
+   see. Rebuilt as two columns of six names with one description line for whatever
+   the cursor is on; all twelve are visible at once. `docs/shots/review/rule_picker.png`.
+2. **The objective line was printed across every panel's title.** `Prompts.objective`
+   is anchored to the top of the screen and `Crawl.open` hushed the floor banner
+   but not the objective, so "The stairs are open" sat over the exit screen's own
+   heading. Pre-existing, and visible on every panel in the game.
+
+### And one the shot could not have found
+
+`Crawl._on_exit_decided` applied the exit action a **second time** — the panel had
+already applied it before emitting. For a watch or a retreat that was invisible
+(the run was over and `campaign.run` was already null, so the guard caught it), but
+pushing to the next floor left the run in phase `node`, and the second apply
+reached `push_error("run: expected enter, got push")` on **every single descent**.
+
+It survived because `crawl_loop_test` drove `_on_exit_decided("push")` directly, so
+the test was asserting that applying an exit twice is fine. It now presses the
+button, which is what a player does.

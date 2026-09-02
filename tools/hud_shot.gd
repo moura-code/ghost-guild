@@ -6,7 +6,9 @@ extends SceneTree
 ## that was never asked.
 ##
 ##   godot --path . --rendering-method forward_plus --resolution 1280x720 \
-##         -s tools/hud_shot.gd -- <out.png> <walk|fight|reward|guild|panel> [frames]
+##         -s tools/hud_shot.gd -- <out.png> <mode> [frames]
+##
+## Modes: walk, fight, reward, guild, panel, exit, watch.
 ##
 ## Runs against a throwaway save, so it never touches the player's campaign.
 
@@ -44,6 +46,15 @@ func _init() -> void:
 			var station := crawl.guild.station(GuildRoom.TABLE)
 			station.enter(crawl.player)
 			station.use()
+		"exit", "watch":
+			_descend(game, crawl)
+			await _to_the_exit(game, crawl)
+			if mode == "watch":
+				# The picker, with a doctrine half chosen, which is the state
+				# it spends most of its life in.
+				crawl.exit_panel._watch.pressed.emit()
+				crawl.exit_panel._picker.toggle("poison_before_blades")
+				crawl.exit_panel._picker.toggle("finish_the_wounded")
 		_:
 			_descend(game, crawl)
 			if mode == "fight":
@@ -69,6 +80,31 @@ func _descend(game: GameRoot, crawl: Crawl) -> void:
 	while game.campaign.run != null and game.campaign.run.phase == "descent" and guard < 20:
 		guard += 1
 		crawl.choice.take(0)
+
+
+## A run parked at a floor exit with the watch already earned, which is the
+## only state either of the two exit screens is ever seen in.
+func _to_the_exit(game: GameRoot, crawl: Crawl) -> void:
+	var run := game.campaign.run
+	game.campaign.onboarding.watch_unlocked = true
+	run.watch_unlocked = true
+	run.floor = 4
+	run.nodes = [{"kind": "rest"}]
+	run.resolved = []
+	run.node_index = 0
+	run.phase = "node"
+	crawl.build_floor()
+	await process_frame
+	# Through run_action, not RunEngine: the panel opens on `run_changed`, and
+	# applying straight to the engine leaves the run at the exit with nobody
+	# having been told.
+	game.run_action({"kind": "enter"})
+	game.run_action({"kind": "rest_heal"})
+	await process_frame
+	# The exit screen opens when the player walks into the stairs, not when the
+	# phase changes -- so the shot has to walk in.
+	crawl._on_stairs_entered(0)
+	await process_frame
 
 
 func _pick_a_fight(game: GameRoot, crawl: Crawl) -> void:

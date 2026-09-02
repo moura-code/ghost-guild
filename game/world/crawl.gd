@@ -199,13 +199,16 @@ func open(screen: Control) -> void:
 	if screen != null:
 		prompts.clear_prompt()
 		# A floor announcement still fading when a panel opens ends up printed
-		# across it.
+		# across it. So does the objective line, which is anchored to the top
+		# of the screen and was landing across the exit screen's own title.
 		prompts.hush()
+		prompts.clear_objective()
 
 
 func close_panel() -> void:
 	open(null)
 	_refresh_prompt()
+	_refresh_objective()
 
 
 func panel_open() -> bool:
@@ -377,11 +380,18 @@ func _on_stairs_entered(_index: int) -> void:
 	open(exit_panel)
 
 
-func _on_exit_decided(kind: String) -> void:
+## The panel applied the decision before it told anyone; this only takes the
+## panel down.
+##
+## It used to apply the action a second time. For a watch or a retreat that was
+## invisible -- the run was already over and `campaign.run` was already null, so
+## the guard caught it -- but pushing to the next floor left the run in phase
+## "node" and the second apply reached `push_error("expected enter, got push")`
+## on every single descent. One owner per action: the screen that made the
+## decision is the one that carries it, because it is also the only one that
+## knows what was chosen with it.
+func _on_exit_decided(_kind: String) -> void:
 	close_panel()
-	if game.campaign.run == null:
-		return
-	game.run_action({"kind": kind})
 
 
 ## Marks every node the engine now considers resolved, and re-checks the
