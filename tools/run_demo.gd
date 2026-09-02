@@ -19,7 +19,7 @@ func _init() -> void:
 		printerr("entry floor must be 1..%d" % depth)
 		quit(1)
 		return
-	var hero := Hero.create(content, "sexton", Hero.generate_name(Rng.new(seed_value)))
+	var hero := Hero.create(content, Classes.starting(content), Hero.generate_name(Rng.new(seed_value)))
 	var run := RunEngine.start_run(content, hero, entry, seed_value, true)
 	var outcome := RunAutopilot.new().play_run(run)
 	for ev in run.events:

@@ -9,8 +9,11 @@ const STAT_IDS := ["might", "wit", "vigor", "focus"]
 const DECK_CARD_SCALE := 0.42
 
 var game: GameRoot
+## One button per class in the data, locked ones included. Keyed by class id.
+var class_rows: Dictionary = {}
 
 var _name: Label
+var _class_row: HBoxContainer
 var _class: Label
 var _vitals: Label
 var _stats: Dictionary = {}
@@ -46,6 +49,28 @@ func _build() -> void:
 	add_child(_name)
 	_class = ScreenLayout.centre(UiTheme.small(""))
 	add_child(_class)
+
+	# Who goes down next. Every class in the data is here, the locked ones
+	# greyed with the biome that opens them on the tooltip -- a reward you
+	# cannot see is not a reward. The row closes the moment this hero has
+	# descended, because by then their deck was built rather than dealt.
+	_class_row = HBoxContainer.new()
+	_class_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_class_row.add_theme_constant_override("separation", 6)
+	var ids: Array = game.content.classes.keys()
+	ids.sort()
+	for id in ids:
+		var button := Button.new()
+		button.custom_minimum_size = Vector2(72.0, 16.0)
+		# Styled by hand, the way every other button in the game is: the
+		# carved theme in `UiTheme.build()` is never applied to the running
+		# HUD, so a Button with no overrides renders as a stock Godot control
+		# in 16px Open Sans. See the plan's note; it is the next stage.
+		button.add_theme_font_size_override("font_size", UiTheme.FONT_BODY)
+		button.pressed.connect(_on_class_pressed.bind(String(id)))
+		_class_row.add_child(button)
+		class_rows[String(id)] = button
+	add_child(_class_row)
 	_vitals = ScreenLayout.centre(UiTheme.body(""))
 	add_child(_vitals)
 
@@ -103,8 +128,63 @@ func refresh() -> void:
 	]
 	for stat in STAT_IDS:
 		(_stats[stat] as Label).text = str(int(hero.stats.get(stat, 0)))
+	_refresh_classes(hero)
 	_refresh_relics(hero)
 	_refresh_deck(hero)
+
+
+## Which classes this hero could still become.
+##
+## A locked class shows what would open it; a hero who has descended shows
+## nothing, because at that point the answer is "die first" and a row of dead
+## buttons says that better than a sentence would.
+func _refresh_classes(hero: Hero) -> void:
+	var open := Classes.unlocked(game.content, game.campaign.ladder)
+	var committed := hero.runs > 0 or game.campaign.run != null
+	for id in class_rows:
+		var button: Button = class_rows[id]
+		var class_id := String(id)
+		var def: ClassDef = game.content.classes[class_id]
+		button.text = game.text(def.name_key)
+		var behind := Classes.locked_behind(game.content, class_id)
+		if not open.has(class_id) and behind != "":
+			button.tooltip_text = game.text("ui.class.locked") 				.replace("{biome}", game.text(_biome_name_key(behind)))
+		elif class_id == hero.class_id:
+			button.tooltip_text = game.text("ui.class.current")
+		else:
+			button.tooltip_text = game.text("ui.class.swap")
+		button.disabled = committed or not open.has(class_id) or class_id == hero.class_id
+		_style_class(button, class_id == hero.class_id, not button.disabled)
+
+
+## Three states, and the tablets in the Guild already say what each looks
+## like: the one you are is lit and unpressable, one you could become is an
+## offer, and one you cannot reach recedes.
+func _style_class(button: Button, current: bool, offered: bool) -> void:
+	if current:
+		button.add_theme_stylebox_override("normal",
+			UiTheme.panel_box(Palette.VOID, Palette.PREPARED))
+		button.add_theme_color_override("font_color", Palette.PREPARED)
+		button.add_theme_color_override("font_disabled_color", Palette.PREPARED)
+		return
+	if offered:
+		button.add_theme_stylebox_override("normal", UiTheme.primary_box(Palette.EDGE_LIGHT))
+		button.add_theme_color_override("font_color", Palette.BONE)
+		return
+	button.add_theme_stylebox_override("normal",
+		UiTheme.panel_box(Palette.VOID, Palette.STONE_RAISED))
+	button.add_theme_color_override("font_disabled_color", Palette.BONE_FAINT)
+
+
+func _biome_name_key(biome_id: String) -> String:
+	if game.content.biomes.has(biome_id):
+		return (game.content.biomes[biome_id] as BiomeDef).name_key
+	return biome_id
+
+
+func _on_class_pressed(class_id: String) -> void:
+	game.choose_class(class_id)
+	refresh()
 
 
 ## The hero themselves, not the deck below them.

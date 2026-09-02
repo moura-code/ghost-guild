@@ -4,5 +4,6 @@
   {"id": "cracked_hourglass", "name": "relic.cracked_hourglass.name", "text": "relic.cracked_hourglass.text", "hooks": {"on_fight_start": [{"op": "draw", "amount": 1}]}},
   {"id": "ossuary_key", "name": "relic.ossuary_key.name", "text": "relic.ossuary_key.text", "hooks": {"on_fight_end": [{"op": "heal", "amount": 4}]}},
   {"id": "lead_censer", "name": "relic.lead_censer.name", "text": "relic.lead_censer.text", "hooks": {"on_fight_start": [{"op": "apply_status", "status": "weak", "stacks": 1, "target": "all_enemies"}]}},
-  {"id": "grave_coin", "name": "relic.grave_coin.name", "text": "relic.grave_coin.text", "hooks": {"on_fight_end": [{"op": "coin", "amount": 10}]}}
+  {"id": "grave_coin", "name": "relic.grave_coin.name", "text": "relic.grave_coin.text", "hooks": {"on_fight_end": [{"op": "coin", "amount": 10}]}},
+  {"id": "hexers_thimble", "name": "relic.hexers_thimble.name", "text": "relic.hexers_thimble.text", "hooks": {"on_fight_start": [{"op": "apply_status", "status": "poison", "stacks": 3, "target": "all_enemies"}]}}
 ]

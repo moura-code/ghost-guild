@@ -93,7 +93,7 @@ func is_true() -> bool:
 
 
 static func founder(content: Content, p_created_at: int) -> Ghost:
-	var klass: ClassDef = content.classes["sexton"]
+	var klass: ClassDef = content.classes[Classes.starting(content)]
 	var g := Ghost.new()
 	g.name = content.text("ghost.founder.name")
 	g.class_id = klass.id

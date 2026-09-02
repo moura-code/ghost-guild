@@ -20,6 +20,10 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/status/burn.svg` — *flame*
 - `assets/icons/enemies/flesh_weaver.svg` — *spider-face*
 
+### cathelineau
+
+- `assets/icons/card_art/witchs_mark.svg` — *witch-face*
+
 ### delapouite
 
 - `assets/icons/card_art/bone_wall.svg` — *stone-wall*
@@ -63,6 +67,7 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/card_art/deep_roots.svg` — *tree-roots*
 - `assets/icons/card_art/harvest.svg` — *sickle*
 - `assets/icons/card_art/the_deep_breath.svg` — *lungs*
+- `assets/icons/card_art/miasma.svg` — *fog*
 
 ### faithtoken
 
@@ -129,6 +134,18 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/card_art/rupture.svg` — *burst-blob*
 - `assets/icons/card_art/chitin_plate.svg` — *beetle-shell*
 - `assets/icons/card_art/rotbloom.svg` — *spoted-flower*
+- `assets/icons/card_art/wither.svg` — *chemical-drop*
+- `assets/icons/card_art/flinch.svg` — *hood*
+- `assets/icons/card_art/ill_wish.svg` — *dead-eye*
+- `assets/icons/card_art/creeping_rot.svg` — *virus*
+- `assets/icons/card_art/sap_will.svg` — *magic-swirl*
+- `assets/icons/card_art/bitter_draught.svg` — *bottle-vapors*
+- `assets/icons/card_art/evil_eye.svg` — *bleeding-eye*
+- `assets/icons/card_art/bloodletting.svg` — *triple-needle*
+- `assets/icons/card_art/cold_comfort.svg` — *glass-heart*
+- `assets/icons/card_art/the_long_illness.svg` — *skull-in-jar*
+- `assets/icons/card_art/unmaking.svg` — *shadow-follower*
+- `assets/icons/relics/hexers_thimble.svg` — *sewing-needle*
 
 ### lucasms
 
@@ -148,6 +165,11 @@ black, which then multiplies to black under any tint). No other changes.
 ### skoll
 
 - `assets/icons/intent/summon.svg` — *raise-skeleton*
+- `assets/icons/card_art/hex_bolt.svg` — *hexes*
+
+### willdabeast
+
+- `assets/icons/card_art/black_ledger.svg` — *black-book*
 
 ## Fonts — SIL Open Font License 1.1
 

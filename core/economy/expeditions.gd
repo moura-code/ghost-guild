@@ -59,7 +59,8 @@ static func duration_seconds(c: Campaign, depth: int) -> int:
 static func hero_for(c: Campaign, floor: int, seed_value: int) -> Hero:
 	var mods := c.modifiers()
 	var name := Hero.generate_name(Rng.new(hash([seed_value, "expedition_name"])))
-	var hero := Hero.create(c.content, c.hero.class_id if c.hero != null else "sexton",
+	var sent := c.hero.class_id if c.hero != null else Classes.starting(c.content)
+	var hero := Hero.create(c.content, sent,
 		name, mods["stats"], 1 + int(mods["max_resolve_bonus"]))
 	hero.rules = c.hero.rules.duplicate() if c.hero != null else []
 	# The same pools a played run would draft from: a biome the guild has

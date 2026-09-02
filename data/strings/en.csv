@@ -343,3 +343,39 @@ card.rotbloom.name,Rotbloom
 card.rotbloom.text,Gain {0} Knell.
 card.the_deep_breath.name,The Deep Breath
 card.the_deep_breath.text,Heal {0}. Gain {1} Wit. Exhaust.
+class.hexer.name,Hexer
+relic.hexers_thimble.name,Hexer's Thimble
+relic.hexers_thimble.text,Enemies start every fight with 3 Poison.
+card.wither.name,Wither
+card.wither.text,Deal {0} damage. Apply {1} Poison.
+card.flinch.name,Flinch
+card.flinch.text,Gain {0} Block.
+card.ill_wish.name,Ill Wish
+card.ill_wish.text,Apply {0} Weak.
+card.creeping_rot.name,Creeping Rot
+card.creeping_rot.text,Apply {0} Poison.
+card.hex_bolt.name,Hex Bolt
+card.hex_bolt.text,Deal {0} damage. Apply {1} Weak.
+card.sap_will.name,Sap Will
+card.sap_will.text,Apply {0} Weak to all enemies.
+card.bitter_draught.name,Bitter Draught
+card.bitter_draught.text,Gain {0} Block. Draw {1}.
+card.evil_eye.name,Evil Eye
+card.evil_eye.text,Apply {0} Vulnerable. Draw {1}.
+card.bloodletting.name,Bloodletting
+card.bloodletting.text,Deal {0} damage twice. Gain {1} Bleed.
+card.miasma.name,Miasma
+card.miasma.text,Apply {0} Poison to all enemies.
+card.witchs_mark.name,Witch's Mark
+card.witchs_mark.text,Deal {0} damage. Apply {1} Poison and {2} Vulnerable.
+card.cold_comfort.name,Cold Comfort
+card.cold_comfort.text,Gain {0} Block and {1} Regen.
+card.black_ledger.name,Black Ledger
+card.black_ledger.text,Draw {0}. Gain {1} Wit. Exhaust.
+card.the_long_illness.name,The Long Illness
+card.the_long_illness.text,Gain {0} Knell.
+card.unmaking.name,Unmaking
+card.unmaking.text,Deal {0} damage. Apply {1} Poison.
+ui.class.locked,Opens when one of your dead holds {biome}.
+ui.class.current,Who you are.
+ui.class.swap,Send this one down instead. Only before you descend.

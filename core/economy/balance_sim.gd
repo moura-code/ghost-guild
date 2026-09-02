@@ -25,7 +25,7 @@ func sample_runs() -> Dictionary:
 	var samples: Array = []
 	var per_run: Array = []
 	for i in runs:
-		var hero := Hero.create(content, "sexton", "Sim%d" % i)
+		var hero := Hero.create(content, Classes.starting(content), "Sim%d" % i)
 		var run := RunEngine.start_run(content, hero, 1, hash([seed_base, "balance", i]), true)
 		var ap := RunAutopilot.new()
 		ap.survival_samples = 1

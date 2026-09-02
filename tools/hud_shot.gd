@@ -9,7 +9,7 @@ extends SceneTree
 ##         -s tools/hud_shot.gd -- <out.png> <mode> [frames]
 ##
 ## Modes: walk, fight, reward, guild, panel, expedition, offline, exit, watch,
-## deep, ladder.
+## deep, ladder, hero.
 ##
 ## Runs against a throwaway save, so it never touches the player's campaign.
 
@@ -50,6 +50,13 @@ func _init() -> void:
 			game.offline = {"elapsed": 30_000, "counted": 28_800, "capped": true,
 				"soul": 1840.0, "returned": [Ghost.from_expedition(hero, 4, 0)]}
 			crawl._maybe_show_offline()
+		"hero":
+			# The Deep claimed, so the class row has one open and one taken.
+			var deep := Hero.create(game.content, "sexton", "Deepwalker", {}, 1)
+			game.campaign.ladder.add(Ghost.from_expedition(deep, 14, 0))
+			var desk := crawl.guild.station(GuildRoom.DESK)
+			desk.enter(crawl.player)
+			desk.use()
 		"ladder":
 			# A ghost standing in each biome, so the shaft has both bands.
 			for floor in [4, 14]:

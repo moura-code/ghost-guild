@@ -19,15 +19,46 @@ static func new_campaign(content: Content, campaign_seed: int, now: int) -> Camp
 	return c
 
 
-static func new_hero(c: Campaign, now: int) -> Hero:
+## The next hero. `class_id` empty keeps the one who just died -- dying does
+## not cost you your class, it offers you the choice again.
+static func new_hero(c: Campaign, now: int, class_id: String = "") -> Hero:
 	c.hero_counter += 1
 	var mods := c.modifiers()
 	var hero_name := Hero.generate_name(c.sub_rng("names", c.hero_counter))
-	var hero := Hero.create(c.content, "sexton", hero_name, mods["stats"], 1 + int(mods["max_resolve_bonus"]))
+	var wanted := class_id
+	if wanted == "" and c.hero != null:
+		wanted = c.hero.class_id
+	if not Classes.is_unlocked(c.content, c.ladder, wanted):
+		wanted = Classes.starting(c.content)
+	var hero := Hero.create(c.content, wanted, hero_name, mods["stats"], 1 + int(mods["max_resolve_bonus"]))
 	hero.id = c.hero_counter
 	c.hero = hero
 	c.emit({"type": "hero_created", "id": hero.id, "name": hero.name, "at": now})
 	return hero
+
+
+## Re-makes the living hero as `class_id` (spec §3.4). Refused once they have
+## descended: the gate is `runs == 0`, so every death offers the choice again
+## and nobody swaps mid-campaign to dodge a matchup.
+##
+## Nothing is lost by it. Reach, Soul, the upgrades, the ladder and the camp
+## are all campaign-level; the only state discarded is a deck that has never
+## been played.
+static func choose_class(c: Campaign, class_id: String) -> Dictionary:
+	if c.hero == null or c.run != null:
+		return {"ok": false, "reason": "in_run"}
+	if c.hero.class_id == class_id:
+		return {"ok": false, "reason": "unchanged"}
+	if not Classes.is_unlocked(c.content, c.ladder, class_id):
+		return {"ok": false, "reason": "locked"}
+	if c.hero.runs > 0:
+		return {"ok": false, "reason": "committed"}
+	var camp := c.hero.camp
+	var hero := new_hero(c, c.last_tick, class_id)
+	# The camp is where the *guild* got to, not where this deck did.
+	hero.camp = camp
+	c.emit({"type": "class_chosen", "class": class_id, "hero": hero.id})
+	return {"ok": true, "reason": ""}
 
 
 static func reach(c: Campaign) -> int:

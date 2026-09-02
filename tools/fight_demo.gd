@@ -22,13 +22,13 @@ func _init() -> void:
 			printerr("unknown enemy: " + String(id))
 			quit(1)
 			return
-	var hero := HeroSnapshot.starter(content, "sexton")
+	var hero := HeroSnapshot.starter(content, Classes.starting(content))
 	var s := CombatEngine.start_fight(content, hero, enemy_ids, 1, Rng.new(1))
 	var ap := Autopilot.new()
 	var result := ap.play_fight(s)
 	for ev in s.events:
 		print(JSON.stringify(ev))
 	print("RESULT won=%s turns=%d hp=%d" % [str(result["won"]), int(result["turns"]), int(result["hp"])])
-	var stats := FightSimulator.simulate(content, HeroSnapshot.starter(content, "sexton"), enemy_ids, 1, 7, 50)
+	var stats := FightSimulator.simulate(content, HeroSnapshot.starter(content, Classes.starting(content)), enemy_ids, 1, 7, 50)
 	print("SIM fights=%d win_rate=%.2f avg_turns=%.1f avg_hp_left=%.1f" % [int(stats["fights"]), float(stats["win_rate"]), float(stats["avg_turns"]), float(stats["avg_hp_left"])])
 	quit(0)

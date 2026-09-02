@@ -15,8 +15,8 @@ func test_slice_content_volume() -> void:
 	# failed to load, which is what they were actually guarding.
 	assert_int(c.cards.size()).is_greater_equal(30)
 	assert_int(c.enemies.size()).is_greater_equal(10)
-	assert_int(c.relics.size()).is_equal(6)
-	assert_int(c.classes.size()).is_equal(1)
+	assert_int(c.relics.size()).is_greater_equal(6)
+	assert_int(c.classes.size()).is_greater_equal(1)
 	assert_int(c.biomes.size()).is_greater_equal(1)
 	assert_int(c.events.size()).is_equal(3)
 	# The M1 slice shipped ten upgrade nodes (spec §7). M2 is growing toward
@@ -26,8 +26,21 @@ func test_slice_content_volume() -> void:
 	assert_int(c.upgrades.size()).is_greater_equal(10)
 	# Twelve priority rules (spec §7), all in the Descent-era content.
 	assert_int(c.rules.size()).is_equal(12)
-	var sexton: ClassDef = c.classes["sexton"]
-	assert_array(sexton.starting_deck).has_size(10)
+	# Every class opens with ten cards and its own relic (spec §3.4), whatever
+	# else it is. A class with nine is a class that draws a different opening
+	# hand to every other one.
+	for id in c.classes:
+		var klass: ClassDef = c.classes[id]
+		assert_array(klass.starting_deck).override_failure_message(
+			"%s does not open with ten cards" % id).has_size(10)
+		assert_bool(c.relics.has(klass.relic)).override_failure_message(
+			"%s's relic '%s' does not exist" % [id, klass.relic]).is_true()
+		for card_id in klass.starting_deck:
+			var card: CardDef = c.cards.get(card_id)
+			assert_object(card).override_failure_message(
+				"%s opens with '%s', which is not a card" % [id, card_id]).is_not_null()
+			assert_str(card.pool).override_failure_message(
+				"%s opens with %s, which is in the %s pool" % [id, card_id, card.pool]) 				.is_equal(klass.pool)
 	var elites := 0
 	var bosses := 0
 	for id in c.enemies:

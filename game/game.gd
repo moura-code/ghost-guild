@@ -184,6 +184,19 @@ func _land_due() -> void:
 	save()
 
 
+## Re-makes the living hero as another class (spec §3.4). Costs no Soul, so
+## it does not go through `_after_mutation` and its purchase sound.
+func choose_class(class_id: String) -> Dictionary:
+	if campaign == null:
+		return {"ok": false, "reason": "unbooted"}
+	settle()
+	var r := CampaignEngine.choose_class(campaign, class_id)
+	if bool(r["ok"]):
+		_emit_all()
+		save()
+	return r
+
+
 ## Starts a descent. CampaignEngine validates the entry floor against reach
 ## and refuses an unbanked finished run, returning null either way.
 ##
