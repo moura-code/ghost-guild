@@ -44,6 +44,9 @@ var _note: Label
 var _push: Button
 var _retreat: Button
 var _watch: Button
+## The readings and the three choices, hidden while the rule picker is up.
+var _face: Control
+var _picker: RulePicker
 
 
 func _init() -> void:
@@ -57,15 +60,24 @@ func bind(g: GameRoot, p_run: RunState) -> void:
 	if _title == null:
 		_build()
 	numbers = {}
+	_show_face()
 	_refresh_labels()
 	_refresh_buttons()
 	_start_projection()
 
 
 func _build() -> void:
+	# Everything the player reads lives under one node, so taking the watch
+	# swaps the panel's face instead of swapping the panel.
+	var face := VBoxContainer.new()
+	face.add_theme_constant_override("separation", 18)
+	face.alignment = BoxContainer.ALIGNMENT_CENTER
+	_face = face
+	add_child(_face)
+
 	_title = UiTheme.title("")
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(_title)
+	face.add_child(_title)
 
 	# The three numbers side by side, each in its own panel. Spec §9 says
 	# these are the numbers the player learns to read, and a stack of
@@ -79,13 +91,13 @@ func _build() -> void:
 	numbers_row.add_child(_reading(_here, game.text("ui.exit.here"), "soul"))
 	numbers_row.add_child(_reading(_next, game.text("ui.exit.next"), "descend"))
 	numbers_row.add_child(_reading(_survival, game.text("ui.exit.survival"), "hp"))
-	add_child(numbers_row)
+	_face.add_child(numbers_row)
 
 	# Why a reading is blank, when it is. An em-dash alone tells the player
 	# nothing about why they cannot go deeper.
 	_note = UiTheme.small("", Palette.BONE_DIM)
 	_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(_note)
+	_face.add_child(_note)
 
 	var choices := HBoxContainer.new()
 	choices.add_theme_constant_override("separation", 10)
@@ -105,7 +117,13 @@ func _build() -> void:
 	_watch.custom_minimum_size = Vector2(150.0, 22.0)
 	_watch.pressed.connect(func() -> void: _decide("watch"))
 	choices.add_child(_watch)
-	add_child(choices)
+	_face.add_child(choices)
+
+	_picker = RulePicker.new()
+	_picker.visible = false
+	_picker.confirmed.connect(_take_watch)
+	_picker.cancelled.connect(_show_face)
+	add_child(_picker)
 
 
 ## One reading: an icon, the value, and what it means underneath.
@@ -267,5 +285,31 @@ func _refresh_buttons() -> void:
 func _decide(kind: String) -> void:
 	if run == null or run.phase != "exit":
 		return
+	if kind == "watch":
+		# Not a confirmation dialog. Choosing how your ghost will fight is
+		# the build-expression beat of dying (spec 3.3), and it is the only
+		# thing this screen asks the player to author rather than read.
+		_show_picker()
+		return
 	game.run_action({"kind": kind})
 	decided.emit(kind)
+
+
+func _show_picker() -> void:
+	_picker.bind(game, run.hero.rules)
+	_face.visible = false
+	_picker.visible = true
+	if game.sfx != null:
+		UiTheme.voice_buttons(_picker, game.sfx)
+
+
+func _show_face() -> void:
+	_picker.visible = false
+	_face.visible = true
+
+
+func _take_watch(rule_ids: Array) -> void:
+	if run == null or run.phase != "exit":
+		return
+	game.run_action({"kind": "watch", "rules": rule_ids})
+	decided.emit("watch")

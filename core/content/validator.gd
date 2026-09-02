@@ -39,7 +39,41 @@ static func validate(c: Content) -> Array[String]:
 		_event(c, c.events[id], errors)
 	for id in c.upgrades:
 		_upgrade(c, c.upgrades[id], errors)
+	for id in c.rules:
+		_rule(c, c.rules[id], errors)
 	return errors
+
+
+## A priority rule may bend any of these. `death` and `lethal` are deliberately
+## absent: they are what stop the autopilot walking into a loss, and the
+## 30-turn fight cap (spec 10) rests on them. A rule that could soften them
+## would be a rule that can hang a simulation.
+static func _rule(c: Content, r: RuleDef, errors: Array[String]) -> void:
+	var where := "rule '%s'" % r.id
+	if r.id == "":
+		errors.append("rule with no id")
+	_key(c, where, r.name_key, errors)
+	_key(c, where, r.text_key, errors)
+	if r.weights.is_empty():
+		errors.append("%s: adjusts nothing" % where)
+	for path in r.weights:
+		var name := String(path)
+		if not PriorityRules.ADJUSTABLE.has(name):
+			errors.append("%s: unknown or protected weight '%s'" % [where, name])
+		var entry: Variant = r.weights[path]
+		if not (entry is Dictionary):
+			errors.append("%s: weight '%s' is not an adjustment" % [where, name])
+			continue
+		var adjust: Dictionary = entry
+		if adjust.is_empty():
+			errors.append("%s: weight '%s' adjusts nothing" % [where, name])
+		for op in adjust:
+			if not ["mul", "add"].has(String(op)):
+				errors.append("%s: weight '%s' has unknown op '%s'" % [where, name, op])
+			elif not (adjust[op] is float or adjust[op] is int):
+				# Not `_amount_ok`: that one also accepts the string "x" for
+				# X-cost card effects, and an X-cost multiplier is nothing.
+				errors.append("%s: weight '%s' has a non-numeric %s" % [where, name, op])
 
 
 static func _key(c: Content, where: String, key: String, errors: Array[String]) -> void:

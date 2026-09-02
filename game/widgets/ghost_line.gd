@@ -13,6 +13,7 @@ var ghost_id: int = 0
 var _mark: GhostMark
 var _name: Label
 var _detail: Label
+var _doctrine: Label
 var _floor: SpinBox
 var _floor_seeded: bool = false
 var _echo: Button
@@ -46,6 +47,13 @@ func _build() -> void:
 	_detail = UiTheme.small("", Palette.BONE_DIM)
 	text_box.add_child(_name)
 	text_box.add_child(_detail)
+
+	# What this one was told to do. The picker's whole promise is that the
+	# choice matters, and a choice the player can never see again is one they
+	# will not make carefully a second time.
+	_doctrine = UiTheme.small("", Palette.GHOST)
+	_doctrine.visible = false
+	text_box.add_child(_doctrine)
 	row.add_child(text_box)
 
 	_floor = SpinBox.new()
@@ -68,6 +76,21 @@ func _build() -> void:
 	row.add_child(_call)
 
 
+## The rules this ghost fights by, as one line, or "" if it has none. Static
+## so the epitaph screen and anything else that shows a ghost can say the same
+## sentence the same way.
+static func doctrine_text(content: Content, ghost: Ghost) -> String:
+	var names: Array[String] = []
+	for id in ghost.rules:
+		if not content.rules.has(id):
+			continue
+		var rule: RuleDef = content.rules[id]
+		names.append(content.text(rule.name_key))
+	if names.is_empty():
+		return ""
+	return content.text("ui.ghost.doctrine").replace("{rules}", ", ".join(names))
+
+
 ## ctx = {waypoint: int, echo_cost: float, call_cost: float,
 ##        tend_cost: float, soul: float}
 func bind(content: Content, ghost: Ghost, ctx: Dictionary) -> void:
@@ -83,6 +106,10 @@ func bind(content: Content, ghost: Ghost, ctx: Dictionary) -> void:
 	if ghost.restless:
 		bits.append(content.text("ui.restless"))
 	_detail.text = " · ".join(bits)
+	_doctrine.text = doctrine_text(content, ghost)
+	# Hidden rather than blank when there is nothing to say: an empty line
+	# under every ghost turns a list of people into a list of gaps.
+	_doctrine.visible = _doctrine.text != ""
 
 	var waypoint := maxi(1, int(ctx["waypoint"]))
 	var soul := float(ctx["soul"])

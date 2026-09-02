@@ -90,7 +90,7 @@ static func finish_run(c: Campaign, now: int) -> Dictionary:
 static func strength_for(c: Campaign, ghost: Ghost) -> float:
 	if ghost.fixed_strength:
 		return ghost.strength
-	var sim := Strength.simulate(c.content, ghost.snapshot(), c.biome(), ghost.floor, hash([c.campaign_seed, "strength", ghost.id]), c.sim_fights)
+	var sim := Strength.simulate(c.content, ghost.snapshot(), c.biome(), ghost.floor, hash([c.campaign_seed, "strength", ghost.id]), c.sim_fights, ghost.rules)
 	return Strength.of_ghost_stats(ghost.measured, sim, c.balance())
 
 

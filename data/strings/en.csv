@@ -262,3 +262,34 @@ ui.run.stairs_open,The stairs are open
 ui.menu.title,Ghost Guild
 ui.menu.continue,Continue
 ui.menu.new,New guild
+rule.strike_first.name,Strike first
+rule.strike_first.text,Damage over guard. Kill it before it swings.
+rule.hold_the_line.name,Hold the line
+rule.hold_the_line.text,"Guard first, and never take a blow you could have stopped."
+rule.finish_the_wounded.name,Finish the wounded
+rule.finish_the_wounded.text,One dead enemy beats two hurt ones.
+rule.spend_everything.name,Spend everything
+rule.spend_everything.text,Energy left at the end of a turn is energy wasted.
+rule.save_your_strength.name,Save your strength
+rule.save_your_strength.text,Hold energy back. Some cards are worth waiting for.
+rule.poison_before_blades.name,Poison before blades
+rule.poison_before_blades.text,Let it rot. Strike only when there is nothing left to apply.
+rule.break_them_first.name,Break them first
+rule.break_them_first.text,Weaken and expose before striking.
+rule.powers_first.name,Powers first
+rule.powers_first.text,Set up early. A fight is won on the first turn.
+rule.draw_before_striking.name,Draw before striking
+rule.draw_before_striking.text,Cards in hand before blows landed.
+rule.nurse_the_wound.name,Nurse the wound
+rule.nurse_the_wound.text,Stay whole. Healing is worth more than a hit.
+rule.trade_blood_for_ground.name,Trade blood for ground
+rule.trade_blood_for_ground.text,Take the hit. Give a worse one back.
+rule.block_only_against_lethal.name,Block only against lethal
+rule.block_only_against_lethal.text,"Guard exactly what is coming, and not one point more."
+ui.watch.title,How will they fight?
+ui.watch.hint,"Up to three, in order. The first weighs heaviest."
+ui.watch.confirm,Take the watch
+ui.watch.back,Back
+ui.watch.none,No orders. They will fight as anyone would.
+ui.watch.order,They will fight by: {rules}
+ui.ghost.doctrine,Fights by: {rules}

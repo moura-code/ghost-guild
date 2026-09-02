@@ -22,6 +22,10 @@ var epitaph_key: String = ""
 var measured: Dictionary = {"fights": 0, "wins": 0, "win_rate": 0.0, "avg_turns": 0.0}
 var strength: float = 0.0
 var fixed_strength: bool = false
+## How this ghost fights (spec 3.3, 5.2). Inherited from the hero, and the
+## reason "the ghost fights as you fought" is true of the simulated half of
+## its strength and not only the measured half.
+var rules: Array[String] = []
 
 
 static func from_run(hero: Hero, outcome: Dictionary, p_measured: Dictionary, p_created_at: int) -> Ghost:
@@ -44,6 +48,7 @@ static func from_run(hero: Hero, outcome: Dictionary, p_measured: Dictionary, p_
 	g.restless = g.cause == "death"
 	g.created_at = p_created_at
 	g.measured = p_measured.duplicate()
+	g.rules = hero.rules.duplicate()
 	if g.cause == "watch":
 		g.epitaph_key = "epitaph.watch"
 	elif g.killer != "":
@@ -118,6 +123,7 @@ func to_dict() -> Dictionary:
 		"stats": stats.duplicate(), "max_hp": max_hp, "floor": floor, "kind": kind, "source_id": source_id,
 		"cause": cause, "killer": killer, "prepared": prepared, "restless": restless, "created_at": created_at,
 		"epitaph_key": epitaph_key, "measured": measured.duplicate(), "strength": strength, "fixed_strength": fixed_strength,
+		"rules": rules.duplicate(),
 	}
 
 
@@ -147,4 +153,6 @@ static func from_dict(d: Dictionary) -> Ghost:
 	g.measured = {"fights": int(m.get("fights", 0)), "wins": int(m.get("wins", 0)), "win_rate": float(m.get("win_rate", 0.0)), "avg_turns": float(m.get("avg_turns", 0.0))}
 	g.strength = float(d.get("strength", 0.0))
 	g.fixed_strength = bool(d.get("fixed_strength", false))
+	for raw in d.get("rules", []):
+		g.rules.append(String(raw))
 	return g

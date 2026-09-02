@@ -118,7 +118,7 @@ static func apply(run: RunState, action: Dictionary) -> Array:
 		"shop":
 			_apply_shop(run, kind, action)
 		"exit":
-			_apply_exit(run, kind)
+			_apply_exit(run, kind, action)
 		_:
 			push_error("run: no handler for phase " + run.phase)
 	var out: Array = combat_events.duplicate()
@@ -417,7 +417,7 @@ static func layout_for(run: RunState) -> FloorLayout:
 	return LayoutGenerator.generate(run.nodes.size(), run.sub_rng("layout", run.floor))
 
 
-static func _apply_exit(run: RunState, kind: String) -> void:
+static func _apply_exit(run: RunState, kind: String, action: Dictionary) -> void:
 	match kind:
 		"push":
 			if not can_push(run):
@@ -438,7 +438,15 @@ static func _apply_exit(run: RunState, kind: String) -> void:
 			if not can_watch(run):
 				push_error("watch: locked until the first death")
 				return
-			run.emit({"type": "exit_decision", "floor": run.floor, "choice": "watch"})
+			# Choosing how your ghost will fight is the build-expression beat
+			# of dying (spec 3.3), so the rules arrive with the decision rather
+			# than being edited afterwards. Normalized here -- against the
+			# content, capped, deduplicated -- so nothing downstream has to
+			# wonder whether a ghost's rules are real.
+			if action.has("rules"):
+				run.hero.rules = PriorityRules.normalize_ids(action["rules"], run.content)
+			run.emit({"type": "exit_decision", "floor": run.floor, "choice": "watch",
+				"rules": run.hero.rules.duplicate()})
 			_end_run(run, "watch")
 		_:
 			push_error("run: unknown exit action " + kind)

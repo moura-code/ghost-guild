@@ -6,22 +6,48 @@ extends RefCounted
 
 const MAX_SEQUENCES := 200
 
-var weights: Dictionary = {
-	"lethal": 1000.0,
-	"death": -10000.0,
-	"damage": 1.0,
-	"kill": 25.0,
-	"block_useful": 1.2,
-	"block_excess": 0.1,
-	"unblocked": -3.0,
-	"hp_lost": -3.0,
-	"heal": 1.0,
-	"energy_left": -0.2,
-	"ai_value": 0.1,
-	"enemy_status": {"poison": 1.5, "vulnerable": 2.0, "weak": 2.0, "burn": 1.0},
-	"hero_status": {"might_buff": 3.0, "wit_buff": 2.0, "thorns": 1.0, "vigil": 2.0, "regen": 1.0, "knell": 3.0},
-}
+var weights: Dictionary = default_weights()
 var last_explored: int = 0
+
+
+## The table every autopilot starts from, and the one `PriorityRules` bends.
+##
+## A function rather than a const because a const Dictionary in GDScript is
+## read-only, and because two autopilots must not share one table: a ghost
+## that edited its weights in place would change how every other ghost fights.
+##
+## `cards_drawn` and `powers_played` are zero on purpose. Spec 3.3's own
+## examples -- "Draw before attacking", "Powers on turn 1" -- cannot be
+## expressed without them, and at zero they leave the scorer arithmetically
+## identical to the one the balance simulator was tuned against. They are
+## terms a rule turns on, not terms the game plays by default.
+static func default_weights() -> Dictionary:
+	return {
+		"lethal": 1000.0,
+		"death": -10000.0,
+		"damage": 1.0,
+		"kill": 25.0,
+		"block_useful": 1.2,
+		"block_excess": 0.1,
+		"unblocked": -3.0,
+		"hp_lost": -3.0,
+		"heal": 1.0,
+		"energy_left": -0.2,
+		"ai_value": 0.1,
+		"cards_drawn": 0.0,
+		"powers_played": 0.0,
+		"enemy_status": {"poison": 1.5, "vulnerable": 2.0, "weak": 2.0, "burn": 1.0},
+		"hero_status": {"might_buff": 3.0, "wit_buff": 2.0, "thorns": 1.0, "vigil": 2.0, "regen": 1.0, "knell": 3.0},
+	}
+
+
+## An autopilot that fights the way `rule_ids` say. The one constructor every
+## ghost-driven simulation should use, so "how does this ghost fight" has a
+## single answer.
+static func with_rules(rule_ids: Array, content: Content) -> Autopilot:
+	var a := Autopilot.new()
+	a.weights = PriorityRules.weights_for(default_weights(), rule_ids, content)
+	return a
 
 
 static func incoming_damage(s: FightState) -> int:
@@ -37,7 +63,7 @@ func choose_turn(s: FightState) -> Array:
 	var incoming := incoming_damage(s)
 	var best := {"score": -INF, "seq": []}
 	var counter := {"n": 0}
-	_explore(s, s, [], 0.0, incoming, best, counter)
+	_explore(s, s, [], 0.0, 0, incoming, best, counter)
 	last_explored = counter["n"]
 	var out: Array = []
 	for action in best["seq"]:
@@ -59,9 +85,9 @@ func play_fight(s: FightState) -> Dictionary:
 	return {"won": s.phase == "won", "turns": s.turn, "hp": maxi(0, s.hero_hp)}
 
 
-func _explore(start: FightState, s: FightState, seq: Array, ai_sum: float, incoming: int, best: Dictionary, counter: Dictionary) -> void:
+func _explore(start: FightState, s: FightState, seq: Array, ai_sum: float, powers: int, incoming: int, best: Dictionary, counter: Dictionary) -> void:
 	counter["n"] += 1
-	var score := _score(start, s, incoming, ai_sum)
+	var score := _score(start, s, incoming, ai_sum, powers, seq.size())
 	if score > best["score"]:
 		best["score"] = score
 		best["seq"] = seq.duplicate()
@@ -80,12 +106,14 @@ func _explore(start: FightState, s: FightState, seq: Array, ai_sum: float, incom
 		CombatEngine.apply(next, action)
 		var next_seq := seq.duplicate()
 		next_seq.append(action)
-		_explore(start, next, next_seq, ai_sum + s.card_def(card).ai_value, incoming, best, counter)
+		var def := s.card_def(card)
+		var next_powers := powers + (1 if def.type == "power" else 0)
+		_explore(start, next, next_seq, ai_sum + def.ai_value, next_powers, incoming, best, counter)
 		if counter["n"] >= MAX_SEQUENCES:
 			return
 
 
-func _score(start: FightState, s: FightState, incoming: int, ai_sum: float) -> float:
+func _score(start: FightState, s: FightState, incoming: int, ai_sum: float, powers: int, played: int) -> float:
 	var w := weights
 	if s.phase == "lost":
 		return float(w["death"])
@@ -110,6 +138,10 @@ func _score(start: FightState, s: FightState, incoming: int, ai_sum: float) -> f
 	score += (hp_delta * float(w["hp_lost"]) * -1.0) if hp_delta < 0 else hp_delta * float(w["heal"])
 	score += s.energy * float(w["energy_left"])
 	score += ai_sum * float(w["ai_value"])
+	# Playing a card removes it from hand, so the hand delta alone understates
+	# the draw by exactly the number of cards played.
+	score += float((s.hand.size() - start.hand.size()) + played) * float(w["cards_drawn"])
+	score += float(powers) * float(w["powers_played"])
 	var enemy_w: Dictionary = w["enemy_status"]
 	for i in s.living_enemy_indices():
 		var before: Dictionary = start.enemies[i].statuses if i < start.enemies.size() else {}

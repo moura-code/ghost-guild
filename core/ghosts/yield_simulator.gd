@@ -10,14 +10,14 @@ static func strength_here(c: Campaign, run: RunState) -> float:
 	var measured := run.stats.measured(run.floor)
 	var snap := run.hero_snapshot()
 	snap.hp = snap.max_hp
-	var sim := Strength.simulate(c.content, snap, c.biome(), run.floor, hash([c.campaign_seed, "yield", c.run_counter, run.floor]), c.sim_fights)
+	var sim := Strength.simulate(c.content, snap, c.biome(), run.floor, hash([c.campaign_seed, "yield", c.run_counter, run.floor]), c.sim_fights, run.hero.rules)
 	return Strength.of_ghost_stats(measured, sim, c.balance())
 
 
 static func strength_at(c: Campaign, run: RunState, floor: int) -> float:
 	var snap := run.hero_snapshot()
 	snap.hp = snap.max_hp
-	var sim := Strength.simulate(c.content, snap, c.biome(), floor, hash([c.campaign_seed, "yield", c.run_counter, floor]), c.sim_fights)
+	var sim := Strength.simulate(c.content, snap, c.biome(), floor, hash([c.campaign_seed, "yield", c.run_counter, floor]), c.sim_fights, run.hero.rules)
 	return Strength.from_stats(float(sim["win_rate"]), float(sim["avg_turns"]), c.balance())
 
 

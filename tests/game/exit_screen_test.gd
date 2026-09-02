@@ -243,3 +243,83 @@ func test_the_preview_restores_the_campaign_fight_count() -> void:
 	# Trimming sim_fights for the preview must not leak into the campaign,
 	# or every ghost placed afterwards would be measured with fewer fights.
 	assert_int(g.campaign.sim_fights).is_equal(before)
+
+
+# ------------------------------------------------- taking the watch, in order
+
+func test_taking_the_watch_asks_how_before_it_ends_the_run() -> void:
+	# The one thing this screen asks the player to author rather than read.
+	# Ending the run on the first click would skip it entirely.
+	var g := _game()
+	g.campaign.onboarding.watch_unlocked = true
+	var run := _at_exit(g)
+	run.watch_unlocked = true
+	var s := _screen(g, run)
+	s._watch.pressed.emit()
+	assert_bool(s._picker.visible).override_failure_message("no picker").is_true()
+	assert_bool(s._face.visible).is_false()
+	assert_str(run.phase).override_failure_message("the run ended before the choice").is_equal("exit")
+
+
+func test_backing_out_of_the_picker_returns_the_numbers() -> void:
+	var g := _game()
+	g.campaign.onboarding.watch_unlocked = true
+	var run := _at_exit(g)
+	run.watch_unlocked = true
+	var s := _screen(g, run)
+	s._watch.pressed.emit()
+	s._picker.cancelled.emit()
+	assert_bool(s._picker.visible).is_false()
+	assert_bool(s._face.visible).is_true()
+	assert_str(run.phase).is_equal("exit")
+
+
+func test_confirming_ends_the_run_with_the_rules_the_player_ordered() -> void:
+	var g := _game()
+	g.campaign.onboarding.watch_unlocked = true
+	var run := _at_exit(g)
+	run.watch_unlocked = true
+	var s := _screen(g, run)
+	var decided: Array[String] = []
+	s.decided.connect(func(kind: String) -> void: decided.append(kind))
+	s._watch.pressed.emit()
+	s._picker.toggle("strike_first")
+	s._picker.toggle("finish_the_wounded")
+	s._picker._confirm.pressed.emit()
+	assert_array(decided).is_equal(["watch"])
+	assert_array(run.hero.rules).is_equal(["strike_first", "finish_the_wounded"])
+
+
+func test_the_ghost_that_walks_away_from_this_screen_carries_them() -> void:
+	# The whole chain: picker -> action -> hero -> ghost -> ladder.
+	var g := _game()
+	g.campaign.onboarding.watch_unlocked = true
+	var run := _at_exit(g)
+	run.watch_unlocked = true
+	var s := _screen(g, run)
+	s._watch.pressed.emit()
+	s._picker.toggle("hold_the_line")
+	s._picker._confirm.pressed.emit()
+	# The screen ends the run; banking it is Crawl's job, and this is the
+	# chain being tested rather than the screen alone.
+	g.finish_run()
+	var newest: Ghost = null
+	for ghost in g.campaign.ladder.ghosts:
+		if newest == null or ghost.id > newest.id:
+			newest = ghost
+	assert_object(newest).is_not_null()
+	assert_array(newest.rules).override_failure_message("the ghost forgot its orders").is_equal(["hold_the_line"])
+
+
+func test_rebinding_the_screen_puts_the_numbers_back_in_front() -> void:
+	# The panel is built once and reused for every floor exit. A picker left
+	# up would greet the player at the next exit instead of the readings.
+	var g := _game()
+	g.campaign.onboarding.watch_unlocked = true
+	var run := _at_exit(g)
+	run.watch_unlocked = true
+	var s := _screen(g, run)
+	s._watch.pressed.emit()
+	s.bind(g, run)
+	assert_bool(s._face.visible).is_true()
+	assert_bool(s._picker.visible).is_false()

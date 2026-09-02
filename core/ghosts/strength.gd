@@ -21,10 +21,15 @@ static func from_stats(win_rate: float, avg_turns: float, balance: Dictionary) -
 	return 3600.0 / seconds
 
 
-static func simulate(content: Content, snapshot: HeroSnapshot, biome: BiomeDef, floor: int, seed_value: int, fights: int = -1) -> Dictionary:
+## `rules` is who is fighting (spec 3.3). Empty is the default autopilot, which
+## is what every caller passed before this existed and what every caller with
+## nothing to say still passes -- so a ghost with no rules simulates exactly as
+## it always did.
+static func simulate(content: Content, snapshot: HeroSnapshot, biome: BiomeDef, floor: int, seed_value: int, fights: int = -1, rules: Array = []) -> Dictionary:
 	var n := fights if fights > 0 else int(content.balance.get("strength_sim_fights", 50))
 	var groups := FloorGenerator.groups_for(biome, floor)
-	var r := FightSimulator.simulate_table(content, snapshot, groups, floor, seed_value, n)
+	var ap: Autopilot = Autopilot.with_rules(rules, content) if not rules.is_empty() else null
+	var r := FightSimulator.simulate_table(content, snapshot, groups, floor, seed_value, n, ap)
 	return {"fights": int(r["fights"]), "wins": int(r["wins"]), "win_rate": float(r["win_rate"]), "avg_turns": float(r["avg_turns"])}
 
 

@@ -154,3 +154,47 @@ func test_upgrade_stat_effect_needs_a_known_stat() -> void:
 	var up: UpgradeDef = c.upgrades["fx_might"]
 	up.effect = {"kind": "stat", "stat": "luck", "amount": "lots"}
 	assert_int(ContentValidator.validate(c).size()).is_equal(2)
+
+
+func test_a_rule_may_not_touch_the_weights_that_keep_the_autopilot_alive() -> void:
+	# `death` and `lethal` are what stop the autopilot walking into a loss,
+	# and the 30-turn fight cap rests on them. A rule that could soften either
+	# is a rule that can hang every simulation in the game, so it is rejected
+	# at load rather than clamped at use.
+	var c := _ok()
+	var rule: RuleDef = c.rules["fx_aggressive"]
+	rule.weights = {"death": {"mul": 0.1}}
+	var errors := ContentValidator.validate(c)
+	assert_int(errors.size()).is_equal(1)
+	assert_str(errors[0]).contains("death")
+
+
+func test_a_rule_that_names_a_weight_that_does_not_exist_is_an_error() -> void:
+	var c := _ok()
+	var rule: RuleDef = c.rules["fx_aggressive"]
+	rule.weights = {"morale": {"mul": 2.0}}
+	assert_str(ContentValidator.validate(c)[0]).contains("morale")
+
+
+func test_a_rule_that_changes_nothing_is_an_error() -> void:
+	# Silent content. A rule the player can pick that does nothing is worse
+	# than a missing rule, because they will pick it and blame the game.
+	var c := _ok()
+	var rule: RuleDef = c.rules["fx_aggressive"]
+	rule.weights = {}
+	assert_str(ContentValidator.validate(c)[0]).contains("adjusts nothing")
+
+
+func test_a_rule_adjustment_must_be_a_number() -> void:
+	var c := _ok()
+	var rule: RuleDef = c.rules["fx_aggressive"]
+	rule.weights = {"damage": {"mul": "x"}}
+	assert_str(ContentValidator.validate(c)[0]).contains("non-numeric")
+
+
+func test_a_rule_needs_both_its_strings() -> void:
+	var c := _ok()
+	var rule: RuleDef = c.rules["fx_aggressive"]
+	rule.name_key = ""
+	rule.text_key = "rule.nope.text"
+	assert_int(ContentValidator.validate(c).size()).is_equal(2)

@@ -1,0 +1,6 @@
+[
+  {"id": "fx_aggressive", "name": "rule.fx_aggressive.name", "text": "rule.fx_aggressive.text",
+   "weights": {"damage": {"mul": 1.5}, "block_useful": {"mul": 0.6}}},
+  {"id": "fx_defensive", "name": "rule.fx_defensive.name", "text": "rule.fx_defensive.text",
+   "weights": {"block_useful": {"mul": 1.8}, "hero_status.*": {"mul": 1.2}, "energy_left": {"add": 0.3}}}
+]
