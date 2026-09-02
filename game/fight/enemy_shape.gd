@@ -44,6 +44,19 @@ const SHAPES := {
 	"deep_lurker": Kind.HULK,
 	"sporemother": Kind.HULK,
 	"the_bloom": Kind.HULK,
+
+	# The Kiln. Built things, mostly: heavy, upright and made of pieces. The
+	# two that are only fire float, because fire does not stand on anything.
+	"cinder_hound": Kind.BEAST,
+	"slag_crawler": Kind.BEAST,
+	"ember_wisp": Kind.WISP,
+	"furnace_drone": Kind.STACK,
+	"clay_sentinel": Kind.HULK,
+	"glass_shrike": Kind.STACK,
+	"kiln_warden": Kind.HUMANOID,
+	"molten_husk": Kind.HUMANOID,
+	"the_bellows": Kind.HULK,
+	"the_first_flame": Kind.WISP,
 }
 
 

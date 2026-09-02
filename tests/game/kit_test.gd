@@ -62,31 +62,42 @@ func test_the_stone_is_grey_so_the_light_can_be_the_colour() -> void:
 	# pixel in the game a value of the same orange. Tinting the albedo cool-grey
 	# pulls the colour out of the texture so it comes from the lighting: warm
 	# where the torches reach, cold in the fill, contrast between them.
-	for m in [Kit.wall_material(), Kit.floor_material(), Kit.ceiling_material()]:
-		assert_float(m.albedo_color.b).override_failure_message(
-			"the stone tint is warm, so the room can only ever be orange").is_greater_equal(m.albedo_color.r)
-		assert_float(m.albedo_color.r).is_less(1.0)
+	#
+	# Every biome, including the one that is about fire: the Kiln's heat comes
+	# from its torches and from its accent in the fog, and a warm albedo on top
+	# of that is how a biome turns into one colour.
+	for biome in Kit.BIOME_STONE:
+		for m in [Kit.wall_material(biome), Kit.floor_material(biome), Kit.ceiling_material(biome)]:
+			assert_float(m.albedo_color.b).override_failure_message(
+				"%s is tinted warm, so it can only ever be orange" % biome) 				.is_greater_equal(m.albedo_color.r)
+			assert_float(m.albedo_color.r).is_less(1.0)
 
 
 func test_each_biome_is_made_of_its_own_stone() -> void:
 	# The Deep shipped with the Catacombs' walls and floor, and the only thing
 	# that said "somewhere else" was the colour of the air twenty metres away.
+	# No two biomes share a surface: the moment one does, the cheap fix for the
+	# next biome is to share two.
 	for surface in ["wall", "floor", "ceiling"]:
-		assert_str(String(Kit.stone_for("fungal_deep")[surface])) \
-			.override_failure_message("the Deep's %s is the Catacombs'" % surface) \
-			.is_not_equal(String(Kit.stone_for("catacombs")[surface]))
+		var seen: Array[String] = []
+		for biome in Kit.BIOME_STONE:
+			var set_name := String(Kit.BIOME_STONE[biome][surface])
+			assert_bool(seen.has(set_name)).override_failure_message(
+				"%s uses %s for its %s, and so does another biome" % [biome, set_name, surface]) \
+				.is_false()
+			seen.append(set_name)
 
 
 func test_a_biome_with_no_stone_yet_still_gets_a_room() -> void:
 	# The content and the materials do not have to land in the same commit.
-	assert_dict(Kit.stone_for("the_kiln")).is_equal(Kit.stone_for(Kit.HOME_STONE))
-	assert_object(Kit.wall_material("the_kiln")).is_not_null()
+	assert_dict(Kit.stone_for("nowhere_yet")).is_equal(Kit.stone_for(Kit.HOME_STONE))
+	assert_object(Kit.wall_material("nowhere_yet")).is_not_null()
 
 
 func test_one_texel_density_across_every_biome() -> void:
 	# The single discipline that stops mixed CC0 sources reading as an asset
 	# flip (spec §7). A second biome is exactly where it would slip.
-	for biome in ["catacombs", "fungal_deep"]:
+	for biome in Kit.BIOME_STONE:
 		var floor_span := _metres_per_repeat(Kit.floor_material(biome), Vector2(Kit.CELL, Kit.CELL))
 		var wall_span := _metres_per_repeat(Kit.wall_material(biome), Vector2(Kit.CELL, Kit.WALL_H))
 		var ceiling_span := _metres_per_repeat(Kit.ceiling_material(biome), Vector2(Kit.CELL, Kit.CELL))

@@ -68,6 +68,12 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/card_art/harvest.svg` — *sickle*
 - `assets/icons/card_art/the_deep_breath.svg` — *lungs*
 - `assets/icons/card_art/miasma.svg` — *fog*
+- `assets/icons/enemies/clay_sentinel.svg` — *rock-golem*
+- `assets/icons/enemies/kiln_warden.svg` — *golem-head*
+- `assets/icons/enemies/the_bellows.svg` — *bellows*
+- `assets/icons/enemies/furnace_drone.svg` — *furnace*
+- `assets/icons/card_art/slake.svg` — *healing*
+- `assets/icons/card_art/pry_bar.svg` — *war-pick*
 
 ### faithtoken
 
@@ -146,6 +152,20 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/card_art/the_long_illness.svg` — *skull-in-jar*
 - `assets/icons/card_art/unmaking.svg` — *shadow-follower*
 - `assets/icons/relics/hexers_thimble.svg` — *sewing-needle*
+- `assets/icons/enemies/cinder_hound.svg` — *burning-tree*
+- `assets/icons/enemies/slag_crawler.svg` — *stone-sphere*
+- `assets/icons/enemies/ember_wisp.svg` — *burning-embers*
+- `assets/icons/enemies/glass_shrike.svg` — *shattered-glass*
+- `assets/icons/enemies/molten_husk.svg` — *flame-tunnel*
+- `assets/icons/enemies/the_first_flame.svg` — *fire-silhouette*
+- `assets/icons/card_art/hammer_blow.svg` — *hammer-drop*
+- `assets/icons/card_art/firebrand.svg` — *flaming-arrow*
+- `assets/icons/card_art/quench.svg` — *fire-shield*
+- `assets/icons/card_art/bellows_breath.svg` — *heat-haze*
+- `assets/icons/card_art/anvil_stance.svg` — *anvil*
+- `assets/icons/card_art/white_heat.svg` — *fire-ring*
+- `assets/icons/card_art/smiths_eye.svg` — *burning-eye*
+- `assets/icons/card_art/sunder.svg` — *crossed-slashes*
 
 ### lucasms
 
@@ -242,6 +262,9 @@ normal, roughness, ambient occlusion, displacement. The DirectX normal, the
 - `assets/materials/rock023/` — *Rock023*, Fungal Deep walls
 - `assets/materials/ground068/` — *Ground068*, Fungal Deep floor
 - `assets/materials/rock030/` — *Rock030*, Fungal Deep ceiling
+- `assets/materials/bricks056/` — *Bricks056*, Kiln walls (fired brick)
+- `assets/materials/rock020/` — *Rock020*, Kiln floor
+- `assets/materials/rock035/` — *Rock035*, Kiln ceiling
 
 Only PavingStones119 publishes a real-world size (115 cm); the others report
 zero, so their tiling is an art call rather than a measurement. That is

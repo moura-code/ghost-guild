@@ -48,6 +48,17 @@ const DEEP_FLOOR_TINT := Color(0.74, 0.79, 0.76)
 ## at full brightness its speckle was the busiest surface in the frame -- on
 ## the one surface nobody looks at on purpose. It recedes.
 const DEEP_CEILING_TINT := Color(0.52, 0.58, 0.70)
+## The Kiln's stone is fired brick and scorched rock, which is warm before
+## anything is done to it -- so the tint stays cool like every other biome's.
+## The heat comes from the torches and from the biome's own accent in the fog
+## (see `Grade.biome_tint`), never from a warm albedo. That rule is what makes
+## a torch read as fire rather than as a brightness setting, and the biome that
+## is *about* fire is the last place to break it.
+const KILN_STONE_TINT := Color(0.86, 0.90, 0.96)
+const KILN_FLOOR_TINT := Color(0.80, 0.85, 0.92)
+## Soot on a vault. The darkest surface in the game, on purpose: a ceiling you
+## can read is a ceiling you look at.
+const KILN_CEILING_TINT := Color(0.55, 0.60, 0.70)
 
 ## What each biome is made of. The Catacombs are laid brick and cut paving --
 ## somebody built them. The Deep is fractured strata and a floor of moss and
@@ -65,6 +76,11 @@ const BIOME_STONE := {
 		"wall": "rock023", "floor": "ground068", "ceiling": "rock030",
 		"wall_tint": DEEP_STONE_TINT, "floor_tint": DEEP_FLOOR_TINT,
 		"ceiling_tint": DEEP_CEILING_TINT,
+	},
+	"the_kiln": {
+		"wall": "bricks056", "floor": "rock020", "ceiling": "rock035",
+		"wall_tint": KILN_STONE_TINT, "floor_tint": KILN_FLOOR_TINT,
+		"ceiling_tint": KILN_CEILING_TINT,
 	},
 }
 ## Everywhere the data goes that the kit has no stone for yet.

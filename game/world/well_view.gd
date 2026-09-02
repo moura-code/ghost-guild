@@ -17,7 +17,11 @@ const RING_RADIUS := 0.72
 const FIGURE_SCALE := 0.4
 ## How many floors are drawn. Below this the shaft just goes dark, which is
 ## more honest than a bottom.
-const MAX_FLOORS := 20
+## A guard against a corrupt content set, not a design limit: the well is as
+## deep as the dungeon is, and the dungeon grew from ten floors to thirty over
+## three stages. A shaft that stopped at twenty would quietly stop showing the
+## ghosts standing in the biome the player just unlocked.
+const MAX_FLOORS := 60
 
 var rings: Array[Node3D] = []
 var figures: Array[GhostFigure] = []

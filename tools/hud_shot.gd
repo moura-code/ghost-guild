@@ -9,7 +9,7 @@ extends SceneTree
 ##         -s tools/hud_shot.gd -- <out.png> <mode> [frames]
 ##
 ## Modes: walk, fight, reward, guild, panel, expedition, offline, exit, watch,
-## deep, ladder, hero.
+## deep, kiln, ladder, hero.
 ##
 ## Runs against a throwaway save, so it never touches the player's campaign.
 
@@ -59,10 +59,10 @@ func _init() -> void:
 			desk.use()
 		"ladder":
 			# A ghost standing in each biome, so the shaft has both bands.
-			for floor in [4, 14]:
+			for floor in [4, 14, 26]:
 				var walker := Hero.create(game.content, "sexton", "Deep%d" % floor, {}, 1)
 				game.campaign.ladder.add(Ghost.from_expedition(walker, floor, 0))
-			game.campaign.record_depth = 16
+			game.campaign.record_depth = 28
 			var well := crawl.guild.station(GuildRoom.WELL)
 			well.enter(crawl.player)
 			well.use()
@@ -91,7 +91,12 @@ func _init() -> void:
 		_:
 			# `deep` walks the second biome instead of the first: the whole
 			# point of a biome is that you can see which one you are in.
-			_descend(game, crawl, 11 if mode == "deep" else 1)
+			var entry := 1
+			if mode == "deep":
+				entry = 11
+			elif mode == "kiln":
+				entry = 24
+			_descend(game, crawl, entry)
 			if mode == "fight":
 				await _pick_a_fight(game, crawl)
 			elif mode == "reward":
@@ -115,7 +120,7 @@ func _descend(game: GameRoot, crawl: Crawl, entry: int = 1) -> void:
 		game.campaign.record_depth = entry
 	game.start_run(entry)
 	var guard := 0
-	while game.campaign.run != null and game.campaign.run.phase == "descent" and guard < 20:
+	while game.campaign.run != null and game.campaign.run.phase == "descent" and guard < 40:
 		guard += 1
 		crawl.choice.take(0)
 

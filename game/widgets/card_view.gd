@@ -202,7 +202,9 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 	_name.text = content.text(def.name_key)
 	if card.upgraded:
 		_name.text += content.text("ui.upgraded")
-	_text.text = content.text(def.text_key)
+	# The card's own numbers, and the upgraded ones when it is upgraded. See
+	# CardText: an upgraded card used to read out its base numbers.
+	_text.text = CardText.of(content, def, card.upgraded)
 	_type_icon.texture = Icons.card_type(def.type)
 	# Real card art would load here; until then the type icon stands in it,
 	# at the size and aspect the illustration will occupy.

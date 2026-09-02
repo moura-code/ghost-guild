@@ -2,65 +2,65 @@ key,text
 class.sexton.name,Sexton
 biome.catacombs.name,Catacombs
 card.strike.name,Strike
-card.strike.text,Deal 6 damage.
+card.strike.text,Deal {0} damage.
 card.brace.name,Brace
-card.brace.text,Gain 5 Block.
+card.brace.text,Gain {0} Block.
 card.last_rites.name,Last Rites
-card.last_rites.text,Deal 4 damage. Apply 2 Weak.
+card.last_rites.text,Deal {0} damage. Apply {1} Weak.
 card.shovel_swing.name,Shovel Swing
-card.shovel_swing.text,Deal 8 damage.
+card.shovel_swing.text,Deal {0} damage.
 card.bone_wall.name,Bone Wall
-card.bone_wall.text,Gain 11 Block.
+card.bone_wall.text,Gain {0} Block.
 card.grave_dust.name,Grave Dust
-card.grave_dust.text,Apply 1 Vulnerable. Draw 1 card.
+card.grave_dust.text,Apply {0} Vulnerable. Draw {1} card.
 card.reaping.name,Reaping
-card.reaping.text,Deal 4 damage 3 times.
+card.reaping.text,Deal {0} damage {1} times.
 card.vigil.name,Vigil
-card.vigil.text,At the start of each turn gain 3 Block.
+card.vigil.text,At the start of each turn gain {0} Block.
 card.censer_smoke.name,Censer Smoke
-card.censer_smoke.text,Gain 4 Block. Apply 1 Weak to all enemies.
+card.censer_smoke.text,Gain {0} Block. Apply {1} Weak to all enemies.
 card.exhume.name,Exhume
-card.exhume.text,Draw 2 cards. Exhaust.
+card.exhume.text,Draw {0} cards. Exhaust.
 card.lantern_oil.name,Lantern Oil
-card.lantern_oil.text,Gain 1 Energy. Draw 1 card. Exhaust.
+card.lantern_oil.text,Gain {0} Energy. Draw {1} card. Exhaust.
 card.bone_shard.name,Bone Shard
-card.bone_shard.text,Deal 3 damage.
+card.bone_shard.text,Deal {0} damage.
 card.sanctify.name,Sanctify
-card.sanctify.text,Gain 8 Block. Heal 3.
+card.sanctify.text,Gain {0} Block. Heal {1}.
 card.hallowed_strike.name,Hallowed Strike
-card.hallowed_strike.text,Deal 12 damage. Holy: 50% more against the undead.
+card.hallowed_strike.text,Deal {0} damage. Holy: 50% more against the undead.
 card.bulwark.name,Bulwark
-card.bulwark.text,Gain 3 Thorns.
+card.bulwark.text,Gain {0} Thorns.
 card.requiem.name,Requiem
-card.requiem.text,Deal 20 damage to all enemies.
+card.requiem.text,Deal {0} damage to all enemies.
 card.second_wind.name,Second Wind
-card.second_wind.text,Heal 6. Exhaust.
+card.second_wind.text,Heal {0}. Exhaust.
 card.dig_in.name,Dig In
-card.dig_in.text,Gain 3 Block. Gain 1 Wit this fight.
+card.dig_in.text,Gain {0} Block. Gain {1} Wit this fight.
 card.sharpen_spade.name,Sharpen Spade
-card.sharpen_spade.text,Gain 2 Might this fight. Exhaust.
+card.sharpen_spade.text,Gain {0} Might this fight. Exhaust.
 card.tolling_bell.name,Tolling Bell
-card.tolling_bell.text,Apply 2 Vulnerable to all enemies.
+card.tolling_bell.text,Apply {0} Vulnerable to all enemies.
 card.rat_swarm.name,Rat Swarm
-card.rat_swarm.text,Deal 2 damage 4 times.
+card.rat_swarm.text,Deal {0} damage {1} times.
 card.cold_iron.name,Cold Iron
-card.cold_iron.text,Deal 7 damage. Apply 1 Weak.
+card.cold_iron.text,Deal {0} damage. Apply {1} Weak.
 card.shroud.name,Shroud
-card.shroud.text,Gain 6 Block. Retain.
+card.shroud.text,Gain {0} Block. Retain.
 card.grave_moss.name,Grave Moss
-card.grave_moss.text,Gain 3 Regen.
+card.grave_moss.text,Gain {0} Regen.
 card.tomb_lantern.name,Tomb Lantern
-card.tomb_lantern.text,Draw 2 cards.
+card.tomb_lantern.text,Draw {0} cards.
 card.bone_spear.name,Bone Spear
-card.bone_spear.text,Deal 14 damage.
+card.bone_spear.text,Deal {0} damage.
 card.plague_vial.name,Plague Vial
-card.plague_vial.text,Apply 4 Poison.
+card.plague_vial.text,Apply {0} Poison.
 card.death_knell.name,Death Knell
-card.death_knell.text,At the start of each turn deal 4 damage to all enemies.
+card.death_knell.text,At the start of each turn deal {0} damage to all enemies.
 card.cairn.name,Cairn
-card.cairn.text,Gain 14 Block. Gain 2 Thorns.
+card.cairn.text,Gain {0} Block. Gain {1} Thorns.
 card.ashes.name,Ashes
-card.ashes.text,Deal 3 damage to all enemies. Apply 2 Burn to all enemies.
+card.ashes.text,Deal {0} damage to all enemies. Apply {1} Burn to all enemies.
 enemy.bone_rat.name,Bone Rat
 enemy.shambler.name,Shambler
 enemy.grave_wisp.name,Grave Wisp
@@ -379,3 +379,34 @@ card.unmaking.text,Deal {0} damage. Apply {1} Poison.
 ui.class.locked,Opens when one of your dead holds {biome}.
 ui.class.current,Who you are.
 ui.class.swap,Send this one down instead. Only before you descend.
+biome.the_kiln.name,The Kiln
+enemy.cinder_hound.name,Cinder Hound
+enemy.slag_crawler.name,Slag Crawler
+enemy.ember_wisp.name,Ember Wisp
+enemy.furnace_drone.name,Furnace Drone
+enemy.clay_sentinel.name,Clay Sentinel
+enemy.glass_shrike.name,Glass Shrike
+enemy.kiln_warden.name,Kiln Warden
+enemy.molten_husk.name,Molten Husk
+enemy.the_bellows.name,The Bellows
+enemy.the_first_flame.name,The First Flame
+card.hammer_blow.name,Hammer Blow
+card.hammer_blow.text,Deal {0} damage.
+card.firebrand.name,Firebrand
+card.firebrand.text,Deal {0} damage. Apply {1} Burn.
+card.slake.name,Slake
+card.slake.text,Gain {0} Block. Heal {1}.
+card.quench.name,Quench
+card.quench.text,Gain {0} Block and {1} Regen.
+card.pry_bar.name,Pry Bar
+card.pry_bar.text,Deal {0} damage. Apply {1} Vulnerable.
+card.bellows_breath.name,Bellows Breath
+card.bellows_breath.text,Apply {0} Burn to all enemies.
+card.anvil_stance.name,Anvil Stance
+card.anvil_stance.text,Gain {0} Block and {1} Thorns.
+card.white_heat.name,White Heat
+card.white_heat.text,Gain {0} Might.
+card.smiths_eye.name,Smith's Eye
+card.smiths_eye.text,Draw {0}. Gain {1} energy. Exhaust.
+card.sunder.name,Sunder
+card.sunder.text,Deal {0} damage. Apply {1} Vulnerable.

@@ -109,3 +109,12 @@ func test_the_tower_is_a_diorama_not_a_place() -> void:
 		var figure: GhostFigure = f
 		assert_float(absf(figure.position.x)).is_less(Kit.CELL * 0.5)
 		assert_float(absf(figure.position.z)).is_less(Kit.CELL * 0.5)
+
+
+func test_the_shaft_is_as_deep_as_the_dungeon_however_deep_that_gets() -> void:
+	# The cap was twenty, which was the dungeon's depth when it was written and
+	# stopped being it the day the Kiln landed -- a shaft that silently stopped
+	# showing the biome the player had just unlocked.
+	assert_int(WellView.MAX_FLOORS).override_failure_message(
+		"the well is shallower than the dungeon").is_greater_equal(
+			Biomes.depth(TestFixtures.content()))

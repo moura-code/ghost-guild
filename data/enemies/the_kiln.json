@@ -1,0 +1,393 @@
+[
+  {
+    "id": "cinder_hound",
+    "name": "enemy.cinder_hound.name",
+    "biome": "the_kiln",
+    "tags": [
+      "construct",
+      "fire"
+    ],
+    "hp": 24,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "scorch",
+        "intent": "attack",
+        "damage": 8,
+        "hits": 1,
+        "status": "burn",
+        "stacks": 2
+      },
+      {
+        "id": "pounce",
+        "intent": "attack",
+        "damage": 11,
+        "hits": 1
+      }
+    ],
+    "pattern": {
+      "kind": "weighted",
+      "moves": [
+        {
+          "move": "scorch",
+          "weight": 3
+        },
+        {
+          "move": "pounce",
+          "weight": 2
+        }
+      ],
+      "no_repeat": false
+    }
+  },
+  {
+    "id": "slag_crawler",
+    "name": "enemy.slag_crawler.name",
+    "biome": "the_kiln",
+    "tags": [
+      "construct"
+    ],
+    "hp": 30,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "harden",
+        "intent": "block",
+        "block": 12
+      },
+      {
+        "id": "grind",
+        "intent": "attack",
+        "damage": 12,
+        "hits": 1
+      }
+    ],
+    "pattern": {
+      "kind": "sequence",
+      "moves": [
+        "harden",
+        "grind"
+      ]
+    }
+  },
+  {
+    "id": "ember_wisp",
+    "name": "enemy.ember_wisp.name",
+    "biome": "the_kiln",
+    "tags": [
+      "fire"
+    ],
+    "hp": 18,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "spark",
+        "intent": "attack",
+        "damage": 4,
+        "hits": 2,
+        "status": "burn",
+        "stacks": 3
+      },
+      {
+        "id": "dazzle",
+        "intent": "debuff",
+        "status": "weak",
+        "stacks": 2
+      }
+    ],
+    "pattern": {
+      "kind": "weighted",
+      "moves": [
+        {
+          "move": "spark",
+          "weight": 3
+        },
+        {
+          "move": "dazzle",
+          "weight": 1
+        }
+      ],
+      "no_repeat": false
+    }
+  },
+  {
+    "id": "furnace_drone",
+    "name": "enemy.furnace_drone.name",
+    "biome": "the_kiln",
+    "tags": [
+      "construct",
+      "fire"
+    ],
+    "hp": 26,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "stoke",
+        "intent": "buff",
+        "status": "might_buff",
+        "stacks": 3
+      },
+      {
+        "id": "vent",
+        "intent": "attack",
+        "damage": 9,
+        "hits": 2
+      }
+    ],
+    "pattern": {
+      "kind": "sequence",
+      "moves": [
+        "stoke",
+        "vent",
+        "vent"
+      ]
+    }
+  },
+  {
+    "id": "clay_sentinel",
+    "name": "enemy.clay_sentinel.name",
+    "biome": "the_kiln",
+    "tags": [
+      "construct"
+    ],
+    "hp": 34,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "brace",
+        "intent": "block",
+        "block": 14
+      },
+      {
+        "id": "temper",
+        "intent": "buff",
+        "status": "thorns",
+        "stacks": 4
+      },
+      {
+        "id": "hammer",
+        "intent": "attack",
+        "damage": 14,
+        "hits": 1
+      }
+    ],
+    "pattern": {
+      "kind": "sequence",
+      "moves": [
+        "brace",
+        "hammer",
+        "temper",
+        "hammer"
+      ]
+    }
+  },
+  {
+    "id": "glass_shrike",
+    "name": "enemy.glass_shrike.name",
+    "biome": "the_kiln",
+    "tags": [
+      "construct"
+    ],
+    "hp": 20,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "shatter",
+        "intent": "attack",
+        "damage": 6,
+        "hits": 3
+      },
+      {
+        "id": "splinter",
+        "intent": "debuff",
+        "status": "vulnerable",
+        "stacks": 2
+      }
+    ],
+    "pattern": {
+      "kind": "weighted",
+      "moves": [
+        {
+          "move": "shatter",
+          "weight": 3
+        },
+        {
+          "move": "splinter",
+          "weight": 1
+        }
+      ],
+      "no_repeat": true
+    }
+  },
+  {
+    "id": "kiln_warden",
+    "name": "enemy.kiln_warden.name",
+    "biome": "the_kiln",
+    "tags": [
+      "construct",
+      "fire"
+    ],
+    "hp": 38,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "brand",
+        "intent": "attack",
+        "damage": 13,
+        "hits": 1,
+        "status": "burn",
+        "stacks": 3
+      },
+      {
+        "id": "shield_up",
+        "intent": "block",
+        "block": 12
+      }
+    ],
+    "pattern": {
+      "kind": "weighted",
+      "moves": [
+        {
+          "move": "brand",
+          "weight": 2
+        },
+        {
+          "move": "shield_up",
+          "weight": 1
+        }
+      ],
+      "no_repeat": true
+    }
+  },
+  {
+    "id": "molten_husk",
+    "name": "enemy.molten_husk.name",
+    "biome": "the_kiln",
+    "tags": [
+      "construct",
+      "fire"
+    ],
+    "hp": 32,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "swell",
+        "intent": "buff",
+        "status": "might_buff",
+        "stacks": 4
+      },
+      {
+        "id": "spill",
+        "intent": "attack",
+        "damage": 10,
+        "hits": 1,
+        "status": "burn",
+        "stacks": 4
+      }
+    ],
+    "pattern": {
+      "kind": "sequence",
+      "moves": [
+        "swell",
+        "spill",
+        "spill",
+        "swell",
+        "spill"
+      ]
+    }
+  },
+  {
+    "id": "the_bellows",
+    "name": "enemy.the_bellows.name",
+    "biome": "the_kiln",
+    "tags": [
+      "construct",
+      "fire"
+    ],
+    "hp": 76,
+    "kind": "elite",
+    "moves": [
+      {
+        "id": "cast",
+        "intent": "summon",
+        "enemy": "ember_wisp"
+      },
+      {
+        "id": "seal",
+        "intent": "block",
+        "block": 16
+      },
+      {
+        "id": "blast_furnace",
+        "intent": "attack",
+        "damage": 17,
+        "hits": 1,
+        "status": "burn",
+        "stacks": 4
+      }
+    ],
+    "pattern": {
+      "kind": "sequence",
+      "moves": [
+        "cast",
+        "seal",
+        "blast_furnace",
+        "blast_furnace"
+      ]
+    }
+  },
+  {
+    "id": "the_first_flame",
+    "name": "enemy.the_first_flame.name",
+    "biome": "the_kiln",
+    "tags": [
+      "fire",
+      "construct"
+    ],
+    "hp": 150,
+    "kind": "boss",
+    "moves": [
+      {
+        "id": "ignite",
+        "intent": "attack",
+        "damage": 12,
+        "hits": 2,
+        "status": "burn",
+        "stacks": 4
+      },
+      {
+        "id": "kindle",
+        "intent": "buff",
+        "status": "might_buff",
+        "stacks": 5
+      },
+      {
+        "id": "forge",
+        "intent": "summon",
+        "enemy": "clay_sentinel"
+      },
+      {
+        "id": "bank_the_coals",
+        "intent": "block",
+        "block": 22
+      },
+      {
+        "id": "firestorm",
+        "intent": "attack",
+        "damage": 26,
+        "hits": 1
+      }
+    ],
+    "pattern": {
+      "kind": "sequence",
+      "moves": [
+        "ignite",
+        "kindle",
+        "forge",
+        "ignite",
+        "bank_the_coals",
+        "firestorm"
+      ]
+    }
+  }
+]

@@ -288,3 +288,26 @@ func test_the_shaft_changes_colour_where_the_biome_does() -> void:
 	var g := _game()
 	assert_object(Palette.biome_accent(g.campaign.biome_at(1).id)) \
 		.is_not_equal(Palette.biome_accent(g.campaign.biome_at(14).id))
+
+
+func test_a_long_shaft_is_labelled_as_a_scale_rather_than_a_list() -> void:
+	# Thirty rows in a 360-pixel frame is twelve pixels a row, and a line of
+	# text is taller than that: every floor numbered collided into one
+	# unreadable column the day the third biome landed.
+	for floor in range(1, 21):
+		assert_bool(TowerView.numbered(floor, 20)).override_failure_message(
+			"floor %d of 20 lost its number" % floor).is_true()
+	var shown: Array[int] = []
+	for floor in range(1, 31):
+		if TowerView.numbered(floor, 30):
+			shown.append(floor)
+	assert_array(shown).is_equal([1, 5, 10, 15, 20, 25, 30])
+
+
+func test_the_ends_of_the_shaft_are_always_numbered() -> void:
+	# Whatever the count and whatever it divides by: the top and the bottom
+	# are what the rest is read against.
+	for count in [7, 20, 21, 30, 33, 47]:
+		assert_bool(TowerView.numbered(1, count)).is_true()
+		assert_bool(TowerView.numbered(count, count)).override_failure_message(
+			"the bottom of a %d-floor shaft has no number" % count).is_true()

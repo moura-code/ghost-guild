@@ -1,0 +1,384 @@
+[
+  {
+    "id": "hammer_blow",
+    "name": "card.hammer_blow.name",
+    "text": "card.hammer_blow.text",
+    "pool": "the_kiln",
+    "type": "attack",
+    "cost": 1,
+    "rarity": "common",
+    "tags": [
+      "bone"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "damage",
+        "amount": 9,
+        "scale": "might"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "damage",
+          "amount": 12,
+          "scale": "might"
+        }
+      ]
+    },
+    "ai_value": 9
+  },
+  {
+    "id": "firebrand",
+    "name": "card.firebrand.name",
+    "text": "card.firebrand.text",
+    "pool": "the_kiln",
+    "type": "attack",
+    "cost": 1,
+    "rarity": "common",
+    "tags": [
+      "ember"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "damage",
+        "amount": 5,
+        "scale": "might"
+      },
+      {
+        "op": "apply_status",
+        "status": "burn",
+        "stacks": 3
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "damage",
+          "amount": 7,
+          "scale": "might"
+        },
+        {
+          "op": "apply_status",
+          "status": "burn",
+          "stacks": 4
+        }
+      ]
+    },
+    "ai_value": 9
+  },
+  {
+    "id": "slake",
+    "name": "card.slake.name",
+    "text": "card.slake.text",
+    "pool": "the_kiln",
+    "type": "skill",
+    "cost": 1,
+    "rarity": "common",
+    "tags": [
+      "shield"
+    ],
+    "keywords": [],
+    "target": "self",
+    "effects": [
+      {
+        "op": "block",
+        "amount": 7,
+        "scale": "wit"
+      },
+      {
+        "op": "heal",
+        "amount": 2
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "block",
+          "amount": 10,
+          "scale": "wit"
+        },
+        {
+          "op": "heal",
+          "amount": 3
+        }
+      ]
+    },
+    "ai_value": 8
+  },
+  {
+    "id": "quench",
+    "name": "card.quench.name",
+    "text": "card.quench.text",
+    "pool": "the_kiln",
+    "type": "skill",
+    "cost": 0,
+    "rarity": "common",
+    "tags": [
+      "shield"
+    ],
+    "keywords": [],
+    "target": "self",
+    "effects": [
+      {
+        "op": "block",
+        "amount": 4,
+        "scale": "wit"
+      },
+      {
+        "op": "apply_status",
+        "status": "regen",
+        "stacks": 2,
+        "target": "self"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "block",
+          "amount": 6,
+          "scale": "wit"
+        },
+        {
+          "op": "apply_status",
+          "status": "regen",
+          "stacks": 3,
+          "target": "self"
+        }
+      ]
+    },
+    "ai_value": 6
+  },
+  {
+    "id": "pry_bar",
+    "name": "card.pry_bar.name",
+    "text": "card.pry_bar.text",
+    "pool": "the_kiln",
+    "type": "attack",
+    "cost": 1,
+    "rarity": "common",
+    "tags": [
+      "bone"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "damage",
+        "amount": 6,
+        "scale": "might"
+      },
+      {
+        "op": "apply_status",
+        "status": "vulnerable",
+        "stacks": 2
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "damage",
+          "amount": 8,
+          "scale": "might"
+        },
+        {
+          "op": "apply_status",
+          "status": "vulnerable",
+          "stacks": 3
+        }
+      ]
+    },
+    "ai_value": 9
+  },
+  {
+    "id": "bellows_breath",
+    "name": "card.bellows_breath.name",
+    "text": "card.bellows_breath.text",
+    "pool": "the_kiln",
+    "type": "skill",
+    "cost": 1,
+    "rarity": "uncommon",
+    "tags": [
+      "ember"
+    ],
+    "keywords": [],
+    "target": "all_enemies",
+    "effects": [
+      {
+        "op": "apply_status",
+        "status": "burn",
+        "stacks": 3
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "apply_status",
+          "status": "burn",
+          "stacks": 5
+        }
+      ]
+    },
+    "ai_value": 9
+  },
+  {
+    "id": "anvil_stance",
+    "name": "card.anvil_stance.name",
+    "text": "card.anvil_stance.text",
+    "pool": "the_kiln",
+    "type": "skill",
+    "cost": 2,
+    "rarity": "uncommon",
+    "tags": [
+      "shield"
+    ],
+    "keywords": [],
+    "target": "self",
+    "effects": [
+      {
+        "op": "block",
+        "amount": 14,
+        "scale": "wit"
+      },
+      {
+        "op": "apply_status",
+        "status": "thorns",
+        "stacks": 3,
+        "target": "self"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "block",
+          "amount": 18,
+          "scale": "wit"
+        },
+        {
+          "op": "apply_status",
+          "status": "thorns",
+          "stacks": 4,
+          "target": "self"
+        }
+      ]
+    },
+    "ai_value": 13
+  },
+  {
+    "id": "white_heat",
+    "name": "card.white_heat.name",
+    "text": "card.white_heat.text",
+    "pool": "the_kiln",
+    "type": "power",
+    "cost": 2,
+    "rarity": "rare",
+    "tags": [
+      "ember"
+    ],
+    "keywords": [],
+    "target": "self",
+    "effects": [
+      {
+        "op": "apply_status",
+        "status": "might_buff",
+        "stacks": 2,
+        "target": "self"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "apply_status",
+          "status": "might_buff",
+          "stacks": 3,
+          "target": "self"
+        }
+      ]
+    },
+    "ai_value": 13
+  },
+  {
+    "id": "smiths_eye",
+    "name": "card.smiths_eye.name",
+    "text": "card.smiths_eye.text",
+    "pool": "the_kiln",
+    "type": "skill",
+    "cost": 1,
+    "rarity": "uncommon",
+    "tags": [
+      "draw"
+    ],
+    "keywords": [
+      "exhaust"
+    ],
+    "target": "self",
+    "effects": [
+      {
+        "op": "draw",
+        "amount": 2
+      },
+      {
+        "op": "energy",
+        "amount": 1
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "draw",
+          "amount": 3
+        },
+        {
+          "op": "energy",
+          "amount": 1
+        }
+      ]
+    },
+    "ai_value": 9
+  },
+  {
+    "id": "sunder",
+    "name": "card.sunder.name",
+    "text": "card.sunder.text",
+    "pool": "the_kiln",
+    "type": "attack",
+    "cost": 3,
+    "rarity": "rare",
+    "tags": [
+      "bone"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "damage",
+        "amount": 16,
+        "scale": "might"
+      },
+      {
+        "op": "apply_status",
+        "status": "vulnerable",
+        "stacks": 3
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "damage",
+          "amount": 21,
+          "scale": "might"
+        },
+        {
+          "op": "apply_status",
+          "status": "vulnerable",
+          "stacks": 4
+        }
+      ]
+    },
+    "ai_value": 20
+  }
+]

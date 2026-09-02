@@ -27,6 +27,10 @@ const MAX_MARKS := 8
 ## rock the player cannot reach yet is a promise, not a hole.
 const SOLID_NEAR := 0.32
 const SOLID_FAR := 0.11
+## A row is `size.y / floors` tall and a line of body text is about eleven
+## pixels, so twenty rows in a 360-pixel frame is the last count that fits.
+const EVERY_FLOOR_UP_TO := 20
+const NUMBER_EVERY := 5
 const NUMBER_COLUMN := 14.0
 const RATE_COLUMN := 34.0
 
@@ -125,6 +129,21 @@ func _notification(what: int) -> void:
 		queue_redraw()
 
 
+## Which floors are labelled.
+##
+## Every one, while the shaft is short enough for that to be readable. Thirty
+## floors in a 360-pixel frame is twelve pixels a row and a line of text is
+## taller than that, so the numbers collided into an unreadable column the day
+## the third biome landed. Past that it is a scale rather than a list: the ends
+## and every fifth floor, which is enough to count from.
+##
+## Pure, so the rule can be checked without rendering the thing that broke.
+static func numbered(floor: int, of_floors: int) -> bool:
+	if of_floors <= EVERY_FLOOR_UP_TO:
+		return true
+	return floor == 1 or floor == of_floors or floor % NUMBER_EVERY == 0
+
+
 ## Ghosts stand on the slab at the bottom of their chamber, and the numbers
 ## sit outside the shaft so the chamber itself stays clear.
 func _layout() -> void:
@@ -143,6 +162,7 @@ func _layout() -> void:
 		number.size = Vector2(NUMBER_COLUMN - 12.0, 24.0)
 		number.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		number.position = Vector2(0.0, rect.position.y + rect.size.y * 0.5 - 15.0)
+		number.visible = numbered(floor, floors)
 		number.add_theme_color_override("font_color",
 			Color(Palette.BONE.r, Palette.BONE.g, Palette.BONE.b, 0.25 + light * 0.6))
 
