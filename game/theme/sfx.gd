@@ -8,12 +8,16 @@ extends Node
 ## everything the player is meant to feel about a blow landing has to arrive
 ## through the ear.
 ##
-## Every sound is synthesised by `tools/audio/generate.py` -- square waves,
-## triangles, noise and short envelopes, the same handful of parts a sound
-## chip had. That is not a shortcut around licensing (though it is also
-## that); it is the sonic equivalent of a 28-colour palette at 640x360. A
-## library sample of a real sword would sit against this game the way a
-## photograph sits against a sprite.
+## Every sound is synthesised by `tools/audio/generate.py`: no downloaded
+## asset, no licence to track, and a set that can be re-cut wholesale when the
+## game changes. It has been, once -- the original set was written for the
+## pixel-art build on `main` and was square waves on purpose, which under wet
+## photoreal stone is the exact incoherence ART_BRIEF.md calls an asset flip.
+## What is here now is impacts with a transient, a body and a sub; struck
+## objects with inharmonic partials; and no bare waveform anywhere.
+##
+## Three buses, not one: a crypt has a tail and a menu does not happen in the
+## crypt. See `bus_for`.
 ##
 ## A fixed pool of players rather than one per call: an enemy phase resolves
 ## several blows in a single apply() and the animator fires them a beat
@@ -41,7 +45,7 @@ const STEPS := ["step_a", "step_b", "step_c"]
 
 ## Feet are the most repeated sound in the game by an order of magnitude. At
 ## the level of a blow landing they would be the entire mix.
-const STEP_LEVEL := 0.34
+const STEP_LEVEL := 0.50
 
 ## Room tone. Separate from the catalogue because it is played on its own
 ## looping voice rather than from the pool, and because it is the one sound
