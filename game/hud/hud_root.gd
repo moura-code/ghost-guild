@@ -49,6 +49,14 @@ func _init() -> void:
 	ui = Control.new()
 	ui.name = "Ui"
 	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# The game's own theme, on the node every panel is a descendant of.
+	#
+	# It was built and never applied: `UiTheme.build()` existed for two
+	# milestones and was constructed only by tests, so the HUD drew in Godot's
+	# default face and every carved StoneBox in it -- buttons, panels,
+	# scrollbars -- was dead code. The screens that looked carved were the ones
+	# whose authors had overridden the stylebox by hand.
+	ui.theme = UiTheme.build()
 	add_child(ui)
 
 

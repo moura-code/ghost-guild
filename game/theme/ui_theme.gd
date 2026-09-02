@@ -8,41 +8,35 @@ extends RefCounted
 ## A missing font file is survivable: the loaders return null and Godot
 ## falls back to its own face rather than the game refusing to start.
 
-## Pixel fonts, imported with antialiasing and subpixel positioning off. A
-## vector face rendered into a 640x360 viewport is the one thing that breaks
-## the illusion hardest -- smooth glyphs sitting on hard pixels read as a
-## screenshot of pixel art rather than as pixel art.
+## Cinzel for titles, Inter for everything a player reads as information --
+## spec §9, and the two faces `assets/fonts/` has been carrying all along.
 ##
-## Silkscreen carries the body and Pixelify the titles, which is the opposite
-## of the first arrangement and was decided by measurement after the first one
-## shipped unreadable text.
+## These constants pointed at Silkscreen and PixelifySans, the pixel faces from
+## the 2D direction that the pivot spec says "dies with `PaletteLayer`", while
+## the docstrings above them said Inter and Cinzel. Nobody noticed for two
+## milestones because the theme was never applied to the running HUD at all:
+## every label rendered in Godot's default Open Sans, which is a humanist sans
+## and therefore looked approximately right.
 ##
-## Pixelify is a vector face drawn to look pixelated; it only lands on the
-## grid at its own design size. At 6px its SPACE advance rounds to one pixel,
-## so "You have Soul to spend" rendered as one word, and at 8px the adjacent
-## single-pixel stems in "ill" merged into a solid block -- "kill" came out as
-## a rectangle. Silkscreen is an actual 8px-grid face: its space is three to
-## four pixels and its stems keep their gap.
-##
-## Silkscreen is wider, so this costs the card an extra line of text. Legible
-## and one line taller beats compact and unreadable.
-const BODY_FONT_PATH := "res://assets/fonts/Silkscreen.ttf"
-const TITLE_FONT_PATH := "res://assets/fonts/PixelifySans.ttf"
+## A pixel face over photoreal PBR stone would have been a worse clash than the
+## accident. The 3D direction wants type that belongs to the same century as
+## the rendering.
+const BODY_FONT_PATH := "res://assets/fonts/Inter.ttf"
+const TITLE_FONT_PATH := "res://assets/fonts/Cinzel.ttf"
 
 static var _body_font: Font = null
 static var _title_font: Font = null
 static var _fonts_tried: bool = false
 
-## Sizes are in 640x360 pixels, so they are half what they were and they land
-## on whole numbers on purpose: a pixel font asked for a fractional size gets
-## rounded somewhere and the glyphs stop lining up with the grid.
+## Sizes are in the HUD's 640x360 authoring space, which `HudRoot` scales up to
+## the window -- so body text is 16 real pixels on a 720p screen.
 const FONT_SMALL := 6
 const FONT_BODY := 8
 const FONT_NUMBER := 16
 const FONT_TITLE := 16
 
 
-## Inter for everything a player reads as information.
+## Inter. Everything a player reads as information.
 static func body_font() -> Font:
 	_load_fonts()
 	return _body_font
@@ -99,6 +93,17 @@ static func build() -> Theme:
 	var off := StoneBox.make(Palette.STONE, 3.0, false)
 	off.lit = Palette.STONE_EDGE
 	t.set_stylebox("disabled", "Button", off)
+	# Focus. Godot draws a bright blue rounded rectangle when a control has
+	# keyboard focus and the theme does not say otherwise -- and something
+	# always has focus, so every panel in the game was wearing one stock blue
+	# box the moment the theme was applied. The focus ring is the carved slab
+	# with its edge lit warm, which is the same language as hover without the
+	# fill: focus says "this is where the keyboard is", not "you are pointing
+	# at this".
+	var focus := StoneBox.make(Palette.STONE_HIGH, 2.0)
+	focus.lit = Palette.EDGE_LIGHT
+	focus.accent = Color(Palette.EDGE_LIGHT.r, Palette.EDGE_LIGHT.g, Palette.EDGE_LIGHT.b, 0.35)
+	t.set_stylebox("focus", "Button", focus)
 	t.set_color("font_color", "Button", Palette.BONE)
 	t.set_color("font_hover_color", "Button", Palette.LANTERN)
 	t.set_color("font_disabled_color", "Button", Palette.BONE_FAINT)

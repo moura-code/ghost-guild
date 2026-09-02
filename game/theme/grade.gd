@@ -32,8 +32,13 @@ const FILL_BOTTOM := Color(0.20, 0.28, 0.52)
 ## everywhere, because that is the whole reason mixed CC0 sources read as one
 ## game. What changes is the light inside it. Spec §9 gives each biome one
 ## accent (ivory, violet, orange) and nothing read them until now.
-const BIOME_FOG_TINT := 0.34
-const BIOME_FILL_TINT := 0.20
+## Halved once the biomes were made of different stone. The tint was carrying
+## the whole difference between the Catacombs and the Deep on its own, and at
+## that strength on top of grey strata and a rotting floor the Deep came out a
+## violet-black murk you could not read a corridor in. The air says where you
+## are; the walls say it too now, and they should not both shout.
+const BIOME_FOG_TINT := 0.18
+const BIOME_FILL_TINT := 0.12
 ## The biome the game was graded in. The shift is measured from here rather
 ## than from neutral, so the Catacombs are an identity by construction and
 ## every judgement already made about the look still holds.

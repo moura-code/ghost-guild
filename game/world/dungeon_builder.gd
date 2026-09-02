@@ -48,15 +48,18 @@ static func instance_transforms(layout: FloorLayout) -> Dictionary:
 	return {"floors": floors, "ceilings": ceilings, "walls": walls}
 
 
-static func build(layout: FloorLayout, parent: Node3D) -> Dictionary:
+## `biome_id` picks the stone. The Deep shipped with the Catacombs' walls and
+## floor, so the only thing that said "somewhere else" was the colour of the
+## air twenty metres away.
+static func build(layout: FloorLayout, parent: Node3D, biome_id: String = Kit.HOME_STONE) -> Dictionary:
 	var placed := instance_transforms(layout)
 	var floors: Array[Transform3D] = placed["floors"]
 	var ceilings: Array[Transform3D] = placed["ceilings"]
 	var walls: Array[Transform3D] = placed["walls"]
 
-	parent.add_child(_multi("Floors", Kit.floor_mesh(), Kit.floor_material(), floors))
-	parent.add_child(_multi("Ceilings", Kit.ceiling_mesh(), Kit.ceiling_material(), ceilings))
-	parent.add_child(_multi("Walls", Kit.wall_mesh(), Kit.wall_material(), walls))
+	parent.add_child(_multi("Floors", Kit.floor_mesh(), Kit.floor_material(biome_id), floors))
+	parent.add_child(_multi("Ceilings", Kit.ceiling_mesh(), Kit.ceiling_material(biome_id), ceilings))
+	parent.add_child(_multi("Walls", Kit.wall_mesh(), Kit.wall_material(biome_id), walls))
 
 	var boxes := wall_boxes(layout)
 	parent.add_child(_collision(layout, boxes))

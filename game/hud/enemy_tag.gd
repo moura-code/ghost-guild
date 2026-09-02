@@ -28,6 +28,8 @@ var _intent: Label
 var _hp: int = 1
 var _max_hp: int = 1
 var _block: int = 0
+var _plate: StyleBox = UiTheme.panel_box(
+	Color(Palette.ABYSS.r, Palette.ABYSS.g, Palette.ABYSS.b, 0.82), Palette.STONE_EDGE)
 
 
 static func create(enemy_index: int) -> EnemyTag:
@@ -102,20 +104,20 @@ func _draw() -> void:
 	# A backing plate under the whole tag. Without it the text and the bar sit
 	# straight on lit stone, and a red bar with nothing behind it reads as a
 	# stripe painted on the wall rather than as that creature's health.
-	var plate := Palette.ABYSS
-	plate.a = 0.78
-	draw_rect(Rect2(-3.0, -1.0, WIDTH + 6.0, size.y + 2.0), plate)
+	#
+	# Carved, like everything else the player reads. It was a flat translucent
+	# rectangle with a flat red bar in it, which was fine while the rest of the
+	# HUD was stock Godot controls and became the one unstyled object on screen
+	# the day the theme was actually applied.
+	draw_style_box(_plate, Rect2(-4.0, -2.0, WIDTH + 8.0, size.y + 4.0))
 
 	var top := 12.0
-	draw_rect(Rect2(0.0, top, WIDTH, BAR_HEIGHT), Palette.STONE)
-	var fraction := clampf(float(_hp) / float(_max_hp), 0.0, 1.0)
-	draw_rect(Rect2(0.0, top, WIDTH * fraction, BAR_HEIGHT), Palette.DANGER)
-	draw_rect(Rect2(0.0, top, WIDTH, BAR_HEIGHT), Palette.STONE_EDGE, false, 1.0)
-	if _block > 0:
-		# Block sits on top of the health rather than beside it: it is the
-		# part of the bar you have to get through first.
-		var width := WIDTH * clampf(float(_block) / float(_max_hp), 0.0, 1.0)
-		draw_rect(Rect2(0.0, top - GAP - BAR_HEIGHT, width, BAR_HEIGHT), Palette.SOUL)
+	# The same bar the hero's own health uses: banded, lit along the top, with
+	# block sitting in front of the health rather than beside it -- it is the
+	# part you have to get through first.
+	UiTheme.draw_health(self, Rect2(0.0, top, WIDTH, BAR_HEIGHT + 1.0),
+		float(_hp) / float(_max_hp), Palette.DANGER,
+		clampf(float(_block) / float(_max_hp), 0.0, 1.0))
 
 
 ## Pushes tags apart that would otherwise land on top of each other. Takes the

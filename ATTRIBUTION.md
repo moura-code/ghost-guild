@@ -173,10 +173,10 @@ black, which then multiplies to black under any tint). No other changes.
 
 ## Fonts — SIL Open Font License 1.1
 
-- **Cinzel** by Natanael Gama — display serif, used for titles.
-  Licence in `assets/fonts/OFL-Cinzel.txt`.
-- **Inter** by Rasmus Andersson — humanist sans, used for body text and numbers.
-  Licence in `assets/fonts/OFL-Inter.txt`.
+- **Cinzel** by Natanael Gama — display serif, used for titles, epitaphs and
+  the names of the dead. Licence in `assets/fonts/OFL-Cinzel.txt`.
+- **Inter** by Rasmus Andersson — humanist sans, used for body text, numbers
+  and every button. Licence in `assets/fonts/OFL-Inter.txt`.
 
 Both are unmodified. The OFL permits bundling in a commercial game; it does
 not permit selling the fonts on their own.
@@ -235,15 +235,20 @@ normal, roughness, ambient occlusion, displacement. The DirectX normal, the
 `.usdc`, `.blend`, `.mtlx` and the vendor `.tres` were discarded.
 
 - `assets/materials/bricks100/` — *Bricks100*, wall masonry
-- `assets/materials/pavingstones119/` — *PavingStones119*, floor
-- `assets/materials/rock051/` — *Rock051*, ceiling and rough-cut rock
+- `assets/materials/pavingstones119/` — *PavingStones119*, Catacombs floor
+- `assets/materials/rock051/` — *Rock051*, Catacombs ceiling; also the creature
+  surface, projected triplanar (see `EnemySkin`)
 - `assets/materials/planks037a/` — *Planks037A*, wood for doors and props
+- `assets/materials/rock023/` — *Rock023*, Fungal Deep walls
+- `assets/materials/ground068/` — *Ground068*, Fungal Deep floor
+- `assets/materials/rock030/` — *Rock030*, Fungal Deep ceiling
 
-Only PavingStones119 publishes a real-world size (115 cm); the other three
-report zero, so their tiling is an art call rather than a measurement. That is
+Only PavingStones119 publishes a real-world size (115 cm); the others report
+zero, so their tiling is an art call rather than a measurement. That is
 worth remembering, because one texel density across the kit is the single
-discipline that stops mixed CC0 sources reading as an asset flip, and for
-three of these four it has to be judged by eye.
+discipline that stops mixed CC0 sources reading as an asset flip, and for all
+but one of these it has to be judged by eye. `Kit.TEXEL` is the number; a test
+walks every biome's three surfaces and checks it.
 
 ## 3D props — Poly Haven, CC0 1.0
 

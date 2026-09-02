@@ -66,3 +66,41 @@ func test_the_stone_is_grey_so_the_light_can_be_the_colour() -> void:
 		assert_float(m.albedo_color.b).override_failure_message(
 			"the stone tint is warm, so the room can only ever be orange").is_greater_equal(m.albedo_color.r)
 		assert_float(m.albedo_color.r).is_less(1.0)
+
+
+func test_each_biome_is_made_of_its_own_stone() -> void:
+	# The Deep shipped with the Catacombs' walls and floor, and the only thing
+	# that said "somewhere else" was the colour of the air twenty metres away.
+	for surface in ["wall", "floor", "ceiling"]:
+		assert_str(String(Kit.stone_for("fungal_deep")[surface])) \
+			.override_failure_message("the Deep's %s is the Catacombs'" % surface) \
+			.is_not_equal(String(Kit.stone_for("catacombs")[surface]))
+
+
+func test_a_biome_with_no_stone_yet_still_gets_a_room() -> void:
+	# The content and the materials do not have to land in the same commit.
+	assert_dict(Kit.stone_for("the_kiln")).is_equal(Kit.stone_for(Kit.HOME_STONE))
+	assert_object(Kit.wall_material("the_kiln")).is_not_null()
+
+
+func test_one_texel_density_across_every_biome() -> void:
+	# The single discipline that stops mixed CC0 sources reading as an asset
+	# flip (spec §7). A second biome is exactly where it would slip.
+	for biome in ["catacombs", "fungal_deep"]:
+		var floor_span := _metres_per_repeat(Kit.floor_material(biome), Vector2(Kit.CELL, Kit.CELL))
+		var wall_span := _metres_per_repeat(Kit.wall_material(biome), Vector2(Kit.CELL, Kit.WALL_H))
+		var ceiling_span := _metres_per_repeat(Kit.ceiling_material(biome), Vector2(Kit.CELL, Kit.CELL))
+		for span in [floor_span, wall_span, ceiling_span]:
+			assert_float(span.x).override_failure_message(
+				"%s is not at one texel density" % biome).is_equal_approx(Kit.TEXEL, 0.001)
+			assert_float(span.y).is_equal_approx(Kit.TEXEL, 0.001)
+
+
+func test_every_biome_the_kit_names_has_its_files_on_disk() -> void:
+	for biome in Kit.BIOME_STONE:
+		var stone: Dictionary = Kit.BIOME_STONE[biome]
+		for surface in ["wall", "floor", "ceiling"]:
+			for map in ["color", "normal", "roughness", "ao"]:
+				var path := "%s%s/%s.jpg" % [Kit.MAT_ROOT, String(stone[surface]), map]
+				assert_bool(ResourceLoader.exists(path)).override_failure_message(
+					"missing %s" % path).is_true()

@@ -69,6 +69,14 @@ func _build() -> void:
 	_context_plate.add_child(_context)
 	add_child(ScreenLayout.centred(_context_plate, TEXT_WIDTH))
 
+	# A card lifts under the cursor, and the top row of a reward is close
+	# enough to the heading that the lift printed the card over it. The gap is
+	# the lift, named as the lift, so the two cannot drift apart.
+	var lift_room := Control.new()
+	lift_room.custom_minimum_size = Vector2(0.0, CardView.hover_headroom())
+	lift_room.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(lift_room)
+
 	# The prizes, laid out as cards; then everything else as a list.
 	_fan = HBoxContainer.new()
 	_fan.alignment = BoxContainer.ALIGNMENT_CENTER

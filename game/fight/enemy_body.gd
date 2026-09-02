@@ -72,18 +72,11 @@ static func create(def: EnemyDef, enemy_index: int) -> EnemyBody:
 
 
 func _build_mesh(def: EnemyDef) -> void:
-	_material = StandardMaterial3D.new()
-	# Bone against wet stone. Cold, slightly emissive so a creature at the edge
-	# of the torchlight is a shape rather than nothing at all -- the dark is
-	# meant to be threatening, not empty.
-	# Old bone, not white plastic. The first version was 0.62 grey with a cool
-	# emission on top, and under the new fill light it read as a shop mannequin
-	# -- brighter than the stone around it, which nothing in a crypt should be.
-	_material.albedo_color = Color(0.42, 0.39, 0.33)
-	_material.roughness = 0.94
-	_material.emission_enabled = true
-	_material.emission = Color(0.36, 0.40, 0.46)
-	_material.emission_energy_multiplier = 0.05
+	# What it is made of, read off its own tags. See EnemySkin -- this used to
+	# be a flat untextured colour, which is a mannequin however good the
+	# silhouette is, on a creature standing against a wall that has a normal
+	# map and ambient occlusion.
+	_material = EnemySkin.material_for(def)
 
 	# Every enemy used to be this same capsule with a ball on top, so a rat, a
 	# spider, a floating wisp and a stack of skulls were four identical objects
@@ -169,4 +162,4 @@ func die() -> void:
 func set_highlight(on: bool) -> void:
 	if _material == null:
 		return
-	_material.emission_energy_multiplier = HIGHLIGHT_ENERGY if on else 0.05
+	_material.emission_energy_multiplier = HIGHLIGHT_ENERGY if on else EnemySkin.REST_EMISSION

@@ -85,3 +85,36 @@ func test_hovering_a_button_lights_it_like_a_lantern() -> void:
 ## a whole-frame colour quantise over a PBR crypt is the one thing that would
 ## guarantee it looks cheap. What replaced it is Grade -- one Environment, one
 ## ACES tonemap, over everything -- and grade_test covers that.
+
+
+func test_nothing_falls_back_to_a_stock_godot_box() -> void:
+	# Godot draws its own bright blue rounded rectangle for any state the
+	# theme leaves undefined, and something always has focus -- so a missing
+	# focus stylebox put one stock blue box on every panel in the game.
+	var t := UiTheme.build()
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+		var box := t.get_stylebox(state, "Button")
+		assert_object(box).override_failure_message(
+			"Button has no '%s' stylebox" % state).is_not_null()
+		assert_bool(box is StoneBox).override_failure_message(
+			"Button's '%s' is a %s, not carved stone" % [state, box.get_class()]) \
+			.is_true()
+
+
+func test_the_theme_is_the_one_the_hud_actually_wears() -> void:
+	# It was built and never applied for two milestones: the HUD drew in
+	# Godot's default face and every carved box in the theme was dead code.
+	var hud: HudRoot = auto_free(HudRoot.new())
+	add_child(hud)
+	await await_idle_frame()
+	assert_object(hud.ui.theme).override_failure_message(
+		"the HUD has no theme").is_not_null()
+	var label := UiTheme.body("x")
+	hud.ui.add_child(label)
+	await await_idle_frame()
+	assert_object(label.get_theme_font("font")).is_same(UiTheme.body_font())
+	var button := Button.new()
+	hud.ui.add_child(button)
+	await await_idle_frame()
+	assert_int(button.get_theme_font_size("font_size")).override_failure_message(
+		"buttons are still at Godot's default size").is_equal(UiTheme.FONT_BODY)

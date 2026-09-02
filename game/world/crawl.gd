@@ -283,7 +283,7 @@ func build_floor() -> void:
 
 	layout = RunEngine.layout_for(run)
 	_built_floor = run.floor
-	DungeonBuilder.build(layout, _world)
+	DungeonBuilder.build(layout, _world, run.biome().id)
 	_world.add_child(Grade.world_environment(
 		Grade.depth_of(run.floor, Biomes.depth(run.content)), run.biome().id))
 	_dress()

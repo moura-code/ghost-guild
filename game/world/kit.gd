@@ -35,20 +35,68 @@ const MAT_ROOT := "res://assets/materials/"
 ## room, which is the opposite of the problem being solved.
 const STONE_TINT := Color(0.80, 0.86, 0.94)
 const FLOOR_TINT := Color(0.84, 0.88, 0.94)
+## The Deep is dug rather than built, and its floor is alive. Ground068 is a
+## woodland floor photographed in daylight, so the tint has to pull most of the
+## green out of it: fourteen floors down, what is left should read as rot under
+## the torch and as nothing at all outside it.
+## As bright as the Catacombs' stone and cooler, not darker: a biome that is
+## harder to see in is not a biome with atmosphere, it is one you turn the
+## brightness up for.
+const DEEP_STONE_TINT := Color(0.76, 0.84, 0.96)
+const DEEP_FLOOR_TINT := Color(0.74, 0.79, 0.76)
+## The Deep's ceiling is raw rock rather than the Catacombs' smooth vault, and
+## at full brightness its speckle was the busiest surface in the frame -- on
+## the one surface nobody looks at on purpose. It recedes.
+const DEEP_CEILING_TINT := Color(0.52, 0.58, 0.70)
+
+## What each biome is made of. The Catacombs are laid brick and cut paving --
+## somebody built them. The Deep is fractured strata and a floor of moss and
+## rot -- nobody did.
+##
+## The tint is per surface rather than per set because the sets are photographs
+## of different things: what they have in common is the texel density, and what
+## they must not have in common is a colour cast the lighting did not put there.
+const BIOME_STONE := {
+	"catacombs": {
+		"wall": "bricks100", "floor": "pavingstones119", "ceiling": "rock051",
+		"wall_tint": STONE_TINT, "floor_tint": FLOOR_TINT, "ceiling_tint": STONE_TINT,
+	},
+	"fungal_deep": {
+		"wall": "rock023", "floor": "ground068", "ceiling": "rock030",
+		"wall_tint": DEEP_STONE_TINT, "floor_tint": DEEP_FLOOR_TINT,
+		"ceiling_tint": DEEP_CEILING_TINT,
+	},
+}
+## Everywhere the data goes that the kit has no stone for yet.
+const HOME_STONE := "catacombs"
 
 static var _cache: Dictionary = {}
 
 
-static func floor_material() -> StandardMaterial3D:
-	return _material("floor", "pavingstones119", Vector2(CELL, CELL), FLOOR_TINT)
+## The stone table for a biome, falling back to the Catacombs. A biome added to
+## `data/` before its materials are downloaded gets a room rather than a crash,
+## which is also what makes the fallback worth having: the content and the art
+## do not have to land in the same commit.
+static func stone_for(biome_id: String) -> Dictionary:
+	return BIOME_STONE.get(biome_id, BIOME_STONE[HOME_STONE])
 
 
-static func wall_material() -> StandardMaterial3D:
-	return _material("wall", "bricks100", Vector2(CELL, WALL_H), STONE_TINT)
+static func floor_material(biome_id: String = HOME_STONE) -> StandardMaterial3D:
+	var stone := stone_for(biome_id)
+	return _material("floor:" + String(stone["floor"]), String(stone["floor"]),
+		Vector2(CELL, CELL), stone["floor_tint"])
 
 
-static func ceiling_material() -> StandardMaterial3D:
-	return _material("ceiling", "rock051", Vector2(CELL, CELL), STONE_TINT)
+static func wall_material(biome_id: String = HOME_STONE) -> StandardMaterial3D:
+	var stone := stone_for(biome_id)
+	return _material("wall:" + String(stone["wall"]), String(stone["wall"]),
+		Vector2(CELL, WALL_H), stone["wall_tint"])
+
+
+static func ceiling_material(biome_id: String = HOME_STONE) -> StandardMaterial3D:
+	var stone := stone_for(biome_id)
+	return _material("ceiling:" + String(stone["ceiling"]), String(stone["ceiling"]),
+		Vector2(CELL, CELL), stone["ceiling_tint"])
 
 
 static func floor_mesh() -> PlaneMesh:

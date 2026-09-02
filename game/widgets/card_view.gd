@@ -266,6 +266,14 @@ func set_selected(on: bool) -> void:
 			Palette.STONE_RAISED if playable else Palette.VOID, edge))
 
 
+## How far above its resting place a hovered card actually reaches: the lift,
+## plus half the height the scale adds, because the card scales about its own
+## centre. A layout that leaves only `HOVER_LIFT` of room still gets a card
+## printed over whatever is above it.
+static func hover_headroom() -> float:
+	return HOVER_LIFT + CARD_SIZE.y * (HOVER_SCALE - 1.0) * 0.5
+
+
 ## A playable card lifts under the cursor; an unaffordable one does not,
 ## which is a second, wordless way of saying you cannot afford it.
 func _on_hover(entered: bool) -> void:
