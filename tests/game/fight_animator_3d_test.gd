@@ -212,3 +212,68 @@ func test_an_empty_turn_is_finished_immediately() -> void:
 	a.play([])
 	await await_idle_frame()
 	assert_int(int(done[0])).is_equal(1)
+
+
+# ------------------------------------------------------- the blow has a place
+
+func _voices() -> Voices3D:
+	var v: Voices3D = auto_free(Voices3D.new())
+	add_child(v)
+	return v
+
+
+func test_a_blow_is_heard_from_the_creature_that_took_it() -> void:
+	# Three enemies in a line are three places, and which one just took the
+	# hit is something the ear can tell you without reading a number.
+	var a := _animator()
+	var v := _voices()
+	await await_idle_frame()
+	a.voices = v
+	var body := _body(0)
+	body.global_position = Vector3(-2.0, 1.2, -4.0)
+	a.play([{"type": "damage", "target": "enemy", "index": 0, "amount": 6}])
+	await await_idle_frame()
+	assert_vector((v.get_child(0) as AudioStreamPlayer3D).global_position) \
+		.override_failure_message("the blow was not heard where the creature is standing") \
+		.is_equal_approx(Vector3(-2.0, 1.2, -4.0), Vector3.ONE * 0.01)
+
+
+func test_a_blow_on_nothing_falls_back_to_the_flat_pool() -> void:
+	# There is no body when a creature has already been freed, and there is no
+	# pool at all in half the suite. Neither may be a crash mid-fight, and
+	# neither may be silence.
+	var a := _animator()
+	var v := _voices()
+	await await_idle_frame()
+	a.voices = v
+	a.play([{"type": "damage", "target": "enemy", "index": 3, "amount": 6}])
+	await await_idle_frame()
+	assert_object((v.get_child(0) as AudioStreamPlayer3D).stream) \
+		.override_failure_message("played a positional sound for a body that is not there").is_null()
+	assert_bool(is_instance_valid(a)).is_true()
+
+
+func test_being_hit_yourself_is_not_a_sound_across_the_room() -> void:
+	# You are the listener. A blow on the hero panned to a point in space is a
+	# blow landing on somebody else.
+	var a := _animator()
+	var v := _voices()
+	await await_idle_frame()
+	a.voices = v
+	a.play([{"type": "damage", "target": "hero", "amount": 6}])
+	await await_idle_frame()
+	assert_object((v.get_child(0) as AudioStreamPlayer3D).stream).is_null()
+
+
+func test_a_death_is_heard_where_the_creature_fell() -> void:
+	var a := _animator()
+	var v := _voices()
+	await await_idle_frame()
+	a.voices = v
+	var body := _body(0)
+	body.global_position = Vector3(3.0, 0.9, -5.0)
+	a.play([{"type": "enemy_died", "index": 0}])
+	await await_idle_frame()
+	var voice: AudioStreamPlayer3D = v.get_child(0)
+	assert_object(voice.stream).override_failure_message("the death made no sound").is_not_null()
+	assert_vector(voice.global_position).is_equal_approx(Vector3(3.0, 0.9, -5.0), Vector3.ONE * 0.01)

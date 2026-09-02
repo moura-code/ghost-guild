@@ -225,3 +225,62 @@ func test_walking_the_player_is_what_makes_the_sound() -> void:
 	s.step(1)
 	s.step(2)
 	assert_bool(is_instance_valid(s)).is_true()
+
+
+# ------------------------------------------------------------------ the room
+
+func test_the_game_has_a_dry_path_and_a_wet_one() -> void:
+	# A crypt has a tail, and a UI click does not happen in the crypt. One
+	# reverb over everything makes menus sound underwater; none at all leaves
+	# a blow landing in a stone corridor sounding like a button.
+	Sfx.ensure_buses()
+	for id in [Sfx.BUS_UI, Sfx.BUS_WORLD, Sfx.BUS_AMBIENCE]:
+		assert_int(AudioServer.get_bus_index(id)).override_failure_message("no %s bus" % id).is_greater_equal(0)
+	var world := AudioServer.get_bus_index(Sfx.BUS_WORLD)
+	var ui := AudioServer.get_bus_index(Sfx.BUS_UI)
+	assert_int(AudioServer.get_bus_effect_count(world)).override_failure_message("the world is dry").is_greater(0)
+	assert_object(AudioServer.get_bus_effect(world, 0)).is_instanceof(AudioEffectReverb)
+	assert_int(AudioServer.get_bus_effect_count(ui)).override_failure_message("the menu is in a cave").is_equal(0)
+
+
+func test_every_bus_still_goes_through_master() -> void:
+	# Settings turns the volume down by setting bus 0. A bus that sends
+	# anywhere else is a sound the volume slider cannot reach.
+	Sfx.ensure_buses()
+	for id in [Sfx.BUS_UI, Sfx.BUS_WORLD, Sfx.BUS_AMBIENCE]:
+		assert_str(AudioServer.get_bus_send(AudioServer.get_bus_index(id))).is_equal("Master")
+
+
+func test_building_the_buses_twice_does_not_build_them_twice() -> void:
+	# Every Sfx that boots calls this, and the suite boots a great many.
+	Sfx.ensure_buses()
+	var before := AudioServer.bus_count
+	Sfx.ensure_buses()
+	Sfx.ensure_buses()
+	assert_int(AudioServer.bus_count).is_equal(before)
+
+
+func test_a_click_is_a_menu_and_a_blow_is_a_room() -> void:
+	assert_str(Sfx.bus_for("click")).is_equal(Sfx.BUS_UI)
+	assert_str(Sfx.bus_for("hover")).is_equal(Sfx.BUS_UI)
+	assert_str(Sfx.bus_for("card_play")).is_equal(Sfx.BUS_UI)
+	assert_str(Sfx.bus_for("hit_heavy")).is_equal(Sfx.BUS_WORLD)
+	assert_str(Sfx.bus_for("step_a")).is_equal(Sfx.BUS_WORLD)
+	assert_str(Sfx.bus_for("enemy_die")).is_equal(Sfx.BUS_WORLD)
+	assert_str(Sfx.bus_for("descend")).is_equal(Sfx.BUS_WORLD)
+
+
+func test_every_sound_in_the_catalogue_lands_on_a_bus_that_exists() -> void:
+	# The failure mode of a typo'd bus name is that Godot routes it to Master
+	# silently, so the sound plays and only the reverb is missing -- which is
+	# exactly the kind of wrong nobody hears until the mix is finished.
+	Sfx.ensure_buses()
+	for id in Sfx.CATALOGUE:
+		var bus := Sfx.bus_for(String(id))
+		assert_int(AudioServer.get_bus_index(bus)) \
+			.override_failure_message("%s routes to a bus called %s, which does not exist" % [id, bus]) \
+			.is_greater_equal(0)
+
+
+func test_the_room_tone_is_not_reverbed_into_a_second_room() -> void:
+	assert_str(Sfx.bus_for(Sfx.AMBIENCE)).is_equal(Sfx.BUS_AMBIENCE)

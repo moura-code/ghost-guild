@@ -75,7 +75,7 @@ static func build(layout: FloorLayout, parent: Node3D) -> Dictionary:
 	return {
 		"floors": floors.size(),
 		"walls": walls.size(),
-		"torches": torches.get_child_count(),
+		"torches": torches.count(),
 		"boxes": boxes.size(),
 	}
 

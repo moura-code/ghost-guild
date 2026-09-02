@@ -214,6 +214,60 @@ def build_footsteps(rng):
     return out
 
 
+
+def pop(at, seconds, length, gain, hz, rng, q=3.0):
+    """One crackle inside a loop. Kept well clear of both ends for the same
+    reason `drip` is: a transient crossing the join is the one thing the
+    crossfade cannot hide."""
+    total = int(RATE * length)
+    body = int(RATE * seconds)
+    start = int(RATE * at)
+    raw = svf(burst(seconds, rng, attack=0.0008, release=0.75, curve=4.5), hz,
+              q=q, mode="band")
+    out = [0.0] * total
+    for i in range(min(body, len(raw))):
+        if start + i >= total:
+            break
+        out[start + i] = raw[i] * gain
+    return out
+
+
+def build_torch(rng):
+    """A torch, from two metres away.
+
+    Fire is three sounds at once and it needs all three: a low roar that is
+    the flame moving air, a hiss that is the fuel, and pops. Take the pops
+    away and it is a hiss; take the roar away and it is a hiss with clicks in
+    it. The pops are what the ear identifies as fire, and they have to be
+    irregular -- pops on a grid are a Geiger counter.
+
+    Loops in six seconds, which is long enough that the ear does not find the
+    period and short enough to keep the file small. `Torches` starts each
+    light at its own offset into it, so twenty of these in a room do not comb
+    into one voice.
+    """
+    length = 6.0
+    layers = [
+        # The roar: heavily lowpassed noise, most of the body.
+        gained(svf(loop_noise(length, gain=1.0, rng=rng, colour=0.012), 190.0,
+                   q=0.8, mode="low"), 0.55),
+        # The fuel: a thin hiss well above it, so the two do not mask.
+        gained(svf(loop_noise(length, gain=1.0, rng=rng, colour=0.55), 3400.0,
+                   q=0.9, mode="high"), 0.045),
+    ]
+    # Irregular on purpose, and each at its own brightness: a pop is a
+    # different size depending on what just gave way.
+    for at, seconds, gain, hz in [
+        (0.41, 0.030, 0.30, 2600.0), (0.93, 0.018, 0.17, 4100.0),
+        (1.62, 0.042, 0.36, 1750.0), (2.07, 0.021, 0.20, 3300.0),
+        (2.88, 0.026, 0.24, 2200.0), (3.44, 0.038, 0.31, 1450.0),
+        (3.79, 0.016, 0.14, 5200.0), (4.51, 0.033, 0.28, 2950.0),
+        (5.02, 0.023, 0.19, 3800.0), (5.44, 0.029, 0.26, 2050.0),
+    ]:
+        layers.append(pop(at, seconds, length, gain, hz, rng))
+    return {"amb_torch": mix(*layers)}
+
+
 def build_ambience(rng):
     """Room tone. One eight-second loop, quiet enough to be noticed only when
     it stops -- which is the whole job of ambience. A crypt is not silent, it
@@ -314,6 +368,7 @@ def main():
     # Its own stream, so adding a sound never shifts the random draws
     # behind an existing one and silently makes it a different sound.
     sounds.update(build_footsteps(random.Random(SEED + 2)))
+    sounds.update(build_torch(random.Random(SEED + 3)))
     wanted = sys.argv[1:] or list(sounds)
     unknown = [w for w in wanted if w not in sounds]
     if unknown:

@@ -31,6 +31,8 @@ var hud: HudRoot
 var player: Player
 var hand: HandView
 var animator: FightAnimator3D
+## Where the fight's blows are heard from.
+var voices: Voices3D
 var vitals: HeroPanel
 var bodies: Array[EnemyBody] = []
 var tags: Array[EnemyTag] = []
@@ -289,6 +291,16 @@ func _face(at: Vector3) -> void:
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
+## The spatial pool for this fight, parented to the director so it is torn
+## down with the fight rather than accumulating one pool per room.
+func _build_voices() -> Voices3D:
+	voices = Voices3D.new()
+	voices.name = "Voices"
+	voices.sfx = game.sfx
+	add_child(voices)
+	return voices
+
+
 func _build_hud() -> void:
 	_hud_layer = Control.new()
 	_hud_layer.name = "FightHud"
@@ -297,7 +309,7 @@ func _build_hud() -> void:
 	hud.ui.add_child(_hud_layer)
 
 	animator = FightAnimator3D.new()
-	animator.bind(game.content, game.sfx)
+	animator.bind(game.content, game.sfx, _build_voices())
 	animator.anchors_supplier = anchors
 	animator.body_supplier = func(i: int) -> Node3D: return body_of(i)
 	animator.shake_requested.connect(_on_shake)

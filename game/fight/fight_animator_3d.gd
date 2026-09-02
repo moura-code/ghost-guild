@@ -33,6 +33,10 @@ const BEAT := 0.14
 
 var content: Content
 var sfx: Sfx
+## Blows land on a creature that is standing somewhere, so they are played
+## from there. Optional: without it every hit falls back to the flat pool,
+## which is what the whole game did before.
+var voices: Voices3D
 ## `() -> Dictionary` keyed "hero" and by enemy index, in SCREEN space. Asked
 ## again on every beat.
 var anchors_supplier: Callable = func() -> Dictionary: return {}
@@ -69,9 +73,10 @@ func _init() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 
 
-func bind(c: Content, s: Sfx) -> void:
+func bind(c: Content, s: Sfx, v: Voices3D = null) -> void:
 	content = c
 	sfx = s
+	voices = v
 
 
 func is_playing() -> bool:
@@ -152,8 +157,7 @@ func _render(event: Dictionary, stagger: int) -> bool:
 				var body := _body_of(event)
 				if body != null and body.has_method("recoil"):
 					body.call("recoil", amount)
-				if sfx != null:
-					sfx.hit(amount)
+				_hit_sound(amount, body)
 			hit_landed.emit(event)
 			return true
 		"block_gained":
@@ -186,7 +190,9 @@ func _render(event: Dictionary, stagger: int) -> bool:
 			if body != null and body.has_method("die"):
 				body.call("die")
 			_hold = HIT_STOP * 1.6
-			_sound("enemy_die")
+			# Where it fell, not from the middle of your head. A death is the
+			# loudest thing in a fight and the one most worth locating.
+			_world_sound("enemy_die", body)
 			hit_landed.emit(event)
 			return true
 	return false
@@ -201,6 +207,34 @@ func _body_of(event: Dictionary) -> Node3D:
 func _sound(id: String) -> void:
 	if sfx != null:
 		sfx.play(id)
+
+
+## A blow on a creature, from where that creature is standing. Three enemies
+## in a line are three places, and which of them just took the hit is a thing
+## the ear can tell you without you having to read a number.
+##
+## Falls back to the flat pool whenever there is nothing to be positional
+## about -- no spatial pool, or a body that has already been freed.
+func _hit_sound(amount: int, body: Node3D) -> void:
+	if _placed(body):
+		voices.hit_at(amount, body.global_position)
+	elif sfx != null:
+		sfx.hit(amount)
+
+
+## The same fallback, for a sound that is not a blow.
+func _world_sound(id: String, body: Node3D) -> void:
+	if _placed(body):
+		voices.play_at(id, body.global_position)
+	else:
+		_sound(id)
+
+
+## Whether there is anything to be positional about. A body is freed the
+## instant its death animation ends, and the events behind it are still in the
+## queue.
+func _placed(body: Node3D) -> bool:
+	return voices != null and body != null and is_instance_valid(body) and body.is_inside_tree()
 
 
 func _anchor(event: Dictionary) -> Variant:

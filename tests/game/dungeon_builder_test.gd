@@ -116,11 +116,11 @@ func test_a_torch_hangs_in_the_open_cell_in_front_of_its_wall() -> void:
 	var root: Node3D = auto_free(Node3D.new())
 	add_child(root)
 	var counts := DungeonBuilder.build(layout, root)
-	var torches: Node3D = root.get_node("Torches")
-	assert_int(torches.get_child_count()).is_equal(int(counts["torches"]))
-	assert_int(torches.get_child_count()).is_greater(0)
-	for child in torches.get_children():
-		var light: OmniLight3D = child
+	var torches: Torches = root.get_node("Torches")
+	assert_int(torches.count()).is_equal(int(counts["torches"]))
+	assert_int(torches.count()).is_greater(0)
+	for i in torches.count():
+		var light := torches.light(i)
 		# A light left on the anchor sits inside the wall and lights it from
 		# within, which reads as a glowing window floating in the stone.
 		var cell := Kit.world_to_cell(light.position)
