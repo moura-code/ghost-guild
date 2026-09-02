@@ -19,7 +19,8 @@ const ADD_CARD_WHERE: Array[String] = ["hand", "discard", "draw"]
 const RUN_OPS: Array[String] = ["heal", "heal_percent", "damage", "coin", "soul", "add_card", "relic", "stat", "max_hp"]
 const STATS: Array[String] = ["might", "wit", "vigor", "focus"]
 const UPGRADE_GROUPS: Array[String] = ["hero", "ghosts", "descent", "seance"]
-const UPGRADE_EFFECTS: Array[String] = ["stat", "max_resolve", "mend_discount", "global_strength", "global_spawn", "offline_cap", "restless_penalty"]
+const UPGRADE_EFFECTS: Array[String] = ["stat", "max_resolve", "mend_discount", "global_strength", "global_spawn", "offline_cap", "restless_penalty",
+	"auto_draft", "expedition_unlock", "expedition_slots", "expedition_speed"]
 
 
 static func validate(c: Content) -> Array[String]:

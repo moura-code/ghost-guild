@@ -16,6 +16,10 @@ var soul: float = 0.0
 var record_depth: int = 0
 var hero_counter: int = 0
 var run_counter: int = 0
+var expedition_counter: int = 0
+## In flight. Empty until the Descent upgrade is bought; at most
+## `Expeditions.slots`.
+var expeditions: Array[Expedition] = []
 var created_at: int = 0
 var last_tick: int = 0
 var rate_per_hour: float = 0.0
@@ -51,6 +55,13 @@ func spend(cost: float) -> bool:
 	return true
 
 
+func _expeditions_dict() -> Array:
+	var out: Array = []
+	for e in expeditions:
+		out.append((e as Expedition).to_dict())
+	return out
+
+
 func to_dict() -> Dictionary:
 	return {
 		"version": 1,
@@ -65,6 +76,8 @@ func to_dict() -> Dictionary:
 		"record_depth": record_depth,
 		"hero_counter": hero_counter,
 		"run_counter": run_counter,
+		"expedition_counter": expedition_counter,
+		"expeditions": _expeditions_dict(),
 		"created_at": created_at,
 		"last_tick": last_tick,
 		"rate_per_hour": rate_per_hour,
@@ -90,6 +103,9 @@ static func from_dict(p_content: Content, d: Dictionary) -> Campaign:
 	c.record_depth = int(d.get("record_depth", 0))
 	c.hero_counter = int(d.get("hero_counter", 0))
 	c.run_counter = int(d.get("run_counter", 0))
+	c.expedition_counter = int(d.get("expedition_counter", 0))
+	for raw in d.get("expeditions", []):
+		c.expeditions.append(Expedition.from_dict(raw))
 	c.created_at = int(d.get("created_at", 0))
 	c.last_tick = int(d.get("last_tick", 0))
 	c.rate_per_hour = float(d.get("rate_per_hour", 0.0))

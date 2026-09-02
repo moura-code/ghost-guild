@@ -86,7 +86,7 @@ static func _fill_run_resolved(d: Dictionary) -> void:
 static func load_and_catch_up(content: Content, now: int, path: String = DEFAULT_PATH) -> Dictionary:
 	var c := load_campaign(content, path)
 	if c == null:
-		return {"campaign": null, "offline": {"elapsed": 0, "counted": 0, "capped": false, "soul": 0.0}}
+		return {"campaign": null, "offline": {"elapsed": 0, "counted": 0, "capped": false, "soul": 0.0, "returned": []}}
 	var offline := CampaignEngine.tick(c, now)
 	CampaignEngine.refresh_rate(c)
 	return {"campaign": c, "offline": offline}

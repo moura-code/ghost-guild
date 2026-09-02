@@ -98,12 +98,63 @@ static func refresh_rate(c: Campaign) -> void:
 	c.rate_per_hour = Production.rate_per_hour(c.ladder, c.balance(), c.modifiers())
 
 
+## Enough for a week of the fastest expeditions. A guard, not a limit:
+## expeditions do not relaunch themselves, so the loop is bounded by how many
+## are in flight, and this only catches a corrupted save.
+const MAX_SEGMENTS := 512
+
+
+## Production up to `now`, in segments.
+##
+## `Production.accrue` integrates ONE rate across a window. An expedition that
+## landed three hours into an eight-hour absence changed the rate three hours
+## in, so a single call underpays every offline session that resolved one --
+## silently, by exactly what the new ghost would have earned. The window is
+## therefore cut at every expedition that lands inside it: accrue, place the
+## ghost, refresh the rate, continue.
+##
+## Two things the cap does NOT do, both deliberate:
+##
+## - It does not stop an expedition landing. The cap limits what the ladder
+##   PAYS for an absence, not what happened during it; a player returning after
+##   a week to find their expedition still in the field would be right to call
+##   that a bug.
+## - It is not applied per segment. A budget of `min(elapsed, cap)` seconds is
+##   spent across the segments in order, so cutting a window into more pieces
+##   can never pay more than leaving it whole -- which is exactly what a
+##   per-segment cap would do.
 static func tick(c: Campaign, now: int) -> Dictionary:
-	var r := Production.accrue(c.rate_per_hour, now - c.last_tick, float(c.modifiers()["offline_cap_hours"]))
-	if float(r["soul"]) > 0.0:
-		c.soul += float(r["soul"])
+	var elapsed := maxi(0, now - c.last_tick)
+	var cap_seconds := int(round(float(c.modifiers()["offline_cap_hours"]) * 3600.0))
+	var budget := mini(elapsed, cap_seconds)
+	var total := {"elapsed": elapsed, "counted": 0, "capped": elapsed > budget,
+		"soul": 0.0, "returned": []}
+	var at := c.last_tick
+	var guard := 0
+	while guard < MAX_SEGMENTS:
+		guard += 1
+		var due := Expeditions.next_due(c)
+		if due < 0 or due > now or due <= at:
+			break
+		budget = _accrue_segment(c, due - at, budget, total)
+		at = due
+		total["returned"].append_array(Expeditions.resolve_due(c, due))
+		refresh_rate(c)
+	_accrue_segment(c, now - at, budget, total)
 	c.last_tick = now
-	return r
+	return total
+
+
+## Pays for `span` seconds at the current rate, out of `budget`, and returns
+## what is left of the budget.
+static func _accrue_segment(c: Campaign, span: int, budget: int, total: Dictionary) -> int:
+	var counted := clampi(span, 0, budget)
+	if counted <= 0:
+		return budget
+	c.soul += c.rate_per_hour * counted / 3600.0
+	total["soul"] = float(total["soul"]) + c.rate_per_hour * counted / 3600.0
+	total["counted"] = int(total["counted"]) + counted
+	return budget - counted
 
 
 static func buy_upgrade(c: Campaign, id: String) -> Dictionary:

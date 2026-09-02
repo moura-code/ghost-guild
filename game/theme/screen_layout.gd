@@ -58,6 +58,17 @@ static func section(text: String, accent: Color = Palette.SOUL) -> Control:
 	return row
 
 
+## Retitles a heading built by `section`, for a section whose caption is not
+## known until something is bound to it. The heading is three nodes and which
+## one is the label is `section`'s business, not its caller's.
+static func section_text(heading: Control, text: String) -> void:
+	for child in heading.get_children():
+		var label := child as Label
+		if label != null:
+			label.text = text
+			return
+
+
 ## Wraps content in a bounded, translucent slab.
 ##
 ## The panel screens were bare lists sitting straight on the crypt wall,

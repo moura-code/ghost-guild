@@ -45,7 +45,7 @@ static func echo_strength(c: Campaign, source: Ghost, floor: int) -> float:
 static func create_echo(c: Campaign, source_id: int, floor: int, now: int) -> Dictionary:
 	var source := c.ladder.find(source_id)
 	var cost := echo_cost(c)
-	if source == null or source.kind != "true":
+	if source == null or not source.is_true():
 		return {"ok": false, "cost": cost, "reason": "source"}
 	if floor < 1 or floor > c.ladder.waypoint():
 		return {"ok": false, "cost": cost, "reason": "floor"}
@@ -80,7 +80,7 @@ static func call_echo(c: Campaign, echo_id: int, floor: int) -> Dictionary:
 
 static func tend(c: Campaign, ghost_id: int) -> Dictionary:
 	var ghost := c.ladder.find(ghost_id)
-	if ghost == null or ghost.kind != "true":
+	if ghost == null or not ghost.is_true():
 		return {"ok": false, "cost": 0.0, "reason": "ghost"}
 	if not ghost.restless:
 		return {"ok": false, "cost": 0.0, "reason": "not_restless"}

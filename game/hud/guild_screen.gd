@@ -1,10 +1,21 @@
 class_name GuildScreen
 extends VBoxContainer
-## The Guild panel (spec §5.9). Upgrades in two groups, each row priced from
-## the player's current Soul. Every purchase goes through Game, which settles
-## production first and saves after.
+## The Guild panel (spec §5.9): who the guild has in the field, pinned above a
+## wall of everything it can buy. Every purchase goes through Game, which
+## settles production first and saves after.
+##
+## The wall was built to fit one screen with nothing to scroll, and it did --
+## at ten upgrades in two groups. Fourteen in three does not, and the count
+## only goes one way, so the wall scrolls and the expedition band does not.
+## The band is the only thing on this screen that changes while you look at
+## it; the tablets are a catalogue, and a catalogue that runs past the bottom
+## of the frame is still a wall rather than a settings page.
 
-const GROUP_ORDER := ["hero", "ghosts"]
+## Spec §5.9's own order, which is also the order they are earned in: what the
+## living hero is, what the dead do, how far down the guild reaches, and what
+## can be done to a ghost afterwards. `seance` has no nodes yet and is listed
+## anyway, so it appears in the right place on the day it does.
+const GROUP_ORDER := ["hero", "ghosts", "descent", "seance"]
 ## A whole group abreast, plus the gaps between the tablets and the plate's
 ## own margins. Too narrow and the flow wraps, which puts the second group
 ## below the fold and the screen starts scrolling again.
@@ -13,9 +24,14 @@ const WALL_WIDTH := UpgradePlaque.COLUMNS * UpgradePlaque.PLAQUE_SIZE.x 	+ (Upgr
 
 var game: GameRoot
 var rows: Dictionary = {}
+## One per slot, in flight or open. Empty until the Descent upgrade is bought.
+var slots: Array[ExpeditionLine] = []
 
 var _groups: Dictionary = {}
 var _group_order: Array[String] = []
+var _band: Control
+var _band_slots: VBoxContainer
+var _wall: VBoxContainer
 
 
 func _init() -> void:
@@ -31,12 +47,23 @@ func bind(g: GameRoot) -> void:
 		g.soul_changed.connect(_on_soul_changed)
 	if not g.ladder_changed.is_connected(refresh):
 		g.ladder_changed.connect(refresh)
+	if not g.expeditions_changed.is_connected(refresh):
+		g.expeditions_changed.connect(refresh)
 	refresh()
 
 
 ## One section per group, in GROUP_ORDER; any group the data introduces that
 ## the order does not name is appended after, so new content still shows up.
 func _build() -> void:
+	_build_band()
+	_wall = VBoxContainer.new()
+	_wall.add_theme_constant_override("separation", 12)
+	_wall.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.add_child(_wall)
+	add_child(scroll)
 	for group in GROUP_ORDER:
 		if _has_group(group):
 			_add_group(group)
@@ -51,6 +78,24 @@ func _build() -> void:
 		var wall: HFlowContainer = _groups[def2.group]
 		wall.add_child(row)
 		rows[def2.id] = row
+
+
+## Who the guild has in the field, above the wall of what it can buy.
+##
+## Above, because it is the only thing on this screen that changes on its own:
+## a player who opens the Guild while an expedition is out came to look at
+## this, and the upgrades are still there underneath. It is hidden outright
+## until the upgrade is bought, so the screen a new player sees is unchanged.
+func _build_band() -> void:
+	_band_slots = VBoxContainer.new()
+	_band_slots.add_theme_constant_override("separation", 3)
+	var section := VBoxContainer.new()
+	section.add_theme_constant_override("separation", 4)
+	section.add_child(ScreenLayout.section(game.text("ui.expedition.title"), Palette.GHOST))
+	section.add_child(_band_slots)
+	_band = ScreenLayout.plate(section, WALL_WIDTH)
+	_band.visible = false
+	add_child(_band)
 
 
 func _has_group(group: String) -> bool:
@@ -78,7 +123,7 @@ func _add_group(group: String) -> void:
 	section.add_child(ScreenLayout.section(game.text("ui.group.%s" % group),
 		Palette.SOUL if group == "hero" else Palette.GHOST))
 	section.add_child(wall)
-	add_child(ScreenLayout.plate(section, WALL_WIDTH))
+	_wall.add_child(ScreenLayout.plate(section, WALL_WIDTH))
 	_groups[group] = wall
 	_group_order.append(group)
 
@@ -86,6 +131,7 @@ func _add_group(group: String) -> void:
 func refresh() -> void:
 	if game == null or game.campaign == null:
 		return
+	refresh_expeditions()
 	var soul := game.displayed_soul()
 	for id in rows:
 		var def: UpgradeDef = game.content.upgrades[id]
@@ -95,6 +141,32 @@ func refresh() -> void:
 		(rows[id] as UpgradePlaque).bind(game.content, def, level, cost, affordable)
 
 
+## One row per slot -- filled ones first, so an expedition landing does not
+## make the open slot jump over the one still in the field. The row count only
+## changes when the slots upgrade is bought.
+func refresh_expeditions() -> void:
+	var count := Expeditions.slots(game.campaign)
+	_band.visible = count > 0
+	while slots.size() > count:
+		var gone: ExpeditionLine = slots.pop_back()
+		_band_slots.remove_child(gone)
+		gone.queue_free()
+	while slots.size() < count:
+		var line := ExpeditionLine.new()
+		line.send_pressed.connect(_on_send)
+		_band_slots.add_child(line)
+		slots.append(line)
+	var now := game.now()
+	var flying := game.campaign.expeditions
+	for i in slots.size():
+		slots[i].bind(game.content, flying[i] if i < flying.size() else null, now)
+
+
+func _on_send() -> void:
+	game.launch_expedition()
+	refresh()
+
+
 func _on_buy(id: String) -> void:
 	var result := game.buy_upgrade(id)
 	if not bool(result["ok"]):
@@ -102,9 +174,11 @@ func _on_buy(id: String) -> void:
 		refresh()
 
 
-## Affordability tracks the ticking counter, so a row unlocks the moment the
-## ladder has earned enough without the player touching anything.
+## Affordability tracks the ticking counter, and so does the countdown on an
+## expedition in the field -- this signal is the game's only heartbeat, and a
+## bar that only moved when something was bought would be worse than no bar.
 func _on_soul_changed(soul: float, _rate_per_hour: float) -> void:
+	refresh_expeditions()
 	for id in rows:
 		var row: UpgradePlaque = rows[id]
 		var cost := game.campaign.upgrades.cost(game.content, String(id))

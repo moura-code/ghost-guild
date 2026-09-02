@@ -4,6 +4,17 @@ extends RefCounted
 ## per hero: floors already offered to this hero are skipped.
 
 
+## Which of `cards` a fighter with these `rules` would take (spec §3.2: the
+## auto-draft upgrade resolves picks with the hero's priority rules).
+##
+## Estimated rather than simulated -- see `CardValue`. An expedition hero
+## resolves one of these per skipped floor while the game is closed, so a pick
+## that costs a fight is a pick that cannot be made.
+static func auto_pick(content: Content, cards: Array, rules: Array) -> int:
+	return CardValue.best(content, cards, PriorityRules.weights_for(
+		Autopilot.default_weights(), rules, content))
+
+
 static func offers(content: Content, hero: Hero, biome: BiomeDef, entry_floor: int, run_seed: int) -> Array:
 	var out: Array = []
 	var klass: ClassDef = content.classes[hero.class_id]

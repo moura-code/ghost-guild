@@ -16,6 +16,10 @@ signal soul_changed(soul: float, rate_per_hour: float)
 signal ladder_changed()
 signal hero_changed()
 signal run_changed()
+## An expedition was sent, or landed. Distinct from ladder_changed because a
+## slot filling and emptying is a different thing to look at than a ghost
+## arriving, and the Guild is the only screen that cares about the first.
+signal expeditions_changed()
 
 const CONTENT_ROOT := "res://data"
 const REFRESH_HZ := 10.0
@@ -26,7 +30,7 @@ const REFRESH_HZ := 10.0
 var sfx: Sfx
 var content: Content
 var campaign: Campaign
-var offline: Dictionary = {"elapsed": 0, "counted": 0, "capped": false, "soul": 0.0}
+var offline: Dictionary = {"elapsed": 0, "counted": 0, "capped": false, "soul": 0.0, "returned": []}
 var is_booted: bool = false
 var save_path: String = SaveGame.DEFAULT_PATH
 var autosave_seconds: float = 60.0
@@ -75,6 +79,7 @@ func _process(delta: float) -> void:
 	_refresh_accum += delta
 	if _refresh_accum >= 1.0 / REFRESH_HZ:
 		_refresh_accum = 0.0
+		_land_due()
 		soul_changed.emit(displayed_soul(), campaign.rate_per_hour)
 	if autosave_seconds > 0.0:
 		_autosave_accum += delta
@@ -135,6 +140,48 @@ func mend() -> Dictionary:
 	if bool(r["ok"]):
 		_after_mutation()
 	return r
+
+
+## Sends an expedition down (spec §3.5). It costs no Soul: the upgrade was the
+## price, and what it spends is a slot and the clock.
+##
+## The launch does all of the expensive work -- the survival projection, the
+## draft, the strength simulation -- which is exactly why it happens on a click
+## and not on load. See Expeditions.
+func launch_expedition() -> Dictionary:
+	if campaign == null:
+		return {"ok": false, "expedition": null, "reason": "unbooted"}
+	settle()
+	var r := Expeditions.launch(campaign, now())
+	if bool(r["ok"]):
+		if sfx != null:
+			sfx.play("descend")
+		_emit_all()
+		expeditions_changed.emit()
+		save()
+	return r
+
+
+## An expedition that finishes while the player is standing in the guild has
+## to land while they are standing in the guild.
+##
+## Everything else in the campaign settles because the player did something --
+## bought, tended, descended -- and an expedition is the first thing in the
+## game that completes on its own. Without this it would sit at "0s" until the
+## next purchase or the next autosave noticed it, which is the exact shape of
+## a bug even though nothing would be lost.
+func _land_due() -> void:
+	var due := Expeditions.next_due(campaign)
+	if due < 0 or due > now():
+		return
+	var result := settle()
+	if (result.get("returned", []) as Array).is_empty():
+		return
+	if sfx != null:
+		sfx.play("ghost_place")
+	_emit_all()
+	expeditions_changed.emit()
+	save()
 
 
 ## Starts a descent. CampaignEngine validates the entry floor against reach

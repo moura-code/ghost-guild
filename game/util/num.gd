@@ -51,6 +51,21 @@ static func duration(seconds: int) -> String:
 	return "%dm" % minutes
 
 
+## A clock the player is watching, rather than a span being reported.
+##
+## `duration` rounds to whole minutes, which is right for "you were away for
+## 8h" and wrong for a bar with forty seconds left on it -- a countdown that
+## reads "0m" for a whole minute looks stuck, and the one thing this number
+## has to do is keep moving.
+static func countdown(seconds: int) -> String:
+	var s := maxi(0, seconds)
+	if s >= 3600:
+		return "%dh %dm" % [s / 3600, (s % 3600) / 60]
+	if s >= 60:
+		return "%dm %ds" % [s / 60, s % 60]
+	return "%ds" % s
+
+
 static func _trim(a: float) -> String:
 	var rounded := roundf(a * 10.0) / 10.0
 	if is_equal_approx(rounded, roundf(rounded)):

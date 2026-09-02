@@ -104,7 +104,7 @@ func marginal_yield(floor: int, candidate_strength: float, balance: Dictionary, 
 func waypoint() -> int:
 	var deepest := 0
 	for g in ghosts:
-		if g.kind == "true" and g.floor > deepest:
+		if g.is_true() and g.floor > deepest:
 			deepest = g.floor
 	return deepest
 

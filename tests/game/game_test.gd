@@ -147,3 +147,67 @@ func test_finish_run_banks_the_outcome_and_clears_the_run() -> void:
 	var result := g.finish_run()
 	assert_str(String(result["kind"])).is_equal("retreat")
 	assert_object(g.campaign.run).is_null()
+
+
+func _sending(g: GameRoot) -> void:
+	g.campaign.upgrades.levels["expedition"] = 1
+	g.campaign.sim_fights = 2
+	g.content.balance["expedition_seconds_per_floor"] = 60
+	g.content.balance["expedition_samples"] = 1
+	g.content.balance["expedition_sim_fights"] = 2
+
+
+func test_nobody_is_sent_before_the_upgrade_is_bought() -> void:
+	var g := _fresh()
+	g.boot()
+	var r := g.launch_expedition()
+	assert_bool(bool(r["ok"])).is_false()
+	assert_str(String(r["reason"])).is_equal("locked")
+
+
+func test_launching_reports_it_and_writes_it_to_disk() -> void:
+	var g := _fresh()
+	g.boot()
+	_sending(g)
+	var seen := [0]
+	g.expeditions_changed.connect(func() -> void: seen[0] += 1)
+	assert_bool(bool(g.launch_expedition()["ok"])).is_true()
+	assert_int(seen[0]).is_equal(1)
+	var back := SaveGame.load_campaign(g.content, TMP)
+	assert_array(back.expeditions).has_size(1)
+
+
+## An expedition is the first thing in the game that finishes without the
+## player doing anything, so the frame loop has to notice it.
+func test_an_expedition_lands_while_the_game_is_running() -> void:
+	var g := _fresh()
+	g.boot()
+	_sending(g)
+	g.launch_expedition()
+	var e: Expedition = g.campaign.expeditions[0]
+	var seen := [0]
+	g.expeditions_changed.connect(func() -> void: seen[0] += 1)
+	g.clock = func() -> int: return e.done_at() + 1
+	var before := g.campaign.ladder.ghosts.size()
+	g._process(1.0)
+	assert_array(g.campaign.expeditions).is_empty()
+	assert_int(g.campaign.ladder.ghosts.size()).is_equal(before + 1)
+	assert_int(seen[0]).is_equal(1)
+	# And it does not keep announcing an arrival that already happened.
+	g._process(1.0)
+	assert_int(seen[0]).is_equal(1)
+
+
+func test_an_expedition_that_landed_while_the_game_was_closed_is_reported() -> void:
+	var g := _fresh()
+	g.boot()
+	_sending(g)
+	g.launch_expedition()
+	var e: Expedition = g.campaign.expeditions[0]
+	g.save()
+	var again := _fresh()
+	again.clock = func() -> int: return e.done_at() + 60
+	var r := again.boot()
+	var offline: Dictionary = r["offline"]
+	assert_array(offline["returned"]).has_size(1)
+	assert_array(again.campaign.expeditions).is_empty()

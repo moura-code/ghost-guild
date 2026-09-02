@@ -8,7 +8,7 @@ extends SceneTree
 ##   godot --path . --rendering-method forward_plus --resolution 1280x720 \
 ##         -s tools/hud_shot.gd -- <out.png> <mode> [frames]
 ##
-## Modes: walk, fight, reward, guild, panel, exit, watch.
+## Modes: walk, fight, reward, guild, panel, expedition, offline, exit, watch.
 ##
 ## Runs against a throwaway save, so it never touches the player's campaign.
 
@@ -42,7 +42,23 @@ func _init() -> void:
 	match mode:
 		"guild":
 			pass
-		"panel":
+		"offline":
+			# A night away that finished an expedition, which is the version
+			# of this screen with something on it worth reading.
+			var hero := Hero.create(game.content, "sexton", "Halvard", {}, 1)
+			game.offline = {"elapsed": 30_000, "counted": 28_800, "capped": true,
+				"soul": 1840.0, "returned": [Ghost.from_expedition(hero, 4, 0)]}
+			crawl._maybe_show_offline()
+		"panel", "expedition":
+			if mode == "expedition":
+				# One slot in the field and one open, which is the state the
+				# band spends most of its life in.
+				game.campaign.upgrades.levels["expedition"] = 1
+				game.campaign.upgrades.levels["expedition_slots"] = 1
+				game.campaign.sim_fights = 2
+				game.content.balance["expedition_samples"] = 1
+				game.content.balance["expedition_sim_fights"] = 2
+				game.launch_expedition()
 			var station := crawl.guild.station(GuildRoom.TABLE)
 			station.enter(crawl.player)
 			station.use()

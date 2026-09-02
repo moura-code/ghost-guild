@@ -119,7 +119,7 @@ func bind(content: Content, ghost: Ghost, ctx: Dictionary) -> void:
 		_floor.value = float(ghost.floor)
 		_floor_seeded = true
 
-	var is_true := ghost.kind == "true"
+	var is_true := ghost.is_true()
 	_echo.visible = is_true
 	_call.visible = not is_true
 	_tend.visible = is_true and ghost.restless

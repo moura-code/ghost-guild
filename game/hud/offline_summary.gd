@@ -22,6 +22,8 @@ var _title: Label
 var _away: Label
 var _earned: Label
 var _capped: Label
+var _returned_head: Control
+var _returned: VBoxContainer
 var _button: Button
 var _earned_ticker: Ticker
 var _motes: CPUParticles2D
@@ -35,6 +37,10 @@ func _init() -> void:
 ## even if the ladder was empty and earned nothing.
 static func should_show(offline: Dictionary) -> bool:
 	if bool(offline.get("capped", false)):
+		return true
+	# A ghost arrived. That is news at any Soul figure, and it is the whole
+	# reason the player left an expedition running before they closed the game.
+	if not (offline.get("returned", []) as Array).is_empty():
 		return true
 	var counted := int(offline.get("counted", 0))
 	var soul := float(offline.get("soul", 0.0))
@@ -82,6 +88,15 @@ func _build() -> void:
 	_capped = ScreenLayout.centre(UiTheme.small("", Palette.PREPARED))
 	_capped.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_capped)
+
+	# What the guild did while nobody was watching. The Soul figure above is
+	# the reward for having ghosts; this is the reward for having sent
+	# somebody, and it is the only report the player ever gets of it.
+	_returned_head = ScreenLayout.section("", Palette.GHOST)
+	box.add_child(_returned_head)
+	_returned = VBoxContainer.new()
+	_returned.add_theme_constant_override("separation", 2)
+	box.add_child(_returned)
 
 	# Two candles burning on the card. Coming back to the game is supposed
 	# to feel like finding the guild still lit.
@@ -146,4 +161,31 @@ func bind(content: Content, offline: Dictionary) -> void:
 	_earned_ticker.to(float(offline.get("soul", 0.0)))
 	_capped.text = content.text("ui.offline.capped")
 	_capped.visible = capped
+	_bind_returned(content, offline.get("returned", []) as Array)
 	_button.text = content.text("ui.offline.dismiss")
+
+
+## One line per ghost the guild placed while the game was closed, each with
+## the silhouette that is now standing in the tower.
+func _bind_returned(content: Content, ghosts: Array) -> void:
+	for old in _returned.get_children():
+		_returned.remove_child(old)
+		old.queue_free()
+	ScreenLayout.section_text(_returned_head, content.text("ui.offline.expeditions"))
+	_returned_head.visible = not ghosts.is_empty()
+	_returned.visible = not ghosts.is_empty()
+	for entry in ghosts:
+		var ghost := entry as Ghost
+		if ghost == null:
+			continue
+		var row := HBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_theme_constant_override("separation", 6)
+		var mark := GhostMark.new()
+		mark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		mark.bind(ghost)
+		row.add_child(mark)
+		row.add_child(UiTheme.body(content.text("ui.expedition.returned")
+			.replace("{name}", ghost.name).replace("{floor}", str(ghost.floor)),
+			Palette.GHOST))
+		_returned.add_child(row)

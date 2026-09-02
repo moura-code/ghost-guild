@@ -5,8 +5,14 @@
   "base_draw": 5,
   "hand_limit": 10,
   "turn_cap": 30,
-  "focus_draw_thresholds": [3, 9],
-  "focus_energy_thresholds": [6, 12],
+  "focus_draw_thresholds": [
+    3,
+    9
+  ],
+  "focus_energy_thresholds": [
+    6,
+    12
+  ],
   "weak_multiplier": 0.75,
   "vulnerable_multiplier": 1.5,
   "soul_per_kill_growth": 1.3,
@@ -15,7 +21,11 @@
   "coin_elite_multiplier": 2.0,
   "coin_boss_multiplier": 3.0,
   "coin_to_soul": 0.1,
-  "reward_rarity_weights": {"common": 60, "uncommon": 30, "rare": 10},
+  "reward_rarity_weights": {
+    "common": 60,
+    "uncommon": 30,
+    "rare": 10
+  },
   "rest_heal_percent": 0.3,
   "shop_card_count": 3,
   "shop_card_price": 50,
@@ -42,5 +52,10 @@
   "ghost_respawn_seconds": 20,
   "ghost_loss_seconds": 120,
   "strength_sim_fights": 50,
-  "strength_blend_k": 3
+  "strength_blend_k": 3,
+  "expedition_seconds_per_floor": 120,
+  "expedition_speed_step": 0.2,
+  "expedition_survival": 0.65,
+  "expedition_samples": 4,
+  "expedition_sim_fights": 12
 }

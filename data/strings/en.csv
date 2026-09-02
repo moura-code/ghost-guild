@@ -130,6 +130,8 @@ ui.guild,Guild
 ui.maxed,Maxed
 ui.group.hero,Hero
 ui.group.ghosts,Ghosts
+ui.group.descent,Descent
+ui.group.seance,Séance
 ui.seance,Séance
 ui.seance.rites,Rites
 ui.seance.dead,Your Dead
@@ -293,3 +295,19 @@ ui.watch.back,Back
 ui.watch.none,No orders. They will fight as anyone would.
 ui.watch.order,They will fight by: {rules}
 ui.ghost.doctrine,Fights by: {rules}
+upgrade.auto_draft.name,Standing Orders
+upgrade.auto_draft.text,Descent picks resolve themselves by your priority rules.
+upgrade.expedition.name,Expeditions
+upgrade.expedition.text,The guild sends a hero down on its own. They take the watch where they can hold.
+upgrade.expedition_slots.name,A Larger Guild
+upgrade.expedition_slots.text,One more expedition in the field at a time.
+upgrade.expedition_speed.name,Sure Footing
+upgrade.expedition_speed.text,Expeditions travel faster.
+epitaph.expedition,"{name} was sent down, and holds Floor {floor}"
+ui.expedition.title,Expeditions
+ui.expedition.send,Send
+ui.expedition.none,An empty slot
+ui.expedition.away,{name} is descending to Floor {floor}
+ui.expedition.returns,takes the watch in {time}
+ui.expedition.returned,{name} holds Floor {floor}
+ui.offline.expeditions,Expeditions returned

@@ -137,7 +137,7 @@ func focus_rect() -> Rect2:
 func _refresh_premise() -> void:
 	var deepest: Ghost = null
 	for ghost in game.campaign.ladder.ghosts:
-		if ghost.kind != "true":
+		if not ghost.is_true():
 			continue
 		if deepest == null or ghost.floor > deepest.floor:
 			deepest = ghost

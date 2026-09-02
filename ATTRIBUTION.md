@@ -27,6 +27,8 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/card_art/dig_in.svg` — *dig-hole*
 - `assets/icons/upgrade/ghost_spawn.svg` — *dig-hole* (the same glyph, reused:
   Deeper Burrows digs more of the floor out, which is the same idea)
+- `assets/icons/upgrade/expedition.svg` — *hiking*
+- `assets/icons/upgrade/expedition_slots.svg` — *three-friends*
 - `assets/icons/card_art/grave_coin.svg` — *two-coins*
 - `assets/icons/card_art/grave_moss.svg` — *grass*
 - `assets/icons/card_art/lantern_oil.svg` — *oil-can*
@@ -63,6 +65,8 @@ black, which then multiplies to black under any tint). No other changes.
 ### lorc
 
 - `assets/icons/card/attack.svg` — *sword-hilt*
+- `assets/icons/upgrade/auto_draft.svg` — *scroll-unfurled*
+- `assets/icons/upgrade/expedition_speed.svg` — *walking-boot*
 - `assets/icons/card/power.svg` — *flat-star*
 - `assets/icons/card_art/ashes.svg` — *burning-embers*
 - `assets/icons/card_art/bone_shard.svg` — *bone-knife*

@@ -87,3 +87,40 @@ func test_soul_rises_behind_the_card() -> void:
 	assert_bool(s._motes.emitting).is_true()
 	# Behind the card, or it draws over the number it is celebrating.
 	assert_int(s.get_children().find(s._motes)).is_equal(0)
+
+
+func _ghost(name: String, floor: int) -> Ghost:
+	var hero := Hero.create(_content(), "sexton", name, {}, 1)
+	return Ghost.from_expedition(hero, floor, 0)
+
+
+func test_it_reports_the_ghosts_the_guild_placed_while_you_were_gone() -> void:
+	var p := _panel({"elapsed": 7200, "counted": 7200, "capped": false, "soul": 90.0,
+		"returned": [_ghost("Wren", 4), _ghost("Cass", 2)]})
+	await await_idle_frame()
+	assert_bool(p._returned_head.visible).is_true()
+	assert_array(p._returned.get_children()).has_size(2)
+	var first: HBoxContainer = p._returned.get_child(0)
+	assert_str((first.get_child(1) as Label).text).contains("Wren")
+	assert_str((first.get_child(1) as Label).text).contains("4")
+
+
+func test_the_section_stays_out_of_the_way_when_nobody_was_sent() -> void:
+	var p := _panel({"elapsed": 7200, "counted": 7200, "capped": false, "soul": 90.0})
+	await await_idle_frame()
+	assert_bool(p._returned_head.visible).is_false()
+	assert_array(p._returned.get_children()).is_empty()
+
+
+func test_a_ghost_arriving_is_worth_showing_however_little_it_earned() -> void:
+	assert_bool(OfflineSummary.should_show({"elapsed": 300, "counted": 300,
+		"capped": false, "soul": 0.1, "returned": [_ghost("Wren", 1)]})).is_true()
+
+
+func test_rebinding_does_not_stack_the_same_arrivals_twice() -> void:
+	var p := _panel({"elapsed": 60, "counted": 60, "capped": false, "soul": 1.0,
+		"returned": [_ghost("Wren", 4)]})
+	p.bind(_content(), {"elapsed": 60, "counted": 60, "capped": false, "soul": 1.0,
+		"returned": [_ghost("Cass", 2)]})
+	await await_idle_frame()
+	assert_array(p._returned.get_children()).has_size(1)

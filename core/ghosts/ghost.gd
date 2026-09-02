@@ -58,6 +58,40 @@ static func from_run(hero: Hero, outcome: Dictionary, p_measured: Dictionary, p_
 	return g
 
 
+## The guild's own dead (spec §3.5). A true ghost for every purpose that
+## matters -- the waypoint, echoes -- but NOT prepared: only manual play earns
+## the +25%, which is the whole reason to still play the game yourself.
+static func from_expedition(hero: Hero, p_floor: int, p_created_at: int) -> Ghost:
+	var g := Ghost.new()
+	g.name = hero.name
+	g.class_id = hero.class_id
+	for card in hero.deck:
+		g.deck.append(card.clone())
+	g.relics = hero.relics.duplicate()
+	for key in hero.stats:
+		g.stats[key] = int(hero.stats[key])
+	g.max_hp = hero.max_hp
+	g.floor = p_floor
+	g.kind = "expedition"
+	g.cause = "watch"
+	g.prepared = false
+	g.restless = false
+	g.created_at = p_created_at
+	g.rules = hero.rules.duplicate()
+	g.epitaph_key = "epitaph.expedition"
+	return g
+
+
+## Whether this ghost counts as one of the guild's own rather than as a copy.
+##
+## Spec §5.1: an expedition ghost "counts as true for the waypoint and as an
+## echo source". There were six scattered `kind == "true"` checks before this
+## existed, and adding a second true-ish kind to all six independently is how a
+## ghost ends up real on one screen and a copy on the next.
+func is_true() -> bool:
+	return kind == "true" or kind == "expedition"
+
+
 static func founder(content: Content, p_created_at: int) -> Ghost:
 	var klass: ClassDef = content.classes["sexton"]
 	var g := Ghost.new()
