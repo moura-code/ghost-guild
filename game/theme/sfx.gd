@@ -30,7 +30,18 @@ const CATALOGUE := [
 	"turn_start", "descend", "floor_clear",
 	"soul", "purchase",
 	"epitaph", "ghost_place",
+	"step_a", "step_b", "step_c",
 ]
+
+## The footstep variants, in rotation order. Three and not one because a
+## corridor is thirty footfalls long: a single sample at three per second
+## stops being a footstep and becomes a rhythm, which is the fastest way to
+## make walking read as a machine rather than as a person.
+const STEPS := ["step_a", "step_b", "step_c"]
+
+## Feet are the most repeated sound in the game by an order of magnitude. At
+## the level of a blow landing they would be the entire mix.
+const STEP_LEVEL := 0.34
 
 ## Room tone. Separate from the catalogue because it is played on its own
 ## looping voice rather than from the pool, and because it is the one sound
@@ -81,7 +92,7 @@ func _ready() -> void:
 ## Plays `id`, or does nothing if there is no such sound. Silence is always
 ## the failure mode -- content and screens will ask for sounds that do not
 ## exist yet and that must never interrupt a fight.
-func play(id: String, pitch: float = 1.0) -> void:
+func play(id: String, pitch: float = 1.0, level: float = 1.0) -> void:
 	if muted or _players.is_empty():
 		return
 	var stream := _stream(id)
@@ -90,7 +101,7 @@ func play(id: String, pitch: float = 1.0) -> void:
 	var player := _players[_next]
 	_next = (_next + 1) % _players.size()
 	player.stream = stream
-	player.volume_db = linear_to_db(maxf(0.0001, volume))
+	player.volume_db = linear_to_db(maxf(0.0001, volume * clampf(level, 0.0, 1.0)))
 	# A little variation, so ten identical blows in a row do not read as one
 	# sound repeating -- which is what makes a hit sound cheap.
 	player.pitch_scale = clampf(pitch, 0.5, 2.0)
@@ -109,6 +120,20 @@ func hit(amount: int) -> void:
 ## The same threshold the animator uses for hit-stop and shake, so the ear
 ## and the eye agree about which blows were the heavy ones.
 const BIG_HIT := 10
+
+
+## Which variant footfall number `index` uses. Pure, and separate from `step`,
+## because the rotation is the part worth asserting and the audio server is
+## the part a headless suite cannot hear.
+static func step_sound(index: int) -> String:
+	return STEPS[posmod(index - 1, STEPS.size())]
+
+
+## A foot on stone. `index` is the footfall number from `Player.footfall`; the
+## pitch jitter on top of the rotation is what stops even three samples
+## reading as a loop over a long corridor.
+func step(index: int) -> void:
+	play(step_sound(index), randf_range_pitch(0.90, 1.12), STEP_LEVEL)
 
 
 ## Deterministic enough for a game that replays from a seed: this varies the

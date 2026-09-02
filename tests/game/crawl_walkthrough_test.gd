@@ -283,3 +283,13 @@ func test_options_from_the_title_go_back_to_the_title() -> void:
 	assert_object(c.panel).is_same(c.options)
 	_escape(c)
 	assert_object(c.panel).is_same(c.title)
+
+
+func test_the_body_that_walks_the_guild_is_wired_to_the_sound_that_answers_it() -> void:
+	# The one link in the footstep chain that is neither Stride's maths nor
+	# Sfx's rotation: that Crawl actually connected the two. It has exactly one
+	# failure mode -- silence -- and silence is the hardest bug to notice.
+	var c := _crawl(_game())
+	assert_object(c.player).is_not_null()
+	assert_bool(c.player.footfall.is_connected(c.game.sfx.step)) \
+		.override_failure_message("nothing is listening to the player's feet").is_true()

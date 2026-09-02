@@ -61,13 +61,16 @@ static func build(layout: FloorLayout, parent: Node3D) -> Dictionary:
 	var boxes := wall_boxes(layout)
 	parent.add_child(_collision(layout, boxes))
 
-	var torches := Node3D.new()
+	# A `Torches` rather than a plain Node3D: the group the builder was already
+	# making is also the right place to drive the flicker from, so it costs one
+	# _process per floor and dies with the floor rather than outliving it.
+	var torches := Torches.new()
 	torches.name = "Torches"
 	parent.add_child(torches)
 	for raw in layout.torch_anchors:
 		var light := torch_light(layout, raw)
 		if light != null:
-			torches.add_child(light)
+			torches.adopt(light)
 
 	return {
 		"floors": floors.size(),

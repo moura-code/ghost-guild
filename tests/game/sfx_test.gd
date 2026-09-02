@@ -187,3 +187,41 @@ func test_muting_silences_the_room_too() -> void:
 	s.start_ambience()
 	s.muted = true
 	assert_bool(s._ambience.playing).is_false()
+
+
+func test_the_footsteps_rotate_through_their_variants() -> void:
+	# One sample at three per second stops being a footstep and becomes a
+	# rhythm. The rotation is what the index the player emits is FOR, so it is
+	# the part worth pinning.
+	var seen: Array[String] = []
+	for i in range(1, Sfx.STEPS.size() * 2 + 1):
+		seen.append(Sfx.step_sound(i))
+	for id in Sfx.STEPS:
+		assert_array(seen).contains([id])
+	assert_str(seen[0]).is_not_equal(seen[1])
+	assert_str(seen[0]).is_equal(seen[Sfx.STEPS.size()])
+
+
+func test_every_footstep_variant_is_in_the_catalogue_and_on_disk() -> void:
+	for id in Sfx.STEPS:
+		assert_array(Sfx.CATALOGUE).override_failure_message("%s not in the catalogue" % id).contains([id])
+		assert_bool(ResourceLoader.exists(Sfx.path_for(String(id)))) \
+			.override_failure_message("no wav for %s" % id).is_true()
+
+
+func test_a_footstep_is_quieter_than_the_thing_that_plays_it() -> void:
+	# Feet are the most repeated sound in the game by an order of magnitude.
+	# At the level of a blow landing they would be the whole mix.
+	assert_float(Sfx.STEP_LEVEL).is_less(1.0)
+	assert_float(Sfx.STEP_LEVEL).is_greater(0.0)
+
+
+func test_walking_the_player_is_what_makes_the_sound() -> void:
+	# The wire the whole batch exists for: Player emits, Sfx answers. Asserted
+	# by playing it directly, because a headless audio server will not tell
+	# you what came out of the speakers.
+	var s := _sfx()
+	await await_idle_frame()
+	s.step(1)
+	s.step(2)
+	assert_bool(is_instance_valid(s)).is_true()

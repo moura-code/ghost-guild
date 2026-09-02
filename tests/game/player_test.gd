@@ -145,3 +145,99 @@ func test_escape_does_not_steal_the_cursor_back_from_a_panel() -> void:
 	escape.pressed = true
 	p._unhandled_input(escape)
 	assert_int(Input.get_mouse_mode()).is_equal(Input.MOUSE_MODE_VISIBLE)
+
+
+## Feet and head. The bob maths live in `Stride` where they can be checked
+## exactly; what is left here is the wiring -- that really walking a real body
+## through the real physics server really produces footfalls, and that the
+## head both moves while you walk and comes back to rest when you stop.
+func test_walking_a_corridor_puts_feet_on_the_ground() -> void:
+	var p := _player()
+	_floor_under(p)
+	p.place_at(Vector3.ZERO, 0.0)
+	await await_millis(200)
+	var heard: Array[int] = []
+	p.footfall.connect(func(index: int) -> void: heard.append(index))
+	Input.action_press("move_forward")
+	await await_millis(900)
+	Input.action_release("move_forward")
+	await await_millis(60)
+	# Distance walked divided by a stride, give or take the acceleration ramp.
+	assert_int(heard.size()).override_failure_message("silent feet over %f m" % absf(p.position.z)).is_greater(1)
+	assert_int(heard.size()).is_less(12)
+	# Numbered, and in order: the sound picker rotates through variants by
+	# index, so a repeated or skipped index is a footstep that machine-guns.
+	for i in heard.size():
+		assert_int(heard[i]).is_equal(i + 1)
+
+
+func test_standing_still_makes_no_sound() -> void:
+	var p := _player()
+	_floor_under(p)
+	p.place_at(Vector3.ZERO, 0.0)
+	var heard := 0
+	p.footfall.connect(func(_index: int) -> void: heard += 1)
+	await await_millis(500)
+	assert_int(heard).override_failure_message("footsteps while standing still").is_equal(0)
+
+
+func test_a_frozen_body_does_not_walk_on_the_spot() -> void:
+	# A fight freezes the body. Feet that keep going through a staged fight is
+	# the sound of the game running behind the player's back.
+	var p := _player()
+	_floor_under(p)
+	p.place_at(Vector3.ZERO, 0.0)
+	p.frozen = true
+	await await_millis(150)
+	var heard := 0
+	p.footfall.connect(func(_index: int) -> void: heard += 1)
+	Input.action_press("move_forward")
+	await await_millis(500)
+	Input.action_release("move_forward")
+	assert_int(heard).is_equal(0)
+
+
+func test_the_head_moves_while_you_walk_and_settles_when_you_stop() -> void:
+	var p := _player()
+	_floor_under(p)
+	p.place_at(Vector3.ZERO, 0.0)
+	await await_millis(200)
+	assert_float(p.head.position.y).override_failure_message("head not at rest before walking").is_equal_approx(Player.EYE, 0.001)
+	var low := Player.EYE
+	var high := -1.0
+	Input.action_press("move_forward")
+	for i in 40:
+		await await_millis(16)
+		low = minf(low, p.head.position.y)
+		high = maxf(high, p.head.position.y)
+	Input.action_release("move_forward")
+	assert_float(high - low).override_failure_message("the head never moved").is_greater(0.015)
+	# And it is a bob, not a drift: bounded by the envelope Stride states.
+	assert_float(high - low).is_less_equal(Stride.BOB_DOWN + 0.0001)
+	await await_millis(700)
+	assert_float(p.head.position.y).override_failure_message("head never settled").is_equal_approx(Player.EYE, 0.003)
+
+
+func test_placing_the_player_puts_the_head_back_where_it_belongs() -> void:
+	# place_at is used on every descent and every retreat. A head left mid-dip
+	# would put the camera below eye level for the whole next floor.
+	var p := _player()
+	p.head.position = Vector3(0.02, Player.EYE - 0.03, 0.0)
+	p.place_at(Vector3(3.0, 0.0, 3.0), 0.0)
+	assert_vector(p.head.position).is_equal_approx(Vector3(0.0, Player.EYE, 0.0), Vector3.ONE * 0.0001)
+
+
+func test_the_torch_you_carry_is_a_flame_and_not_a_lamp() -> void:
+	# The only light within arm's reach of the camera. Held at a constant
+	# energy it is the one thing in the frame that gives away that nothing in
+	# this room is actually burning.
+	var p := _player()
+	var seen: Array[float] = []
+	for i in 20:
+		await await_idle_frame()
+		seen.append(p.torch.light_energy)
+	var low := seen.min() as float
+	var high := seen.max() as float
+	assert_float(high - low).override_failure_message("the hero torch is a lamp").is_greater(0.0)
+	assert_float(low).is_greater_equal(Player.TORCH_ENERGY * Flame.LOW - 0.001)
+	assert_float(high).is_less_equal(Player.TORCH_ENERGY * Flame.HIGH + 0.001)

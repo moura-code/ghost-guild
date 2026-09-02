@@ -155,6 +155,65 @@ def drip(at, seconds, length, gain, rng):
     return out
 
 
+
+def svf(samples, cutoff, q=1.2, mode="low"):
+    """A Chamberlin state-variable filter: lowpass, bandpass or highpass in one
+    pass.
+
+    This is the part the original set did not have, and it is the difference
+    between a sound with a *body* and a beep. Noise on its own is static;
+    noise with a resonance is a material -- the same burst at 700 Hz is a boot
+    on stone and at 2.6 kHz is the grit it scuffed up.
+    """
+    f = 2.0 * math.sin(math.pi * min(cutoff, RATE * 0.45) / RATE)
+    damp = min(1.0, 1.0 / max(0.5, q))
+    low = band = 0.0
+    out = []
+    for x in samples:
+        high = x - low - damp * band
+        band += f * high
+        low += f * band
+        out.append({"low": low, "band": band, "high": high}[mode])
+    return out
+
+
+def burst(seconds, rng, gain=1.0, attack=0.002, release=0.9, curve=3.0):
+    """Raw enveloped white noise, before a filter gives it a material."""
+    total = int(RATE * seconds)
+    return [rng.uniform(-1.0, 1.0) * gain * env(i, total, attack, release, curve)
+            for i in range(total)]
+
+
+def gained(samples, gain):
+    return [value * gain for value in samples]
+
+
+def build_footsteps(rng):
+    """A boot on wet stone, three times.
+
+    Three and not one because a corridor is thirty footfalls long and a single
+    sample repeating at three per second stops being a footstep and becomes a
+    rhythm -- the fastest way to make walking read as a machine. Three
+    variants plus the pitch jitter `Sfx.step` adds is enough that the ear
+    stops hearing a loop.
+
+    Each is a low body (the heel taking weight, filtered down to where stone
+    lives) under a short bright scuff (the grit it drags). The variants differ
+    in where the body sits and how much grit there is, which is what makes
+    them siblings rather than three unrelated noises.
+    """
+    out = {}
+    for name, body_hz, grit_hz, grit_gain, length in [
+        ("step_a", 620.0, 2400.0, 0.16, 0.115),
+        ("step_b", 520.0, 2900.0, 0.11, 0.098),
+        ("step_c", 720.0, 2150.0, 0.20, 0.126),
+    ]:
+        body = svf(burst(length, rng, release=0.85, curve=3.2), body_hz, q=1.6, mode="low")
+        grit = svf(burst(length * 0.42, rng, release=0.95, curve=4.0), grit_hz, q=2.4, mode="band")
+        out[name] = mix(gained(body, 0.42), gained(grit, grit_gain))
+    return out
+
+
 def build_ambience(rng):
     """Room tone. One eight-second loop, quiet enough to be noticed only when
     it stops -- which is the whole job of ambience. A crypt is not silent, it
@@ -252,6 +311,9 @@ def main():
     rng = random.Random(SEED)
     sounds = build(rng)
     sounds.update(build_ambience(random.Random(SEED + 1)))
+    # Its own stream, so adding a sound never shifts the random draws
+    # behind an existing one and silently makes it a different sound.
+    sounds.update(build_footsteps(random.Random(SEED + 2)))
     wanted = sys.argv[1:] or list(sounds)
     unknown = [w for w in wanted if w not in sounds]
     if unknown:

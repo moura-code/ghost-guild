@@ -549,6 +549,10 @@ func _place_player(at: Vector3, yaw: float = 0.0) -> void:
 	if player == null:
 		player = Player.new()
 		player.name = "Player"
+		# The body counts its own footfalls; what one sounds like is the
+		# HUD-side decision, so the wire is made here rather than in Player.
+		if game != null and game.sfx != null:
+			player.footfall.connect(game.sfx.step)
 		add_child(player)
 	player.place_at(at, yaw)
 
