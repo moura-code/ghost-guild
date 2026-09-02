@@ -6,13 +6,14 @@ extends RefCounted
 
 
 static func start_run(content: Content, hero: Hero, entry_floor: int, run_seed: int,
-		watch_unlocked: bool, claimed_pools: Array = []) -> RunState:
+		watch_unlocked: bool, claimed_pools: Array = [], blessing: float = 1.0) -> RunState:
 	var run := RunState.new()
 	run.content = content
 	run.hero = hero
 	run.run_seed = run_seed
 	for pool in claimed_pools:
 		run.claimed_pools.append(String(pool))
+	run.blessing = blessing
 	run.entry_floor = entry_floor
 	run.floor = entry_floor
 	run.watch_unlocked = watch_unlocked

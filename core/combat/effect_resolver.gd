@@ -54,10 +54,22 @@ static func _enemy_targets(s: FightState, e: Dictionary, ctx: Dictionary) -> Arr
 	return out
 
 
+## Applies the Blessing to a number. Exactly the identity at 1.0 -- integer
+## in, integer out, no rounding drift -- which is what lets every demo in the
+## repo stay byte-identical until a player prestiges.
+static func blessed(amount: int, blessing: float) -> int:
+	if is_equal_approx(blessing, 1.0):
+		return amount
+	return int(round(float(amount) * blessing))
+
+
 static func _damage(s: FightState, e: Dictionary, ctx: Dictionary) -> void:
 	var base := _amount(e, "amount", ctx)
 	if String(e.get("scale", "")) == "might":
 		base += s.might()
+	# The Legend's Blessing, after Might rather than before it: it multiplies
+	# what the hero deals, which is the card plus the stat (spec §4.4).
+	base = blessed(base, s.blessing)
 	var hits := int(e.get("hits", 1))
 	var is_attack := bool(ctx.get("is_attack", false))
 	var tags: Array = ctx.get("tags", [])
@@ -70,6 +82,7 @@ static func _block(s: FightState, e: Dictionary, ctx: Dictionary) -> void:
 	var amount := _amount(e, "amount", ctx)
 	if String(e.get("scale", "")) == "wit":
 		amount += s.wit()
+	amount = blessed(amount, s.blessing)
 	s.hero_block += amount
 	s.emit({"type": "block_gained", "target": "hero", "amount": amount})
 

@@ -139,7 +139,8 @@ func refresh() -> void:
 ## nothing, because at that point the answer is "die first" and a row of dead
 ## buttons says that better than a sentence would.
 func _refresh_classes(hero: Hero) -> void:
-	var open := Classes.unlocked(game.content, game.campaign.ladder)
+	var open := Classes.unlocked(game.content, game.campaign.ladder,
+		game.campaign.claimed_biomes)
 	var committed := hero.runs > 0 or game.campaign.run != null
 	for id in class_rows:
 		var button: Button = class_rows[id]

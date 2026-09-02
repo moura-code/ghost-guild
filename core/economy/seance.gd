@@ -37,7 +37,7 @@ static func mend_cost(c: Campaign) -> float:
 static func echo_strength(c: Campaign, source: Ghost, floor: int) -> float:
 	# An echo of a ghost fights the way that ghost fights: the rules travel
 	# with the copy, or an echo is a different fighter wearing its deck.
-	var sim := Strength.simulate(c.content, source.snapshot(), c.biome_at(floor), floor, hash([c.campaign_seed, "echo", source.id, floor]), c.sim_fights, source.rules)
+	var sim := Strength.simulate(c.content, CampaignEngine.blessed_snapshot(c, source), c.biome_at(floor), floor, hash([c.campaign_seed, "echo", source.id, floor]), c.sim_fights, source.rules)
 	var simulated := Strength.from_stats(float(sim["win_rate"]), float(sim["avg_turns"]), c.balance())
 	return float(c.balance().get("echo_factor", 0.75)) * minf(source.strength, simulated)
 

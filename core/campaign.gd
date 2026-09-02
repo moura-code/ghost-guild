@@ -19,6 +19,16 @@ var expedition_counter: int = 0
 ## In flight. Empty until the Descent upgrade is bought; at most
 ## `Expeditions.slots`.
 var expeditions: Array[Expedition] = []
+## The prestige layer (spec §6.1). Every merged cycle, oldest first, and the
+## currency the next layer will spend. Both survive a prestige by definition;
+## almost nothing else does.
+var legends: Array[Legend] = []
+var ink: int = 0
+## Biomes claimed in an earlier cycle. Claims are derived from the ladder
+## (spec §5.6) and prestige wipes the ladder, so without this the rite would
+## silently re-lock the Fungal Deep and take the Hexer with it -- §6.1 lists
+## biome claims among the things a prestige keeps.
+var claimed_biomes: Array[String] = []
 var created_at: int = 0
 var last_tick: int = 0
 var rate_per_hour: float = 0.0
@@ -57,6 +67,13 @@ func spend(cost: float) -> bool:
 	return true
 
 
+func _legends_dict() -> Array:
+	var out: Array = []
+	for l in legends:
+		out.append((l as Legend).to_dict())
+	return out
+
+
 func _expeditions_dict() -> Array:
 	var out: Array = []
 	for e in expeditions:
@@ -79,6 +96,9 @@ func to_dict() -> Dictionary:
 		"run_counter": run_counter,
 		"expedition_counter": expedition_counter,
 		"expeditions": _expeditions_dict(),
+		"legends": _legends_dict(),
+		"ink": ink,
+		"claimed_biomes": claimed_biomes.duplicate(),
 		"created_at": created_at,
 		"last_tick": last_tick,
 		"rate_per_hour": rate_per_hour,
@@ -104,6 +124,11 @@ static func from_dict(p_content: Content, d: Dictionary) -> Campaign:
 	c.hero_counter = int(d.get("hero_counter", 0))
 	c.run_counter = int(d.get("run_counter", 0))
 	c.expedition_counter = int(d.get("expedition_counter", 0))
+	c.ink = int(d.get("ink", 0))
+	for claimed in d.get("claimed_biomes", []):
+		c.claimed_biomes.append(String(claimed))
+	for raw_legend in d.get("legends", []):
+		c.legends.append(Legend.from_dict(raw_legend))
 	for raw in d.get("expeditions", []):
 		c.expeditions.append(Expedition.from_dict(raw))
 	c.created_at = int(d.get("created_at", 0))

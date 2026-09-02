@@ -410,3 +410,20 @@ card.smiths_eye.name,Smith's Eye
 card.smiths_eye.text,Draw {0}. Gain {1} energy. Exhaust.
 card.sunder.name,Sunder
 card.sunder.text,Deal {0} damage. Apply {1} Vulnerable.
+ui.hall.title,The Hall of Legends
+ui.hall.blessing,What every Legend adds to your dead and to your hands
+ui.hall.legends,The Merged
+ui.hall.none,Nobody has been merged yet.
+ui.hall.rite,Perform the rite
+ui.hall.needed,The rite needs one of your own standing on Floor {floor}. The deepest stands on {standing}.
+ui.hall.cost,"It takes all {ghosts} of your dead and every Soul you have ({soul}). It keeps your reach, your upgrades and your unlocks."
+ui.hall.legend,"{name}, cycle {cycle} — +{bonus}, {trait}"
+ui.hall.and_more,and {count} more
+ui.use.hall,Read the Hall of Legends
+tag.bone.name,Bone
+tag.shield.name,Shield
+tag.poison.name,Poison
+tag.ember.name,Ember
+tag.draw.name,Draw
+tag.holy.name,Holy
+tag.weak.name,Weak

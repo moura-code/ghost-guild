@@ -150,7 +150,8 @@ func _build_hud() -> void:
 	options.changed.connect(_on_settings_changed)
 	_host(options)
 
-	for id in [GuildRoom.TABLE, GuildRoom.CIRCLE, GuildRoom.DESK, GuildRoom.WELL]:
+	for id in [GuildRoom.TABLE, GuildRoom.CIRCLE, GuildRoom.DESK, GuildRoom.HALL,
+			GuildRoom.WELL]:
 		var screen := _guild_panel(String(id))
 		_stations[id] = screen
 		_host(screen)
@@ -170,6 +171,8 @@ func _guild_panel(id: String) -> Control:
 			return SeanceScreen.new()
 		GuildRoom.DESK:
 			return HeroScreen.new()
+		GuildRoom.HALL:
+			return HallScreen.new()
 		_:
 			return LadderScreen.new()
 

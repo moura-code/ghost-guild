@@ -9,7 +9,7 @@ extends SceneTree
 ##         -s tools/hud_shot.gd -- <out.png> <mode> [frames]
 ##
 ## Modes: walk, fight, reward, guild, panel, expedition, offline, exit, watch,
-## deep, kiln, ladder, hero.
+## deep, kiln, ladder, hero, hall.
 ##
 ## Runs against a throwaway save, so it never touches the player's campaign.
 
@@ -50,6 +50,25 @@ func _init() -> void:
 			game.offline = {"elapsed": 30_000, "counted": 28_800, "capped": true,
 				"soul": 1840.0, "returned": [Ghost.from_expedition(hero, 4, 0)]}
 			crawl._maybe_show_offline()
+		"hall":
+			# One cycle already merged and the next rite open, which is the
+			# state the screen has to be readable in.
+			for floor in [6, 15]:
+				var fallen := Hero.create(game.content, "sexton", "Fallen%d" % floor, {}, 1)
+				var ghost := game.campaign.ladder.add(Ghost.from_expedition(fallen, floor, 0))
+				ghost.strength = 180.0
+				ghost.fixed_strength = true
+			game.campaign.record_depth = 17
+			game.prestige()
+			for floor in [4, 16]:
+				var again := Hero.create(game.content, "sexton", "Walker%d" % floor, {}, 1)
+				var g2 := game.campaign.ladder.add(Ghost.from_expedition(again, floor, 0))
+				g2.strength = 210.0
+				g2.fixed_strength = true
+			game.campaign.soul = 3400.0
+			var wall := crawl.guild.station(GuildRoom.HALL)
+			wall.enter(crawl.player)
+			wall.use()
 		"hero":
 			# The Deep claimed, so the class row has one open and one taken.
 			var deep := Hero.create(game.content, "sexton", "Deepwalker", {}, 1)

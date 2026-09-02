@@ -13,6 +13,10 @@ var floor: int = 1
 ## start_run. A run is a closed system that replays from its seed, so it must
 ## not reach back into the ladder mid-run to ask what has been claimed since.
 var claimed_pools: Array[String] = []
+## The Legend's Blessing this run was started with (spec §4.4). Copied in
+## rather than read live, for the same reason `claimed_pools` is: a run is a
+## closed system that replays from its seed.
+var blessing: float = 1.0
 var nodes: Array = []
 var node_index: int = 0
 ## One flag per node, so a floor can be walked in any order. `node_index`
@@ -117,7 +121,9 @@ func next_unresolved() -> int:
 
 
 func hero_snapshot() -> HeroSnapshot:
-	return hero.snapshot(stat_bonus)
+	var snap := hero.snapshot(stat_bonus)
+	snap.blessing = blessing
+	return snap
 
 
 func to_dict() -> Dictionary:
@@ -128,6 +134,7 @@ func to_dict() -> Dictionary:
 		"entry_floor": entry_floor,
 		"floor": floor,
 		"claimed_pools": claimed_pools.duplicate(),
+		"blessing": blessing,
 		"nodes": nodes.duplicate(true),
 		"node_index": node_index,
 		"resolved": resolved.duplicate(),
@@ -157,6 +164,7 @@ static func from_dict(p_content: Content, d: Dictionary) -> RunState:
 	run.floor = int(d.get("floor", 1))
 	for pool in d.get("claimed_pools", []):
 		run.claimed_pools.append(String(pool))
+	run.blessing = float(d.get("blessing", 1.0))
 	var nodes_raw: Array = d.get("nodes", [])
 	run.nodes = nodes_raw.duplicate(true)
 	run.node_index = int(d.get("node_index", 0))

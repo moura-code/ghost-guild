@@ -17,6 +17,9 @@ const DESK := "desk"
 ## it shows the tower of your dead and walking into it starts the descent.
 ## They are the same object seen two ways, so it is one station, not two.
 const WELL := "well"
+## The Hall of Legends (spec §6.1). A wall, not a table: it is the one station
+## you read rather than spend at.
+const HALL := "hall"
 
 ## In cells, like a dungeon floor, so the kit's metres stay the only metres.
 const WIDTH := 9
@@ -67,6 +70,7 @@ static func station_cells() -> Dictionary:
 		TABLE: Vector2i(2, 2),
 		CIRCLE: Vector2i(WIDTH - 1, 2),
 		DESK: Vector2i(2, DEPTH - 1),
+		HALL: Vector2i(WIDTH - 1, DEPTH - 1),
 		WELL: WELL_CELL,
 	}
 
@@ -81,7 +85,7 @@ func build(campaign: Campaign) -> void:
 	add_child(Grade.world_environment_guild())
 
 	var cells := station_cells()
-	for id in [TABLE, CIRCLE, DESK, WELL]:
+	for id in [TABLE, CIRCLE, DESK, HALL, WELL]:
 		var reach := 2.4 if id == WELL else Interactable.REACH
 		var it := Interactable.create(String(id), Kit.cell_to_world(cells[id]), "ui.use.%s" % id, reach)
 		add_child(it)

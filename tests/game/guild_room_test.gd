@@ -77,14 +77,19 @@ func test_you_spawn_inside_the_room() -> void:
 
 
 func test_the_stations_all_have_their_own_id() -> void:
+	# Derived from the room's own list rather than counted, so a station added
+	# to the guild is a station this test starts checking rather than one it
+	# starts failing on.
 	var r := _room()
-	assert_array(r.stations).has_size(4)
+	var want := GuildRoom.station_cells().keys()
+	assert_array(r.stations).has_size(want.size())
 	var ids: Dictionary = {}
 	for s in r.stations:
 		ids[(s as Interactable).id] = true
-	assert_int(ids.size()).is_equal(4)
-	for id in [GuildRoom.TABLE, GuildRoom.CIRCLE, GuildRoom.DESK, GuildRoom.WELL]:
-		assert_object(r.station(id)).override_failure_message("no station %s" % id).is_not_null()
+	assert_int(ids.size()).is_equal(want.size())
+	for id in want:
+		assert_object(r.station(String(id))).override_failure_message(
+			"no station %s" % id).is_not_null()
 
 
 func test_each_station_carries_a_line_that_resolves_to_real_words() -> void:

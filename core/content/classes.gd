@@ -26,8 +26,8 @@ static func starting(content: Content) -> String:
 
 
 ## Every class available to this guild, sorted, starting class first.
-static func unlocked(content: Content, ladder: Ladder) -> Array[String]:
-	var claimed := Biomes.claimed(content, ladder)
+static func unlocked(content: Content, ladder: Ladder, banked: Array = []) -> Array[String]:
+	var claimed := Biomes.claimed(content, ladder, banked)
 	var first := starting(content)
 	var out: Array[String] = []
 	if first != "":
@@ -41,8 +41,9 @@ static func unlocked(content: Content, ladder: Ladder) -> Array[String]:
 	return out
 
 
-static func is_unlocked(content: Content, ladder: Ladder, class_id: String) -> bool:
-	return unlocked(content, ladder).has(class_id)
+static func is_unlocked(content: Content, ladder: Ladder, class_id: String,
+		banked: Array = []) -> bool:
+	return unlocked(content, ladder, banked).has(class_id)
 
 
 ## The biome that opens this class, or "" if nothing does. For the UI, which

@@ -8,6 +8,13 @@ var relics: Array[String] = []
 var stats: Dictionary = {"might": 0, "wit": 0, "vigor": 0, "focus": 0}
 var hp: int = 1
 var max_hp: int = 1
+## The Legend's Blessing (spec §4.4), carried on the snapshot rather than
+## looked up, so that every path that starts a fight -- the live run, the
+## autopilot, a projection, an echo's pricing, an expedition -- gets the same
+## number without any of them having to remember to ask for it. A ghost priced
+## without the Blessing it fights with would make every yield in the game
+## quietly low.
+var blessing: float = 1.0
 
 
 static func max_hp_for(base_hp: int, vigor: int) -> int:
@@ -39,4 +46,5 @@ func clone() -> HeroSnapshot:
 	h.stats = stats.duplicate()
 	h.hp = hp
 	h.max_hp = max_hp
+	h.blessing = blessing
 	return h

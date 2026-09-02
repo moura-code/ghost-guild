@@ -28,7 +28,7 @@ static func new_hero(c: Campaign, now: int, class_id: String = "") -> Hero:
 	var wanted := class_id
 	if wanted == "" and c.hero != null:
 		wanted = c.hero.class_id
-	if not Classes.is_unlocked(c.content, c.ladder, wanted):
+	if not Classes.is_unlocked(c.content, c.ladder, wanted, c.claimed_biomes):
 		wanted = Classes.starting(c.content)
 	var hero := Hero.create(c.content, wanted, hero_name, mods["stats"], 1 + int(mods["max_resolve_bonus"]))
 	hero.id = c.hero_counter
@@ -49,7 +49,7 @@ static func choose_class(c: Campaign, class_id: String) -> Dictionary:
 		return {"ok": false, "reason": "in_run"}
 	if c.hero.class_id == class_id:
 		return {"ok": false, "reason": "unchanged"}
-	if not Classes.is_unlocked(c.content, c.ladder, class_id):
+	if not Classes.is_unlocked(c.content, c.ladder, class_id, c.claimed_biomes):
 		return {"ok": false, "reason": "locked"}
 	if c.hero.runs > 0:
 		return {"ok": false, "reason": "committed"}
@@ -59,6 +59,73 @@ static func choose_class(c: Campaign, class_id: String) -> Dictionary:
 	hero.camp = camp
 	c.emit({"type": "class_chosen", "class": class_id, "hero": hero.id})
 	return {"ok": true, "reason": ""}
+
+
+## What every Legend the guild has multiplies (spec §4.4): ghost strength, and
+## hero damage and block. Exactly 1.0 until the first prestige.
+static func blessing(c: Campaign) -> float:
+	return Legends.blessing(c.legends)
+
+
+## A ghost's snapshot, carrying the guild's Blessing. Every simulation in the
+## game goes through a snapshot, so stamping it here is what stops one path
+## pricing a ghost without the Blessing that ghost actually fights with.
+static func blessed_snapshot(c: Campaign, ghost: Ghost) -> HeroSnapshot:
+	var snap := ghost.snapshot()
+	snap.blessing = blessing(c)
+	return snap
+
+
+## The floor a true ghost must be standing on before the guild may prestige.
+static func prestige_threshold(c: Campaign) -> int:
+	return Legends.threshold(c.content, c.legends.size())
+
+
+static func can_prestige(c: Campaign) -> bool:
+	return c.run == null and c.ladder.waypoint() >= prestige_threshold(c)
+
+
+## The rite (spec §6.1). Merges every ghost into a Legend and starts the cycle
+## again.
+##
+## What is kept and what is taken is the riskiest list in the game, so it is
+## written here rather than spread across the reset:
+##
+## - **Kept:** reach, the upgrades, the unlocks, the biome claims (which are
+##   derived from... nothing, now -- see below), the Legends, the Ink.
+## - **Taken:** the ladder, the Soul, the waypoint, anything in the field, and
+##   the living hero's camp.
+##
+## The one that needs saying out loud: **biome claims are derived from the
+## ladder**, and the ladder is wiped, so a naive prestige would silently
+## re-lock the Fungal Deep and take the Hexer with it. `claimed_biomes` is
+## therefore banked on the campaign before the merge, and `Biomes.claimed`
+## reads the union of the two.
+static func prestige(c: Campaign, now: int) -> Dictionary:
+	if c.run != null:
+		return {"ok": false, "reason": "in_run", "legend": null}
+	if c.ladder.waypoint() < prestige_threshold(c):
+		return {"ok": false, "reason": "too_shallow", "legend": null}
+
+	tick(c, now)
+	for id in Biomes.claimed(c.content, c.ladder):
+		if not c.claimed_biomes.has(id):
+			c.claimed_biomes.append(id)
+	var legend := Legends.forge(c.content, c.ladder, c.legends.size() + 1, now)
+	legend.id = c.legends.size() + 1
+	c.legends.append(legend)
+	c.ink += 1
+
+	c.ladder = Ladder.new()
+	c.ladder.add(Ghost.founder(c.content, now))
+	c.soul = 0.0
+	c.expeditions = []
+	new_hero(c, now)
+	refresh_rate(c)
+	c.emit({"type": "prestige", "cycle": legend.cycle, "legend": legend.name,
+		"mass": legend.mass, "multiplier": legend.multiplier,
+		"trait": legend.trait_tag, "ink": c.ink, "at": now})
+	return {"ok": true, "reason": "", "legend": legend}
 
 
 static func reach(c: Campaign) -> int:
@@ -81,7 +148,8 @@ static func start_run(c: Campaign, entry_floor: int, now: int) -> RunState:
 	c.run_counter += 1
 	var run_seed := hash([c.campaign_seed, "run", c.run_counter])
 	c.run = RunEngine.start_run(c.content, c.hero, entry_floor, run_seed,
-		c.onboarding.watch_unlocked, Biomes.claimed_pools(c.content, c.ladder))
+		c.onboarding.watch_unlocked,
+		Biomes.claimed_pools(c.content, c.ladder, c.claimed_biomes), blessing(c))
 	c.emit({"type": "run_started", "run": c.run_counter, "entry_floor": entry_floor, "seed": run_seed, "at": now})
 	return c.run
 
@@ -122,7 +190,7 @@ static func finish_run(c: Campaign, now: int) -> Dictionary:
 static func strength_for(c: Campaign, ghost: Ghost) -> float:
 	if ghost.fixed_strength:
 		return ghost.strength
-	var sim := Strength.simulate(c.content, ghost.snapshot(), c.biome_at(ghost.floor), ghost.floor, hash([c.campaign_seed, "strength", ghost.id]), c.sim_fights, ghost.rules)
+	var sim := Strength.simulate(c.content, blessed_snapshot(c, ghost), c.biome_at(ghost.floor), ghost.floor, hash([c.campaign_seed, "strength", ghost.id]), c.sim_fights, ghost.rules)
 	return Strength.of_ghost_stats(ghost.measured, sim, c.balance())
 
 

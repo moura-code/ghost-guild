@@ -197,6 +197,22 @@ func choose_class(class_id: String) -> Dictionary:
 	return r
 
 
+## Performs the rite (spec §6.1). Merges every ghost into a Legend and starts
+## the cycle again. Everything the player is about to lose is spelled out on
+## the Hall screen before this can be reached.
+func prestige() -> Dictionary:
+	if campaign == null:
+		return {"ok": false, "reason": "unbooted", "legend": null}
+	settle()
+	var r := CampaignEngine.prestige(campaign, now())
+	if bool(r["ok"]):
+		if sfx != null:
+			sfx.play("epitaph")
+		_emit_all()
+		save()
+	return r
+
+
 ## Starts a descent. CampaignEngine validates the entry floor against reach
 ## and refuses an unbanked finished run, returning null either way.
 ##

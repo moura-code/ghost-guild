@@ -58,8 +58,15 @@ static func deepest(content: Content) -> BiomeDef:
 ##
 ## An echo does not claim. §5.6 says the *first true ghost*, and a claim that an
 ## echo could make would be a claim you could buy.
-static func claimed(content: Content, ladder: Ladder) -> Array[String]:
+## `banked` carries claims from earlier prestige cycles. A claim is derived
+## from the ladder and prestige wipes the ladder, so without it the rite would
+## silently re-lock every biome the guild had reached -- and §6.1 lists biome
+## claims among the things a prestige keeps.
+static func claimed(content: Content, ladder: Ladder, banked: Array = []) -> Array[String]:
 	var out: Array[String] = []
+	for id in banked:
+		if content.biomes.has(id) and not out.has(String(id)):
+			out.append(String(id))
 	for g in ladder.ghosts:
 		var ghost := g as Ghost
 		if not ghost.is_true():
@@ -72,9 +79,9 @@ static func claimed(content: Content, ladder: Ladder) -> Array[String]:
 
 
 ## The card pools those claims open, for the Descent draft and for shops.
-static func claimed_pools(content: Content, ladder: Ladder) -> Array[String]:
+static func claimed_pools(content: Content, ladder: Ladder, banked: Array = []) -> Array[String]:
 	var out: Array[String] = []
-	for id in claimed(content, ladder):
+	for id in claimed(content, ladder, banked):
 		var pool := (content.biomes[id] as BiomeDef).card_pool
 		if pool != "" and not out.has(pool):
 			out.append(pool)

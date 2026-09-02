@@ -11,6 +11,7 @@ static func start_fight(content: Content, hero: HeroSnapshot, enemy_ids: Array, 
 	s.floor = floor
 	s.hero_hp = hero.hp
 	s.hero_max_hp = hero.max_hp
+	s.blessing = hero.blessing
 	s.stats = hero.stats.duplicate()
 	s.relics = hero.relics.duplicate()
 	var focus := int(s.stats.get("focus", 0))

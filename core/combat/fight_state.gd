@@ -18,6 +18,10 @@ var hero_block: int = 0
 var energy: int = 0
 var max_energy: int = 3
 var draw_per_turn: int = 5
+## The Legend's Blessing on hero damage and block (spec §4.4). Exactly 1.0
+## until the first prestige, which is what keeps every existing number and
+## every demo unchanged.
+var blessing: float = 1.0
 var stats: Dictionary = {"might": 0, "wit": 0, "vigor": 0, "focus": 0}
 var statuses: Dictionary = {}
 var relics: Array[String] = []
@@ -126,6 +130,7 @@ func clone() -> FightState:
 	s.energy = energy
 	s.max_energy = max_energy
 	s.draw_per_turn = draw_per_turn
+	s.blessing = blessing
 	s.stats = stats.duplicate()
 	s.statuses = statuses.duplicate()
 	s.relics = relics.duplicate()

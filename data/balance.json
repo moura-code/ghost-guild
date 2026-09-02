@@ -57,5 +57,8 @@
   "expedition_speed_step": 0.2,
   "expedition_survival": 0.65,
   "expedition_samples": 4,
-  "expedition_sim_fights": 12
+  "expedition_sim_fights": 12,
+  "legend_threshold_step": 15,
+  "legend_k": 0.5,
+  "legend_mass_scale": 400.0
 }
