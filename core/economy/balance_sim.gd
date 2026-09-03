@@ -9,8 +9,16 @@ extends RefCounted
 ## reported, not asserted (no EV model in M1).
 
 var content: Content
-var runs: int = 4
-var sim_fights: int = 12
+## Enough samples to be measuring the economy rather than the sampler.
+##
+## These were 4 and 12, and at those counts `deeper_pays` reported a failure
+## for months that was not one: floor 7 came out 1.5% under floor 6 because
+## four runs and twelve fights is not enough to price a deck, and the whole
+## invariant is a statement about a curve. At 14 and 48 the curve is stable,
+## the invariant passes, and the run takes about forty-five seconds -- which
+## is the right trade for the one tool in the repo whose job is to be right.
+var runs: int = 14
+var sim_fights: int = 48
 var seed_base: int = 1
 
 

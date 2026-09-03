@@ -36,7 +36,7 @@
   "spawn_rate_growth": 1.08,
   "overflow_rate": 0.25,
   "prepared_bonus": 0.25,
-  "restless_penalty": 0.3,
+  "restless_penalty": 0.5,
   "echo_factor": 0.75,
   "echo_base_cost": 50,
   "echo_cost_growth": 1.15,
