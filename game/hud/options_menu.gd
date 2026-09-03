@@ -13,6 +13,10 @@ signal changed(settings: Settings)
 var settings: Settings
 var sliders: Dictionary = {}
 var checks: Dictionary = {}
+## The language picker. An OptionButton rather than a row of buttons: the
+## list grows with every language shipped, and a row of them would push the
+## rest of the menu off a 360-pixel frame at the fourth one.
+var language: OptionButton
 
 var _column: VBoxContainer
 
@@ -52,6 +56,7 @@ func build(content: Content, s: Settings) -> void:
 	_slider(content, "fov", "ui.options.fov", Settings.FOV_MIN, Settings.FOV_MAX, 1.0, s.fov)
 	_slider(content, "master_volume", "ui.options.volume", 0.0, 1.0, 0.05, s.master_volume)
 	_check(content, "fullscreen", "ui.options.fullscreen", s.fullscreen)
+	_language(content, s)
 
 	_column.add_child(HSeparator.new())
 	var back := Button.new()
@@ -59,6 +64,27 @@ func build(content: Content, s: Settings) -> void:
 	back.custom_minimum_size = Vector2(0.0, 22.0)
 	back.pressed.connect(func() -> void: closed.emit())
 	_column.add_child(back)
+
+
+## The language row. Every entry is named in its own language, because a
+## player who has landed in the wrong one cannot read the word for theirs.
+func _language(content: Content, s: Settings) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var label := UiTheme.body(content.text("ui.options.language"))
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+	language = OptionButton.new()
+	language.name = "Language"
+	language.custom_minimum_size = Vector2(96.0, 18.0)
+	for i in Settings.LOCALES.size():
+		var id := String(Settings.LOCALES[i])
+		language.add_item(content.text("ui.language." + id), i)
+		if id == s.locale:
+			language.select(i)
+	language.item_selected.connect(func(_i: int) -> void: commit())
+	row.add_child(language)
+	_column.add_child(row)
 
 
 ## Reads every control back into the Settings object and announces it. One
@@ -71,6 +97,8 @@ func commit() -> void:
 	settings.master_volume = float((sliders["master_volume"] as HSlider).value)
 	settings.invert_y = (checks["invert_y"] as CheckBox).button_pressed
 	settings.fullscreen = (checks["fullscreen"] as CheckBox).button_pressed
+	if language != null and language.selected >= 0:
+		settings.locale = String(Settings.LOCALES[language.selected])
 	changed.emit(settings)
 
 

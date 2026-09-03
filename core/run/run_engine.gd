@@ -25,7 +25,7 @@ static func start_run(content: Content, hero: Hero, entry_floor: int, run_seed: 
 	run.emit({"type": "run_start", "seed": run_seed, "entry_floor": entry_floor, "hero": hero.name})
 	run.descent_offers = DescentDraft.offers(content, hero, pools(run), entry_floor, run_seed)
 	for offer in run.descent_offers:
-		run.emit({"type": "draft_offer", "floor": offer["floor"], "cards": offer["cards"]})
+		run.emit({"type": "draft_offer", "floor": offer["floor"], "cards": (offer["cards"] as Array).duplicate(true)})
 	if run.descent_offers.is_empty():
 		_enter_floor(run)
 	else:
@@ -294,6 +294,10 @@ static func _end_run(run: RunState, kind: String, killer: String = "", cause: St
 	run.outcome = {
 		"kind": kind,
 		"floor": run.floor,
+		# Where it ended from. A retreat out of the exit means the floor was
+		# cleared; an `abandon` is also a "retreat" and can come from any
+		# phase, including the middle of a fight.
+		"from_phase": run.phase,
 		"killer": killer,
 		"cause": cause,
 		"coin": run.coin,
@@ -413,8 +417,18 @@ static func exit_summary(run: RunState, samples: int = -1) -> Dictionary:
 	if can_push(run):
 		# The floor being projected, not the one being stood on -- they are
 		# different biomes on the one floor where this reading matters most.
+		# Same rules, same fighter. Two of the three numbers on the exit screen
+		# came from the hero's own doctrine and this one did not.
+		# The floor below is projected under the rules it will actually be
+		# fought under -- its own tier's mutation, the invoked Legend and the
+		# Seal -- and by the hero's own doctrine, which the other two numbers
+		# on this screen were already using.
+		var next_floor := run.floor + 1
 		survival = RunProjection.survival_chance(run.content, run.hero_snapshot(),
-			run.biome_at(run.floor + 1), run.floor + 1, run.run_seed, n)
+			run.biome_at(next_floor), next_floor, run.run_seed, n,
+			Autopilot.with_rules(run.hero.rules, run.content),
+			Mutations.for_floor(run.content, next_floor, run.campaign_seed),
+			run.hero_trait(), run.seal_scaling())
 	return {
 		"floor": run.floor,
 		"measured": run.stats.measured(run.floor),

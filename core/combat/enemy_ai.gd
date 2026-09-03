@@ -89,12 +89,17 @@ static func execute_move(s: FightState, index: int) -> void:
 		"attack":
 			var dmg := scaled_damage(s, index, move)
 			for i in int(move.get("hits", 1)):
+				# A volley stops when the thing throwing it dies. Thorns can kill an
+				# attacker on the second hit of three, and the third landed anyway --
+				# damage out of a corpse, after `enemy_died` was already emitted.
+				if not e.alive:
+					break
 				EffectResolver.hit_hero(s, dmg, index, true)
 				if s.hero_hp <= 0:
 					break
 			if e.alive and e.status("bleed") > 0:
 				EffectResolver.direct_damage_enemy(s, index, e.status("bleed"), "bleed")
-			if move.has("status"):
+			if e.alive and move.has("status"):
 				EffectResolver.apply_status(s, {"kind": "hero"}, String(move["status"]), int(move.get("stacks", 1)))
 		"block":
 			var amount := int(move.get("block", 0))

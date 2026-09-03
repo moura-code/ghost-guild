@@ -25,11 +25,21 @@ static func from_stats(win_rate: float, avg_turns: float, balance: Dictionary) -
 ## is what every caller passed before this existed and what every caller with
 ## nothing to say still passes -- so a ghost with no rules simulates exactly as
 ## it always did.
-static func simulate(content: Content, snapshot: HeroSnapshot, biome: BiomeDef, floor: int, seed_value: int, fights: int = -1, rules: Array = []) -> Dictionary:
+## `campaign_seed` and `seal` are what the ghost's floor is actually like:
+## the tier's mutation is drawn from the seed (§2) and the Seal is what the
+## run that left it there was under (§6.2). Both default to none, which is
+## every floor of the authored dungeon fought without a Seal.
+static func simulate(content: Content, snapshot: HeroSnapshot, biome: BiomeDef,
+		floor: int, seed_value: int, fights: int = -1, rules: Array = [],
+		campaign_seed: int = 0, seal: int = 0) -> Dictionary:
 	var n := fights if fights > 0 else int(content.balance.get("strength_sim_fights", 50))
-	var groups := FloorGenerator.groups_for(biome, floor)
+	# Within its own tier: a ghost on floor 44 is fighting the Catacombs'
+	# floor-14 table at tier-2 scaling, not the Kiln's floor-30 one.
+	var groups := FloorGenerator.groups_for(biome, Biomes.in_tier(content, floor))
 	var ap: Autopilot = Autopilot.with_rules(rules, content) if not rules.is_empty() else null
-	var r := FightSimulator.simulate_table(content, snapshot, groups, floor, seed_value, n, ap)
+	var r := FightSimulator.simulate_table(content, snapshot, groups, floor, seed_value,
+		n, ap, Mutations.for_floor(content, floor, campaign_seed), null,
+		Chronicle.seal_scaling(content, seal))
 	return {"fights": int(r["fights"]), "wins": int(r["wins"]), "win_rate": float(r["win_rate"]), "avg_turns": float(r["avg_turns"])}
 
 

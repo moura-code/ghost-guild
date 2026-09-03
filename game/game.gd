@@ -48,6 +48,38 @@ func text(key: String) -> String:
 	return content.text(key) if content != null else key
 
 
+## The language the content is loaded in. Set before `boot` -- `Crawl` reads
+## it out of Settings, which is on disk beside the save rather than in it.
+var locale: String = "en"
+
+
+## Swaps the language under a running game (spec §11, M3).
+##
+## Three objects hold a `Content`: the campaign, the run inside it and the
+## fight inside that. Everything else looks its defs up by id, so re-pointing
+## those three and re-emitting is the whole of it -- and it is worth the six
+## lines, because a language that only takes effect after a restart is a
+## setting the player changes once, restarts, and finds they preferred the
+## other one.
+func set_locale(wanted: String) -> bool:
+	if content != null and content.locale == wanted:
+		return true
+	var next := Content.load_from(CONTENT_ROOT, wanted)
+	if not next.load_errors.is_empty():
+		push_error("set_locale: %s failed to load: %s" % [wanted, next.load_errors])
+		return false
+	locale = wanted
+	content = next
+	if campaign != null:
+		campaign.content = next
+		if campaign.run != null:
+			campaign.run.content = next
+			if campaign.run.fight != null:
+				campaign.run.fight.content = next
+	_emit_all()
+	return true
+
+
 func boot() -> Dictionary:
 	if sfx == null:
 		sfx = Sfx.new()
@@ -55,7 +87,7 @@ func boot() -> Dictionary:
 		# Deferred: the pool builds itself in _ready, which has not run yet on
 		# the frame the node is added.
 		sfx.start_ambience.call_deferred()
-	content = Content.load_from(CONTENT_ROOT)
+	content = Content.load_from(CONTENT_ROOT, locale)
 	if not content.load_errors.is_empty():
 		push_error("boot: content failed to load: %s" % ", ".join(content.load_errors))
 		return {"ok": false, "reason": "content", "errors": content.load_errors, "new_game": false, "offline": offline}
@@ -91,7 +123,7 @@ func _process(delta: float) -> void:
 func displayed_soul() -> float:
 	if campaign == null:
 		return 0.0
-	var cap := float(campaign.modifiers()["offline_cap_hours"])
+	var cap := campaign.offline_cap_hours()
 	var pending := Production.accrue(campaign.rate_per_hour, now() - campaign.last_tick, cap)
 	return campaign.soul + float(pending["soul"])
 

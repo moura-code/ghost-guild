@@ -486,3 +486,6 @@ ui.chronicle.level,Level {level} of {max}
 ui.seal.none,No Seal
 ui.seal.set,"Seal {seal}: enemies +{harder}, your dead +{richer}"
 ui.seal.locked,Depth Seals are written in the Chronicle.
+ui.options.language,Language
+ui.language.en,English
+ui.language.es,Español

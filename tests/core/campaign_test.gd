@@ -103,8 +103,19 @@ func test_tick_banks_production_with_the_offline_cap() -> void:
 	var far := CampaignEngine.tick(c, 4600 + 30 * 3600)
 	assert_bool(far["capped"]).is_true()
 	assert_float(far["soul"]).is_equal_approx(52.0 * 8.0, 0.0001)
+	# A clock that goes backwards must not un-pay a window. `elapsed` is
+	# floored at zero so nothing is earned, and the paid-up marker holds --
+	# it used to rewind, and the next settle then re-paid seconds this one
+	# had already covered. One NTP correction after a sleep is enough.
+	var paid_through := c.last_tick
+	var banked := c.soul
 	CampaignEngine.tick(c, 100)
-	assert_int(c.last_tick).is_equal(100)
+	var note := "the clock went backwards and took the paid-up marker with it"
+	assert_int(c.last_tick).override_failure_message(note).is_equal(paid_through)
+	assert_float(c.soul).is_equal_approx(banked, 0.0001)
+	# And the window it already covered is not paid a second time.
+	CampaignEngine.tick(c, paid_through + 3600)
+	assert_float(c.soul).is_equal_approx(banked + 52.0, 0.0001)
 
 
 func test_buy_upgrade_spends_and_applies() -> void:

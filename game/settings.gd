@@ -15,6 +15,9 @@ const SENSITIVITY_MIN := 0.4
 const SENSITIVITY_MAX := 3.0
 const FOV_MIN := 60.0
 const FOV_MAX := 110.0
+## The languages the game ships. A config naming anything else falls back
+## to English rather than to a screen full of raw keys.
+const LOCALES: Array[String] = ["en", "es"]
 
 ## Multiplier on Player.SENSITIVITY. 1.0 is the authored default.
 var sensitivity: float = 1.0
@@ -22,6 +25,10 @@ var invert_y: bool = false
 var fov: float = 72.0
 var master_volume: float = 0.8
 var fullscreen: bool = false
+## Which `data/strings/<locale>.csv` is loaded over the English one.
+## Beside the save rather than in it, like everything else here: a
+## language is a property of the person reading, not of the campaign.
+var locale: String = "en"
 
 
 static func defaults() -> Settings:
@@ -35,6 +42,7 @@ func to_dict() -> Dictionary:
 		"fov": fov,
 		"master_volume": master_volume,
 		"fullscreen": fullscreen,
+		"locale": locale,
 	}
 
 
@@ -46,6 +54,8 @@ func from_dict(d: Dictionary) -> void:
 	fov = clampf(float(d.get("fov", fov)), FOV_MIN, FOV_MAX)
 	master_volume = clampf(float(d.get("master_volume", master_volume)), 0.0, 1.0)
 	fullscreen = bool(d.get("fullscreen", fullscreen))
+	var wanted := String(d.get("locale", locale))
+	locale = wanted if LOCALES.has(wanted) else "en"
 
 
 func save(path: String = PATH) -> Error:

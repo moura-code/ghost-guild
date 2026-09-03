@@ -56,6 +56,12 @@ static func write(c: Campaign, id: String, now: int) -> Dictionary:
 		return {"ok": false, "cost": price, "reason": "ink"}
 	c.ink -= price
 	c.chapters[id] = level_of(c, id) + 1
+	# The Breeding Dark changes the spawn rate, and `rate_per_hour` is a
+	# *saved* field that `load_and_catch_up` pays the whole offline window
+	# at before refreshing it. Every other mutator in the economy refreshes
+	# its own rate; this one was relying on the HUD to do it, which is fine
+	# until something that is not the HUD writes a Chapter.
+	CampaignEngine.refresh_rate(c)
 	c.emit({"type": "chapter_written", "chapter": id, "level": c.chapters[id],
 		"ink": c.ink, "at": now})
 	return {"ok": true, "cost": price, "reason": ""}

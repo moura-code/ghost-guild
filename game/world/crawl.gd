@@ -80,13 +80,16 @@ func _ready() -> void:
 
 func bind(g: GameRoot) -> void:
 	game = g
+	# Settings before boot: the language is one of them, and content is
+	# loaded once, during boot, in whatever language it is told.
+	settings = Settings.load_from(settings_path)
+	g.locale = settings.locale
 	if not g.is_booted:
 		var result := g.boot()
 		if not bool(result["ok"]):
 			push_error("crawl: boot failed: %s" % result["reason"])
 			return
 	_had_save = SaveGame.exists(g.save_path)
-	settings = Settings.load_from(settings_path)
 	_build_hud()
 	settings.apply(player)
 	if not g.run_changed.is_connected(_sync):
@@ -787,6 +790,13 @@ func _open_options() -> void:
 func _on_settings_changed(s: Settings) -> void:
 	s.apply(player)
 	s.save(settings_path)
+	# A language change reloads the content underneath everything, so the
+	# menu that asked for it has to be rebuilt in the language it asked for.
+	if game.content != null and game.content.locale != s.locale:
+		if game.set_locale(s.locale):
+			options.build(game.content, s)
+			prompts.clear_objective()
+			prompts.clear_rule()
 
 
 ## Giving up goes through RunEngine like everything else. The engine ends it

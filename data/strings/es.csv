@@ -1,0 +1,491 @@
+key,text
+class.sexton.name,Sacristán
+biome.catacombs.name,Catacumbas
+card.strike.name,Golpe
+card.strike.text,Inflige {0} de daño.
+card.brace.name,Aguantar
+card.brace.text,Gana {0} de Bloqueo.
+card.last_rites.name,Últimos Ritos
+card.last_rites.text,Inflige {0} de daño. Aplica {1} Débil.
+card.shovel_swing.name,Palazo
+card.shovel_swing.text,Inflige {0} de daño.
+card.bone_wall.name,Muro de Huesos
+card.bone_wall.text,Gana {0} de Bloqueo.
+card.grave_dust.name,Polvo de Tumba
+card.grave_dust.text,Aplica {0} Vulnerable. Roba {1} carta.
+card.reaping.name,Siega
+card.reaping.text,Inflige {0} de daño {1} veces.
+card.vigil.name,Vela
+card.vigil.text,Al inicio de cada turno gana {0} de Bloqueo.
+card.censer_smoke.name,Humo de Incensario
+card.censer_smoke.text,Gana {0} de Bloqueo. Aplica {1} Débil a todos los enemigos.
+card.exhume.name,Exhumar
+card.exhume.text,Roba {0} cartas. Se consume.
+card.lantern_oil.name,Aceite de Farol
+card.lantern_oil.text,Gana {0} de Energía. Roba {1} carta. Se consume.
+card.bone_shard.name,Esquirla de Hueso
+card.bone_shard.text,Inflige {0} de daño.
+card.sanctify.name,Santificar
+card.sanctify.text,Gana {0} de Bloqueo. Cura {1}.
+card.hallowed_strike.name,Golpe Consagrado
+card.hallowed_strike.text,Inflige {0} de daño. Sagrado: 50% más contra los no muertos.
+card.bulwark.name,Baluarte
+card.bulwark.text,Gana {0} de Espinas.
+card.requiem.name,Réquiem
+card.requiem.text,Inflige {0} de daño a todos los enemigos.
+card.second_wind.name,Segundo Aliento
+card.second_wind.text,Cura {0}. Se consume.
+card.dig_in.name,Atrincherarse
+card.dig_in.text,Gana {0} de Bloqueo. Gana {1} de Ingenio en este combate.
+card.sharpen_spade.name,Afilar la Pala
+card.sharpen_spade.text,Gana {0} de Fuerza en este combate. Se consume.
+card.tolling_bell.name,Campana a Muerto
+card.tolling_bell.text,Aplica {0} Vulnerable a todos los enemigos.
+card.rat_swarm.name,Plaga de Ratas
+card.rat_swarm.text,Inflige {0} de daño {1} veces.
+card.cold_iron.name,Hierro Frío
+card.cold_iron.text,Inflige {0} de daño. Aplica {1} Débil.
+card.shroud.name,Sudario
+card.shroud.text,Gana {0} de Bloqueo. Se retiene.
+card.grave_moss.name,Musgo de Tumba
+card.grave_moss.text,Gana {0} de Regeneración.
+card.tomb_lantern.name,Farol de Tumba
+card.tomb_lantern.text,Roba {0} cartas.
+card.bone_spear.name,Lanza de Hueso
+card.bone_spear.text,Inflige {0} de daño.
+card.plague_vial.name,Vial de Peste
+card.plague_vial.text,Aplica {0} Veneno.
+card.death_knell.name,Toque de Difuntos
+card.death_knell.text,Al inicio de cada turno inflige {0} de daño a todos los enemigos.
+card.cairn.name,Mojón
+card.cairn.text,Gana {0} de Bloqueo. Gana {1} de Espinas.
+card.ashes.name,Cenizas
+card.ashes.text,Inflige {0} de daño a todos los enemigos. Aplica {1} Quemadura a todos los enemigos.
+enemy.bone_rat.name,Rata de Hueso
+enemy.shambler.name,Renqueante
+enemy.grave_wisp.name,Fuego Fatuo
+enemy.skull_stack.name,Pila de Cráneos
+enemy.bone_archer.name,Arquero de Hueso
+enemy.crypt_spider.name,Araña de Cripta
+enemy.hollow_knight.name,Caballero Hueco
+enemy.plague_bearer.name,Portador de Peste
+enemy.ossuary_warden.name,Guardián del Osario
+enemy.mother_of_bones.name,Madre de los Huesos
+relic.sextons_lantern.name,Farol del Sacristán
+relic.sextons_lantern.text,Empieza cada combate con 3 de Bloqueo.
+relic.bone_charm.name,Amuleto de Hueso
+relic.bone_charm.text,Empieza cada combate con 1 de Fuerza.
+relic.cracked_hourglass.name,Reloj Rajado
+relic.cracked_hourglass.text,Roba 1 carta más al inicio de cada combate.
+relic.ossuary_key.name,Llave del Osario
+relic.ossuary_key.text,Cura 4 tras cada combate.
+relic.lead_censer.name,Incensario de Plomo
+relic.lead_censer.text,Los enemigos empiezan cada combate con 1 Débil.
+relic.grave_coin.name,Moneda de Tumba
+relic.grave_coin.text,Gana 10 de Moneda tras cada combate.
+event.whispering_well.name,El Pozo que Susurra
+event.whispering_well.text,Un pozo respira aire frío. Algo abajo sabe tu nombre.
+event.whispering_well.drink,Beber. Cura 12.
+event.whispering_well.offer,Ofrecer sangre. Pierde 7 de Vida. Gana 1 de Ingenio en esta expedición.
+event.whispering_well.leave,Seguir andando.
+event.collapsed_crypt.name,Cripta Derrumbada
+event.collapsed_crypt.text,La piedra caída tapa un pasillo lateral. Brillan huesos entre los escombros.
+event.collapsed_crypt.dig,Cavar. Pierde 8 de Vida. Gana una Lanza de Hueso.
+event.collapsed_crypt.pray,Decir los ritos. Cura 5. Gana 2 de Alma.
+event.collapsed_crypt.leave,Dejarlo enterrado.
+event.lost_lantern.name,Farol Perdido
+event.lost_lantern.text,Un farol sigue ardiendo junto a un sepulturero muerto. Tiene el vidrio rajado.
+event.lost_lantern.take,Cogerlo. Gana el Reloj Rajado.
+event.lost_lantern.sell,Arrancar el latón. Gana 40 de Moneda.
+upgrade.might.name,Fuerza de Sepulturero
+upgrade.might.text,Tus héroes ganan +1 de Fuerza.
+upgrade.wit.name,Ritos Antiguos
+upgrade.wit.text,Tus héroes ganan +1 de Ingenio.
+upgrade.vigor.name,Sangre Recia
+upgrade.vigor.text,Tus héroes ganan +1 de Vigor.
+upgrade.focus.name,Disciplina del Farol
+upgrade.focus.text,Tus héroes ganan +1 de Enfoque.
+upgrade.resolve.name,Segundas Intenciones
+upgrade.resolve.text,+1 de Temple máximo. Retirada dos veces por héroe.
+upgrade.mend_discount.name,Cirujano del Gremio
+upgrade.mend_discount.text,Restaurar cuesta un 15% menos por nivel.
+upgrade.ghost_strength.name,Vigor Inquieto
+upgrade.ghost_strength.text,Todos los espectros son un 10% más fuertes por nivel.
+upgrade.ghost_spawn.name,Madrigueras Hondas
+upgrade.ghost_spawn.text,Cada piso engendra un 10% más por nivel.
+upgrade.offline_cap.name,Guardia Nocturna
+upgrade.offline_cap.text,Los espectros siguen cosechando 24 horas mientras no estás.
+upgrade.restless_relief.name,Buenas Palabras
+upgrade.restless_relief.text,Los espectros inquietos pierden un 10% menos por nivel.
+epitaph.watch,{name} montó la vigilia en el Piso {floor}
+epitaph.death,{name} cayó ante {killer} en el Piso {floor}
+epitaph.death_unknown,{name} cayó en el Piso {floor}
+epitaph.founder,{name} fundó el gremio y ocupa el Piso {floor}
+ghost.founder.name,Ilse
+ui.soul,Alma
+ui.per_hour,por hora
+ui.reach,alcance
+ui.farmed,cosechado
+ui.guild,Gremio
+ui.maxed,Al máximo
+ui.group.hero,Héroe
+ui.group.ghosts,Espectros
+ui.group.descent,Descenso
+ui.group.seance,Sesión
+ui.seance,Sesión
+ui.seance.rites,Ritos
+ui.seance.dead,Tus Muertos
+ui.echo,Eco
+ui.call,Llamada
+ui.tend,Atender
+ui.mend,Restaurar
+ui.free,Gratis
+ui.restless,Inquieto
+ui.floor_short,P
+ui.strength,fza
+ui.hero,Héroe
+ui.hp,Vida
+ui.resolve,Temple
+ui.camp,campamento
+ui.deck,Mazo
+ui.relics,Reliquias
+ui.none,Ninguno
+ui.upgraded,+
+stat.might.name,Fuerza
+stat.wit.name,Ingenio
+stat.vigor.name,Vigor
+stat.focus.name,Enfoque
+ui.offline.title,Mientras no estabas
+ui.offline.away,Fuera durante {duration}
+ui.offline.capped,Tus espectros se pararon en el tope de ausencia.
+ui.offline.dismiss,Bien
+ui.ladder,Escalera
+ui.premise,{name} sigue peleando en el Piso {floor}. Cada muerte se vuelve tu Alma.
+ui.premise.empty,Nada tuyo ocupa aún la mazmorra.
+ui.tip.soul,Lo que tus muertos han ganado para ti. Gástalo en el Gremio y en la Sesión.
+ui.tip.per_hour,Lo que gana la torre entera cada hora — esté el juego abierto o no.
+ui.tip.reach,El piso más hondo desde el que puede empezar un héroe nuevo.
+ui.tip.floor,El Piso {floor} engendra {spawn} muertes por hora. Tus espectros se llevan {taken}.
+ui.tip.floor_empty,El Piso {floor} engendra {spawn} muertes por hora. Nada tuyo lo ocupa.
+ui.hint.wait,Tus muertos siguen ganando con el juego cerrado. Vuelve y gástalo.
+ui.hint.spend,Tienes Alma que gastar — abre el Gremio o la Sesión.
+ui.descend,Descender
+ui.run.continue,Continuar
+ui.run.bank,Guardar la expedición
+ui.run.over,La expedición ha terminado.
+ui.run.floor,Piso {floor}
+ui.run.floor_biome,Piso {floor} · {biome}
+ui.run.phase.descent,Descendiendo
+ui.run.phase.node,Elige un camino
+ui.run.phase.fight,Combate
+ui.run.phase.reward,Coge una carta
+ui.run.phase.event,Un suceso
+ui.run.phase.rest,Descanso
+ui.run.phase.shop,Tienda
+ui.run.phase.exit,Piso despejado
+ui.node.fight,Combate
+ui.node.elite,Élite
+ui.node.boss,Jefe
+ui.node.event,Suceso
+ui.node.rest,Descanso
+ui.node.shop,Tienda
+ui.node.exit,Salida
+ui.node.enter,Entrar
+status.poison.name,Veneno
+status.bleed.name,Sangrado
+status.burn.name,Quemadura
+status.weak.name,Débil
+status.vulnerable.name,Vulnerable
+status.might_buff.name,Fuerza
+status.wit_buff.name,Ingenio
+status.thorns.name,Espinas
+status.regen.name,Regeneración
+status.vigil.name,Guardia
+status.knell.name,Doble
+ui.fight.end_turn,Fin del turno
+ui.fight.energy,Energía
+ui.fight.block,Bloqueo
+ui.fight.draw,Robo
+ui.fight.discard,Descarte
+ui.fight.turn,Turno {turn}
+ui.fight.pick_target,Elige un objetivo
+ui.fight.intent.buff,Se fortalece
+ui.fight.intent.debuff,Te debilita
+ui.fight.intent.summon,Pide ayuda
+ui.fight.intent.unknown,Desconocido
+ui.fight.slain,Abatido
+ui.coin,Moneda
+ui.choice.skip,No coger nada
+ui.choice.leave,Marcharse
+ui.choice.rest_heal,Descansar y curar {amount}
+ui.choice.rest_upgrade,Afilar {card}
+ui.choice.remove,Quemar {card}
+ui.exit.title,Piso {floor} despejado
+ui.exit.here,Un espectro dejado aquí gana
+ui.exit.next,Un espectro en el piso siguiente gana
+ui.exit.survival,Posibilidad de sobrevivir al piso siguiente
+ui.exit.pending,Calculando...
+ui.exit.push,Seguir bajando
+ui.exit.retreat,Retirarse y restaurar
+ui.exit.watch,Montar la Vigilia
+ui.exit.watch_locked,Montar la Vigilia — cerrado hasta tu primera muerte
+ui.epitaph.stands,Sigue en pie en el Piso {floor}
+ui.epitaph.banked,Alma traída a casa
+ui.epitaph.rite,La próxima vez — monta la vigilia antes de caer.
+ui.epitaph.dismiss,Déjalos con ello
+ui.descent.offer,Te saltaste el Piso {floor}. Coge algo de él.
+ui.card.cost_x,X
+ui.fight.your_turn,Tu turno
+ui.fight.enemy_turn,Se mueven
+ui.fight.becoming,Si caes aquí
+ui.fight.yield_here,este piso paga
+ui.fight.blocked,Bloqueado
+ui.fight.watching,{count} de tus muertos vigilan este piso
+ui.use.table,Usar la mesa de mejoras
+ui.use.circle,Entrar en el círculo de la sesión
+ui.use.desk,Leer el registro de héroes
+ui.use.well,Mirar al fondo del pozo
+ui.use.close,Atrás
+ui.menu.paused,En pausa
+ui.menu.resume,Reanudar
+ui.menu.options,Opciones
+ui.menu.abandon,Abandonar la expedición
+ui.menu.quit,Salir al escritorio
+ui.menu.back,Atrás
+ui.options.sensitivity,Sensibilidad del ratón
+ui.options.invert_y,Invertir la vista
+ui.options.fov,Campo de visión
+ui.options.volume,Volumen
+ui.options.fullscreen,Pantalla completa
+ui.hint.close,Esc para cerrar
+ui.run.rooms_left,{n} salas siguen despiertas
+ui.run.one_room_left,Una sala sigue despierta
+ui.run.stairs_open,La escalera está abierta
+ui.menu.title,Ghost Guild
+ui.menu.continue,Continuar
+ui.menu.new,Gremio nuevo
+rule.strike_first.name,Golpear primero
+rule.strike_first.text,Daño antes que guardia. Mátalo antes de que balancee.
+rule.hold_the_line.name,Aguantar la línea
+rule.hold_the_line.text,Guardia primero. Nunca recibas un golpe que pudiste parar.
+rule.finish_the_wounded.name,Rematar al herido
+rule.finish_the_wounded.text,Un enemigo muerto vale más que dos heridos.
+rule.spend_everything.name,Gastarlo todo
+rule.spend_everything.text,La energía que sobra al final del turno es energía perdida.
+rule.save_your_strength.name,Guardar fuerzas
+rule.save_your_strength.text,Reserva energía. Hay cartas que merecen la espera.
+rule.poison_before_blades.name,Veneno antes que filo
+rule.poison_before_blades.text,Que se pudra. Golpea solo cuando no quede nada que aplicar.
+rule.break_them_first.name,Romperlos primero
+rule.break_them_first.text,Debilita y expón antes de golpear.
+rule.powers_first.name,Poderes primero
+rule.powers_first.text,Prepara pronto. Un combate se gana en el primer turno.
+rule.draw_before_striking.name,Robar antes de golpear
+rule.draw_before_striking.text,Cartas en la mano antes que golpes dados.
+rule.nurse_the_wound.name,Curar la herida
+rule.nurse_the_wound.text,Sigue entero. Curarse vale más que un golpe.
+rule.trade_blood_for_ground.name,Cambiar sangre por terreno
+rule.trade_blood_for_ground.text,Encaja el golpe. Devuelve uno peor.
+rule.block_only_against_lethal.name,Bloquear solo lo letal
+rule.block_only_against_lethal.text,Guarda exactamente lo que viene y ni un punto más.
+ui.watch.title,¿Cómo pelearán?
+ui.watch.hint,"Hasta tres, en orden. La primera pesa más."
+ui.watch.confirm,Montar la vigilia
+ui.watch.back,Atrás
+ui.watch.none,Sin órdenes. Pelearán como pelearía cualquiera.
+ui.watch.order,Pelearán según: {rules}
+ui.ghost.doctrine,Pelea según: {rules}
+upgrade.auto_draft.name,Órdenes Permanentes
+upgrade.auto_draft.text,Las elecciones del descenso se resuelven solas según tus reglas.
+upgrade.expedition.name,Expediciones
+upgrade.expedition.text,El gremio manda un héroe abajo por su cuenta. Monta la vigilia donde aguante.
+upgrade.expedition_slots.name,Un Gremio Mayor
+upgrade.expedition_slots.text,Una expedición más en el campo a la vez.
+upgrade.expedition_speed.name,Paso Firme
+upgrade.expedition_speed.text,Las expediciones viajan más rápido.
+epitaph.expedition,{name} fue enviado abajo y ocupa el Piso {floor}
+ui.expedition.title,Expediciones
+ui.expedition.send,Enviar
+ui.expedition.none,Una plaza vacía
+ui.expedition.away,{name} desciende al Piso {floor}
+ui.expedition.returns,monta la vigilia en {time}
+ui.expedition.returned,{name} ocupa el Piso {floor}
+ui.offline.expeditions,Expediciones de vuelta
+biome.fungal_deep.name,La Hondura Fúngica
+enemy.spore_hound.name,Sabueso de Esporas
+enemy.rot_grub.name,Gusano de Podredumbre
+enemy.bloom_wretch.name,Miserable en Flor
+enemy.mycelial_husk.name,Cáscara Micelial
+enemy.cap_thrower.name,Lanzasombreros
+enemy.thorn_polyp.name,Pólipo Espinoso
+enemy.flesh_weaver.name,Tejedor de Carne
+enemy.deep_lurker.name,Acechador de la Hondura
+enemy.sporemother.name,Madre de Esporas
+enemy.the_bloom.name,La Floración
+card.spore_cloud.name,Nube de Esporas
+card.spore_cloud.text,Aplica {0} Veneno a todos los enemigos.
+card.cutting_fungus.name,Hongo Cortante
+card.cutting_fungus.text,Inflige {0} de daño. Aplica {1} Veneno.
+card.mycelium.name,Micelio
+card.mycelium.text,Gana {0} de Bloqueo y {1} de Regeneración.
+card.gut_hook.name,Garfio Destripador
+card.gut_hook.text,Inflige {0} de daño. Aplica {1} Vulnerable.
+card.deep_roots.name,Raíces Hondas
+card.deep_roots.text,Roba {0}. Gana {1} de energía. Se consume.
+card.rupture.name,Reventón
+card.rupture.text,Inflige {0} de daño. Aplica {1} Veneno.
+card.chitin_plate.name,Placa de Quitina
+card.chitin_plate.text,Gana {0} de Bloqueo y {1} de Espinas.
+card.harvest.name,Cosecha
+card.harvest.text,Roba {0}. Cura {1}.
+card.rotbloom.name,Flor Podrida
+card.rotbloom.text,Gana {0} de Doble.
+card.the_deep_breath.name,La Honda Bocanada
+card.the_deep_breath.text,Cura {0}. Gana {1} de Ingenio. Se consume.
+class.hexer.name,Maldicente
+relic.hexers_thimble.name,Dedal del Maldicente
+relic.hexers_thimble.text,Los enemigos empiezan cada combate con 3 Veneno.
+card.wither.name,Marchitar
+card.wither.text,Inflige {0} de daño. Aplica {1} Veneno.
+card.flinch.name,Encogerse
+card.flinch.text,Gana {0} de Bloqueo.
+card.ill_wish.name,Mal Deseo
+card.ill_wish.text,Aplica {0} Débil.
+card.creeping_rot.name,Podredumbre Reptante
+card.creeping_rot.text,Aplica {0} Veneno.
+card.hex_bolt.name,Saeta Maldita
+card.hex_bolt.text,Inflige {0} de daño. Aplica {1} Débil.
+card.sap_will.name,Minar la Voluntad
+card.sap_will.text,Aplica {0} Débil a todos los enemigos.
+card.bitter_draught.name,Brebaje Amargo
+card.bitter_draught.text,Gana {0} de Bloqueo. Roba {1}.
+card.evil_eye.name,Mal de Ojo
+card.evil_eye.text,Aplica {0} Vulnerable. Roba {1}.
+card.bloodletting.name,Sangría
+card.bloodletting.text,Inflige {0} de daño dos veces. Gana {1} de Sangrado.
+card.miasma.name,Miasma
+card.miasma.text,Aplica {0} Veneno a todos los enemigos.
+card.witchs_mark.name,Marca de Bruja
+card.witchs_mark.text,Inflige {0} de daño. Aplica {1} Veneno y {2} Vulnerable.
+card.cold_comfort.name,Frío Consuelo
+card.cold_comfort.text,Gana {0} de Bloqueo y {1} de Regeneración.
+card.black_ledger.name,Libro Negro
+card.black_ledger.text,Roba {0}. Gana {1} de Ingenio. Se consume.
+card.the_long_illness.name,La Larga Enfermedad
+card.the_long_illness.text,Gana {0} de Doble.
+card.unmaking.name,Deshacer
+card.unmaking.text,Inflige {0} de daño. Aplica {1} Veneno.
+ui.class.locked,Se abre cuando uno de tus muertos ocupe {biome}.
+ui.class.current,Quién eres.
+ui.class.swap,Manda a este otro en su lugar. Solo antes de descender.
+biome.the_kiln.name,El Horno
+enemy.cinder_hound.name,Sabueso de Rescoldo
+enemy.slag_crawler.name,Reptador de Escoria
+enemy.ember_wisp.name,Fatuo de Ascuas
+enemy.furnace_drone.name,Zángano de Fragua
+enemy.clay_sentinel.name,Centinela de Barro
+enemy.glass_shrike.name,Alcaudón de Vidrio
+enemy.kiln_warden.name,Guardián del Horno
+enemy.molten_husk.name,Cáscara Fundida
+enemy.the_bellows.name,El Fuelle
+enemy.the_first_flame.name,La Primera Llama
+card.hammer_blow.name,Martillazo
+card.hammer_blow.text,Inflige {0} de daño.
+card.firebrand.name,Tizón
+card.firebrand.text,Inflige {0} de daño. Aplica {1} Quemadura.
+card.slake.name,Apagar la Sed
+card.slake.text,Gana {0} de Bloqueo. Cura {1}.
+card.quench.name,Templar
+card.quench.text,Gana {0} de Bloqueo y {1} de Regeneración.
+card.pry_bar.name,Palanca
+card.pry_bar.text,Inflige {0} de daño. Aplica {1} Vulnerable.
+card.bellows_breath.name,Soplo de Fuelle
+card.bellows_breath.text,Aplica {0} Quemadura a todos los enemigos.
+card.anvil_stance.name,Postura del Yunque
+card.anvil_stance.text,Gana {0} de Bloqueo y {1} de Espinas.
+card.white_heat.name,Calor Blanco
+card.white_heat.text,Gana {0} de Fuerza.
+card.smiths_eye.name,Ojo del Herrero
+card.smiths_eye.text,Roba {0}. Gana {1} de energía. Se consume.
+card.sunder.name,Hendir
+card.sunder.text,Inflige {0} de daño. Aplica {1} Vulnerable.
+ui.hall.title,El Salón de las Leyendas
+ui.hall.blessing,Lo que cada Leyenda suma a tus muertos y a tus manos
+ui.hall.legends,Los Fundidos
+ui.hall.none,Todavía no se ha fundido a nadie.
+ui.hall.rite,Ejecutar el rito
+ui.hall.needed,El rito necesita a uno de los tuyos en el Piso {floor}. El más hondo está en el {standing}.
+ui.hall.cost,"Se lleva a los {ghosts} muertos que tienes y toda el Alma ({soul}). Conserva tu alcance, tus mejoras y lo que has desbloqueado."
+ui.hall.legend,"{name}, ciclo {cycle} — +{bonus}, {trait}"
+ui.hall.and_more,y {count} más
+ui.use.hall,Leer el Salón de las Leyendas
+tag.bone.name,Hueso
+tag.shield.name,Escudo
+tag.poison.name,Veneno
+tag.ember.name,Ascua
+tag.draw.name,Robo
+tag.holy.name,Sagrado
+tag.weak.name,Débil
+mutation.thorned.name,Espinado
+mutation.thorned.text,Cada enemigo empieza con 3 Espinas.
+mutation.hardened.name,Endurecido
+mutation.hardened.text,Cada enemigo empieza con 2 de Fuerza.
+mutation.the_cold.name,El Frío
+mutation.the_cold.text,Empiezas cada combate con 2 Débil.
+mutation.the_rot.name,La Podredumbre
+mutation.the_rot.text,Empiezas cada combate con 3 Veneno.
+mutation.the_dark.name,La Oscuridad
+mutation.the_dark.text,Robas una carta menos cada turno.
+mutation.the_weight.name,El Peso
+mutation.the_weight.text,Tienes una energía menos cada turno.
+mutation.second_wind.name,Segundo Aliento
+mutation.second_wind.text,Tienes una energía más cada turno.
+mutation.the_kindling.name,La Yesca
+mutation.the_kindling.text,Empiezas cada combate con 2 Quemadura.
+mutation.the_swollen.name,Lo Hinchado
+mutation.the_swollen.text,Cada enemigo tiene mucha más salud.
+ui.run.floor_tier,Piso {floor} · {biome} · Ciclo {tier}
+ui.run.mutation,{name} — {text}
+trait.poison.name,El Podrido
+trait.poison.text,Tus cartas de Veneno aplican 1 acumulación más.
+trait.ember.name,El Encendido
+trait.ember.text,Tus cartas de Ascua aplican 1 acumulación más.
+trait.weak.name,El Deshacedor
+trait.weak.text,Tus cartas de Débil aplican 1 acumulación más.
+trait.bone.name,El Rompehuesos
+trait.bone.text,Tus cartas de Hueso infligen 2 de daño más.
+trait.holy.name,El Consagrado
+trait.holy.text,Tus cartas Sagradas infligen 3 de daño más.
+trait.shield.name,El Inquebrantable
+trait.shield.text,Tus cartas de Escudo dan 2 de Bloqueo más.
+trait.draw.name,El Clarividente
+trait.draw.text,Tus cartas de Robo roban 1 carta más.
+ui.hall.carry,Llevar al descenso
+ui.hall.carried,Llevada
+ui.hall.carrying,{name} camina contigo.
+ui.hall.carry_none,Ninguna Leyenda camina contigo.
+ui.hall.invoke_hint,Puede invocarse una Leyenda por descenso. Su rasgo es tuyo durante la expedición.
+ui.haunting,El Piso {floor} está encantado: {count} muertos de {tag} y +{bonus} de engendro.
+ui.haunting.none,Tres de tus muertos del mismo arquetipo encantan su piso.
+ui.tend.sharpen,Afilar
+ui.tend.relic,Armar
+chapter.deeper_roots.name,Raíces Más Hondas
+chapter.deeper_roots.text,El Fundador de cada ciclo empieza tres pisos más abajo.
+chapter.breeding_dark.name,La Oscuridad Fecunda
+chapter.breeding_dark.text,Cada piso engendra un 10% más.
+chapter.old_blood.name,Sangre Vieja
+chapter.old_blood.text,Conserva una décima parte de tu Alma tras el rito.
+chapter.depth_seals.name,Sellos de Profundidad
+chapter.depth_seals.text,Pon un Sello antes de descender: más duro abajo y tus muertos valen más.
+ui.chronicle.title,La Crónica
+ui.chronicle.locked,La Crónica se abre con {count} Leyendas. Tienes {have}.
+ui.chronicle.ink,Tinta
+ui.chronicle.write,Escribir
+ui.chronicle.written,Escrito
+ui.chronicle.level,Nivel {level} de {max}
+ui.seal.none,Sin Sello
+ui.seal.set,Sello {seal}: enemigos +{harder} y tus muertos +{richer}
+ui.seal.locked,Los Sellos de Profundidad se escriben en la Crónica.
+ui.options.language,Idioma
+ui.language.en,English
+ui.language.es,Español

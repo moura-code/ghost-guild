@@ -222,7 +222,12 @@ static func finish_run(c: Campaign, now: int) -> Dictionary:
 	var soul := float(outcome.get("soul", 0.0))
 	c.soul += soul
 	c.emit({"type": "soul_banked", "amount": soul, "total": c.soul})
-	var cleared := floor - 1 if kind == "death" else floor
+	# A floor is cleared by walking out of its exit. `abandon` ends a run as
+	# a "retreat" from any phase, mid-fight included, so retreating from
+	# anywhere but the exit was banking a floor nobody had finished -- a
+	# permanent floor of reach for pressing Escape.
+	var walked_out := String(c.run.outcome.get("from_phase", "exit")) == "exit"
+	var cleared := floor if (kind == "watch" or walked_out) else floor - 1
 	c.record_depth = maxi(c.record_depth, cleared)
 	var result := {"kind": kind, "floor": floor, "soul": soul, "ghost_id": 0, "epitaph": "", "new_hero": false, "rite_events": []}
 	# Whatever the hero was carrying is the guild's knowledge now, however
@@ -261,13 +266,16 @@ static func _remember_relics(c: Campaign, relics: Array) -> void:
 
 
 static func strength_for(c: Campaign, ghost: Ghost) -> float:
-	# A ghost left under a Depth Seal is worth more for ever (§6.2), and the
-	# multiplier rides on the ghost so a later tend re-prices it with the
-	# seal still on rather than washing it off.
-	var sealed := Chronicle.seal_yield(c.content, ghost.seal)
 	if ghost.fixed_strength:
 		return ghost.strength
-	var sim := Strength.simulate(c.content, blessed_snapshot(c, ghost), c.biome_at(ghost.floor), ghost.floor, hash([c.campaign_seed, "strength", ghost.id]), c.sim_fights, ghost.rules)
+	# A ghost left under a Depth Seal is worth more for ever (§6.2), and the
+	# multiplier rides on the ghost so a later tend re-prices it with the
+	# seal still on rather than washing it off. After the early return, not
+	# before it: a fixed-strength ghost was paying for this and dropping it.
+	var sealed := Chronicle.seal_yield(c.content, ghost.seal)
+	var sim := Strength.simulate(c.content, blessed_snapshot(c, ghost),
+		c.biome_at(ghost.floor), ghost.floor, hash([c.campaign_seed, "strength", ghost.id]),
+		c.sim_fights, ghost.rules, c.campaign_seed, ghost.seal)
 	return Strength.of_ghost_stats(ghost.measured, sim, c.balance()) * sealed
 
 
@@ -302,7 +310,7 @@ const MAX_SEGMENTS := 512
 ##   per-segment cap would do.
 static func tick(c: Campaign, now: int) -> Dictionary:
 	var elapsed := maxi(0, now - c.last_tick)
-	var cap_seconds := int(round(float(c.modifiers()["offline_cap_hours"]) * 3600.0))
+	var cap_seconds := int(round(c.offline_cap_hours() * 3600.0))
 	var budget := mini(elapsed, cap_seconds)
 	var total := {"elapsed": elapsed, "counted": 0, "capped": elapsed > budget,
 		"soul": 0.0, "returned": []}
@@ -318,7 +326,11 @@ static func tick(c: Campaign, now: int) -> Dictionary:
 		total["returned"].append_array(Expeditions.resolve_due(c, due))
 		refresh_rate(c)
 	_accrue_segment(c, now - at, budget, total)
-	c.last_tick = now
+	# Never backwards. `elapsed` is floored at zero, so a `now` behind
+	# `last_tick` pays nothing -- and then moved the paid-up marker back,
+	# so the next settle re-paid a window this one had already covered. An
+	# NTP correction after a sleep is enough to do it.
+	c.last_tick = maxi(c.last_tick, now)
 	return total
 
 

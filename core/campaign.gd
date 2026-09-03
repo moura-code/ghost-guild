@@ -67,6 +67,15 @@ func biome_at(floor: int) -> BiomeDef:
 	return Biomes.for_floor(content, floor)
 
 
+## Just the offline cap, without building the rest of the table.
+##
+## `modifiers()` rebuilds the upgrade table *and* walks every ghost on
+## every floor for the haunting map. `displayed_soul` wanted one float out
+## of it, ten times a second, on a live 3D scene.
+func offline_cap_hours() -> float:
+	return float(upgrades.modifiers(content).get("offline_cap_hours", 8.0))
+
+
 func modifiers() -> Dictionary:
 	var mods := upgrades.modifiers(content)
 	# Hauntings (spec §5.6) are a property of *who is standing where*, so they
