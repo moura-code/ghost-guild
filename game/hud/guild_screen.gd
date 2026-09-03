@@ -20,7 +20,8 @@ const GROUP_ORDER := ["hero", "ghosts", "descent", "seance"]
 ## own margins. Too narrow and the flow wraps, which puts the second group
 ## below the fold and the screen starts scrolling again.
 const WALL_GAP := 5.0
-const WALL_WIDTH := UpgradePlaque.COLUMNS * UpgradePlaque.PLAQUE_SIZE.x 	+ (UpgradePlaque.COLUMNS - 1) * WALL_GAP + 44.0
+const WALL_WIDTH := UpgradePlaque.COLUMNS * UpgradePlaque.PLAQUE_SIZE.x \
+	+ (UpgradePlaque.COLUMNS - 1) * WALL_GAP + 44.0
 
 var game: GameRoot
 var rows: Dictionary = {}

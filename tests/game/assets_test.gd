@@ -53,7 +53,8 @@ func test_every_card_type_has_an_icon() -> void:
 func test_every_shipped_card_has_its_own_art() -> void:
 	var content := TestFixtures.content()
 	for card_id in content.cards:
-		assert_object(Icons.get_icon("card_art", String(card_id))) 			.override_failure_message("no art for card %s" % card_id).is_not_null()
+		assert_object(Icons.get_icon("card_art", String(card_id))) \
+			.override_failure_message("no art for card %s" % card_id).is_not_null()
 
 
 func test_cards_that_do_different_things_look_different() -> void:
@@ -63,7 +64,8 @@ func test_cards_that_do_different_things_look_different() -> void:
 	var seen := {}
 	for card_id in content.cards:
 		var art := Icons.get_icon("card_art", String(card_id))
-		assert_bool(seen.has(art)) 			.override_failure_message("%s reuses another card's icon" % card_id).is_false()
+		assert_bool(seen.has(art)) \
+			.override_failure_message("%s reuses another card's icon" % card_id).is_false()
 		seen[art] = card_id
 
 

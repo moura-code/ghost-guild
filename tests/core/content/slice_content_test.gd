@@ -40,7 +40,8 @@ func test_slice_content_volume() -> void:
 			assert_object(card).override_failure_message(
 				"%s opens with '%s', which is not a card" % [id, card_id]).is_not_null()
 			assert_str(card.pool).override_failure_message(
-				"%s opens with %s, which is in the %s pool" % [id, card_id, card.pool]) 				.is_equal(klass.pool)
+				"%s opens with %s, which is in the %s pool" % [id, card_id, card.pool]) \
+				.is_equal(klass.pool)
 	var elites := 0
 	var bosses := 0
 	for id in c.enemies:
@@ -66,7 +67,8 @@ func test_every_upgrade_group_the_spec_names_has_something_in_it() -> void:
 		if group == "seance":
 			# Séance upgrades are M2 work that has not landed yet (spec §5.9).
 			continue
-		assert_int(int(groups.get(group, 0))) 			.override_failure_message("upgrade group '%s' is empty" % group).is_greater(0)
+		assert_int(int(groups.get(group, 0))) \
+			.override_failure_message("upgrade group '%s' is empty" % group).is_greater(0)
 
 
 ## A card whose pool nothing draws from is a card that cannot be found.
@@ -120,3 +122,28 @@ func test_every_key_the_content_names_resolves() -> void:
 		check.call("ui.group.%s" % (c.upgrades[id] as UpgradeDef).group)
 	assert_array(missing).override_failure_message(
 		"unresolved string keys: %s" % ", ".join(missing)).is_empty()
+
+
+## A comma in an unquoted CSV value ends the value, and the loader keeps the
+## half in front of it. Nothing errors, nothing is missing a key, and the
+## sentence on the screen simply stops -- which is how a haunting shipped for
+## an afternoon saying "Floor 4: 3 Bone" and never what it was worth.
+func test_no_string_is_quietly_cut_in_half_by_its_own_comma() -> void:
+	var file := FileAccess.open("res://data/strings/en.csv", FileAccess.READ)
+	assert_object(file).is_not_null()
+	var line_no := 0
+	while not file.eof_reached():
+		var raw := file.get_line()
+		line_no += 1
+		if raw.strip_edges() == "":
+			continue
+		var first := raw.find(",")
+		if first == -1:
+			continue
+		var value := raw.substr(first + 1)
+		if value.begins_with("\""):
+			continue
+		assert_bool(value.contains(",")).override_failure_message(
+			"line %d of en.csv has an unquoted comma and loses everything after it: %s"
+			% [line_no, raw]).is_false()
+	file.close()

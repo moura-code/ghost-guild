@@ -220,6 +220,11 @@ func _layout() -> void:
 		# And the rate holds a column at the right, for the same reason.
 		var rate: Label = _rates[floor]
 		rate.text = Num.rate(output) if output > 0.0 else ""
+		# A haunted floor (spec §5.6) pays more than its ghosts should be able
+		# to make it pay, and the number is the only place that shows. Amber,
+		# the colour the game already uses for a condition of the place.
+		var haunted: Dictionary = mods.get("haunting", {})
+		rate.modulate = Palette.PREPARED if haunted.has(floor) else Palette.SOUL
 		rate.size = Vector2(RATE_COLUMN - 10.0, 18.0)
 		rate.position = Vector2(size.x - RATE_COLUMN + 10.0, rect.position.y + rect.size.y * 0.5 - 9.0)
 

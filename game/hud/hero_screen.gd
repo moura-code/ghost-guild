@@ -149,7 +149,8 @@ func _refresh_classes(hero: Hero) -> void:
 		button.text = game.text(def.name_key)
 		var behind := Classes.locked_behind(game.content, class_id)
 		if not open.has(class_id) and behind != "":
-			button.tooltip_text = game.text("ui.class.locked") 				.replace("{biome}", game.text(_biome_name_key(behind)))
+			button.tooltip_text = game.text("ui.class.locked") \
+				.replace("{biome}", game.text(_biome_name_key(behind)))
 		elif class_id == hero.class_id:
 			button.tooltip_text = game.text("ui.class.current")
 		else:

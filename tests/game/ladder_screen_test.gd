@@ -392,3 +392,45 @@ func test_a_ghost_below_the_authored_dungeon_has_a_chamber_to_stand_in() -> void
 	await await_idle_frame()
 	assert_bool(s._tower._marks.has(44)).override_failure_message(
 		"floor 44 has no chamber in the shaft").is_true()
+
+
+## Hauntings (spec 5.6) are the one thing on this screen a still frame has to
+## be able to show: a floor paying more than its ghosts should be able to make
+## it pay, and a line saying why.
+func test_the_ladder_says_when_a_floor_is_haunted() -> void:
+	var g := _game()
+	for i in 3:
+		var walker := Hero.create(g.content, "sexton", "Crowd%d" % i, {}, 1)
+		g.campaign.ladder.add(Ghost.from_expedition(walker, 4, 1000))
+	var s := _screen(g)
+	await await_idle_frame()
+	assert_str(s._haunting.text).contains("4")
+	# A comma in an unquoted CSV value ends the value. This line has one, and
+	# the half that went missing was the number.
+	var note := "the line reads: " + s._haunting.text
+	assert_str(s._haunting.text).override_failure_message(note).contains("%")
+	assert_str(s._haunting.text).override_failure_message(note).contains("spawn")
+
+
+func test_the_haunting_line_fits_the_column_it_is_drawn_in() -> void:
+	# This VBox is as wide as the shaft. A line that runs past it is a line
+	# the player reads half of, and the half that goes missing is the number.
+	var g := _game()
+	for i in 3:
+		var walker := Hero.create(g.content, "sexton", "Crowd%d" % i, {}, 1)
+		g.campaign.ladder.add(Ghost.from_expedition(walker, 4, 1000))
+	var s := _screen(g)
+	await await_idle_frame()
+	var font := s._haunting.get_theme_font("font")
+	var size := s._haunting.get_theme_font_size("font_size")
+	var wide := font.get_string_size(s._haunting.text, HORIZONTAL_ALIGNMENT_LEFT,
+		-1.0, size).x
+	var note := "the line is %d px wide in a %d px box" % [wide, s._haunting.size.x]
+	assert_float(wide).override_failure_message(note).is_less_equal(s._haunting.size.x)
+
+
+func test_an_unhaunted_ladder_says_how_to_haunt_one() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	assert_str(s._haunting.text).is_equal(g.text("ui.haunting.none"))

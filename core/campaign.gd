@@ -57,7 +57,12 @@ func biome_at(floor: int) -> BiomeDef:
 
 
 func modifiers() -> Dictionary:
-	return upgrades.modifiers(content)
+	var mods := upgrades.modifiers(content)
+	# Hauntings (spec §5.6) are a property of *who is standing where*, so they
+	# ride with the other floor modifiers rather than living inside `Ladder`,
+	# which holds ghosts and has never needed to know what a card is.
+	mods["haunting"] = Hauntings.by_floor(content, ladder, balance())
+	return mods
 
 
 func sub_rng(tag: String, n: int) -> Rng:

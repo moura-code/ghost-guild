@@ -26,6 +26,14 @@ var fixed_strength: bool = false
 ## reason "the ghost fights as you fought" is true of the simulated half of
 ## its strength and not only the measured half.
 var rules: Array[String] = []
+## What this ghost's deck was mostly made of, worked out once on demand.
+##
+## Not saved and not a constructor argument: a deck never changes after the
+## ghost is made, so the answer is stable, and the three constructors take a
+## Hero rather than the Content it would take to read a card's tags. Cached
+## because `Campaign.modifiers()` asks every ghost on the ladder for it, and
+## that is a path the Soul counter walks ten times a second.
+var _archetype: String = ""
 
 
 static func from_run(hero: Hero, outcome: Dictionary, p_measured: Dictionary, p_created_at: int) -> Ghost:
@@ -88,6 +96,28 @@ static func from_expedition(hero: Hero, p_floor: int, p_created_at: int) -> Ghos
 ## echo source". There were six scattered `kind == "true"` checks before this
 ## existed, and adding a second true-ish kind to all six independently is how a
 ## ghost ends up real on one screen and a copy on the next.
+## The card tag this ghost's deck carries most of (spec §5.6). Empty for a
+## ghost with no deck, which then joins no haunting.
+func archetype(content: Content) -> String:
+	if _archetype != "":
+		return _archetype
+	var counts: Dictionary = {}
+	for card in deck:
+		var def_id := (card as CardInstance).def_id
+		if not content.cards.has(def_id):
+			continue
+		for tag in (content.cards[def_id] as CardDef).tags:
+			counts[tag] = int(counts.get(tag, 0)) + 1
+	var names: Array = counts.keys()
+	names.sort()
+	var most := 0
+	for tag in names:
+		if int(counts[tag]) > most:
+			most = int(counts[tag])
+			_archetype = String(tag)
+	return _archetype
+
+
 func is_true() -> bool:
 	return kind == "true" or kind == "expedition"
 

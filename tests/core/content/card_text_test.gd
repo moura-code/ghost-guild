@@ -62,7 +62,8 @@ func test_a_card_whose_numbers_change_says_so() -> void:
 			silent.append("%s: %s" % [id, c.text(def.text_key)])
 	assert_array(silent).override_failure_message(
 		"cards that read the same upgraded as they do unupgraded:
-  %s" 		% "
+  %s" \
+		% "
   ".join(silent)).is_empty()
 
 

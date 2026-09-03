@@ -176,7 +176,9 @@ func test_every_tablet_explains_itself_on_hover() -> void:
 	for id in s.rows:
 		var plaque: UpgradePlaque = s.rows[id]
 		var def: UpgradeDef = g.content.upgrades[id]
-		assert_str(plaque.tooltip_text) 			.override_failure_message("%s has no tooltip" % id) 			.contains(g.text(def.text_key))
+		assert_str(plaque.tooltip_text) \
+			.override_failure_message("%s has no tooltip" % id) \
+			.contains(g.text(def.text_key))
 		assert_int(plaque.mouse_filter).is_not_equal(Control.MOUSE_FILTER_IGNORE)
 
 

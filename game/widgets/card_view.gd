@@ -214,7 +214,8 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 	# different framing -- a glyph sits centred inside the slot with air
 	# around it, an illustration fills the window it is looking through.
 	var illustrated := Icons.has_card_art(card.def_id)
-	_art_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED if illustrated 		else TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_art_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED if illustrated \
+		else TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	if illustrated:
 		_art_image.modulate = Color.WHITE if playable else Color(0.45, 0.45, 0.5, 1.0)
 	else:
@@ -286,9 +287,11 @@ func _on_hover(entered: bool) -> void:
 		_hover_tween.kill()
 	_hover_tween = create_tween()
 	_hover_tween.set_parallel(true)
-	_hover_tween.tween_property(self, "position:y", _rest_y - (HOVER_LIFT if raise else 0.0), 0.10) 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_hover_tween.tween_property(self, "position:y", _rest_y - (HOVER_LIFT if raise else 0.0), 0.10) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	_hover_tween.tween_property(self, "scale",
-		Vector2.ONE * (HOVER_SCALE if raise else 1.0), 0.10) 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		Vector2.ONE * (HOVER_SCALE if raise else 1.0), 0.10) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	# A raised card must draw over its neighbours, or the fan clips it.
 	z_index = 10 if raise else 0
 
@@ -319,7 +322,8 @@ func fly_out(to: Vector2) -> void:
 		return
 	var tween := create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(self, "global_position", to, FLY_SECONDS) 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, "global_position", to, FLY_SECONDS) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 	tween.tween_property(self, "rotation", 0.5, FLY_SECONDS)
 	tween.tween_property(self, "modulate:a", 0.0, FLY_SECONDS)
 

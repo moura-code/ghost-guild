@@ -145,13 +145,16 @@ func test_the_room_has_a_tone_and_it_loops() -> void:
 	var s := _sfx()
 	await await_idle_frame()
 	s.start_ambience()
-	assert_bool(s._ambience.playing) 		.override_failure_message("the room is silent").is_true()
+	assert_bool(s._ambience.playing) \
+		.override_failure_message("the room is silent").is_true()
 	var stream := s._ambience.stream as AudioStreamWAV
 	assert_object(stream).is_not_null()
 	# The loop is set at import time (edit/loop_mode=1), not at runtime:
 	# mutating the shared cached resource meant holding a copy past shutdown,
 	# which leaked the stream and its playback at exit.
-	assert_int(stream.loop_mode) 		.override_failure_message("ambience would play once and stop") 		.is_equal(AudioStreamWAV.LOOP_FORWARD)
+	assert_int(stream.loop_mode) \
+		.override_failure_message("ambience would play once and stop") \
+		.is_equal(AudioStreamWAV.LOOP_FORWARD)
 
 
 func test_starting_the_room_twice_does_not_stack_two_of_them() -> void:

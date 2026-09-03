@@ -229,8 +229,10 @@ func test_the_slow_half_fills_in_without_losing_the_fast_half() -> void:
 func test_the_preview_simulates_less_than_the_balance_tools() -> void:
 	# The trade this screen makes: an estimate the player glances at does
 	# not need the accuracy a balance invariant does.
-	assert_int(ExitScreen.PREVIEW_FIGHTS) 		.is_less(int(TestFixtures.content().balance.get("strength_sim_fights", 50)))
-	assert_int(ExitScreen.PREVIEW_SAMPLES) 		.is_less(int(TestFixtures.content().balance.get("survival_samples", 20)))
+	assert_int(ExitScreen.PREVIEW_FIGHTS) \
+		.is_less(int(TestFixtures.content().balance.get("strength_sim_fights", 50)))
+	assert_int(ExitScreen.PREVIEW_SAMPLES) \
+		.is_less(int(TestFixtures.content().balance.get("survival_samples", 20)))
 
 
 func test_the_preview_restores_the_campaign_fight_count() -> void:

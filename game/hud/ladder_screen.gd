@@ -14,7 +14,10 @@ const ROW_SEPARATION := 1
 ## ones are ledges down a shaft, which is the image the whole game is named
 ## after.
 const TOWER_WIDTH := 186.0
-const TOWER_HEIGHT := 236.0
+## Two lines shorter than it was: the haunting line under the shaft has to
+## fit inside the frame, and a sentence clipped by the bottom edge teaches
+## nobody anything.
+const TOWER_HEIGHT := 222.0
 
 var game: GameRoot
 
@@ -24,6 +27,10 @@ var _descend: Button
 var _entry: SpinBox
 var _cheapest_cost: float = -1.0
 var _tower: TowerView
+## What a haunting is and whether the guild has one. Under the shaft rather
+## than on it: the tower can colour a number amber, and only a sentence can
+## teach the player why standing three Poison dead together was worth doing.
+var _haunting: Label
 
 
 func _init() -> void:
@@ -100,6 +107,17 @@ func _build() -> void:
 	tower_wrap.add_child(_tower)
 	add_child(tower_wrap)
 
+	_haunting = UiTheme.small("", Palette.PREPARED)
+	_haunting.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# One line and no wrapping: this VBox gives a Label about forty characters
+	# whatever it is told about widths, and a wrapped second line is simply
+	# never drawn. The sentence is written to fit rather than argued with.
+	# Given a width, not left to find one. A bare Label in this VBox got a
+	# rect about ninety pixels across -- narrower than the shaft above it --
+	# and quietly cut the sentence off after four words.
+	_haunting.custom_minimum_size = Vector2(0.0, 22.0)
+	add_child(ScreenLayout.centred(_haunting, ScreenLayout.WIDE_COLUMN))
+
 
 ## A number over its name, with the icon beside the caption rather than the
 ## value -- an icon next to a large number competes with it.
@@ -110,6 +128,7 @@ func refresh() -> void:
 		return
 	_tower.bind(game.campaign)
 	_refresh_premise()
+	_refresh_haunting()
 	_cheapest_cost = _cheapest_upgrade_cost()
 	var reach := CampaignEngine.reach(game.campaign)
 	var chosen := clampi(int(_entry.value), 1, reach)
@@ -132,6 +151,30 @@ func focus_rect() -> Rect2:
 		box.size + Vector2(60.0, 30.0))
 
 
+## The deepest haunting the guild has, or the rule for making one.
+##
+## The deepest rather than the first, because that is the one paying most and
+## the one the player is working toward -- and naming a floor 1 haunting while
+## floor 20 is also haunted would read as the feature being about the shallow
+## end.
+func _refresh_haunting() -> void:
+	var c := game.campaign
+	var bal := c.balance()
+	var floors := c.ladder.floors()
+	floors.reverse()
+	for floor in floors:
+		var told := Hauntings.describe(c.content, c.ladder, floor, bal)
+		if told.is_empty():
+			continue
+		_haunting.text = game.text("ui.haunting") \
+			.replace("{floor}", str(floor)) \
+			.replace("{count}", str(int(told["count"]))) \
+			.replace("{tag}", game.text("tag.%s.name" % String(told["tag"]))) \
+			.replace("{bonus}", Num.percent(float(told["bonus"])))
+		return
+	_haunting.text = game.text("ui.haunting.none")
+
+
 ## Names the deepest true ghost, because that one is both the waypoint and
 ## the best example of what the player is looking at.
 func _refresh_premise() -> void:
@@ -144,7 +187,9 @@ func _refresh_premise() -> void:
 	if deepest == null:
 		_premise.text = game.text("ui.premise.empty")
 		return
-	_premise.text = game.text("ui.premise") 		.replace("{name}", deepest.name) 		.replace("{floor}", str(deepest.floor))
+	_premise.text = game.text("ui.premise") \
+		.replace("{name}", deepest.name) \
+		.replace("{floor}", str(deepest.floor))
 
 
 ## Clicking a floor you can reach sets it as the entry for the next descent

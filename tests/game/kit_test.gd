@@ -69,7 +69,8 @@ func test_the_stone_is_grey_so_the_light_can_be_the_colour() -> void:
 	for biome in Kit.BIOME_STONE:
 		for m in [Kit.wall_material(biome), Kit.floor_material(biome), Kit.ceiling_material(biome)]:
 			assert_float(m.albedo_color.b).override_failure_message(
-				"%s is tinted warm, so it can only ever be orange" % biome) 				.is_greater_equal(m.albedo_color.r)
+				"%s is tinted warm, so it can only ever be orange" % biome) \
+				.is_greater_equal(m.albedo_color.r)
 			assert_float(m.albedo_color.r).is_less(1.0)
 
 

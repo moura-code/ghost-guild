@@ -143,7 +143,8 @@ func react_hit(amount: int) -> void:
 	_reaction = create_tween()
 	_reaction.set_parallel(true)
 	_reaction.tween_property(_plate, "modulate", Color.WHITE, 0.22)
-	_reaction.tween_property(_plate, "scale", Vector2.ONE, 0.3) 		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_reaction.tween_property(_plate, "scale", Vector2.ONE, 0.3) \
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 
 func _hp_colour() -> Color:

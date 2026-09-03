@@ -264,7 +264,8 @@ func duck(seconds: float = 1.2, depth: float = 0.25) -> void:
 	var under := linear_to_db(maxf(0.0001, volume * AMBIENCE_LEVEL * depth))
 	_ambience.volume_db = under
 	_duck = create_tween()
-	_duck.tween_property(_ambience, "volume_db", full, seconds) 		.set_delay(seconds * 0.5).set_trans(Tween.TRANS_SINE)
+	_duck.tween_property(_ambience, "volume_db", full, seconds) \
+		.set_delay(seconds * 0.5).set_trans(Tween.TRANS_SINE)
 
 
 func stop_all() -> void:

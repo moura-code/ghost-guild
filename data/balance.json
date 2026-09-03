@@ -62,5 +62,8 @@
   "legend_k": 0.5,
   "legend_mass_scale": 400.0,
   "tier_hp_jump": 1.45,
-  "tier_damage_jump": 1.25
+  "tier_damage_jump": 1.25,
+  "haunting_min": 3,
+  "haunting_per": 0.15,
+  "haunting_cap": 0.75
 }

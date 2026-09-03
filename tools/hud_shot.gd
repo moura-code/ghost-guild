@@ -82,7 +82,9 @@ func _init() -> void:
 			# `ladderdeep` is the same screen past the authored dungeon, where
 			# the drawn window has left the surface behind.
 			var deep_run := mode == "ladderdeep"
-			var standing: Array = [4, 14, 26, 34, 42] if deep_run else [4, 14, 26]
+			# Three on one floor in the shallow shot, because a haunting (§5.6) is
+			# the one thing on this screen a still frame has to be able to show.
+			var standing: Array = [4, 14, 26, 34, 42] if deep_run else [4, 14, 14, 14, 26]
 			for floor in standing:
 				var walker := Hero.create(game.content, "sexton", "Deep%d" % floor, {}, 1)
 				game.campaign.ladder.add(Ghost.from_expedition(walker, floor, 0))
