@@ -233,6 +233,30 @@ func _seance_action(act: Callable) -> Dictionary:
 	return r
 
 
+## Writing a Chapter of the Chronicle, and setting the Depth Seal for the
+## next descent (spec §6.2). Nothing under `game/` writes to the campaign.
+func write_chapter(id: String) -> Dictionary:
+	if campaign == null:
+		return {"ok": false, "cost": 0, "reason": "unbooted"}
+	settle()
+	var r := Chronicle.write(campaign, id, now())
+	if bool(r["ok"]):
+		CampaignEngine.refresh_rate(campaign)
+		_emit_all()
+		save()
+	return r
+
+
+func set_seal(seal: int) -> bool:
+	if campaign == null:
+		return false
+	var ok := CampaignEngine.set_seal(campaign, seal, now())
+	if ok:
+		_emit_all()
+		save()
+	return ok
+
+
 func prestige() -> Dictionary:
 	if campaign == null:
 		return {"ok": false, "reason": "unbooted", "legend": null}

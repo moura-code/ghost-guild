@@ -73,6 +73,23 @@ static func invoked_tag(c: Campaign) -> String:
 	return l.trait_tag if l != null else ""
 
 
+## Sets the Depth Seal for the next descent (spec §6.2). Clamped to what the
+## Chronicle has actually unlocked, and refused mid-run for the same reason an
+## invocation is: the run snapshots it at the door.
+static func set_seal(c: Campaign, seal: int, now: int) -> bool:
+	if c.run != null and not c.run.is_over():
+		push_error("set_seal: a run is already in progress")
+		return false
+	var wanted := clampi(seal, 0, Chronicle.seals_available(c))
+	if wanted != seal:
+		return false
+	if c.seal == wanted:
+		return true
+	c.seal = wanted
+	c.emit({"type": "seal_set", "seal": wanted, "at": now})
+	return true
+
+
 ## Chooses which Legend to carry (spec §6.1). `id` of 0 carries none.
 ##
 ## Refused while a run is live, because the run snapshots the trait at the
@@ -147,8 +164,13 @@ static func prestige(c: Campaign, now: int) -> Dictionary:
 	c.ink += 1
 
 	c.ladder = Ladder.new()
-	c.ladder.add(Ghost.founder(c.content, now))
-	c.soul = 0.0
+	# Deeper Roots and Old Blood (§6.2): the Chronicle is the layer above
+	# the layer that resets, so it is the only thing allowed to change what
+	# a reset means. Both are the identity until Ink has been spent.
+	var founder := Ghost.founder(c.content, now)
+	founder.floor = Chronicle.founder_floor(c)
+	c.ladder.add(founder)
+	c.soul = c.soul * Chronicle.soul_kept(c)
 	c.expeditions = []
 	new_hero(c, now)
 	refresh_rate(c)
@@ -184,7 +206,7 @@ static func start_run(c: Campaign, entry_floor: int, now: int) -> RunState:
 	c.run = RunEngine.start_run(c.content, c.hero, entry_floor, run_seed,
 		c.onboarding.watch_unlocked,
 		Biomes.claimed_pools(c.content, c.ladder, c.claimed_biomes), blessing(c),
-		c.campaign_seed, invoked_tag(c))
+		c.campaign_seed, invoked_tag(c), c.seal)
 	c.emit({"type": "run_started", "run": c.run_counter, "entry_floor": entry_floor, "seed": run_seed, "at": now})
 	return c.run
 
@@ -209,6 +231,7 @@ static func finish_run(c: Campaign, now: int) -> Dictionary:
 	_remember_relics(c, c.hero.relics)
 	if kind == "death" or kind == "watch":
 		var ghost := Ghost.from_run(c.hero, outcome, c.run.stats.measured(floor), now)
+		ghost.seal = c.run.seal
 		c.ladder.add(ghost)
 		ghost.strength = strength_for(c, ghost)
 		result["ghost_id"] = ghost.id
@@ -238,10 +261,14 @@ static func _remember_relics(c: Campaign, relics: Array) -> void:
 
 
 static func strength_for(c: Campaign, ghost: Ghost) -> float:
+	# A ghost left under a Depth Seal is worth more for ever (§6.2), and the
+	# multiplier rides on the ghost so a later tend re-prices it with the
+	# seal still on rather than washing it off.
+	var sealed := Chronicle.seal_yield(c.content, ghost.seal)
 	if ghost.fixed_strength:
 		return ghost.strength
 	var sim := Strength.simulate(c.content, blessed_snapshot(c, ghost), c.biome_at(ghost.floor), ghost.floor, hash([c.campaign_seed, "strength", ghost.id]), c.sim_fights, ghost.rules)
-	return Strength.of_ghost_stats(ghost.measured, sim, c.balance())
+	return Strength.of_ghost_stats(ghost.measured, sim, c.balance()) * sealed
 
 
 static func refresh_rate(c: Campaign) -> void:

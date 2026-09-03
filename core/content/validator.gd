@@ -40,6 +40,8 @@ static func validate(c: Content) -> Array[String]:
 		_mutation(c, c.mutations[id], errors)
 	for id in c.traits:
 		_trait(c, c.traits[id], errors)
+	for id in c.chapters:
+		_chapter(c, c.chapters[id], errors)
 	for id in c.events:
 		_event(c, c.events[id], errors)
 	for id in c.upgrades:
@@ -122,6 +124,24 @@ static func _trait(c: Content, t: TraitDef, errors: Array[String]) -> void:
 		var other: TraitDef = c.traits[other_id]
 		if other.id != t.id and other.tag == t.tag:
 			errors.append("%s: '%s' already has a trait (%s)" % [where, t.tag, other.id])
+
+
+## A Chapter of the Chronicle (spec §6.2). Ink arrives one per rite, so a
+## Chapter that costs more than a handful of levels' worth is one the player
+## will never finish -- the validator holds the whole book to a budget a real
+## campaign can reach.
+static func _chapter(c: Content, ch: ChapterDef, errors: Array[String]) -> void:
+	var where := "chapter " + ch.id
+	_key(c, where, ch.name_key, errors)
+	_key(c, where, ch.text_key, errors)
+	if not ChapterDef.OPS.has(ch.op):
+		errors.append("%s: unknown op '%s'" % [where, ch.op])
+	if ch.cost <= 0:
+		errors.append("%s: is free" % where)
+	if ch.max_level <= 0:
+		errors.append("%s: cannot be written" % where)
+	if is_zero_approx(ch.amount):
+		errors.append("%s: changes nothing" % where)
 
 
 static func _key(c: Content, where: String, key: String, errors: Array[String]) -> void:

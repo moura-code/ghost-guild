@@ -68,6 +68,21 @@ func _init() -> void:
 				g2.strength = 210.0
 				g2.fixed_strength = true
 			game.campaign.soul = 3400.0
+			# Enough closed cycles for the Chronicle to be open, and Ink to spend
+			# in it: a locked shelf is not the state worth looking at.
+			for extra in range(2, 7):
+				var older := Legend.new()
+				older.id = extra
+				older.cycle = extra
+				older.name = "Cycle%d" % extra
+				older.multiplier = 1.0 + 0.08 * float(extra)
+				older.trait_tag = "poison" if extra % 2 == 0 else "shield"
+				game.campaign.legends.append(older)
+			game.campaign.ink = 7
+			game.campaign.chapters = {"breeding_dark": 1, "depth_seals": 1}
+			# The Chronicle is the half of this screen the shot is about, and the
+			# Hall above it is four plates tall.
+			crawl.set_meta("shot_scroll", true)
 			var wall := crawl.guild.station(GuildRoom.HALL)
 			wall.enter(crawl.player)
 			wall.use()
@@ -152,6 +167,15 @@ func _init() -> void:
 
 	for _i in frames:
 		await process_frame
+	# A scrolling panel has no content height until it has been laid out, so
+	# a shot that wants the bottom of one has to ask after the wait, not
+	# before it -- `scroll_vertical` is clamped to zero until then.
+	if bool(crawl.get_meta("shot_scroll", false)) and crawl.panel != null:
+		var sc := crawl.panel.get_child(0)
+		if sc is ScrollContainer:
+			(sc as ScrollContainer).scroll_vertical = 100000
+		for _j in 6:
+			await process_frame
 	await process_frame
 	var err := win.get_texture().get_image().save_png(out)
 	print("hud_shot[%s] -> %s err=%d" % [mode, out, err])

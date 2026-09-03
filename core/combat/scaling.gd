@@ -14,13 +14,18 @@ static func tier_step(tier: int, balance: Dictionary, key: String) -> float:
 	return pow(float(balance.get(key, 1.0)), float(maxi(1, tier) - 1))
 
 
-static func enemy_hp(base: int, floor: int, balance: Dictionary, tier: int = 1) -> int:
+## `seal` is the Depth Seal the run is under (spec §6.2): opt-in difficulty,
+## 1.0 at no seal, so an unsealed descent is the one the game is balanced
+## around and every existing number is untouched.
+static func enemy_hp(base: int, floor: int, balance: Dictionary, tier: int = 1,
+		seal: float = 1.0) -> int:
 	var growth := float(balance.get("enemy_hp_growth", 1.06))
 	var step := tier_step(tier, balance, "tier_hp_jump")
-	return maxi(1, int(round(base * pow(growth, floor - 1) * step)))
+	return maxi(1, int(round(base * pow(growth, floor - 1) * step * seal)))
 
 
-static func enemy_damage(base: int, floor: int, balance: Dictionary, tier: int = 1) -> int:
+static func enemy_damage(base: int, floor: int, balance: Dictionary, tier: int = 1,
+		seal: float = 1.0) -> int:
 	var growth := float(balance.get("enemy_damage_growth", 1.04))
 	var step := tier_step(tier, balance, "tier_damage_jump")
-	return maxi(0, int(round(base * pow(growth, floor - 1) * step)))
+	return maxi(0, int(round(base * pow(growth, floor - 1) * step * seal)))

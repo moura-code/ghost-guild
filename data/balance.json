@@ -67,5 +67,8 @@
   "haunting_per": 0.15,
   "haunting_cap": 0.75,
   "tend_upgrade_mult": 2.5,
-  "tend_relic_mult": 6.0
+  "tend_relic_mult": 6.0,
+  "chronicle_threshold": 5,
+  "seal_enemy_step": 0.25,
+  "seal_yield_step": 0.45
 }

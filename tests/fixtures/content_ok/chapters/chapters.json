@@ -1,0 +1,11 @@
+[
+  {
+    "id": "chapter_fx",
+    "name": "chapter.fx.name",
+    "text": "chapter.fx.text",
+    "op": "global_spawn",
+    "cost": 1,
+    "max_level": 2,
+    "amount": 0.1
+  }
+]

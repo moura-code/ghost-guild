@@ -469,3 +469,20 @@ ui.haunting,"Floor {floor} is haunted: {count} {tag} dead, +{bonus} spawn."
 ui.haunting.none,Three of your dead sharing an archetype haunt their floor.
 ui.tend.sharpen,Sharpen
 ui.tend.relic,Arm
+chapter.deeper_roots.name,Deeper Roots
+chapter.deeper_roots.text,Every cycle's Founder stands three floors deeper.
+chapter.breeding_dark.name,The Breeding Dark
+chapter.breeding_dark.text,Every floor spawns 10% more.
+chapter.old_blood.name,Old Blood
+chapter.old_blood.text,Keep a tenth of your Soul through the rite.
+chapter.depth_seals.name,Depth Seals
+chapter.depth_seals.text,"Set a Seal before a descent: harder below, and your dead are worth more."
+ui.chronicle.title,The Chronicle
+ui.chronicle.locked,The Chronicle opens at {count} Legends. You have {have}.
+ui.chronicle.ink,Ink
+ui.chronicle.write,Write
+ui.chronicle.written,Written
+ui.chronicle.level,Level {level} of {max}
+ui.seal.none,No Seal
+ui.seal.set,"Seal {seal}: enemies +{harder}, your dead +{richer}"
+ui.seal.locked,Depth Seals are written in the Chronicle.

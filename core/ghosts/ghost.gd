@@ -26,6 +26,10 @@ var fixed_strength: bool = false
 ## reason "the ghost fights as you fought" is true of the simulated half of
 ## its strength and not only the measured half.
 var rules: Array[String] = []
+## The Depth Seal the run that left this ghost was under (spec §6.2), or 0.
+## Kept on the ghost rather than applied once to its strength, so a tend
+## that re-prices it does not quietly wash the seal off.
+var seal: int = 0
 ## What this ghost's deck was mostly made of, worked out once on demand.
 ##
 ## Not saved and not a constructor argument: a deck never changes after the
@@ -187,7 +191,7 @@ func to_dict() -> Dictionary:
 		"stats": stats.duplicate(), "max_hp": max_hp, "floor": floor, "kind": kind, "source_id": source_id,
 		"cause": cause, "killer": killer, "prepared": prepared, "restless": restless, "created_at": created_at,
 		"epitaph_key": epitaph_key, "measured": measured.duplicate(), "strength": strength, "fixed_strength": fixed_strength,
-		"rules": rules.duplicate(),
+		"rules": rules.duplicate(), "seal": seal,
 	}
 
 
@@ -206,6 +210,7 @@ static func from_dict(d: Dictionary) -> Ghost:
 	g.max_hp = int(d.get("max_hp", 1))
 	g.floor = int(d.get("floor", 1))
 	g.kind = String(d.get("kind", "true"))
+	g.seal = int(d.get("seal", 0))
 	g.source_id = int(d.get("source_id", 0))
 	g.cause = String(d.get("cause", "watch"))
 	g.killer = String(d.get("killer", ""))

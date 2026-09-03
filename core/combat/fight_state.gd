@@ -16,6 +16,9 @@ var tier: int = 1
 ## The invoked Legend's trait (§6.1), or null. Null is the identity: a guild
 ## that has never prestiged plays the game it always played.
 var hero_trait: TraitDef = null
+## What the run's Depth Seal multiplies enemy scaling by (spec §6.2). 1.0
+## for an unsealed descent, which is every descent until Ink buys a seal.
+var seal: float = 1.0
 var turn: int = 0
 var phase: String = "player"
 var hero_hp: int = 1
@@ -130,6 +133,7 @@ func clone() -> FightState:
 	s.floor = floor
 	s.tier = tier
 	s.hero_trait = hero_trait
+	s.seal = seal
 	s.turn = turn
 	s.phase = phase
 	s.hero_hp = hero_hp

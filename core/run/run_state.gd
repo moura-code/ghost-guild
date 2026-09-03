@@ -26,6 +26,9 @@ var campaign_seed: int = 0
 ## is a closed system that replays from its seed, and invoking a different
 ## Legend mid-run would rewrite the fights already fought.
 var trait_tag: String = ""
+## The Depth Seal this run is under (spec §6.2), snapshotted at the door
+## with everything else the run is a closed system about.
+var seal: int = 0
 var nodes: Array = []
 var node_index: int = 0
 ## One flag per node, so a floor can be walked in any order. `node_index`
@@ -77,6 +80,11 @@ func mutation() -> MutationDef:
 ## What the invoked Legend is worth in a fight, or null when none was.
 func hero_trait() -> TraitDef:
 	return Traits.for_tag(content, trait_tag)
+
+
+## What the seal multiplies enemy scaling by.
+func seal_scaling() -> float:
+	return Chronicle.seal_scaling(content, seal)
 
 
 func sub_rng(tag: String, n: int) -> Rng:
@@ -161,6 +169,7 @@ func to_dict() -> Dictionary:
 		"blessing": blessing,
 		"campaign_seed": campaign_seed,
 		"trait_tag": trait_tag,
+		"seal": seal,
 		"nodes": nodes.duplicate(true),
 		"node_index": node_index,
 		"resolved": resolved.duplicate(),
@@ -193,6 +202,7 @@ static func from_dict(p_content: Content, d: Dictionary) -> RunState:
 	run.blessing = float(d.get("blessing", 1.0))
 	run.campaign_seed = int(d.get("campaign_seed", 0))
 	run.trait_tag = String(d.get("trait_tag", ""))
+	run.seal = int(d.get("seal", 0))
 	var nodes_raw: Array = d.get("nodes", [])
 	run.nodes = nodes_raw.duplicate(true)
 	run.node_index = int(d.get("node_index", 0))

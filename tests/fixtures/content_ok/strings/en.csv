@@ -25,3 +25,5 @@ mutation.fx_mutation.name,Fixture Rule
 mutation.fx_mutation.text,Every enemy starts with 2 Thorns.
 trait.fx.name,Fixture Trait
 trait.fx.text,Fixture cards do more.
+chapter.fx.name,Fixture Chapter
+chapter.fx.text,More of everything.

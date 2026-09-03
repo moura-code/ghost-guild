@@ -34,6 +34,12 @@ var invoked_legend: int = 0
 ## what makes finding one matter after the run it was found on.
 var compendium: Array[String] = []
 var ink: int = 0
+## Chapter id -> level owned (spec §6.2). Survives everything: the
+## Chronicle is the layer above the layer that resets.
+var chapters: Dictionary = {}
+## The Depth Seal set for the next descent (spec §6.2), 0 for none. Opt-in
+## difficulty: harder enemies, and anything left down there is worth more.
+var seal: int = 0
 ## Biomes claimed in an earlier cycle. Claims are derived from the ladder
 ## (spec §5.6) and prestige wipes the ladder, so without this the rite would
 ## silently re-lock the Fungal Deep and take the Hexer with it -- §6.1 lists
@@ -67,6 +73,10 @@ func modifiers() -> Dictionary:
 	# ride with the other floor modifiers rather than living inside `Ladder`,
 	# which holds ghosts and has never needed to know what a card is.
 	mods["haunting"] = Hauntings.by_floor(content, ladder, balance())
+	# The Breeding Dark (§6.2) makes every floor bigger, which is the same
+	# lever the ghost_spawn upgrade pulls -- so it multiplies rather than
+	# replaces, and a guild with both gets both.
+	mods["global_spawn"] = float(mods.get("global_spawn", 1.0)) * Chronicle.spawn(self)
 	return mods
 
 
@@ -114,6 +124,8 @@ func to_dict() -> Dictionary:
 		"legends": _legends_dict(),
 		"invoked_legend": invoked_legend,
 		"compendium": compendium.duplicate(),
+		"chapters": chapters.duplicate(),
+		"seal": seal,
 		"ink": ink,
 		"claimed_biomes": claimed_biomes.duplicate(),
 		"created_at": created_at,
@@ -149,6 +161,10 @@ static func from_dict(p_content: Content, d: Dictionary) -> Campaign:
 	c.invoked_legend = int(d.get("invoked_legend", 0))
 	for relic in d.get("compendium", []):
 		c.compendium.append(String(relic))
+	c.seal = int(d.get("seal", 0))
+	var written: Dictionary = d.get("chapters", {})
+	for id in written:
+		c.chapters[String(id)] = int(written[id])
 	for raw in d.get("expeditions", []):
 		c.expeditions.append(Expedition.from_dict(raw))
 	c.created_at = int(d.get("created_at", 0))
