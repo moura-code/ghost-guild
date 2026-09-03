@@ -232,7 +232,9 @@ func test_walking_into_a_fight_room_stages_it_instead_of_skipping_it() -> void:
 	assert_array(c.director.bodies).is_not_empty()
 	assert_int(c.director.hand.visible_count()).is_greater(0)
 	# You keep your body during a fight now -- you can walk the room, you just
-	# cannot leave it.
+	# cannot leave it. The half second the hero spends closing the distance is
+	# the exception, and it hands your legs back when it is done.
+	await await_millis(800)
 	assert_bool(c.player.frozen).is_false()
 	assert_object(c.director.get_node_or_null("Ring")).is_not_null()
 

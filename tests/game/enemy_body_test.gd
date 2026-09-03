@@ -52,13 +52,23 @@ func test_a_body_can_be_hit_by_a_camera_ray() -> void:
 	assert_object(shape.shape).is_not_null()
 
 
-func test_recoil_moves_it_and_puts_it_back() -> void:
+func test_recoil_flinches_and_settles() -> void:
+	# The flinch is one number the pose reads, not a tween racing the idle for
+	# the same node position, so this is the number to look at.
 	var b := _body()
-	var rest := b.body_offset()
 	b.recoil(8)
-	assert_float(b.body_offset().z).is_not_equal(rest.z)
-	await await_millis(400)
-	assert_vector(b.body_offset()).is_equal_approx(rest, Vector3.ONE * 0.02)
+	assert_float(b.hurt_level()).is_greater(0.0)
+	await await_millis(500)
+	assert_float(b.hurt_level()).override_failure_message(
+		"it is still flinching half a second later").is_equal(0.0)
+
+
+func test_a_harder_blow_flinches_harder() -> void:
+	var light := _body()
+	light.recoil(4)
+	var heavy := _body()
+	heavy.recoil(30)
+	assert_float(heavy.hurt_level()).is_greater(light.hurt_level())
 
 
 func test_a_dead_body_stops_being_a_target() -> void:
@@ -72,9 +82,25 @@ func test_a_dead_body_stops_being_a_target() -> void:
 func test_dying_twice_is_not_two_deaths() -> void:
 	var b := _body()
 	b.die()
-	var falling := b.rotation.x
+	await await_millis(200)
+	var falling := b.fallen_level()
+	assert_float(falling).is_greater(0.0)
 	b.die()
-	assert_float(b.rotation.x).is_equal(falling)
+	assert_float(b.fallen_level()).override_failure_message(
+		"the second death restarted the fall").is_equal(falling)
+
+
+func test_a_body_goes_down_and_stays_down() -> void:
+	var b := _body()
+	b.die()
+	await await_millis(1200)
+	assert_float(b.fallen_level()).is_equal(1.0)
+	var settled := b.pose_offset()
+	await await_millis(200)
+	assert_vector(b.pose_offset()).override_failure_message(
+		"a dead thing is still breathing").is_equal_approx(settled, Vector3.ONE * 0.001)
+	assert_float(settled.y).override_failure_message(
+		"it died standing up").is_less(0.0)
 
 
 func test_highlighting_is_something_you_can_see_and_turn_off() -> void:

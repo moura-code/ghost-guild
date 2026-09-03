@@ -2,16 +2,19 @@ class_name EnemySkin
 extends RefCounted
 ## What a creature is made of.
 ##
-## The mesh is still a stand-in (see `EnemyBody`), but "stand-in" was doing more
-## work than it should have been: every enemy in the game was a flat untextured
-## colour on a smooth primitive, which is a shop mannequin however good the
-## silhouette is. A rock wall two metres behind it had a normal map, a
-## roughness map and ambient occlusion; the thing trying to kill you did not.
+## The geometry is `CreatureRig`'s job; this is what it is made of. Both were
+## once one stand-in, and "stand-in" was doing more work than it should: every
+## enemy was a flat untextured colour on a smooth primitive, a shop mannequin
+## however good the silhouette is. The rock wall two metres behind it had a
+## normal map, a roughness map and ambient occlusion; the thing trying to kill
+## you did not.
 ##
 ## Nothing here needs an artist. The kit's own CC0 stone, mapped triplanar so
 ## primitives need no UVs, plus a tint read off the enemy's tags, plus a rim
 ## light so a body at the edge of the torchlight is a shape rather than a hole.
-## A real rigged model replaces this and `EnemyShape.build` together.
+## `CreatureRig` builds the geometry this dresses. The two were written to be
+## replaced together by a rigged model and never were, because the parts a
+## crypt creature is made of turned out to be the right model of it.
 
 const TEXTURE_SET := "rock051"
 ## Metres per texture repeat on a creature. Tighter than the kit's 2 m, because

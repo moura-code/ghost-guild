@@ -25,6 +25,28 @@ const TURN_SECONDS := 0.35
 ## thing you are fighting, tight enough that you cannot leave.
 const ARENA := 7.0
 const SHAKE_SECONDS := 0.22
+## How far from the group the fight opens, in metres.
+##
+## Wherever the player triggered the encounter from -- and they trigger it by
+## walking into a marker that can sit anywhere in a room nine metres across --
+## the first frame of a fight has to be a composition. A creature six metres
+## back in an unlit room is a smudge, and the entire reason these are bodies
+## standing in a room rather than portraits on a card is that you can see what
+## you are fighting.
+##
+## Closed rather than cut. The camera never leaves your head (spec 8), so the
+## hero walks the difference; half a second of stepping up to something is
+## also the best half-second in the fight.
+const ENGAGE := 3.4
+const CLOSE_SECONDS := 0.55
+## The fight brings its own light: a low warm pool at the group's feet rather
+## than a spotlight, so the thing trying to kill you is legible from across a
+## dark room without the room stopping being dark.
+## Dim on purpose. At 2.2 it lit the walls as well as the creatures and the
+## crypt stopped being dark, which costs more than legibility buys: the whole
+## threat of this place is that you cannot see.
+const STAGE_LIGHT := 1.1
+const STAGE_RANGE := 5.5
 
 var game: GameRoot
 var hud: HudRoot
@@ -79,13 +101,16 @@ func begin(g: GameRoot, h: HudRoot, p: Player, at: Vector3) -> void:
 	if facing.length_squared() < 0.0001:
 		facing = -p.global_transform.basis.z
 	_stage(at, facing)
+	_light(_centroid(at))
 	# Face what you are fighting, not the middle of the room. Walking in from a
 	# corner put the enemies off to one side of the screen while the camera
 	# obediently looked at the geometric centre of the floor.
 	_face(_centroid(at))
 
 	# You stay in your body. The cards need the cursor, so the mouse is free,
-	# but you can still walk around the room and look at what you are fighting.
+	# but you can still walk around the room and look at what you are fighting
+	# -- from the moment the hero has finished stepping up to them, half a
+	# second in. Being walked and walking at the same time is neither.
 	#
 	# The movement is ATMOSPHERIC, not tactical, and the difference matters:
 	# core/combat is a pure state machine with no concept of space -- no
@@ -94,8 +119,11 @@ func begin(g: GameRoot, h: HudRoot, p: Player, at: Vector3) -> void:
 	# balanced against it. Promising positional agency and not delivering it
 	# would be worse than the freeze it replaces. What this buys is that the
 	# fight stops feeling like the game paused and put a menu over the room.
-	player.frozen = false
+	# Frozen only for as long as it takes to step up to them. `_close_in`
+	# hands it back.
+	player.frozen = true
 	player.look_enabled = false
+	_close_in(_centroid(at))
 	_fence(at)
 	_build_hud()
 	hud.set_pointer(true)
@@ -261,6 +289,45 @@ func _stage(at: Vector3, facing: Vector3) -> void:
 		body.global_position = points[i]
 		body.look_at_from_position(points[i], Vector3(at.x, points[i].y, at.z) - facing * 4.0, Vector3.UP)
 		bodies.append(body)
+
+
+## Where the player should be standing to see the group. Pure, so the framing
+## can be checked without a room to stand in. Never pushes anybody backwards:
+## if you walked right up to the thing, you are already close enough.
+static func engage_point(from: Vector3, group: Vector3, distance: float) -> Vector3:
+	var flat := Vector3(from.x - group.x, 0.0, from.z - group.z)
+	if flat.length_squared() < 0.0001 or flat.length() <= distance:
+		return from
+	var to := group + flat.normalized() * distance
+	return Vector3(to.x, from.y, to.z)
+
+
+## Walks the hero into position, then gives them their legs back.
+func _close_in(group: Vector3) -> void:
+	var want := engage_point(player.global_position, group, ENGAGE)
+	if not is_inside_tree() or want.is_equal_approx(player.global_position):
+		player.global_position = want
+		player.frozen = false
+		return
+	var step := create_tween()
+	step.tween_property(player, "global_position", want, CLOSE_SECONDS) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	step.tween_callback(func() -> void: player.frozen = false)
+
+
+## The pool of light the fight happens in.
+func _light(group: Vector3) -> void:
+	var lamp := OmniLight3D.new()
+	lamp.name = "StageLight"
+	lamp.light_color = Palette.LANTERN
+	lamp.light_energy = STAGE_LIGHT
+	lamp.omni_range = STAGE_RANGE
+	# Low and slightly in front, so the creatures are lit from the player's
+	# side and their own shadows fall away from the camera. Lighting them from
+	# above turns every skull into two black holes.
+	lamp.position = Vector3(group.x, 1.4, group.z)
+	lamp.shadow_enabled = false
+	add_child(lamp)
 
 
 ## The middle of the group, on the floor. Falls back to the room centre when

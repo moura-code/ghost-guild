@@ -97,6 +97,9 @@ func test_a_fight_leaves_you_in_your_body_but_frees_the_mouse_for_the_cards() ->
 	# change the rules -- and promising positional agency without delivering it
 	# would be worse than the freeze it replaces.
 	var d := _director(_game())
+	# Held only while the hero steps up to the group.
+	assert_bool(d.player.frozen).is_true()
+	await await_millis(800)
 	assert_bool(d.player.frozen).is_false()
 	assert_bool(d.player.look_enabled).is_false()
 	assert_bool(d.hud.pointer_free).is_true()
@@ -243,3 +246,37 @@ func test_you_end_up_facing_what_you_are_fighting() -> void:
 		to_body.y = 0.0
 		assert_float(forward.normalized().dot(to_body.normalized())).override_failure_message(
 			"enemy %d is not in front of the player" % (b as EnemyBody).index).is_greater(0.35)
+
+
+## Wherever the encounter marker sat, the first frame of a fight has to be a
+## composition: a creature six metres back in an unlit room is a smudge.
+func test_the_fight_opens_at_a_distance_you_can_see_them_from() -> void:
+	var far := FightDirector.engage_point(Vector3(0.0, 1.7, 9.0), Vector3.ZERO, 3.4)
+	assert_float(Vector2(far.x, far.z).length()).is_equal_approx(3.4, 0.001)
+	# Vector3 is 32-bit, so the height comes back as float(1.7) and not 1.7.
+	assert_float(far.y).override_failure_message(
+		"it lifted the hero off the floor").is_equal_approx(1.7, 0.0001)
+
+
+func test_stepping_up_never_backs_you_away() -> void:
+	# If you walked right into the thing, you are already close enough.
+	var close := Vector3(0.0, 1.7, 1.2)
+	assert_vector(FightDirector.engage_point(close, Vector3.ZERO, 3.4)).is_equal(close)
+
+
+func test_standing_on_top_of_them_is_not_a_direction() -> void:
+	# Zero length has no normal, and normalising it would put the hero at the
+	# origin of the room rather than where they are.
+	var on := Vector3(0.0, 1.7, 0.0)
+	assert_vector(FightDirector.engage_point(on, Vector3.ZERO, 3.4)).is_equal(on)
+
+
+func test_the_fight_brings_its_own_light() -> void:
+	var d := _director(_game())
+	var lamp := d.get_node_or_null("StageLight")
+	assert_object(lamp).override_failure_message(
+		"a creature in an unlit room is a smudge").is_not_null()
+	assert_float((lamp as OmniLight3D).light_energy).is_greater(0.0)
+	# ...and not so much of it that the crypt stops being dark, which is the
+	# only threat this place has.
+	assert_float((lamp as OmniLight3D).light_energy).is_less(2.0)

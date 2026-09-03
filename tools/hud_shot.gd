@@ -9,7 +9,7 @@ extends SceneTree
 ##         -s tools/hud_shot.gd -- <out.png> <mode> [frames]
 ##
 ## Modes: walk, fight, reward, guild, panel, expedition, offline, exit, watch,
-## deep, kiln, tier2, tier2fight, ladder, ladderdeep, hero, hall.
+## deep, kiln, tier2, tier2fight, creatures, ladder, ladderdeep, hero, hall.
 ##
 ## Runs against a throwaway save, so it never touches the player's campaign.
 
@@ -36,6 +36,7 @@ func _init() -> void:
 	win.add_child(game)
 
 	var crawl := Crawl.new()
+	crawl.set_meta("shot_mode", mode)
 	crawl.game = game
 	win.add_child(crawl)
 	crawl.bind(game)
@@ -122,7 +123,7 @@ func _init() -> void:
 			elif mode == "tier2" or mode == "tier2fight":
 				entry = Biomes.depth(game.content) + 4
 			_descend(game, crawl, entry)
-			if mode == "fight" or mode == "tier2fight":
+			if mode == "fight" or mode == "tier2fight" or mode == "creatures":
 				await _pick_a_fight(game, crawl)
 			elif mode == "reward":
 				await _pick_a_fight(game, crawl)
@@ -177,7 +178,12 @@ func _to_the_exit(game: GameRoot, crawl: Crawl) -> void:
 
 func _pick_a_fight(game: GameRoot, crawl: Crawl) -> void:
 	var run := game.campaign.run
-	run.nodes = [{"kind": "fight", "enemies": ["bone_rat", "hollow_knight"]}]
+	# One of each silhouette when the shot is about the creatures, so the
+	# beast, the stack, the wisp and the hulk can be compared in one frame.
+	var cast := ["bone_rat", "hollow_knight"]
+	if String(crawl.get_meta("shot_mode", "")) == "creatures":
+		cast = ["bone_rat", "skull_stack", "grave_wisp", "ossuary_warden"]
+	run.nodes = [{"kind": "fight", "enemies": cast}]
 	run.resolved = []
 	run.node_index = 0
 	run.phase = "node"
