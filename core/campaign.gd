@@ -28,6 +28,11 @@ var legends: Array[Legend] = []
 ## because a later prestige appends to the list and must not silently re-point
 ## an invocation at somebody else's grave.
 var invoked_legend: int = 0
+## Every relic the guild has ever held (spec §5.5's compendium, and §6.1 lists
+## it among the things a prestige keeps). Tending adds a relic *from here*, so
+## the guild can only give a ghost something it has actually found -- which is
+## what makes finding one matter after the run it was found on.
+var compendium: Array[String] = []
 var ink: int = 0
 ## Biomes claimed in an earlier cycle. Claims are derived from the ladder
 ## (spec §5.6) and prestige wipes the ladder, so without this the rite would
@@ -108,6 +113,7 @@ func to_dict() -> Dictionary:
 		"expeditions": _expeditions_dict(),
 		"legends": _legends_dict(),
 		"invoked_legend": invoked_legend,
+		"compendium": compendium.duplicate(),
 		"ink": ink,
 		"claimed_biomes": claimed_biomes.duplicate(),
 		"created_at": created_at,
@@ -141,6 +147,8 @@ static func from_dict(p_content: Content, d: Dictionary) -> Campaign:
 	for raw_legend in d.get("legends", []):
 		c.legends.append(Legend.from_dict(raw_legend))
 	c.invoked_legend = int(d.get("invoked_legend", 0))
+	for relic in d.get("compendium", []):
+		c.compendium.append(String(relic))
 	for raw in d.get("expeditions", []):
 		c.expeditions.append(Expedition.from_dict(raw))
 	c.created_at = int(d.get("created_at", 0))

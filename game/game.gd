@@ -212,6 +212,27 @@ func invoke_legend(id: int) -> bool:
 	return ok
 
 
+## Sharpening a ghost's best card, and handing one a relic out of the
+## compendium (spec §5.5). Both re-price the ghost and every echo of it.
+func tend_upgrade(ghost_id: int) -> Dictionary:
+	return _seance_action(func() -> Dictionary: return Seance.tend_upgrade(campaign, ghost_id))
+
+
+func tend_relic(ghost_id: int) -> Dictionary:
+	return _seance_action(func() -> Dictionary: return Seance.tend_relic(campaign, ghost_id))
+
+
+func _seance_action(act: Callable) -> Dictionary:
+	if campaign == null:
+		return {"ok": false, "cost": 0.0, "reason": "unbooted"}
+	settle()
+	var r: Dictionary = act.call()
+	if bool(r["ok"]):
+		_emit_all()
+		save()
+	return r
+
+
 func prestige() -> Dictionary:
 	if campaign == null:
 		return {"ok": false, "reason": "unbooted", "legend": null}

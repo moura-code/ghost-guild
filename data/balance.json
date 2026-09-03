@@ -65,5 +65,7 @@
   "tier_damage_jump": 1.25,
   "haunting_min": 3,
   "haunting_per": 0.15,
-  "haunting_cap": 0.75
+  "haunting_cap": 0.75,
+  "tend_upgrade_mult": 2.5,
+  "tend_relic_mult": 6.0
 }

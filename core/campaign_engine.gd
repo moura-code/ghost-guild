@@ -203,6 +203,10 @@ static func finish_run(c: Campaign, now: int) -> Dictionary:
 	var cleared := floor - 1 if kind == "death" else floor
 	c.record_depth = maxi(c.record_depth, cleared)
 	var result := {"kind": kind, "floor": floor, "soul": soul, "ghost_id": 0, "epitaph": "", "new_hero": false, "rite_events": []}
+	# Whatever the hero was carrying is the guild's knowledge now, however
+	# the run ended -- they came home with it or their ghost is standing in
+	# it. Before `new_hero`, which replaces the hero this reads.
+	_remember_relics(c, c.hero.relics)
 	if kind == "death" or kind == "watch":
 		var ghost := Ghost.from_run(c.hero, outcome, c.run.stats.measured(floor), now)
 		c.ladder.add(ghost)
@@ -220,6 +224,17 @@ static func finish_run(c: Campaign, now: int) -> Dictionary:
 	refresh_rate(c)
 	c.emit({"type": "run_finished", "kind": kind, "floor": floor, "soul": soul, "at": now})
 	return result
+
+
+## Everything the guild has ever held goes in the compendium (spec §5.5), and
+## a prestige keeps it (§6.1). Recorded when a run banks its dead rather than
+## when a relic is picked up, because a relic the hero found and then died
+## without banking is one the guild never got its hands on.
+static func _remember_relics(c: Campaign, relics: Array) -> void:
+	for raw in relics:
+		var id := String(raw)
+		if id != "" and not c.compendium.has(id):
+			c.compendium.append(id)
 
 
 static func strength_for(c: Campaign, ghost: Ghost) -> float:

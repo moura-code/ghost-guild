@@ -165,9 +165,15 @@ func refresh() -> void:
 			line.echo_pressed.connect(_on_echo)
 			line.call_pressed.connect(_on_call)
 			line.tend_pressed.connect(_on_tend)
+			line.upgrade_pressed.connect(_on_upgrade)
+			line.relic_pressed.connect(_on_relic)
 			_list.add_child(line)
 			lines[ghost.id] = line
 		ctx["tend_cost"] = Seance.tend_cost(c, ghost)
+		ctx["upgrade_cost"] = Seance.upgrade_cost(c, ghost)
+		ctx["relic_cost"] = Seance.relic_cost(c, ghost)
+		ctx["can_upgrade"] = Seance.next_upgrade(c, ghost) != null
+		ctx["can_relic"] = Seance.next_relic(c, ghost) != ""
 		line.bind(game.content, ghost, ctx)
 	for id in lines.keys():
 		if not seen.has(id):
@@ -204,6 +210,16 @@ func _on_call(ghost_id: int, floor: int) -> void:
 
 func _on_tend(ghost_id: int) -> void:
 	if not bool(game.tend(ghost_id)["ok"]):
+		refresh()
+
+
+func _on_upgrade(ghost_id: int) -> void:
+	if not bool(game.tend_upgrade(ghost_id)["ok"]):
+		refresh()
+
+
+func _on_relic(ghost_id: int) -> void:
+	if not bool(game.tend_relic(ghost_id)["ok"]):
 		refresh()
 
 

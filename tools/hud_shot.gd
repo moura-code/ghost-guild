@@ -9,7 +9,8 @@ extends SceneTree
 ##         -s tools/hud_shot.gd -- <out.png> <mode> [frames]
 ##
 ## Modes: walk, fight, reward, guild, panel, expedition, offline, exit, watch,
-## deep, kiln, tier2, tier2fight, creatures, ladder, ladderdeep, hero, hall.
+## deep, kiln, tier2, tier2fight, creatures, ladder, ladderdeep, seance, hero,
+## hall.
 ##
 ## Runs against a throwaway save, so it never touches the player's campaign.
 
@@ -70,6 +71,22 @@ func _init() -> void:
 			var wall := crawl.guild.station(GuildRoom.HALL)
 			wall.enter(crawl.player)
 			wall.use()
+		"seance":
+			# Three of your own on the ladder, one of them restless and the guild
+			# holding Soul: the state where every tend on the row is offered.
+			for floor in [1, 3, 6]:
+				var lost := Hero.create(game.content, "sexton", "Kept%d" % floor, {}, 1)
+				var laid := game.campaign.ladder.add(Ghost.from_expedition(lost, floor, 0))
+				laid.kind = "true"
+				laid.fixed_strength = false
+				laid.strength = 60.0 + float(floor) * 12.0
+			game.campaign.ladder.ghosts[1].restless = true
+			game.campaign.compendium = ["bone_charm", "cracked_hourglass"] as Array[String]
+			game.campaign.soul = 6000.0
+			game.campaign.record_depth = 8
+			var circle := crawl.guild.station(GuildRoom.CIRCLE)
+			circle.enter(crawl.player)
+			circle.use()
 		"hero":
 			# The Deep claimed, so the class row has one open and one taken.
 			var deep := Hero.create(game.content, "sexton", "Deepwalker", {}, 1)

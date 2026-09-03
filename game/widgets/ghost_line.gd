@@ -7,6 +7,8 @@ extends PanelContainer
 signal echo_pressed(ghost_id: int, floor: int)
 signal call_pressed(ghost_id: int, floor: int)
 signal tend_pressed(ghost_id: int)
+signal upgrade_pressed(ghost_id: int)
+signal relic_pressed(ghost_id: int)
 
 var ghost_id: int = 0
 
@@ -19,9 +21,14 @@ var _floor_seeded: bool = false
 var _echo: Button
 var _call: Button
 var _tend: Button
+## The two tends that make a ghost permanently worth more (spec §5.5).
+var _upgrade: Button
+var _relic: Button
 var _echo_cost: float = 0.0
 var _call_cost: float = 0.0
 var _tend_cost: float = 0.0
+var _upgrade_cost: float = 0.0
+var _relic_cost: float = 0.0
 
 
 func _init() -> void:
@@ -66,6 +73,14 @@ func _build() -> void:
 	_tend = Button.new()
 	_tend.pressed.connect(func() -> void: tend_pressed.emit(ghost_id))
 	row.add_child(_tend)
+
+	_upgrade = Button.new()
+	_upgrade.pressed.connect(func() -> void: upgrade_pressed.emit(ghost_id))
+	row.add_child(_upgrade)
+
+	_relic = Button.new()
+	_relic.pressed.connect(func() -> void: relic_pressed.emit(ghost_id))
+	row.add_child(_relic)
 
 	_echo = Button.new()
 	_echo.pressed.connect(func() -> void: echo_pressed.emit(ghost_id, int(_floor.value)))
@@ -135,6 +150,18 @@ func bind(content: Content, ghost: Ghost, ctx: Dictionary) -> void:
 	if _tend.visible:
 		_tend_cost = float(ctx["tend_cost"])
 		_tend.text = content.text("ui.free") if _tend_cost <= 0.0 else Num.short(_tend_cost)
+
+	# Hidden rather than disabled when there is nothing left to sharpen or
+	# nothing in the compendium it does not already carry: a permanently dead
+	# button on every row teaches the player the row is mostly dead.
+	_upgrade.visible = is_true and bool(ctx.get("can_upgrade", false))
+	if _upgrade.visible:
+		_upgrade_cost = float(ctx["upgrade_cost"])
+		_upgrade.text = "%s %s" % [content.text("ui.tend.sharpen"), Num.short(_upgrade_cost)]
+	_relic.visible = is_true and bool(ctx.get("can_relic", false))
+	if _relic.visible:
+		_relic_cost = float(ctx["relic_cost"])
+		_relic.text = "%s %s" % [content.text("ui.tend.relic"), Num.short(_relic_cost)]
 
 	set_affordability(soul)
 

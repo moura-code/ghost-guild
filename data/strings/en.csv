@@ -467,3 +467,5 @@ ui.hall.carry_none,No Legend walks with you.
 ui.hall.invoke_hint,One Legend may be invoked per descent. Its trait is yours for the run.
 ui.haunting,"Floor {floor} is haunted: {count} {tag} dead, +{bonus} spawn."
 ui.haunting.none,Three of your dead sharing an archetype haunt their floor.
+ui.tend.sharpen,Sharpen
+ui.tend.relic,Arm
