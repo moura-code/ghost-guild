@@ -118,3 +118,27 @@ func test_the_shaft_is_as_deep_as_the_dungeon_however_deep_that_gets() -> void:
 	assert_int(WellView.MAX_FLOORS).override_failure_message(
 		"the well is shallower than the dungeon").is_greater_equal(
 			Biomes.depth(TestFixtures.content()))
+
+func test_the_well_goes_down_to_wherever_the_player_has_been() -> void:
+	# The descent has no bottom any more (§2), and ghosts stand where they died,
+	# so a well as deep as the authored dungeon stops showing them at floor 30.
+	var c := TestFixtures.campaign()
+	c.record_depth = 44
+	var ghost := Ghost.founder(TestFixtures.content(), 1000)
+	ghost.floor = 41
+	c.ladder.add(ghost)
+	var w := _well(c)
+	assert_int(w.depth()).is_equal(44)
+	var floors: Array[int] = []
+	for f in w.figures:
+		floors.append((f as GhostFigure).ghost_floor)
+	var missing := "the ghost on floor 41 stands in a shaft that shallow"
+	assert_array(floors).override_failure_message(missing).contains([41])
+
+
+func test_the_well_never_draws_deeper_than_it_can_be_seen() -> void:
+	# Below MAX_FLOORS the shaft simply goes dark, which is the honest answer to
+	# a descent with no bottom rather than a convenient one.
+	var c := TestFixtures.campaign()
+	c.record_depth = 4000
+	assert_int(_well(c).depth()).is_equal(WellView.MAX_FLOORS)

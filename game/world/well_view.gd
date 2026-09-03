@@ -16,11 +16,15 @@ const RING_RADIUS := 0.72
 ## scales people. Life-size ghosts fill the well and the depth stops reading.
 const FIGURE_SCALE := 0.4
 ## How many floors are drawn. Below this the shaft just goes dark, which is
-## more honest than a bottom.
-## A guard against a corrupt content set, not a design limit: the well is as
-## deep as the dungeon is, and the dungeon grew from ten floors to thirty over
-## three stages. A shaft that stopped at twenty would quietly stop showing the
-## ghosts standing in the biome the player just unlocked.
+## more honest than a bottom -- and honest rather than merely convenient now,
+## because the descent has no bottom left to draw (§2).
+##
+## It began as a guard against a corrupt content set: the well was as deep as
+## the dungeon, and the dungeon grew from ten floors to thirty over three
+## stages while this stayed at twenty, so the shaft quietly stopped showing
+## the ghosts standing in the biome the player just unlocked. Cycling biomes
+## is the same failure with no ceiling on it, and the fix is the same one:
+## draw down to wherever the player has actually been.
 const MAX_FLOORS := 60
 
 var rings: Array[Node3D] = []
@@ -49,7 +53,11 @@ func build(campaign: Campaign) -> void:
 	figures.clear()
 	if campaign == null:
 		return
-	_depth = clampi(Biomes.depth(campaign.content), 1, MAX_FLOORS)
+	# As deep as the dungeon or as deep as the player, whichever is further:
+	# ghosts stand where they died, and past floor thirty they were dying on
+	# floors this shaft did not draw.
+	_depth = clampi(maxi(Biomes.depth(campaign.content), CampaignEngine.reach(campaign)),
+		1, MAX_FLOORS)
 
 	for floor in range(1, _depth + 1):
 		var ring := _ring(floor)

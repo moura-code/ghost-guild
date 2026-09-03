@@ -102,3 +102,14 @@ func test_the_banner_names_a_biome_only_where_that_is_news() -> void:
 	assert_str(String(said[3])).not_contains(_content().text("biome.fungal_deep.name"))
 	for line in said:
 		assert_str(String(line)).contains("Floor")
+
+func test_the_second_cycle_is_lit_like_the_first() -> void:
+	# Floor 34 is the Catacombs again (§2), and grading it like the bottom of the
+	# Kiln would leave every floor past thirty the same colour -- the bands are
+	# the only thing on screen saying which biome you are standing in.
+	var c := _content()
+	var depth := Biomes.depth(c)
+	assert_float(Crawl.grade_depth(c, depth + 4)).is_equal(Crawl.grade_depth(c, 4))
+	assert_float(Crawl.grade_depth(c, depth * 3 + 4)).is_equal(Crawl.grade_depth(c, 4))
+	# And it still darkens as you descend inside a cycle.
+	assert_float(Crawl.grade_depth(c, depth + 20)).is_greater(Crawl.grade_depth(c, depth + 4))

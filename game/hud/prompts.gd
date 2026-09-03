@@ -15,6 +15,10 @@ var prompt: Label
 ## What the floor still wants from you. Sits under the compass, because a
 ## compass with marks on it and no words is an instrument nobody reads.
 var objective: Label
+## The tier's standing rule (spec §2). Its own line rather than part of the
+## objective, because the objective counts down as you clear rooms and a rule
+## you have to play around for ten floors does not.
+var rule: Label
 
 var _banner_tween: Tween
 
@@ -54,6 +58,32 @@ func _init() -> void:
 	objective.modulate = Palette.BONE_DIM
 	objective.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(objective)
+
+	rule = Label.new()
+	rule.name = "Rule"
+	rule.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rule.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	# Under the banner, not under the objective. Directly under the objective
+	# is where it started and the objective's line ends four pixels above where
+	# a floor announcement lands, so the two shared a strip of screen for the
+	# two seconds a banner is up. Under the banner it also reads *with* it:
+	# "Floor 34, Catacombs, Tier 2", and then what that costs you.
+	rule.offset_top = banner.offset_bottom + 4.0
+	rule.offset_bottom = banner.offset_bottom + 20.0
+	# Amber, not red. It is a condition of the place rather than a warning:
+	# red is what the game says when something is about to kill you, and a
+	# standing rule that shouts for ten floors stops being read.
+	rule.modulate = Palette.PREPARED
+	# The one line here that has to be readable wherever it lands. The world
+	# behind it is black rock in one room and a torch two feet from pale
+	# sandstone in the next, and amber on lit sandstone is amber on amber --
+	# the theme turns Label outlines off everywhere, and this is the exception
+	# that earns one. The banner is a flourish and the objective is a
+	# reminder; a standing rule you plan ten floors around is neither.
+	rule.add_theme_constant_override("outline_size", 5)
+	rule.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.85))
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(rule)
 
 
 ## Rises, holds, fades. Announced on arrival rather than pinned to a corner:
@@ -100,6 +130,14 @@ func show_objective(text_value: String) -> void:
 
 func clear_objective() -> void:
 	objective.text = ""
+
+
+func show_rule(text_value: String) -> void:
+	rule.text = text_value
+
+
+func clear_rule() -> void:
+	rule.text = ""
 
 
 func has_objective() -> bool:

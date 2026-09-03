@@ -10,6 +10,9 @@ extends RefCounted
 var content: Content
 var rng: Rng
 var floor: int = 1
+## Which cycle of the dungeon this fight is in (§2). Always 1 for the first
+## thirty floors, which is what keeps every existing number unchanged.
+var tier: int = 1
 var turn: int = 0
 var phase: String = "player"
 var hero_hp: int = 1
@@ -122,6 +125,7 @@ func clone() -> FightState:
 	s.content = content
 	s.rng = rng.clone()
 	s.floor = floor
+	s.tier = tier
 	s.turn = turn
 	s.phase = phase
 	s.hero_hp = hero_hp

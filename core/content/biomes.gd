@@ -12,24 +12,41 @@ extends RefCounted
 ##
 ## So a floor answers the question, and nothing stores the answer.
 
-## Tier cycling (§2: floors past the authored end repeat the biomes at tier 2,
-## 3, ... with one mutation per tier) is deliberately not here. `for_floor`
-## clamps into the deepest biome instead, and `depth` is the authored end,
-## which is what `can_push` stops at. A tier without its mutation modifier is
-## just the same floors again with a bigger number on them.
+## Which cycle of the dungeon a floor is in (§2): floors past the authored end
+## repeat the biomes at tier 2, 3, and so on for ever. Tier 1 is the dungeon as
+## it was authored, and everything above floor 0 is tier 1 too, because a
+## `reach` calculation can hand this a zero.
+static func tier_of(content: Content, floor: int) -> int:
+	var span := depth(content)
+	if span <= 0 or floor <= span:
+		return 1
+	return (floor - 1) / span + 1
+
+
+## The floor's position within its own tier: 1..depth, whatever tier it is in.
+static func in_tier(content: Content, floor: int) -> int:
+	var span := depth(content)
+	if span <= 0:
+		return maxi(1, floor)
+	return (floor - 1) % span + 1 if floor > 0 else 1
+
+
+## The biome a floor is in. Past the authored end the biomes cycle rather than
+## clamping, so floor 31 is the Catacombs again at tier 2 -- which is what
+## makes a prestige a new descent rather than the same thirty floors with a
+## bigger multiplier on them (§6.1).
 static func for_floor(content: Content, floor: int) -> BiomeDef:
+	var wrapped := in_tier(content, floor)
 	var best: BiomeDef = null
 	for id in content.biomes:
 		var b: BiomeDef = content.biomes[id]
-		if floor >= b.first_floor and floor <= b.last_floor:
+		if wrapped >= b.first_floor and wrapped <= b.last_floor:
 			return b
 		if best == null or b.first_floor < best.first_floor:
 			best = b
-	# Off either end. A floor above everything authored belongs to the deepest
-	# biome; anything else to the shallowest. Returning null instead would move
-	# the crash to whichever caller was handed the bad floor.
-	if floor > depth(content):
-		return deepest(content)
+	# A gap in the authored ranges. `slice_content_test` forbids one, so this
+	# is the answer to corrupt data rather than to a floor number: returning
+	# null would move the crash to whichever caller was handed it.
 	return best
 
 
@@ -38,15 +55,6 @@ static func depth(content: Content) -> int:
 	for id in content.biomes:
 		deep = maxi(deep, (content.biomes[id] as BiomeDef).last_floor)
 	return deep
-
-
-static func deepest(content: Content) -> BiomeDef:
-	var best: BiomeDef = null
-	for id in content.biomes:
-		var b: BiomeDef = content.biomes[id]
-		if best == null or b.last_floor > best.last_floor:
-			best = b
-	return best
 
 
 ## The biomes with one of the guild's own standing in them (spec §5.6).

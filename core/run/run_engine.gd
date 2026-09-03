@@ -6,7 +6,8 @@ extends RefCounted
 
 
 static func start_run(content: Content, hero: Hero, entry_floor: int, run_seed: int,
-		watch_unlocked: bool, claimed_pools: Array = [], blessing: float = 1.0) -> RunState:
+		watch_unlocked: bool, claimed_pools: Array = [], blessing: float = 1.0,
+		campaign_seed: int = 0) -> RunState:
 	var run := RunState.new()
 	run.content = content
 	run.hero = hero
@@ -14,6 +15,7 @@ static func start_run(content: Content, hero: Hero, entry_floor: int, run_seed: 
 	for pool in claimed_pools:
 		run.claimed_pools.append(String(pool))
 	run.blessing = blessing
+	run.campaign_seed = campaign_seed
 	run.entry_floor = entry_floor
 	run.floor = entry_floor
 	run.watch_unlocked = watch_unlocked
@@ -208,7 +210,8 @@ static func _enter_node(run: RunState, index: int) -> void:
 static func _start_fight(run: RunState, node: Dictionary) -> void:
 	run.fight_counter += 1
 	var enemies: Array = node.get("enemies", [])
-	run.fight = CombatEngine.start_fight(run.content, run.hero_snapshot(), enemies, run.floor, run.sub_rng("fight", run.fight_counter))
+	run.fight = CombatEngine.start_fight(run.content, run.hero_snapshot(), enemies,
+		run.floor, run.sub_rng("fight", run.fight_counter), run.mutation())
 	run.phase = "fight"
 	run.emit({"type": "fight_begin", "index": run.node_index, "kind": String(node["kind"]), "enemies": enemies.duplicate()})
 
@@ -390,10 +393,11 @@ static func _apply_shop(run: RunState, kind: String, action: Dictionary) -> void
 			push_error("run: unknown shop action " + kind)
 
 
-## As deep as the biomes go, not as deep as the current one goes: clearing the
-## last Catacombs floor offers floor 11, which is a different biome, mid-run.
-static func can_push(run: RunState) -> bool:
-	return run.floor < Biomes.depth(run.content)
+## Always. The descent is infinite (§2): past the authored floors the biomes
+## cycle at tier 2, 3 and so on, so there is no last floor to stop at -- what
+## stops a run is the hero, which is the point.
+static func can_push(_run: RunState) -> bool:
+	return true
 
 
 static func can_watch(run: RunState) -> bool:

@@ -224,7 +224,6 @@ ui.exit.title,Floor {floor} cleared
 ui.exit.here,A ghost left here earns
 ui.exit.next,A ghost on the next floor earns
 ui.exit.survival,Chance you survive the next floor
-ui.exit.no_push,The biome ends here.
 ui.exit.pending,Reckoning...
 ui.exit.push,Push deeper
 ui.exit.retreat,Retreat and mend
@@ -427,3 +426,23 @@ tag.ember.name,Ember
 tag.draw.name,Draw
 tag.holy.name,Holy
 tag.weak.name,Weak
+mutation.thorned.name,Thorned
+mutation.thorned.text,Every enemy starts with 3 Thorns.
+mutation.hardened.name,Hardened
+mutation.hardened.text,Every enemy starts with 2 Might.
+mutation.the_cold.name,The Cold
+mutation.the_cold.text,You start every fight with 2 Weak.
+mutation.the_rot.name,The Rot
+mutation.the_rot.text,You start every fight with 3 Poison.
+mutation.the_dark.name,The Dark
+mutation.the_dark.text,You draw one card fewer each turn.
+mutation.the_weight.name,The Weight
+mutation.the_weight.text,You have one less energy each turn.
+mutation.second_wind.name,Second Wind
+mutation.second_wind.text,You have one more energy each turn.
+mutation.the_kindling.name,The Kindling
+mutation.the_kindling.text,You start every fight with 2 Burn.
+mutation.the_swollen.name,The Swollen
+mutation.the_swollen.text,Every enemy has far more health.
+ui.run.floor_tier,Floor {floor} · {biome} · Tier {tier}
+ui.run.mutation,{name} — {text}

@@ -140,7 +140,11 @@ static func start_run(c: Campaign, entry_floor: int, now: int) -> RunState:
 			return c.run
 		push_error("start_run: the previous run has not been banked; call finish_run first")
 		return null
-	var deepest := mini(reach(c), Biomes.depth(c.content))
+	# Reach is the only limit. There used to be a second one -- the authored
+	# depth -- and it stopped meaning anything the day the biomes started
+	# cycling (§2): the dungeon has no bottom, so how deep you may enter is
+	# exactly how deep you have been.
+	var deepest := maxi(1, reach(c))
 	if entry_floor < 1 or entry_floor > deepest:
 		push_error("start_run: entry floor %d outside 1..%d" % [entry_floor, deepest])
 		return null
@@ -149,7 +153,8 @@ static func start_run(c: Campaign, entry_floor: int, now: int) -> RunState:
 	var run_seed := hash([c.campaign_seed, "run", c.run_counter])
 	c.run = RunEngine.start_run(c.content, c.hero, entry_floor, run_seed,
 		c.onboarding.watch_unlocked,
-		Biomes.claimed_pools(c.content, c.ladder, c.claimed_biomes), blessing(c))
+		Biomes.claimed_pools(c.content, c.ladder, c.claimed_biomes), blessing(c),
+		c.campaign_seed)
 	c.emit({"type": "run_started", "run": c.run_counter, "entry_floor": entry_floor, "seed": run_seed, "at": now})
 	return c.run
 

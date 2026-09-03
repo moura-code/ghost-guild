@@ -40,7 +40,6 @@ var _title: Label
 var _here: Label
 var _next: Label
 var _survival: Label
-var _note: Label
 var _push: Button
 var _retreat: Button
 var _watch: Button
@@ -92,12 +91,6 @@ func _build() -> void:
 	numbers_row.add_child(_reading(_next, game.text("ui.exit.next"), "descend"))
 	numbers_row.add_child(_reading(_survival, game.text("ui.exit.survival"), "hp"))
 	_face.add_child(numbers_row)
-
-	# Why a reading is blank, when it is. An em-dash alone tells the player
-	# nothing about why they cannot go deeper.
-	_note = UiTheme.small("", Palette.BONE_DIM)
-	_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_face.add_child(_note)
 
 	var choices := HBoxContainer.new()
 	choices.add_theme_constant_override("separation", 10)
@@ -235,22 +228,19 @@ func _refresh_labels() -> void:
 	if not numbers.has("summary"):
 		_next.text = waiting
 		_survival.text = waiting
-		_note.text = ""
 		return
+	# Every floor has one under it now (spec §2: the biomes cycle for ever), so
+	# both readings always have a number in them. The em-dashes and the note
+	# explaining them -- "the biome ends here" -- went with the bottom of the
+	# dungeon.
 	var summary: Dictionary = numbers["summary"]
-	if bool(summary["can_push"]):
-		_next.text = Num.rate(float(numbers["next"]))
-		var survival := float(summary["survival"])
-		_survival.text = Num.percent(survival)
-		# The odds colour themselves: this is the number the decision hangs
-		# on, and it should read before it is parsed.
-		_survival.add_theme_color_override("font_color",
-			Palette.DANGER if survival < 0.4 else (Palette.PREPARED if survival < 0.7 else Palette.GOOD))
-		_note.text = ""
-	else:
-		_next.text = "—"
-		_survival.text = "—"
-		_note.text = game.text("ui.exit.no_push")
+	_next.text = Num.rate(float(numbers["next"]))
+	var survival := float(summary["survival"])
+	_survival.text = Num.percent(survival)
+	# The odds colour themselves: this is the number the decision hangs on,
+	# and it should read before it is parsed.
+	_survival.add_theme_color_override("font_color",
+		Palette.DANGER if survival < 0.4 else (Palette.PREPARED if survival < 0.7 else Palette.GOOD))
 
 
 func _refresh_buttons() -> void:

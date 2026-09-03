@@ -39,20 +39,33 @@ func test_push_enters_the_next_floor() -> void:
 	assert_str(TestFixtures.run_events_of(run, "exit_decision")[0]["choice"]).is_equal("push")
 
 
-func test_no_push_past_the_last_floor_but_watch_is_always_possible_there() -> void:
+func test_the_last_authored_floor_offers_the_next_tier() -> void:
+	# It used to be the bottom of the dungeon and the one place a locked watch
+	# was allowed anyway. The descent is infinite now (§2), so clearing floor
+	# 30 offers floor 31 -- the Catacombs again, one tier down -- which is what
+	# makes a prestige a new descent rather than the same thirty floors.
 	var last := Biomes.depth(TestFixtures.content())
 	var run := _at_exit(last, 1, false)
 	var summary := RunEngine.exit_summary(run, 2)
-	assert_bool(summary["can_push"]).is_false()
-	assert_float(summary["survival"]).is_equal(-1.0)
-	assert_bool(summary["can_watch"]).is_true()
+	assert_bool(summary["can_push"]).is_true()
+	assert_float(summary["survival"]).is_greater_equal(0.0)
 	var kinds: Array = []
 	for action in RunEngine.legal_actions(run):
 		kinds.append(action["kind"])
-	assert_array(kinds).is_equal(["retreat", "watch"])
+	assert_array(kinds).contains(["push"])
 	RunEngine.apply(run, {"kind": "push"})
-	assert_str(run.phase).is_equal("exit")
-	assert_int(run.floor).is_equal(last)
+	assert_int(run.floor).is_equal(last + 1)
+	assert_int(Biomes.tier_of(run.content, run.floor)).is_equal(2)
+
+
+func test_a_locked_watch_stays_locked_all_the_way_down() -> void:
+	# `can_watch` used to be "unlocked, OR there is nowhere left to go". There
+	# is always somewhere left to go now, so the second half is gone and the
+	# rite is what the onboarding says it is: earned by dying once.
+	var run := _at_exit(Biomes.depth(TestFixtures.content()), 1, false)
+	assert_bool(RunEngine.can_watch(run)).is_false()
+	run.watch_unlocked = true
+	assert_bool(RunEngine.can_watch(run)).is_true()
 
 
 func test_retreat_spends_resolve_sets_camp_and_keeps_hp() -> void:

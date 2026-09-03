@@ -9,7 +9,7 @@ extends SceneTree
 ##         -s tools/hud_shot.gd -- <out.png> <mode> [frames]
 ##
 ## Modes: walk, fight, reward, guild, panel, expedition, offline, exit, watch,
-## deep, kiln, ladder, hero, hall.
+## deep, kiln, tier2, tier2fight, ladder, ladderdeep, hero, hall.
 ##
 ## Runs against a throwaway save, so it never touches the player's campaign.
 
@@ -76,12 +76,16 @@ func _init() -> void:
 			var desk := crawl.guild.station(GuildRoom.DESK)
 			desk.enter(crawl.player)
 			desk.use()
-		"ladder":
-			# A ghost standing in each biome, so the shaft has both bands.
-			for floor in [4, 14, 26]:
+		"ladder", "ladderdeep":
+			# A ghost standing in each biome, so the shaft has all its bands.
+			# `ladderdeep` is the same screen past the authored dungeon, where
+			# the drawn window has left the surface behind.
+			var deep_run := mode == "ladderdeep"
+			var standing: Array = [4, 14, 26, 34, 42] if deep_run else [4, 14, 26]
+			for floor in standing:
 				var walker := Hero.create(game.content, "sexton", "Deep%d" % floor, {}, 1)
 				game.campaign.ladder.add(Ghost.from_expedition(walker, floor, 0))
-			game.campaign.record_depth = 28
+			game.campaign.record_depth = 44 if deep_run else 28
 			var well := crawl.guild.station(GuildRoom.WELL)
 			well.enter(crawl.player)
 			well.use()
@@ -115,8 +119,10 @@ func _init() -> void:
 				entry = 11
 			elif mode == "kiln":
 				entry = 24
+			elif mode == "tier2" or mode == "tier2fight":
+				entry = Biomes.depth(game.content) + 4
 			_descend(game, crawl, entry)
-			if mode == "fight":
+			if mode == "fight" or mode == "tier2fight":
 				await _pick_a_fight(game, crawl)
 			elif mode == "reward":
 				await _pick_a_fight(game, crawl)

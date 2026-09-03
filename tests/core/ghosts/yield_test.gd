@@ -35,13 +35,16 @@ func test_yield_is_marginal_over_the_ladder_and_prepared() -> void:
 	assert_float(YieldSimulator.strength_here(c, run)).is_equal(strength)
 
 
-func test_no_next_floor_past_the_deepest_biome() -> void:
+func test_there_is_always_a_next_floor_to_price() -> void:
+	# The descent has no bottom any more (§2), so the deepest authored floor
+	# reads like any other: it can be pushed past, and the next floor's yield
+	# is a real number rather than the "nothing below this" sentinel.
 	var c := TestFixtures.campaign(1, 1000)
 	var run := _run_at_exit(c, Biomes.depth(c.content))
 	var n := YieldSimulator.exit_numbers(c, run, 1)
-	assert_bool(n["can_push"]).is_false()
-	assert_float(n["yield_next"]).is_equal(-1.0)
-	assert_float(n["strength_next"]).is_equal(-1.0)
+	assert_bool(n["can_push"]).is_true()
+	assert_float(n["yield_next"]).is_greater_equal(0.0)
+	assert_float(n["strength_next"]).is_greater_equal(0.0)
 
 
 func test_preview_strength_ignores_current_hp() -> void:

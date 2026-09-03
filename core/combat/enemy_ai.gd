@@ -14,7 +14,7 @@ static func spawn(s: FightState, enemy_id: String) -> int:
 	var def: EnemyDef = s.content.enemies[enemy_id]
 	var e := EnemyState.new()
 	e.def_id = enemy_id
-	e.max_hp = Scaling.enemy_hp(def.hp, s.floor, s.content.balance)
+	e.max_hp = Scaling.enemy_hp(def.hp, s.floor, s.content.balance, s.tier)
 	e.hp = e.max_hp
 	s.enemies.append(e)
 	var index := s.enemies.size() - 1
@@ -51,7 +51,9 @@ static func choose_next_move(s: FightState, index: int) -> void:
 
 static func scaled_damage(s: FightState, index: int, move: Dictionary) -> int:
 	var e := s.enemies[index]
-	return Scaling.enemy_damage(int(move.get("damage", 0)), s.floor, s.content.balance) + e.status("might_buff")
+	var scaled := Scaling.enemy_damage(int(move.get("damage", 0)), s.floor,
+		s.content.balance, s.tier)
+	return scaled + e.status("might_buff")
 
 
 static func intent_of(s: FightState, index: int) -> Dictionary:

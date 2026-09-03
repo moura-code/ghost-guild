@@ -209,6 +209,7 @@ func open(screen: Control) -> void:
 		# of the screen and was landing across the exit screen's own title.
 		prompts.hush()
 		prompts.clear_objective()
+		prompts.clear_rule()
 
 
 func close_panel() -> void:
@@ -287,8 +288,7 @@ func build_floor() -> void:
 	layout = RunEngine.layout_for(run)
 	_built_floor = run.floor
 	DungeonBuilder.build(layout, _world, run.biome().id)
-	_world.add_child(Grade.world_environment(
-		Grade.depth_of(run.floor, Biomes.depth(run.content)), run.biome().id))
+	_world.add_child(Grade.world_environment(grade_depth(run.content, run.floor), run.biome().id))
 	_dress()
 	_place_player(_stand_in(layout.entry_room), _open_facing(layout.room_center(layout.entry_room)))
 
@@ -326,10 +326,49 @@ func build_floor() -> void:
 ## step out of the Catacombs and into the Deep -- would read as more of it.
 func floor_banner(run: RunState) -> String:
 	var here := run.biome()
+	var tier := run.tier()
+	# Past the first cycle the biome alone no longer says where you are: the
+	# Catacombs at tier 3 and the Catacombs at tier 1 are the same walls and
+	# nothing like the same fight. The tier goes on every banner down there.
+	if tier > 1:
+		_announced_biome = here.id
+		return game.text("ui.run.floor_tier") \
+			.replace("{floor}", str(run.floor)) \
+			.replace("{biome}", game.text(here.name_key)) \
+			.replace("{tier}", str(tier))
 	if here.id == _announced_biome:
 		return game.text("ui.run.floor").replace("{floor}", str(run.floor))
 	_announced_biome = here.id
-	return game.text("ui.run.floor_biome") 		.replace("{floor}", str(run.floor)) 		.replace("{biome}", game.text(here.name_key))
+	return game.text("ui.run.floor_biome") \
+		.replace("{floor}", str(run.floor)) \
+		.replace("{biome}", game.text(here.name_key))
+
+
+## The rule in force on this floor, spelled out, or "" on the first tier.
+##
+## Shown as the objective line rather than the banner: the banner fades, and a
+## rule you have to play around for ten floors is not an announcement.
+func mutation_line(run: RunState) -> String:
+	var rule := run.mutation()
+	if rule == null:
+		return ""
+	return game.text("ui.run.mutation") \
+		.replace("{name}", game.text(rule.name_key)) \
+		.replace("{text}", game.text(rule.text_key))
+
+
+## How deep the room should look, 0..1.
+##
+## It cycles with the biomes rather than running off the end (§2). Floor 34 is
+## the Catacombs again and the Catacombs are the same walls in every cycle;
+## lighting them like the bottom of the Kiln would leave every floor past
+## thirty the same colour, and the colour bands are the only thing on screen
+## that says which biome you are standing in. What makes a tier different is
+## its rule, not its light.
+##
+## Pure, so the rule can be checked without building a floor.
+static func grade_depth(content: Content, floor: int) -> float:
+	return Grade.depth_of(Biomes.in_tier(content, floor), Biomes.depth(content))
 
 
 ## Props against the walls. A boxy empty room reads as a prototype however
@@ -659,6 +698,7 @@ func _refresh_objective() -> void:
 	var run := game.campaign.run
 	if run == null:
 		return
+	prompts.show_rule(mutation_line(run))
 	if run.phase == "exit":
 		prompts.show_objective(game.text("ui.run.stairs_open"))
 		return

@@ -42,13 +42,14 @@ func test_the_boundaries_are_where_the_data_says_they_are() -> void:
 
 
 func test_a_floor_off_either_end_still_answers() -> void:
-	# `reach` arithmetic and a corrupt save can both hand this a floor that no
-	# biome authored. Returning null would push the crash somewhere else.
+	# `reach` arithmetic and a corrupt save can both hand this a zero or a
+	# negative. Returning null would push the crash somewhere else. A floor
+	# below the authored end is not off the end at all any more -- the biomes
+	# cycle (§2), so it belongs to whichever one it lands on. See tiers_test.
 	var c := _content()
 	assert_str(Biomes.for_floor(c, 0).id).is_equal("catacombs")
 	assert_str(Biomes.for_floor(c, -5).id).is_equal("catacombs")
 	assert_object(Biomes.for_floor(c, 9999)).is_not_null()
-	assert_str(Biomes.for_floor(c, 9999).id).is_equal(Biomes.deepest(c).id)
 
 
 func test_the_dungeon_is_as_deep_as_the_biomes_authored() -> void:

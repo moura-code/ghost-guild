@@ -17,6 +17,10 @@ var claimed_pools: Array[String] = []
 ## rather than read live, for the same reason `claimed_pools` is: a run is a
 ## closed system that replays from its seed.
 var blessing: float = 1.0
+## The campaign seed the tier's mutations are drawn from (spec §2, §6.1). Zero
+## for a run started outside a campaign, which draws the same rules every time
+## and is what the demos and the balance sim want.
+var campaign_seed: int = 0
 var nodes: Array = []
 var node_index: int = 0
 ## One flag per node, so a floor can be walked in any order. `node_index`
@@ -53,6 +57,16 @@ func biome() -> BiomeDef:
 
 func biome_at(p_floor: int) -> BiomeDef:
 	return Biomes.for_floor(content, p_floor)
+
+
+## Which cycle of the dungeon this floor is in (spec §2).
+func tier() -> int:
+	return Biomes.tier_of(content, floor)
+
+
+## The rule in force on this floor, or null on the first tier.
+func mutation() -> MutationDef:
+	return Mutations.for_floor(content, floor, campaign_seed)
 
 
 func sub_rng(tag: String, n: int) -> Rng:
@@ -135,6 +149,7 @@ func to_dict() -> Dictionary:
 		"floor": floor,
 		"claimed_pools": claimed_pools.duplicate(),
 		"blessing": blessing,
+		"campaign_seed": campaign_seed,
 		"nodes": nodes.duplicate(true),
 		"node_index": node_index,
 		"resolved": resolved.duplicate(),
@@ -165,6 +180,7 @@ static func from_dict(p_content: Content, d: Dictionary) -> RunState:
 	for pool in d.get("claimed_pools", []):
 		run.claimed_pools.append(String(pool))
 	run.blessing = float(d.get("blessing", 1.0))
+	run.campaign_seed = int(d.get("campaign_seed", 0))
 	var nodes_raw: Array = d.get("nodes", [])
 	run.nodes = nodes_raw.duplicate(true)
 	run.node_index = int(d.get("node_index", 0))

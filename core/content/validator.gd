@@ -36,6 +36,8 @@ static func validate(c: Content) -> Array[String]:
 		_class(c, c.classes[id], errors)
 	for id in c.biomes:
 		_biome(c, c.biomes[id], errors)
+	for id in c.mutations:
+		_mutation(c, c.mutations[id], errors)
 	for id in c.events:
 		_event(c, c.events[id], errors)
 	for id in c.upgrades:
@@ -75,6 +77,29 @@ static func _rule(c: Content, r: RuleDef, errors: Array[String]) -> void:
 				# Not `_amount_ok`: that one also accepts the string "x" for
 				# X-cost card effects, and an X-cost multiplier is nothing.
 				errors.append("%s: weight '%s' has a non-numeric %s" % [where, name, op])
+
+
+## A tier's rule (spec §2). Its ops are a closed vocabulary on purpose: a
+## vocabulary that grows per mutation is a vocabulary nobody can balance.
+static func _mutation(c: Content, m: MutationDef, errors: Array[String]) -> void:
+	var where := "mutation " + m.id
+	_key(c, where, m.name_key, errors)
+	_key(c, where, m.text_key, errors)
+	if not MutationDef.OPS.has(m.op):
+		errors.append("%s: unknown op '%s'" % [where, m.op])
+		return
+	match m.op:
+		"enemy_status", "hero_status":
+			if not STATUSES.has(m.status):
+				errors.append("%s: unknown status '%s'" % [where, m.status])
+			if m.stacks <= 0:
+				errors.append("%s: needs a positive stacks" % where)
+		"hero_draw", "hero_energy":
+			if is_zero_approx(m.amount):
+				errors.append("%s: changes nothing" % where)
+		"enemy_hp":
+			if m.amount <= 0.0:
+				errors.append("%s: needs a positive multiplier" % where)
 
 
 static func _key(c: Content, where: String, key: String, errors: Array[String]) -> void:

@@ -13,6 +13,8 @@ var events: Dictionary = {}
 var upgrades: Dictionary = {}
 ## id -> RuleDef. Priority rules (spec 3.3): how a ghost fights.
 var rules: Dictionary = {}
+## id -> MutationDef. One rule per biome per tier past the first (spec §2).
+var mutations: Dictionary = {}
 var affinity: Dictionary = {}
 var balance: Dictionary = {}
 var strings: Dictionary = {}
@@ -32,6 +34,7 @@ static func load_from(root: String) -> Content:
 	c._load_dir(root.path_join("events"), func(d: Dictionary) -> void: c.events[d["id"]] = EventDef.from_dict(d))
 	c._load_dir(root.path_join("upgrades"), func(d: Dictionary) -> void: c.upgrades[d["id"]] = UpgradeDef.from_dict(d))
 	c._load_dir(root.path_join("rules"), func(d: Dictionary) -> void: c.rules[d["id"]] = RuleDef.from_dict(d))
+	c._load_dir(root.path_join("mutations"), func(d: Dictionary) -> void: c.mutations[d["id"]] = MutationDef.from_dict(d))
 	c.affinity = c._load_object(root.path_join("affinity.json"))
 	c.balance = c._load_object(root.path_join("balance.json"))
 	c._load_strings(root.path_join("strings").path_join("en.csv"))

@@ -1,0 +1,10 @@
+[
+  {
+    "id": "fx_mutation",
+    "name": "mutation.fx_mutation.name",
+    "text": "mutation.fx_mutation.text",
+    "op": "enemy_status",
+    "status": "thorns",
+    "stacks": 2
+  }
+]

@@ -60,5 +60,7 @@
   "expedition_sim_fights": 12,
   "legend_threshold_step": 15,
   "legend_k": 0.5,
-  "legend_mass_scale": 400.0
+  "legend_mass_scale": 400.0,
+  "tier_hp_jump": 1.45,
+  "tier_damage_jump": 1.25
 }
