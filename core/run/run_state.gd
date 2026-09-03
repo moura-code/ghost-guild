@@ -21,6 +21,11 @@ var blessing: float = 1.0
 ## for a run started outside a campaign, which draws the same rules every time
 ## and is what the demos and the balance sim want.
 var campaign_seed: int = 0
+## The card tag of the Legend invoked for this run (§6.1), or "" for none.
+## Snapshotted rather than read live, for the same reason `blessing` is: a run
+## is a closed system that replays from its seed, and invoking a different
+## Legend mid-run would rewrite the fights already fought.
+var trait_tag: String = ""
 var nodes: Array = []
 var node_index: int = 0
 ## One flag per node, so a floor can be walked in any order. `node_index`
@@ -67,6 +72,11 @@ func tier() -> int:
 ## The rule in force on this floor, or null on the first tier.
 func mutation() -> MutationDef:
 	return Mutations.for_floor(content, floor, campaign_seed)
+
+
+## What the invoked Legend is worth in a fight, or null when none was.
+func hero_trait() -> TraitDef:
+	return Traits.for_tag(content, trait_tag)
 
 
 func sub_rng(tag: String, n: int) -> Rng:
@@ -150,6 +160,7 @@ func to_dict() -> Dictionary:
 		"claimed_pools": claimed_pools.duplicate(),
 		"blessing": blessing,
 		"campaign_seed": campaign_seed,
+		"trait_tag": trait_tag,
 		"nodes": nodes.duplicate(true),
 		"node_index": node_index,
 		"resolved": resolved.duplicate(),
@@ -181,6 +192,7 @@ static func from_dict(p_content: Content, d: Dictionary) -> RunState:
 		run.claimed_pools.append(String(pool))
 	run.blessing = float(d.get("blessing", 1.0))
 	run.campaign_seed = int(d.get("campaign_seed", 0))
+	run.trait_tag = String(d.get("trait_tag", ""))
 	var nodes_raw: Array = d.get("nodes", [])
 	run.nodes = nodes_raw.duplicate(true)
 	run.node_index = int(d.get("node_index", 0))

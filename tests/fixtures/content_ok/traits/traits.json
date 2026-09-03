@@ -1,0 +1,10 @@
+[
+  {
+    "id": "trait_fx",
+    "tag": "fx_tag",
+    "name": "trait.fx.name",
+    "text": "trait.fx.text",
+    "op": "status",
+    "amount": 1
+  }
+]

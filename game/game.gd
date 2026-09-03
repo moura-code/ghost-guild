@@ -200,6 +200,18 @@ func choose_class(class_id: String) -> Dictionary:
 ## Performs the rite (spec §6.1). Merges every ghost into a Legend and starts
 ## the cycle again. Everything the player is about to lose is spelled out on
 ## the Hall screen before this can be reached.
+## Which Legend walks with you on the next descent (spec §6.1). Nothing under
+## `game/` writes to the campaign; this is the channel.
+func invoke_legend(id: int) -> bool:
+	if campaign == null:
+		return false
+	var ok := CampaignEngine.invoke_legend(campaign, id, now())
+	if ok:
+		_emit_all()
+		save()
+	return ok
+
+
 func prestige() -> Dictionary:
 	if campaign == null:
 		return {"ok": false, "reason": "unbooted", "legend": null}

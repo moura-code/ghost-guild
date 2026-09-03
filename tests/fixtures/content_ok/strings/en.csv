@@ -23,3 +23,5 @@ rule.fx_defensive.name,Defensive
 rule.fx_defensive.text,Guard over damage.
 mutation.fx_mutation.name,Fixture Rule
 mutation.fx_mutation.text,Every enemy starts with 2 Thorns.
+trait.fx.name,Fixture Trait
+trait.fx.text,Fixture cards do more.

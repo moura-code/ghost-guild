@@ -117,6 +117,12 @@ func _refresh_hall(c: Campaign) -> void:
 			.replace("{trait}", _trait_name(legend.trait_tag)), Palette.PREPARED)
 		box.add_child(head)
 		rows.append(head)
+		# What the trait actually does. A Legend named after the tag it came
+		# from tells you which cycle made it and nothing about why you would
+		# take it down there with you.
+		var does := _trait_text(legend.trait_tag)
+		if does != "":
+			box.add_child(UiTheme.small(does, Palette.GHOST))
 		for i in mini(MAX_EPITAPHS, legend.epitaphs.size()):
 			var row: Dictionary = legend.epitaphs[i]
 			# Body weight, not fine print. These lines are the reason the
@@ -126,13 +132,47 @@ func _refresh_hall(c: Campaign) -> void:
 			box.add_child(UiTheme.small(game.text("ui.hall.and_more") \
 				.replace("{count}", str(legend.epitaphs.size() - MAX_EPITAPHS)),
 				Palette.BONE_FAINT))
+		# One Legend walks with you per descent, and choosing which is the only
+		# decision the Hall offers. It lives on the row rather than in a picker
+		# elsewhere, because the thing you are choosing between is the
+		# epitaphs, not a list of tag names.
+		var carried := c.invoked_legend == legend.id
+		var carry := Button.new()
+		carry.name = "Carry%d" % legend.id
+		carry.text = game.text("ui.hall.carried" if carried else "ui.hall.carry")
+		carry.disabled = c.run != null
+		carry.custom_minimum_size = Vector2(150.0, 20.0)
+		if carried:
+			carry.add_theme_stylebox_override("normal", UiTheme.primary_box(Palette.GHOST))
+		var wanted := 0 if carried else legend.id
+		carry.pressed.connect(func() -> void: _on_carry(wanted))
+		var row := HBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_child(carry)
+		box.add_child(row)
 		_hall.add_child(ScreenLayout.plate(box, ScreenLayout.WIDE_COLUMN))
 
 
+## What a Legend carries, spelled out. The tag's name alone ("Poison") says
+## which cycle it came from and nothing about what it does for you, and the
+## whole point of invoking one is the decision between them.
 func _trait_name(tag: String) -> String:
 	if tag == "":
 		return game.text("ui.none")
-	return game.text("tag.%s.name" % tag)
+	var carried := Traits.for_tag(game.content, tag)
+	if carried == null:
+		return game.text("tag.%s.name" % tag)
+	return game.text(carried.name_key)
+
+
+func _trait_text(tag: String) -> String:
+	var carried := Traits.for_tag(game.content, tag)
+	return game.text(carried.text_key) if carried != null else ""
+
+
+func _on_carry(id: int) -> void:
+	game.invoke_legend(id)
+	refresh()
 
 
 func _on_rite() -> void:

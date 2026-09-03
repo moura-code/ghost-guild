@@ -1,0 +1,58 @@
+[
+  {
+    "id": "trait_poison",
+    "tag": "poison",
+    "name": "trait.poison.name",
+    "text": "trait.poison.text",
+    "op": "status",
+    "amount": 1
+  },
+  {
+    "id": "trait_ember",
+    "tag": "ember",
+    "name": "trait.ember.name",
+    "text": "trait.ember.text",
+    "op": "status",
+    "amount": 1
+  },
+  {
+    "id": "trait_weak",
+    "tag": "weak",
+    "name": "trait.weak.name",
+    "text": "trait.weak.text",
+    "op": "status",
+    "amount": 1
+  },
+  {
+    "id": "trait_bone",
+    "tag": "bone",
+    "name": "trait.bone.name",
+    "text": "trait.bone.text",
+    "op": "damage",
+    "amount": 2
+  },
+  {
+    "id": "trait_holy",
+    "tag": "holy",
+    "name": "trait.holy.name",
+    "text": "trait.holy.text",
+    "op": "damage",
+    "amount": 3
+  },
+  {
+    "id": "trait_shield",
+    "tag": "shield",
+    "name": "trait.shield.name",
+    "text": "trait.shield.text",
+    "op": "block",
+    "amount": 2
+  },
+  {
+    "id": "trait_draw",
+    "tag": "draw",
+    "name": "trait.draw.name",
+    "text": "trait.draw.text",
+    "op": "draw",
+    "amount": 1
+  }
+]

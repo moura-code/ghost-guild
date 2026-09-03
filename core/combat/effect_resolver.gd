@@ -17,7 +17,8 @@ static func resolve(s: FightState, effects: Array, source: Dictionary, ctx: Dict
 			"apply_status":
 				_apply_status_op(s, e, ctx)
 			"draw":
-				s.draw(_amount(e, "amount", ctx))
+				s.draw(_amount(e, "amount", ctx)
+					+ Traits.bonus(s.hero_trait, "draw", ctx.get("tags", [])))
 			"energy":
 				s.energy += _amount(e, "amount", ctx)
 				s.emit({"type": "energy_changed", "energy": s.energy})
@@ -67,6 +68,9 @@ static func _damage(s: FightState, e: Dictionary, ctx: Dictionary) -> void:
 	var base := _amount(e, "amount", ctx)
 	if String(e.get("scale", "")) == "might":
 		base += s.might()
+	# The Legend's trait, before the Blessing multiplies it: the trait is part
+	# of what the card does, and the Blessing multiplies what the card does.
+	base += Traits.bonus(s.hero_trait, "damage", ctx.get("tags", []))
 	# The Legend's Blessing, after Might rather than before it: it multiplies
 	# what the hero deals, which is the card plus the stat (spec §4.4).
 	base = blessed(base, s.blessing)
@@ -82,6 +86,7 @@ static func _block(s: FightState, e: Dictionary, ctx: Dictionary) -> void:
 	var amount := _amount(e, "amount", ctx)
 	if String(e.get("scale", "")) == "wit":
 		amount += s.wit()
+	amount += Traits.bonus(s.hero_trait, "block", ctx.get("tags", []))
 	amount = blessed(amount, s.blessing)
 	s.hero_block += amount
 	s.emit({"type": "block_gained", "target": "hero", "amount": amount})
@@ -92,6 +97,9 @@ static func _apply_status_op(s: FightState, e: Dictionary, ctx: Dictionary) -> v
 	var stacks := _amount(e, "stacks", ctx)
 	if String(e.get("scale", "")) == "wit":
 		stacks += s.wit()
+	# Spec §6.1's own example: a Poison Legend makes the hero's Poison cards
+	# apply +1 stack.
+	stacks += Traits.bonus(s.hero_trait, "status", ctx.get("tags", []))
 	var mode := String(e.get("target", "target"))
 	var card_target := String(ctx.get("card_target", "enemy"))
 	if mode == "self" or (mode == "target" and (card_target == "self" or card_target == "none")):

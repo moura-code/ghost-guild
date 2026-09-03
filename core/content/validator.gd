@@ -38,6 +38,8 @@ static func validate(c: Content) -> Array[String]:
 		_biome(c, c.biomes[id], errors)
 	for id in c.mutations:
 		_mutation(c, c.mutations[id], errors)
+	for id in c.traits:
+		_trait(c, c.traits[id], errors)
 	for id in c.events:
 		_event(c, c.events[id], errors)
 	for id in c.upgrades:
@@ -100,6 +102,26 @@ static func _mutation(c: Content, m: MutationDef, errors: Array[String]) -> void
 		"enemy_hp":
 			if m.amount <= 0.0:
 				errors.append("%s: needs a positive multiplier" % where)
+
+
+## A Legend's trait (spec §6.1). Keyed to a card tag, so the failure this
+## catches is a trait authored for a tag no card carries -- which is a whole
+## prestige cycle that buys the player nothing and never errors.
+static func _trait(c: Content, t: TraitDef, errors: Array[String]) -> void:
+	var where := "trait " + t.id
+	_key(c, where, t.name_key, errors)
+	_key(c, where, t.text_key, errors)
+	if not TraitDef.OPS.has(t.op):
+		errors.append("%s: unknown op '%s'" % [where, t.op])
+	if t.amount <= 0:
+		errors.append("%s: adds nothing" % where)
+	if t.tag == "":
+		errors.append("%s: is not keyed to a tag" % where)
+		return
+	for other_id in c.traits:
+		var other: TraitDef = c.traits[other_id]
+		if other.id != t.id and other.tag == t.tag:
+			errors.append("%s: '%s' already has a trait (%s)" % [where, t.tag, other.id])
 
 
 static func _key(c: Content, where: String, key: String, errors: Array[String]) -> void:

@@ -67,6 +67,36 @@ static func blessing(c: Campaign) -> float:
 	return Legends.blessing(c.legends)
 
 
+## The card tag of the Legend carried into the next run, or "".
+static func invoked_tag(c: Campaign) -> String:
+	var l := Traits.invoked(c)
+	return l.trait_tag if l != null else ""
+
+
+## Chooses which Legend to carry (spec §6.1). `id` of 0 carries none.
+##
+## Refused while a run is live, because the run snapshots the trait at the
+## door: allowing it mid-run would put a number on the screen that the fights
+## already fought were not using.
+static func invoke_legend(c: Campaign, id: int, now: int) -> bool:
+	if c.run != null and not c.run.is_over():
+		push_error("invoke_legend: a run is already in progress")
+		return false
+	if id != 0:
+		var found := false
+		for l in c.legends:
+			if l.id == id:
+				found = true
+		if not found:
+			push_error("invoke_legend: no Legend with id %d" % id)
+			return false
+	if c.invoked_legend == id:
+		return true
+	c.invoked_legend = id
+	c.emit({"type": "legend_invoked", "legend": id, "at": now})
+	return true
+
+
 ## A ghost's snapshot, carrying the guild's Blessing. Every simulation in the
 ## game goes through a snapshot, so stamping it here is what stops one path
 ## pricing a ghost without the Blessing that ghost actually fights with.
@@ -154,7 +184,7 @@ static func start_run(c: Campaign, entry_floor: int, now: int) -> RunState:
 	c.run = RunEngine.start_run(c.content, c.hero, entry_floor, run_seed,
 		c.onboarding.watch_unlocked,
 		Biomes.claimed_pools(c.content, c.ladder, c.claimed_biomes), blessing(c),
-		c.campaign_seed)
+		c.campaign_seed, invoked_tag(c))
 	c.emit({"type": "run_started", "run": c.run_counter, "entry_floor": entry_floor, "seed": run_seed, "at": now})
 	return c.run
 

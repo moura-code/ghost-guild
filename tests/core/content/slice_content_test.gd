@@ -108,7 +108,7 @@ func test_every_key_the_content_names_resolves() -> void:
 		if key != "" and not c.strings.has(key):
 			missing.append(key)
 	for table in [c.cards, c.enemies, c.relics, c.classes, c.biomes, c.events,
-			c.rules, c.upgrades, c.mutations]:
+			c.rules, c.upgrades, c.mutations, c.traits]:
 		for id in table:
 			var def: Variant = table[id]
 			check.call(String(def.get("name_key")))

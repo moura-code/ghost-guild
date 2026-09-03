@@ -23,6 +23,11 @@ var expeditions: Array[Expedition] = []
 ## currency the next layer will spend. Both survive a prestige by definition;
 ## almost nothing else does.
 var legends: Array[Legend] = []
+## The Legend carried into the next run (spec §6.1: "one Legend can be invoked
+## per run as an extra relic"), by id, or 0 for none. By id rather than index
+## because a later prestige appends to the list and must not silently re-point
+## an invocation at somebody else's grave.
+var invoked_legend: int = 0
 var ink: int = 0
 ## Biomes claimed in an earlier cycle. Claims are derived from the ladder
 ## (spec §5.6) and prestige wipes the ladder, so without this the rite would
@@ -97,6 +102,7 @@ func to_dict() -> Dictionary:
 		"expedition_counter": expedition_counter,
 		"expeditions": _expeditions_dict(),
 		"legends": _legends_dict(),
+		"invoked_legend": invoked_legend,
 		"ink": ink,
 		"claimed_biomes": claimed_biomes.duplicate(),
 		"created_at": created_at,
@@ -129,6 +135,7 @@ static func from_dict(p_content: Content, d: Dictionary) -> Campaign:
 		c.claimed_biomes.append(String(claimed))
 	for raw_legend in d.get("legends", []):
 		c.legends.append(Legend.from_dict(raw_legend))
+	c.invoked_legend = int(d.get("invoked_legend", 0))
 	for raw in d.get("expeditions", []):
 		c.expeditions.append(Expedition.from_dict(raw))
 	c.created_at = int(d.get("created_at", 0))

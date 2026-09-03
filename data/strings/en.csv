@@ -446,3 +446,22 @@ mutation.the_swollen.name,The Swollen
 mutation.the_swollen.text,Every enemy has far more health.
 ui.run.floor_tier,Floor {floor} · {biome} · Tier {tier}
 ui.run.mutation,{name} — {text}
+trait.poison.name,The Rotted
+trait.poison.text,Your Poison cards apply 1 more stack.
+trait.ember.name,The Kindled
+trait.ember.text,Your Ember cards apply 1 more stack.
+trait.weak.name,The Unmaking
+trait.weak.text,Your Weak cards apply 1 more stack.
+trait.bone.name,The Bonebreaker
+trait.bone.text,Your Bone cards deal 2 more damage.
+trait.holy.name,The Consecrated
+trait.holy.text,Your Holy cards deal 3 more damage.
+trait.shield.name,The Unyielding
+trait.shield.text,Your Shield cards give 2 more Block.
+trait.draw.name,The Far-Sighted
+trait.draw.text,Your Draw cards draw 1 more card.
+ui.hall.carry,Carry into the descent
+ui.hall.carried,Carried
+ui.hall.carrying,{name} walks with you.
+ui.hall.carry_none,No Legend walks with you.
+ui.hall.invoke_hint,One Legend may be invoked per descent. Its trait is yours for the run.

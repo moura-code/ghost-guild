@@ -7,7 +7,7 @@ extends RefCounted
 
 static func start_run(content: Content, hero: Hero, entry_floor: int, run_seed: int,
 		watch_unlocked: bool, claimed_pools: Array = [], blessing: float = 1.0,
-		campaign_seed: int = 0) -> RunState:
+		campaign_seed: int = 0, trait_tag: String = "") -> RunState:
 	var run := RunState.new()
 	run.content = content
 	run.hero = hero
@@ -16,6 +16,7 @@ static func start_run(content: Content, hero: Hero, entry_floor: int, run_seed: 
 		run.claimed_pools.append(String(pool))
 	run.blessing = blessing
 	run.campaign_seed = campaign_seed
+	run.trait_tag = trait_tag
 	run.entry_floor = entry_floor
 	run.floor = entry_floor
 	run.watch_unlocked = watch_unlocked
@@ -211,7 +212,7 @@ static func _start_fight(run: RunState, node: Dictionary) -> void:
 	run.fight_counter += 1
 	var enemies: Array = node.get("enemies", [])
 	run.fight = CombatEngine.start_fight(run.content, run.hero_snapshot(), enemies,
-		run.floor, run.sub_rng("fight", run.fight_counter), run.mutation())
+		run.floor, run.sub_rng("fight", run.fight_counter), run.mutation(), run.hero_trait())
 	run.phase = "fight"
 	run.emit({"type": "fight_begin", "index": run.node_index, "kind": String(node["kind"]), "enemies": enemies.duplicate()})
 
