@@ -142,14 +142,17 @@ func bind(content: Content, ghost: Ghost, ctx: Dictionary) -> void:
 
 	if is_true:
 		_echo_cost = float(ctx["echo_cost"])
-		_echo.text = Num.short(_echo_cost)
+		# The verb, not just the price. A button whose entire label is `50`
+		# tells a new player nothing about what pressing it does.
+		_echo.text = "%s %s" % [content.text("ui.echo"), Num.short(_echo_cost)]
 	else:
 		_call_cost = float(ctx["call_cost"])
-		_call.text = Num.short(_call_cost)
+		_call.text = "%s %s" % [content.text("ui.call"), Num.short(_call_cost)]
 
 	if _tend.visible:
 		_tend_cost = float(ctx["tend_cost"])
-		_tend.text = content.text("ui.free") if _tend_cost <= 0.0 else Num.short(_tend_cost)
+		_tend.text = "%s %s" % [content.text("ui.tend"),
+			content.text("ui.free") if _tend_cost <= 0.0 else Num.short(_tend_cost)]
 
 	# Hidden rather than disabled when there is nothing left to sharpen or
 	# nothing in the compendium it does not already carry: a permanently dead

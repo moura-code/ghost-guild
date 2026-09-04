@@ -14,6 +14,12 @@ extends Node3D
 
 signal fight_finished()
 
+## Whether the fight has finished settling. `Crawl` holds the screen until
+## it has: the run leaves the fight phase on the frame the last enemy dies,
+## and the animation of that death has not started yet.
+func is_settled() -> bool:
+	return _finished
+
 ## How far in front of the room's centre the front rank stands.
 const DEPTH := 1.6
 const SPACING := 1.35
@@ -234,6 +240,12 @@ func check_over() -> void:
 	if _finished:
 		return
 	if game.campaign.run != null and game.campaign.run.phase == "fight":
+		return
+	# The blow that ended the fight is still landing. `animator.finished`
+	# calls this again when the queue empties -- without the wait the
+	# reward panel snapped up on the same frame as the killing card, over a
+	# damage number, a spark and a whole collapse nobody ever saw.
+	if animator != null and animator.is_playing():
 		return
 	_finished = true
 	player.frozen = false

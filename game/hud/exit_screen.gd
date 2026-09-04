@@ -43,6 +43,7 @@ var _survival: Label
 var _push: Button
 var _retreat: Button
 var _watch: Button
+var _terms: Label
 ## The readings and the three choices, hidden while the rule picker is up.
 var _face: Control
 var _picker: RulePicker
@@ -111,6 +112,17 @@ func _build() -> void:
 	_watch.pressed.connect(func() -> void: _decide("watch"))
 	choices.add_child(_watch)
 	_face.add_child(choices)
+
+	# What the three buttons actually cost. The player is being asked to
+	# kill their hero on purpose and the screen said nothing about it: not
+	# that the run ends, not that the ghost is worth more for having chosen
+	# it, not that reach and Soul and upgrades survive. Three unexplained
+	# buttons under three numbers about ghosts.
+	_terms = UiTheme.small("", Palette.BONE_DIM)
+	_terms.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_terms.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_terms.custom_minimum_size = Vector2(0.0, 26.0)
+	_face.add_child(ScreenLayout.centred(_terms, ScreenLayout.WIDE_COLUMN))
 
 	_picker = RulePicker.new()
 	_picker.visible = false
@@ -261,6 +273,9 @@ func _refresh_buttons() -> void:
 	_push.disabled = not can_push or pending
 	_push.visible = can_push
 
+	var prepared := float(game.content.balance.get("prepared_bonus", 0.25))
+	_terms.text = game.text("ui.exit.terms") \
+		.replace("{prepared}", Num.percent(prepared))
 	_retreat.text = game.text("ui.exit.retreat")
 	_retreat.disabled = not can_retreat or pending
 	_retreat.visible = true

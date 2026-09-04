@@ -28,6 +28,14 @@ var director: FightDirector
 var guild: GuildRoom
 var choice: ChoiceScreen
 var exit_panel: ExitScreen
+## Soul, income and reach, over every screen where any of the three is
+## earned, spent or looked at.
+##
+## It was written for the 2D shell, mounted by the shell, and then the
+## pivot rebuilt the shell as a room and left it behind -- so the number
+## this whole game is about was not on screen anywhere. You could tell an
+## upgrade was unaffordable only by noticing its button was grey.
+var wallet: WalletBar
 var epitaph: EpitaphScreen
 var title: TitleMenu
 var pause: PauseMenu
@@ -91,10 +99,13 @@ func bind(g: GameRoot) -> void:
 			return
 	_had_save = SaveGame.exists(g.save_path)
 	_build_hud()
-	settings.apply(player)
 	if not g.run_changed.is_connected(_sync):
 		g.run_changed.connect(_sync)
 	_sync()
+	# After `_sync`, because `_sync` is what builds the player. `apply`
+	# guards on null, so calling it before meant sensitivity, invert and
+	# field of view were silently thrown away on every launch.
+	settings.apply(player)
 	if show_title:
 		# Built AFTER _sync, so the world behind the title is the world you are
 		# about to walk back into rather than an empty frame.
@@ -106,6 +117,20 @@ func bind(g: GameRoot) -> void:
 
 # ---------------------------------------------------------------- the screen
 
+## How much room the wallet takes at the top, and how far down the panels
+## that show it start.
+const WALLET_HEIGHT := 30.0
+
+
+## The screens that show the wallet: the five the guild opens, which are
+## the only ones where Soul is earned, spent or looked at. A run's own
+## panels do not -- a reward screen with a Soul counter on it is asking the
+## player to do arithmetic in the middle of a fight.
+static func wants_wallet(screen: Control) -> bool:
+	return screen is LadderScreen or screen is GuildScreen \
+		or screen is SeanceScreen or screen is HeroScreen or screen is HallScreen
+
+
 func _build_hud() -> void:
 	if hud != null:
 		return
@@ -115,6 +140,14 @@ func _build_hud() -> void:
 
 	prompts = Prompts.new()
 	hud.ui.add_child(prompts)
+
+	wallet = WalletBar.new()
+	wallet.name = "Wallet"
+	wallet.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	wallet.offset_top = 2.0
+	wallet.offset_bottom = WALLET_HEIGHT
+	wallet.visible = false
+	hud.ui.add_child(wallet)
 
 	crosshair = Crosshair.new()
 	hud.ui.add_child(crosshair)
@@ -181,7 +214,15 @@ func _guild_panel(id: String) -> Control:
 
 
 func _host(screen: Control) -> void:
-	screen.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# A screen that centres itself keeps its own rect. The pause menu, the
+	# title and the options are authored as small carved cards -- stretching
+	# them to the full frame made the first thing the player ever sees a
+	# 640x360 stone plate with four buttons along the top of it.
+	if not screen.has_meta("keeps_own_rect"):
+		screen.set_anchors_preset(Control.PRESET_FULL_RECT)
+		# Below the wallet, for the screens that show one.
+		if wants_wallet(screen):
+			screen.offset_top = WALLET_HEIGHT
 	screen.visible = false
 	hud.ui.add_child(screen)
 
@@ -192,8 +233,12 @@ func _host(screen: Control) -> void:
 func open(screen: Control) -> void:
 	panel = screen
 	for child in hud.ui.get_children():
-		if child is Control and child != prompts:
+		if child is Control and child != prompts and child != wallet:
 			(child as Control).visible = child == screen
+	if wallet != null:
+		wallet.visible = screen != null and wants_wallet(screen)
+		if wallet.visible:
+			wallet.bind(game)
 	if player != null:
 		player.frozen = screen != null
 		player.look_enabled = screen == null
@@ -256,6 +301,13 @@ func _enter_dungeon(run: RunState) -> void:
 		# The director owns the screen and the body while a fight is staged.
 		# It is created by _on_marker_entered immediately after the action
 		# that put the run in this phase, so there is nothing to do here.
+		return
+	# A fight that has ended but is still settling keeps the screen. The run
+	# leaves the fight phase on the frame the killing card is played, which
+	# is before the blow has been animated; hosting the reward panel here
+	# hid the fight HUD and then freed it mid-animation. `fight_finished`
+	# calls back into `_sync` when the last event has played.
+	if director != null and not director.is_settled():
 		return
 	if ChoiceScreen.handles(run.phase):
 		# Includes "descent", which happens before there is a floor to stand

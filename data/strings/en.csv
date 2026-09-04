@@ -221,14 +221,13 @@ ui.choice.rest_heal,Rest and heal {amount}
 ui.choice.rest_upgrade,Sharpen {card}
 ui.choice.remove,Burn {card}
 ui.exit.title,Floor {floor} cleared
-ui.exit.here,A ghost left here earns
-ui.exit.next,A ghost on the next floor earns
-ui.exit.survival,Chance you survive the next floor
+ui.exit.here,Soul each hour from a ghost left here
+ui.exit.next,Soul each hour from a ghost one floor down
+ui.exit.survival,Your odds of surviving the next floor
 ui.exit.pending,Reckoning...
 ui.exit.push,Push deeper
 ui.exit.retreat,Retreat and mend
 ui.exit.watch,Take the Watch
-ui.exit.watch_locked,Take the Watch — locked until your first death
 ui.epitaph.stands,Still stands on Floor {floor}
 ui.epitaph.banked,Soul brought home
 ui.epitaph.rite,Next time — take the watch before you fall.
@@ -489,3 +488,5 @@ ui.seal.locked,Depth Seals are written in the Chronicle.
 ui.options.language,Language
 ui.language.en,English
 ui.language.es,Español
+ui.exit.terms,"Take the Watch ends this hero on purpose. They stay here as a prepared ghost -- worth {prepared} more for ever -- and the guild keeps your reach, your Soul and your upgrades. Retreat spends 1 Resolve and walks them home."
+ui.exit.watch_locked,Take the Watch — the guild will not hold a vigil until a hero of yours has fallen

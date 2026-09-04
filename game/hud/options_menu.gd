@@ -23,6 +23,9 @@ var _column: VBoxContainer
 
 func _init() -> void:
 	set_anchors_preset(Control.PRESET_CENTER)
+	# `Crawl._host` stretches a hosted panel to the full frame unless it
+	# says it has already placed itself. This is a card, not a screen.
+	set_meta("keeps_own_rect", true)
 	grow_horizontal = Control.GROW_DIRECTION_BOTH
 	grow_vertical = Control.GROW_DIRECTION_BOTH
 	custom_minimum_size = Vector2(280.0, 0.0)

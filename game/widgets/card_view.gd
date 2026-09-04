@@ -56,6 +56,10 @@ var _rest_rotation: float = 0.0
 var _hover_tween: Tween
 
 
+## The discard flight. Held so a re-bind can kill it.
+var _fly: Tween
+
+
 func _init() -> void:
 	custom_minimum_size = CARD_SIZE
 	size = CARD_SIZE
@@ -192,6 +196,12 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 	playable = is_playable
 	# The container owns layout; remember where it put us so hover can
 	# return the card to exactly that spot.
+	# The fly-out is a live tween on this very node, and the hand re-binds
+	# the same view to whichever card slid into the slot. Left running it
+	# drove the new card's alpha back to zero and left it invisible and
+	# clickable until the next action rebound it.
+	if _fly != null and _fly.is_valid():
+		_fly.kill()
 	rotation = 0.0
 	modulate.a = 1.0
 	scale = Vector2.ONE
@@ -320,7 +330,8 @@ func fly_in(from: Vector2, delay: float) -> void:
 func fly_out(to: Vector2) -> void:
 	if not is_inside_tree():
 		return
-	var tween := create_tween()
+	_fly = create_tween()
+	var tween := _fly
 	tween.set_parallel(true)
 	tween.tween_property(self, "global_position", to, FLY_SECONDS) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)

@@ -62,6 +62,10 @@ static func tint_for(tags: Array) -> Color:
 static func material_for(def: EnemyDef) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_color = tint_for(def.tags)
+	# `EnemyBody.die` fades this material's alpha, and albedo alpha is
+	# ignored entirely while transparency is disabled -- so the corpse lay
+	# on the floor at full opacity for the rest of the fight.
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.roughness = 0.92
 	# Triplanar: the shapes are spheres, capsules and boxes built in code, and
 	# a primitive's UVs stretch and pinch wherever it curves. Projecting from

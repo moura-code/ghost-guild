@@ -221,14 +221,14 @@ ui.choice.rest_heal,Descansar y curar {amount}
 ui.choice.rest_upgrade,Afilar {card}
 ui.choice.remove,Quemar {card}
 ui.exit.title,Piso {floor} despejado
-ui.exit.here,Un espectro dejado aquí gana
-ui.exit.next,Un espectro en el piso siguiente gana
-ui.exit.survival,Posibilidad de sobrevivir al piso siguiente
+ui.exit.here,Alma por hora de un espectro dejado aquí
+ui.exit.next,Alma por hora de un espectro un piso más abajo
+ui.exit.survival,Tus probabilidades de sobrevivir al piso siguiente
 ui.exit.pending,Calculando...
 ui.exit.push,Seguir bajando
 ui.exit.retreat,Retirarse y restaurar
 ui.exit.watch,Montar la Vigilia
-ui.exit.watch_locked,Montar la Vigilia — cerrado hasta tu primera muerte
+ui.exit.watch_locked,Montar la Vigilia — el gremio no vela hasta que caiga un héroe tuyo
 ui.epitaph.stands,Sigue en pie en el Piso {floor}
 ui.epitaph.banked,Alma traída a casa
 ui.epitaph.rite,La próxima vez — monta la vigilia antes de caer.
@@ -489,3 +489,4 @@ ui.seal.locked,Los Sellos de Profundidad se escriben en la Crónica.
 ui.options.language,Idioma
 ui.language.en,English
 ui.language.es,Español
+ui.exit.terms,"Montar la Vigilia acaba con este héroe a propósito. Se queda aquí como espectro preparado -- vale un {prepared} más para siempre -- y el gremio conserva tu alcance, tu Alma y tus mejoras. Retirarse gasta 1 de Temple y lo trae a casa."
