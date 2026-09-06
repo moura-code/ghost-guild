@@ -28,6 +28,7 @@ const RATE_COLUMN := 34.0
 
 var floors: int = 10
 var hovered: int = 0
+var selected_floor: int = 1
 var _time: float = 0.0
 
 var _campaign: Campaign
@@ -39,6 +40,10 @@ var _rates: Dictionary = {}
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	focus_mode = Control.FOCUS_ALL
+	mouse_exited.connect(func() -> void:
+		hovered = 0
+		queue_redraw())
 	custom_minimum_size = Vector2(160.0, 200.0)
 
 
@@ -88,7 +93,7 @@ func _rebuild() -> void:
 	if _campaign == null:
 		return
 	for floor in range(1, floors + 1):
-		var number := UiTheme.number(str(floor), Palette.BONE_DIM)
+		var number := UiTheme.body("%02d" % floor, Palette.BONE_DIM)
 		add_child(number)
 		_numbers[floor] = number
 		var rate := UiTheme.small("", Palette.SOUL)
@@ -136,9 +141,9 @@ func _layout() -> void:
 		# taper made them wander diagonally down the screen, which read as a
 		# mistake rather than as perspective.
 		var number: Label = _numbers[floor]
-		number.size = Vector2(NUMBER_COLUMN - 12.0, 24.0)
+		number.size = Vector2(NUMBER_COLUMN - 1.0, 14.0)
 		number.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		number.position = Vector2(0.0, rect.position.y + rect.size.y * 0.5 - 15.0)
+		number.position = Vector2(0.0, rect.position.y + rect.size.y * 0.5 - 7.0)
 		number.add_theme_color_override("font_color",
 			Color(Palette.BONE.r, Palette.BONE.g, Palette.BONE.b, 0.25 + light * 0.6))
 
@@ -170,10 +175,16 @@ func _layout() -> void:
 			if wanted.y > headroom:
 				wanted *= headroom / wanted.y
 			mark.size = wanted
-			mark.position = Vector2(start + float(i) * 30.0, foot - GhostMark.BASE_SIZE.y)
+			mark.position = Vector2(start + float(i) * 30.0, foot - wanted.y)
 
 
 func _gui_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.is_pressed() and _campaign != null:
+		var key := (event as InputEventKey).keycode
+		if key in [KEY_UP, KEY_DOWN]:
+			var direction := -1 if key == KEY_UP else 1
+			floor_clicked.emit(clampi(selected_floor + direction, 1, CampaignEngine.reach(_campaign)))
+			accept_event()
 	if event is InputEventMouseMotion:
 		var was := hovered
 		hovered = _floor_at((event as InputEventMouseMotion).position)
@@ -232,6 +243,9 @@ func _draw() -> void:
 		var rect := chamber_rect(floor)
 		var light := light_at(floor)
 		var reachable := floor <= waypoint
+		if floor == selected_floor:
+			draw_rect(Rect2(Vector2(0, rect.position.y), Vector2(size.x, rect.size.y)), Color(0.79, 0.66, 0.42, 0.10))
+			draw_rect(Rect2(Vector2(0, rect.position.y + 3), Vector2(2, rect.size.y - 6)), Palette.EDGE_LIGHT)
 
 		# The rock the shaft is cut through.
 		var rock := Rect2(Vector2(NUMBER_COLUMN, rect.position.y),

@@ -15,14 +15,14 @@ extends Control
 
 signal pressed(enemy_index: int)
 
-const VIEW_SIZE := Vector2(230.0, 236.0)
+const VIEW_SIZE := Vector2(158.0, 171.0)
 const FIGURE := 52.0
 ## The plate is the figure plus its margins on both sides, so it is half
 ## again as wide. The slot has to be sized to the plate, not to the figure,
 ## or the name below it is drawn over the bottom of the disc.
 const PLATE := FIGURE * 1.44
-const BAR_WIDTH := 132.0
-const BAR_HEIGHT := 8.0
+const BAR_WIDTH := 96.0
+const BAR_HEIGHT := 5.0
 
 const FLASH_SECONDS := 0.09
 const SQUASH := 0.12
@@ -39,6 +39,7 @@ var targetable: bool = false
 var idling: bool = true
 
 var _figure: TextureRect
+var _model: CryptView
 var _illustrated: bool = false
 var _plate_slot: Control
 var _plate: PanelContainer
@@ -66,7 +67,7 @@ func _init() -> void:
 func _build() -> void:
 	var column := VBoxContainer.new()
 	column.set_anchors_preset(Control.PRESET_FULL_RECT)
-	column.add_theme_constant_override("separation", 4)
+	column.add_theme_constant_override("separation", 2)
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(column)
 
@@ -77,9 +78,10 @@ func _build() -> void:
 	_intent_chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var chip_row := HBoxContainer.new()
 	chip_row.add_theme_constant_override("separation", 5)
-	_intent_icon = Icons.make_rect(null, 20.0, Palette.DANGER)
+	_intent_icon = Icons.make_rect(null, 12.0, Palette.DANGER)
 	chip_row.add_child(_intent_icon)
 	_intent = UiTheme.number("", Palette.DANGER)
+	_intent.add_theme_font_size_override("font_size", 14)
 	chip_row.add_child(_intent)
 	_intent_chip.add_child(chip_row)
 	column.add_child(_intent_chip)
@@ -91,7 +93,7 @@ func _build() -> void:
 	# enemy's whole widget rode up, so two enemies of different size no
 	# longer shared a ground line and the row looked misaligned.
 	_plate_slot = Control.new()
-	_plate_slot.custom_minimum_size = Vector2(0.0, PLATE)
+	_plate_slot.custom_minimum_size = Vector2(0.0, 98.0)
 	_plate_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_plate_slot.resized.connect(_resize_plate)
 	column.add_child(_plate_slot)
@@ -100,6 +102,10 @@ func _build() -> void:
 		Palette.STONE_EDGE)
 	_figure = _plate.get_child(0)
 	_plate_slot.add_child(_plate)
+	_plate.visible = false
+	_model = CryptView.new()
+	_model.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_plate_slot.add_child(_model)
 
 	_status_row = HBoxContainer.new()
 	_status_row.add_theme_constant_override("separation", 4)
@@ -135,6 +141,8 @@ func bind(state: FightState, index: int, is_targetable: bool) -> void:
 	alive = enemy.alive
 
 	_figure.texture = Icons.enemy(enemy.def_id)
+	_model.set_subject(enemy.def_id)
+	_model.modulate = Color.WHITE if alive else Color(0.40, 0.40, 0.46, 0.5)
 	_illustrated = Icons.is_illustrated("enemies", enemy.def_id)
 	_figure.modulate = _figure_colour()
 	_resize_plate()
@@ -372,7 +380,7 @@ func _refresh_status_icons(statuses: Dictionary) -> void:
 func _draw_ground() -> void:
 	if size.x <= 0.0:
 		return
-	_draw_niche()
+	# The live model supplies its own lighting and silhouette.
 	if not alive:
 		return
 	var centre := Vector2(size.x * 0.5, size.y - 44.0)

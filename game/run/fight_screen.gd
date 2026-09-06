@@ -23,7 +23,7 @@ const FAN_LIFT := 6.0
 ## Room under the hand for the lift and the rotation. A card at the edge of
 ## the fan is lower AND tilted, and a tilted 208px card reaches further down
 ## than its height suggests -- measured at ~24px past, hence the margin.
-const HAND_BOTTOM := 34.0
+const HAND_BOTTOM := 24.0
 ## The hand's corridor: clear of the hero panel on the left and the
 ## end-turn button on the right, at any window size.
 const GAP_TO_PANEL := 6.0
@@ -31,7 +31,7 @@ const GAP_TO_PANEL := 6.0
 ## right and 128px wide. It used to reserve 170, and those spare 20px were the
 ## difference between a hand that fans readably and one where every card
 ## covers its neighbour's rules text.
-const END_TURN_ROOM := 74.0
+const END_TURN_ROOM := 94.0
 ## Where the enemies stand, and how tall the table under the hand is.
 const ENEMY_TOP := 8.0
 const TABLE_HEIGHT := 120.0
@@ -85,7 +85,7 @@ func bind(g: GameRoot, p_run: RunState) -> void:
 func _build() -> void:
 	# Enemies: centred across the top, where the player looks first.
 	_enemy_row = HBoxContainer.new()
-	_enemy_row.add_theme_constant_override("separation", 4)
+	_enemy_row.add_theme_constant_override("separation", 14)
 	_enemy_row.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_enemy_row.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_enemy_row.position = Vector2(0.0, ENEMY_TOP)
@@ -131,11 +131,11 @@ func _build() -> void:
 	add_child(_hand)
 
 	_end_turn = Button.new()
-	_end_turn.custom_minimum_size = Vector2(62.0, 20.0)
+	_end_turn.custom_minimum_size = Vector2(86.0, 28.0)
 	_end_turn.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	_end_turn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_end_turn.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_end_turn.position = Vector2(-70.0, -26.0)
+	_end_turn.position = Vector2(-90.0, -34.0)
 	_end_turn.pressed.connect(_on_end_turn)
 	add_child(_end_turn)
 

@@ -8,8 +8,8 @@ extends PanelContainer
 
 signal tab_pressed(id: String)
 
-const HEIGHT := 28.0
-const ITEM_WIDTH := 54.0
+const HEIGHT := 39.0
+const ITEM_WIDTH := 69.0
 const MARKER_HEIGHT := 1.0
 const SLIDE_SECONDS := 0.22
 
@@ -34,6 +34,12 @@ func _build() -> void:
 	_row.add_theme_constant_override("separation", 2)
 	_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(_row)
+	var brand := VBoxContainer.new()
+	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	brand.add_theme_constant_override("separation", 0)
+	brand.add_child(UiTheme.title("Ghost Guild"))
+	brand.add_child(UiTheme.small("THE DEAD KEEP THEIR WATCH", Palette.EDGE_LIGHT))
+	_row.add_child(brand)
 
 
 ## `tabs` is an ordered array of {id, label, icon}.
@@ -52,7 +58,7 @@ func _make_item(id: String, label: String, icon: String) -> Button:
 	# website's navigation, which is what this was. Each destination is a
 	# stone plaque set into the wall instead: sunken while you are elsewhere,
 	# pushed out and lit while you are there.
-	button.focus_mode = Control.FOCUS_NONE
+	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_stylebox_override("normal", _sunken())
 	button.add_theme_stylebox_override("hover", _sunken(true))
 	button.add_theme_stylebox_override("pressed", _sunken())
@@ -64,7 +70,7 @@ func _make_item(id: String, label: String, icon: String) -> Button:
 	column.add_theme_constant_override("separation", 1)
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	var glyph := Icons.make_rect(Icons.ui(icon), 11.0, Palette.BONE_DIM)
+	var glyph := Icons.make_rect(Icons.ui(icon), 13.0, Palette.BONE_DIM)
 	glyph.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	column.add_child(glyph)
 

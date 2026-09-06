@@ -239,3 +239,10 @@ ui.fight.becoming,If you fall here
 ui.fight.yield_here,this floor pays
 ui.fight.blocked,Blocked
 ui.fight.watching,{count} of your dead watch this floor
+ui.crypt.chapter,CHAPTER I  /  THE UNDERGUILD
+ui.crypt.title,The Catacombs
+ui.crypt.entry,Entry floor
+ui.crypt.depths,The depths
+ui.crypt.choose,Select a lit floor to descend
+ui.crypt.residents,Floor {floor}  ·  {count} spirits on watch
+ui.hero.living,THE LIVING  /  YOUR NEXT DESCENT

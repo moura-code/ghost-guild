@@ -29,13 +29,13 @@ const TEXT_LINES := 4
 const NAME_LINES := 2
 ## Godot stacks lines at font height PLUS this, and forgetting it is what
 ## silently ate a line off three cards the last time.
-const LINE_SPACING := 3.0
-const CARD_SIZE := Vector2(82.0, 159.0)
+const LINE_SPACING := 1.0
+const CARD_SIZE := Vector2(92.0, 164.0)
 ## How much of the card's width is margin rather than content. Everything the
 ## player reads lives inside this inset, which is what makes a fan possible at
 ## all: cards may overlap each other's margins, never each other's text.
 const CONTENT_INSET := 8.0
-const ART_SIZE := Vector2(64.0, 38.0)
+const ART_SIZE := Vector2(74.0, 40.0)
 const HOVER_LIFT := 14.0
 const HOVER_SCALE := 1.06
 const FLY_SECONDS := 0.28
@@ -102,7 +102,6 @@ func _build() -> void:
 	add_theme_stylebox_override("panel", UiTheme.card_box(Palette.STONE_RAISED, Palette.STONE_EDGE))
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
-	box.add_theme_constant_override("separation", 4)
 	box.custom_minimum_size = Vector2(CARD_SIZE.x - CONTENT_INSET, 0.0)
 	add_child(box)
 
@@ -114,6 +113,7 @@ func _build() -> void:
 	_cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_cost.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_cost.custom_minimum_size = Vector2(15.0, 15.0)
+	_cost.add_theme_font_size_override("font_size", 15)
 	var bubble := PanelContainer.new()
 	bubble.add_theme_stylebox_override("panel", UiTheme.pip_box(Palette.STONE, Palette.SOUL))
 	bubble.add_child(_cost)

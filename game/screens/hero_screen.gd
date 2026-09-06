@@ -6,7 +6,7 @@ extends VBoxContainer
 
 const STAT_IDS := ["might", "wit", "vigor", "focus"]
 ## A whole starting deck has to fit on the sheet without scrolling.
-const DECK_CARD_SCALE := 0.42
+const DECK_CARD_SCALE := 0.64
 
 var game: GameRoot
 
@@ -17,7 +17,7 @@ var _stats: Dictionary = {}
 var _deck: HFlowContainer
 var _relics: Label
 var _relic_row: HBoxContainer
-var _figure: TextureRect
+var _figure: CryptView
 
 
 func _init() -> void:
@@ -35,19 +35,24 @@ func bind(g: GameRoot) -> void:
 
 
 func _build() -> void:
-	# The hero stands at the top of their own sheet. Every other screen in
-	# the game now has a figure on it; a page of labels looked like the
-	# options menu by comparison.
-	_figure = Icons.make_rect(Icons.ui("hero"), 40.0, Palette.BONE)
-	_figure.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	add_child(_figure)
-
-	_name = ScreenLayout.centre(UiTheme.title(""))
-	add_child(_name)
-	_class = ScreenLayout.centre(UiTheme.small(""))
-	add_child(_class)
-	_vitals = ScreenLayout.centre(UiTheme.body(""))
-	add_child(_vitals)
+	var portrait_row := HBoxContainer.new()
+	portrait_row.add_theme_constant_override("separation", 20)
+	_figure = CryptView.new()
+	_figure.custom_minimum_size = Vector2(138, 164)
+	_figure.set_subject("sexton")
+	portrait_row.add_child(_figure)
+	var details := VBoxContainer.new()
+	details.add_theme_constant_override("separation", 7)
+	details.alignment = BoxContainer.ALIGNMENT_CENTER
+	portrait_row.add_child(details)
+	details.add_child(UiTheme.small(game.text("ui.hero.living"), Palette.EDGE_LIGHT))
+	_name = UiTheme.title("")
+	details.add_child(_name)
+	_class = UiTheme.body("", Palette.BONE_DIM)
+	details.add_child(_class)
+	_vitals = UiTheme.body("")
+	details.add_child(_vitals)
+	add_child(ScreenLayout.centred(portrait_row, 460))
 
 	var stat_row := HBoxContainer.new()
 	stat_row.add_theme_constant_override("separation", 12)
@@ -65,19 +70,19 @@ func _build() -> void:
 		var chip := PanelContainer.new()
 		chip.add_child(box)
 		stat_row.add_child(chip)
-	add_child(stat_row)
+	details.add_child(stat_row)
 
-	add_child(ScreenLayout.centre(UiTheme.small(game.text("ui.relics"))))
+	details.add_child(UiTheme.small(game.text("ui.relics")))
 	# Relics are objects you carry, so they are shown as objects. A relic
 	# rendered as a word in a comma-separated list has no more weight than
 	# a footnote.
 	_relic_row = HBoxContainer.new()
 	_relic_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_relic_row.add_theme_constant_override("separation", 10)
-	add_child(_relic_row)
+	details.add_child(_relic_row)
 	_relics = ScreenLayout.centre(UiTheme.small("", Palette.BONE_DIM))
 	_relics.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	add_child(_relics)
+	details.add_child(_relics)
 
 	add_child(ScreenLayout.centre(UiTheme.small(game.text("ui.deck"))))
 	# The deck as cards, not as "5x Strike / 4x Brace". This is the screen

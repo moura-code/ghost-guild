@@ -23,6 +23,7 @@ const SHEET_COLS := 4
 const THUMB := Vector2i(300, 169)
 const PAD := 10
 const LABEL_H := 20
+const CAPTURE_SAVE := "user://visual_capture/campaign.json"
 
 
 func _init() -> void:
@@ -84,7 +85,10 @@ func _capture_all(out_dir: String, frames: int) -> void:
 func _fresh(screen: String, frames: int) -> Node:
 	# A save left over from the last capture puts the game mid-run, so a tab
 	# shot comes back showing whatever floor that run was on.
-	DirAccess.remove_absolute(SaveGame.DEFAULT_PATH)
+	# Captures must never touch the player's campaign, including backups.
+	DirAccess.make_dir_recursive_absolute("user://visual_capture")
+	for suffix in ["", ".bak1", ".bak2"]:
+		DirAccess.remove_absolute(CAPTURE_SAVE + suffix)
 	_reset_game()
 	_reset_window()
 
@@ -109,7 +113,7 @@ func _fresh(screen: String, frames: int) -> Node:
 ## factor. A capture of the raw viewport is the true pixel content but it is
 ## not what anybody looks at, so it is upscaled here the same way the window
 ## does it -- nearest, whole numbers only -- and judged at the size it ships.
-const DISPLAY_SCALE := 2
+const DISPLAY_SCALE := 1
 
 
 func _shoot(path: String) -> int:
@@ -130,14 +134,17 @@ func _reset_game() -> void:
 	var game = root.get_node_or_null("Game")
 	if game == null:
 		return
+	game.save_path = CAPTURE_SAVE
+	game.autosave_seconds = 0.0
+	game.clock = func() -> int: return 1000
 	game.is_booted = false
 	game.campaign = null
 	game.offline = {"elapsed": 0, "counted": 0, "capped": false, "soul": 0.0}
 
 
 func _reset_window() -> void:
-	var want := Vector2i(ProjectSettings.get_setting("display/window/size/viewport_width", 1280),
-		ProjectSettings.get_setting("display/window/size/viewport_height", 720))
+	var want := Vector2i(ProjectSettings.get_setting("display/window/size/window_width_override", 1280),
+		ProjectSettings.get_setting("display/window/size/window_height_override", 720))
 	if DisplayServer.window_get_size() != want:
 		DisplayServer.window_set_size(want)
 

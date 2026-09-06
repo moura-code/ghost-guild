@@ -11,7 +11,7 @@ const TABS := [
 	{"id": "seance", "key": "ui.seance", "icon": "seance"},
 	{"id": "hero", "key": "ui.hero", "icon": "hero"},
 ]
-const MARGIN := 10
+const MARGIN := 16
 
 var game: GameRoot
 var current_tab: String = ""
@@ -126,13 +126,8 @@ func _build() -> void:
 	_offline.dismissed.connect(_on_offline_dismissed)
 	add_child(_offline)
 
-	# Last, and over everything including the modal: the whole frame gets
-	# snapped to the game's palette. Added here rather than per-screen
-	# because the things that break the pixel look worst -- shader gradients,
-	# anti-aliased circles, particle fades, font edge greys -- are exactly
-	# the things no individual screen owns.
-	_palette = PaletteLayer.new()
-	add_child(_palette)
+	# Keep the 3D material shading and font antialiasing intact. PaletteLayer
+	# remains available for pixel-art previews, but is not a screen filter.
 
 	# Every button in the game gets a click and a hover from one place. A
 	# silent button is the single most "unfinished" thing a UI can do, and

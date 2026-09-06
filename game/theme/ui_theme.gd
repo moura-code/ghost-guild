@@ -8,39 +8,19 @@ extends RefCounted
 ## A missing font file is survivable: the loaders return null and Godot
 ## falls back to its own face rather than the game refusing to start.
 
-## Pixel fonts, imported with antialiasing and subpixel positioning off. A
-## vector face rendered into a 640x360 viewport is the one thing that breaks
-## the illusion hardest -- smooth glyphs sitting on hard pixels read as a
-## screenshot of pixel art rather than as pixel art.
-##
-## Silkscreen carries the body and Pixelify the titles, which is the opposite
-## of the first arrangement and was decided by measurement after the first one
-## shipped unreadable text.
-##
-## Pixelify is a vector face drawn to look pixelated; it only lands on the
-## grid at its own design size. At 6px its SPACE advance rounds to one pixel,
-## so "You have Soul to spend" rendered as one word, and at 8px the adjacent
-## single-pixel stems in "ill" merged into a solid block -- "kill" came out as
-## a rectangle. Silkscreen is an actual 8px-grid face: its space is three to
-## four pixels and its stems keep their gap.
-##
-## Silkscreen is wider, so this costs the card an extra line of text. Legible
-## and one line taller beats compact and unreadable.
-const BODY_FONT_PATH := "res://assets/fonts/Silkscreen.ttf"
-const TITLE_FONT_PATH := "res://assets/fonts/PixelifySans.ttf"
+## Readable at the minimum window size; Cinzel gives the crypt its carved
+## title lettering while Inter keeps rules and counters clear.
+const BODY_FONT_PATH := "res://assets/fonts/Inter.ttf"
+const TITLE_FONT_PATH := "res://assets/fonts/Cinzel.ttf"
 
 static var _body_font: Font = null
 static var _title_font: Font = null
 static var _fonts_tried: bool = false
 
-## Sizes are in 640x360 pixels, so they are half what they were and they land
-## on whole numbers on purpose: a pixel font asked for a fractional size gets
-## rounded somewhere and the glyphs stop lining up with the grid.
-const FONT_SMALL := 6
-const FONT_BODY := 8
-const FONT_NUMBER := 16
-const FONT_TITLE := 16
-
+const FONT_SMALL := 8
+const FONT_BODY := 10
+const FONT_NUMBER := 20
+const FONT_TITLE := 24
 
 ## Inter for everything a player reads as information.
 static func body_font() -> Font:
@@ -104,6 +84,20 @@ static func build() -> Theme:
 	t.set_color("font_disabled_color", "Button", Palette.BONE_FAINT)
 	t.set_font_size("font_size", "Button", FONT_BODY)
 	t.set_constant("outline_size", "Label", 0)
+	t.set_constant("line_spacing", "Label", 1)
+	var focus := StyleBoxFlat.new()
+	focus.bg_color = Color.TRANSPARENT
+	focus.border_color = Palette.LANTERN
+	focus.set_border_width_all(1)
+	focus.set_corner_radius_all(0)
+	t.set_stylebox("focus", "Button", focus)
+	t.set_stylebox("normal", "LineEdit", panel_box(Palette.VOID))
+	t.set_stylebox("focus", "LineEdit", focus)
+	t.set_color("font_color", "LineEdit", Palette.BONE)
+	t.set_color("caret_color", "LineEdit", Palette.LANTERN)
+	t.set_color("font_color", "TooltipLabel", Palette.BONE)
+	t.set_font_size("font_size", "TooltipLabel", FONT_BODY)
+	t.set_stylebox("panel", "TooltipPanel", panel_box(Palette.STONE))
 
 	# Scrollbars. A stock scrollbar is the loudest remaining "this is an app"
 	# signal on any screen long enough to need one: a carved groove with a

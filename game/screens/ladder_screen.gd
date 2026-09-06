@@ -13,8 +13,8 @@ const ROW_SEPARATION := 1
 ## or as a bar chart is width. Wide chambers at that height are bars; narrow
 ## ones are ledges down a shaft, which is the image the whole game is named
 ## after.
-const TOWER_WIDTH := 186.0
-const TOWER_HEIGHT := 236.0
+const TOWER_WIDTH := 190.0
+const TOWER_HEIGHT := 242.0
 
 var game: GameRoot
 
@@ -24,6 +24,10 @@ var _descend: Button
 var _entry: SpinBox
 var _cheapest_cost: float = -1.0
 var _tower: TowerView
+var _room: CryptView
+var _floor_title: Label
+var _residents: Label
+var _floor_rate: Label
 
 
 func _init() -> void:
@@ -43,62 +47,98 @@ func bind(g: GameRoot) -> void:
 
 
 func _build() -> void:
-	# Soul, rate and reach are not here any more: they are WalletBar, mounted
-	# by MainScreen above every tab, because the Guild and the Séance need
-	# them at least as much as the Ladder does.
-	# The one line that has to teach the whole premise to someone who has
-	# never seen the game: a dead hero is still working for you.
-	_premise = UiTheme.body("", Palette.BONE_DIM)
+	var spread := HBoxContainer.new()
+	spread.add_theme_constant_override("separation", 18)
+	spread.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(spread)
+
+	var chamber := VBoxContainer.new()
+	chamber.add_theme_constant_override("separation", 5)
+	chamber.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spread.add_child(chamber)
+	chamber.add_child(UiTheme.small(game.text("ui.crypt.chapter"), Palette.EDGE_LIGHT))
+	var heading := HBoxContainer.new()
+	_floor_title = UiTheme.title(game.text("ui.crypt.title"))
+	_floor_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	heading.add_child(_floor_title)
+	_floor_rate = UiTheme.body("", Palette.SOUL)
+	_floor_rate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	heading.add_child(_floor_rate)
+	chamber.add_child(heading)
+
+	_room = CryptView.new()
+	_room.custom_minimum_size = Vector2(390, 174)
+	_room.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	chamber.add_child(_room)
+
+	var footer := PanelContainer.new()
+	footer.add_theme_stylebox_override("panel", UiTheme.panel_box(Palette.STONE_RAISED))
+	var footer_row := HBoxContainer.new()
+	footer_row.add_theme_constant_override("separation", 12)
+	footer.add_child(footer_row)
+	var copy := VBoxContainer.new()
+	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	copy.add_theme_constant_override("separation", 4)
+	footer_row.add_child(copy)
+	_residents = UiTheme.body("", Palette.BONE)
+	copy.add_child(_residents)
+	_premise = UiTheme.small("", Palette.BONE_DIM)
 	_premise.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_premise.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(_premise)
+	copy.add_child(_premise)
 
-	# What to do right now. Without this the player has a tower, four tabs
-	# and no idea which one is waiting on them.
-	# Sits beside the premise rather than under it: two stacked sentences
-	# above the tower pushed the tower itself off the bottom of the screen.
-	# Beside the premise rather than under it: two stacked sentences above the
-	# tower cost it fifteen pixels of depth, and depth is the whole point of
-	# the image.
-	_hint = UiTheme.small("", Palette.SOUL)
-	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hint.clip_text = true
-	add_child(_hint)
-
-	# The way into the dungeon. Disabled while a run is already live so the
-	# campaign never has to refuse the click.
-	var descent_row := HBoxContainer.new()
-	descent_row.add_theme_constant_override("separation", 4)
-	descent_row.alignment = BoxContainer.ALIGNMENT_CENTER
-
-	# Entry floor, bounded by reach. Seeded explicitly on every refresh
-	# because Godot's Range re-clamps .value when max_value is assigned,
-	# which silently defeats a plain "keep the old value" guard.
+	var action := VBoxContainer.new()
+	action.add_theme_constant_override("separation", 3)
+	var entry_row := HBoxContainer.new()
+	entry_row.add_child(UiTheme.small(game.text("ui.crypt.entry")))
 	_entry = SpinBox.new()
 	_entry.min_value = 1.0
 	_entry.step = 1.0
-	_entry.custom_minimum_size = Vector2(40.0, 0.0)
-	descent_row.add_child(_entry)
-
+	_entry.custom_minimum_size = Vector2(45, 0)
+	_entry.value_changed.connect(_on_entry_changed)
+	entry_row.add_child(_entry)
+	action.add_child(entry_row)
 	_descend = Button.new()
-	_descend.custom_minimum_size = Vector2(72.0, 20.0)
+	_descend.custom_minimum_size = Vector2(112, 27)
+	_descend.add_theme_stylebox_override("normal", UiTheme.primary_box(Palette.EDGE_LIGHT))
 	_descend.pressed.connect(_on_descend)
-	descent_row.add_child(_descend)
-	add_child(descent_row)
+	action.add_child(_descend)
+	footer_row.add_child(action)
+	chamber.add_child(footer)
 
-	# One drawn shaft rather than a stack of rows. Centred, and given the
-	# vertical space, because it is the subject of the screen.
-	var tower_wrap := HBoxContainer.new()
-	tower_wrap.alignment = BoxContainer.ALIGNMENT_CENTER
-	tower_wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_hint = UiTheme.small("", Palette.BONE_DIM)
+	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	chamber.add_child(_hint)
+
+	var ledger := PanelContainer.new()
+	ledger.add_theme_stylebox_override("panel", UiTheme.panel_box(Palette.STONE))
+	spread.add_child(ledger)
+	var ledger_column := VBoxContainer.new()
+	ledger_column.add_theme_constant_override("separation", 5)
+	ledger.add_child(ledger_column)
+	ledger_column.add_child(ScreenLayout.section(game.text("ui.crypt.depths"), Palette.EDGE_LIGHT))
 	_tower = TowerView.new()
-	# A real minimum height: the shaft divides its own height into chambers,
-	# so a zero-height tower piles all ten floor numbers on one pixel.
 	_tower.custom_minimum_size = Vector2(TOWER_WIDTH, TOWER_HEIGHT)
 	_tower.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_tower.floor_clicked.connect(_on_floor_clicked)
-	tower_wrap.add_child(_tower)
-	add_child(tower_wrap)
+	ledger_column.add_child(_tower)
+	ledger_column.add_child(UiTheme.small(game.text("ui.crypt.choose"), Palette.BONE_DIM))
+
+
+func _on_entry_changed(_value: float) -> void:
+	_refresh_chamber()
+
+
+func _refresh_chamber() -> void:
+	if _room == null or game == null or game.campaign == null:
+		return
+	var floor := int(_entry.value)
+	_room.show_floor(game.campaign, floor)
+	_tower.selected_floor = floor
+	_tower.queue_redraw()
+	var count := game.campaign.ladder.on_floor(floor).size()
+	_residents.text = game.text("ui.crypt.residents").replace("{floor}", str(floor)).replace("{count}", str(count))
+	var output := game.campaign.ladder.floor_output(floor, game.campaign.balance(), game.campaign.modifiers())
+	_floor_rate.text = Num.rate(output)
 
 
 ## A number over its name, with the icon beside the caption rather than the
@@ -119,15 +159,16 @@ func refresh() -> void:
 	_descend.text = game.text("ui.descend")
 	_descend.disabled = game.campaign.run != null
 	_on_soul_changed(game.displayed_soul(), game.campaign.rate_per_hour)
+	_refresh_chamber()
 
 
 ## The shaft. It is the capsule image, the first screenshot and the first
 ## three seconds of the trailer, so it gets the light on this screen and the
 ## premise line above it does not.
 func focus_rect() -> Rect2:
-	if _tower == null or not _tower.is_inside_tree():
+	if _room == null or not _room.is_inside_tree():
 		return Rect2()
-	var box := _tower.get_global_rect()
+	var box := _room.get_global_rect()
 	return Rect2(box.position - global_position - Vector2(30.0, 15.0),
 		box.size + Vector2(60.0, 30.0))
 
