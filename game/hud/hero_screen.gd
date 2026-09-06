@@ -6,7 +6,7 @@ extends VBoxContainer
 
 const STAT_IDS := ["might", "wit", "vigor", "focus"]
 ## A whole starting deck has to fit on the sheet without scrolling.
-const DECK_CARD_SCALE := 0.42
+const DECK_CARD_SCALE := 0.56
 
 var game: GameRoot
 ## One button per class in the data, locked ones included. Keyed by class id.
@@ -24,7 +24,7 @@ var _figure: TextureRect
 
 
 func _init() -> void:
-	add_theme_constant_override("separation", 10)
+	add_theme_constant_override("separation", 5)
 	alignment = BoxContainer.ALIGNMENT_CENTER
 
 
@@ -41,7 +41,7 @@ func _build() -> void:
 	# The hero stands at the top of their own sheet. Every other screen in
 	# the game now has a figure on it; a page of labels looked like the
 	# options menu by comparison.
-	_figure = Icons.make_rect(Icons.ui("hero"), 40.0, Palette.BONE)
+	_figure = Icons.make_rect(Icons.ui("hero"), 24.0, Palette.BONE)
 	_figure.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	add_child(_figure)
 
@@ -254,17 +254,21 @@ func _refresh_deck(hero: Hero) -> void:
 		# Small enough that a thirty-card deck still fits the screen, big
 		# enough that the art and the cost are legible.
 		card.scale = Vector2(DECK_CARD_SCALE, DECK_CARD_SCALE)
+		card.hover_scale = 1.5
+		card.tooltip_text = "%s\n%s" % [card._name.text, card._text.text]
 		card.pivot_offset = Vector2.ZERO
 		# A scaled Control still reserves its unscaled size in a container,
 		# so the flow has to be told how much room the card really takes.
 		var slot := Control.new()
-		slot.custom_minimum_size = CardView.CARD_SIZE * DECK_CARD_SCALE
+		slot.custom_minimum_size = CardView.CARD_SIZE * DECK_CARD_SCALE + Vector2(0, 11)
 		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		slot.add_child(card)
 		_deck.add_child(slot)
 		if int(counts[key]) > 1:
 			var badge := UiTheme.small("x%d" % int(counts[key]), Palette.LANTERN)
-			badge.position = Vector2(4.0, 2.0)
+			badge.position = Vector2(0, CardView.CARD_SIZE.y * DECK_CARD_SCALE + 1)
+			badge.custom_minimum_size.x = slot.custom_minimum_size.x
+			badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			slot.add_child(badge)
 
 

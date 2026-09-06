@@ -476,6 +476,7 @@ func _stage_fight(index: int) -> void:
 	if director != null:
 		director.queue_free()
 	open(null)
+	prompts.hush()
 	director = FightDirector.new()
 	director.name = "Fight"
 	add_child(director)

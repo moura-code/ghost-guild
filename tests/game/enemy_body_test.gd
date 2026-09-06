@@ -79,6 +79,28 @@ func test_a_dead_body_stops_being_a_target() -> void:
 	assert_int(b.collision_layer).is_equal(0)
 
 
+func test_equipment_and_eye_sockets_fade_with_the_corpse() -> void:
+	var body := _body("hollow_knight")
+	assert_int(body._detail_meshes.size()).is_greater(0)
+	body.die()
+	await await_millis(1200)
+	assert_float(body.mesh_material().albedo_color.a).is_equal(0.0)
+	for mesh in body._detail_meshes:
+		assert_float(mesh.transparency).override_failure_message(
+			"%s remains visible after the corpse fades" % mesh.name).is_equal(1.0)
+
+
+func test_a_floating_wisp_can_be_targeted_at_its_visible_core() -> void:
+	var body := _body("grave_wisp")
+	var height := EnemyBody.stand_in_height(_def("grave_wisp"))
+	var origin := Vector3(0, EnemyShape.hover(EnemyShape.Kind.WISP) + height * 0.58, -3)
+	await await_idle_frame()
+	await get_tree().physics_frame
+	var query := PhysicsRayQueryParameters3D.create(origin, origin + Vector3(0, 0, 6), EnemyBody.LAYER_ENEMY)
+	var hit := body.get_world_3d().direct_space_state.intersect_ray(query)
+	assert_object(hit.get("collider")).is_equal(body)
+
+
 func test_dying_twice_is_not_two_deaths() -> void:
 	var b := _body()
 	b.die()

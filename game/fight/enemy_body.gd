@@ -46,6 +46,7 @@ var _clock: float = 0.0
 var _hurt: float = 0.0
 ## 0 until it dies, then 0 -> 1 as it goes down.
 var _fallen: float = 0.0
+var _detail_meshes: Array[MeshInstance3D] = []
 
 
 ## Height in metres. Bound to hp rather than to a per-enemy art field, because
@@ -74,11 +75,17 @@ static func create(def: EnemyDef, enemy_index: int) -> EnemyBody:
 
 	var shape := CollisionShape3D.new()
 	shape.name = "Shape"
-	var capsule := CapsuleShape3D.new()
-	capsule.radius = b._height * 0.22
-	capsule.height = b._height
-	shape.shape = capsule
-	shape.position = Vector3(0.0, b._height * 0.5, 0.0)
+	if b.shape == EnemyShape.Kind.BEAST:
+		var box := BoxShape3D.new()
+		box.size = Vector3(b._height * 1.35, b._height * 0.70, b._height * 1.3)
+		shape.shape = box
+		shape.position.y = b._height * 0.35
+	else:
+		var capsule := CapsuleShape3D.new()
+		capsule.radius = b._height * 0.22
+		capsule.height = b._height * (0.8 if b.shape == EnemyShape.Kind.WISP else 1.0)
+		shape.shape = capsule
+		shape.position.y = EnemyShape.hover(b.shape) + capsule.height * 0.5
 	b.add_child(shape)
 	return b
 
@@ -92,7 +99,11 @@ func _build_creature(def: EnemyDef) -> void:
 	shape = EnemyShape.kind_for(def)
 	_body.position.y = EnemyShape.hover(shape)
 	_rig = CreatureRig.build(_body, shape, _height, _material,
-		CreatureRig.eye_colour(def.tags))
+		CreatureRig.eye_colour(def.tags), def.id)
+	for node in _body.find_children("*", "MeshInstance3D", true, false):
+		var mesh := node as MeshInstance3D
+		if mesh.material_override != _material:
+			_detail_meshes.append(mesh)
 	# The tag is a name the def already has; nothing here invents copy.
 	_body.set_meta("enemy_id", def.id)
 	# Stand it in its rest pose immediately: a body that only takes a shape on
@@ -121,7 +132,10 @@ func _process(delta: float) -> void:
 
 ## Where a damage number should appear: just above the head, in world space.
 func head_point() -> Vector3:
-	return global_position + Vector3(0.0, _height + 0.25, 0.0)
+	var top := _height * (0.70 if shape == EnemyShape.Kind.BEAST else 1.0)
+	if shape == EnemyShape.Kind.WISP:
+		top = EnemyShape.hover(shape) + _height * 0.82
+	return global_position + Vector3(0.0, top + 0.22, 0.0)
 
 
 func mesh_material() -> StandardMaterial3D:
@@ -175,8 +189,16 @@ func die() -> void:
 	# The pose takes it down; this only takes it away, and later, so the fall
 	# is watched rather than faded through.
 	var fade := create_tween()
+	fade.set_parallel(true)
 	fade.tween_property(_material, "albedo_color:a", 0.0, 0.55) \
 		.set_delay(CreaturePose.DEATH_SECONDS * 0.55)
+	fade.tween_method(_fade_details, 0.0, 1.0, 0.55) \
+		.set_delay(CreaturePose.DEATH_SECONDS * 0.55)
+
+
+func _fade_details(value: float) -> void:
+	for mesh in _detail_meshes:
+		mesh.transparency = value
 
 
 func set_highlight(on: bool) -> void:

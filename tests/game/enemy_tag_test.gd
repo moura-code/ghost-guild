@@ -85,6 +85,13 @@ func test_tags_that_are_already_apart_are_left_alone() -> void:
 	assert_vector(spread[1]).is_equal(input[1])
 
 
+func test_tags_at_the_same_height_can_stay_beside_each_other() -> void:
+	var input := [Vector2(100, 200), Vector2(400, 200)]
+	var spread := EnemyTag.spread(input)
+	assert_vector(spread[0]).is_equal(input[0])
+	assert_vector(spread[1]).is_equal(input[1])
+
+
 func test_three_stacked_tags_all_end_up_readable() -> void:
 	var spread := EnemyTag.spread([Vector2(300.0, 200.0), Vector2(302.0, 201.0), Vector2(298.0, 199.0)])
 	var ys: Array = []

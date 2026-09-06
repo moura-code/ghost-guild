@@ -22,8 +22,8 @@ const BOTTOM := 6.0
 ## to leave the room visible: at full size a five-card hand hides the enemies
 ## completely, which is the fight covering up the fight. You read a card by
 ## pointing at it now, not by having all five permanently legible.
-const CARD_SCALE := 0.62
-const HOVER_SCALE := 1.5
+const CARD_SCALE := 0.78
+const HOVER_SCALE := 1.22
 const HOVER_LIFT := 26.0
 const HOVER_SECONDS := 0.12
 
@@ -35,6 +35,7 @@ var selected: int = -1
 var hovered: int = -1
 
 var _seats: Array = []
+var _hover_tweens: Dictionary = {}
 
 
 ## One seat per card: `{"position": Vector2, "angle": float}`, in the order the
@@ -51,28 +52,23 @@ static func fan(count: int, area: Rect2) -> Array:
 	if count <= 0 or area.size.x <= 0.0 or area.size.y <= 0.0:
 		return out
 	var card := card_size()
-	# Never closer than the card's own text allows. A tighter floor lets the
-	# card in front eat the rules text of the one behind it, so a five-card
-	# hand cannot be read without hovering each card in turn.
-	var step := clampf((area.size.x - card.x) / maxf(1.0, float(count - 1)),
-		CardView.text_safe_step() * CARD_SCALE, card.x * FAN_SPREAD)
-	var half_span := float(count - 1) * 0.5 * step
-	# The minimum step can make the hand wider than the area at small window
-	# sizes. Push the centre right until the leftmost card clears the edge:
-	# readable cards matter more than a hand that is exactly centred.
-	var centre := maxf(area.position.x + area.size.x * 0.5, area.position.x + half_span + card.x * 0.5)
-	# The outer cards hang lower than the middle one, so the base line has to
-	# make room for the deepest of them or the ends of the fan fall off the
-	# bottom of the screen.
 	var edge := float(count - 1) * 0.5
-	var deepest := edge * edge * FAN_LIFT * 0.5
-	var base_y := area.end.y - card.y - BOTTOM - deepest
+	var max_angle := minf(edge * FAN_ARC, 0.13)
+	# Include the rotated corners when fitting the fan. Large hands may
+	# overlap; every card must remain reachable inside the viewport.
+	var pad_x := (sin(max_angle) * card.y + cos(max_angle) * card.x - card.x) * 0.5 + 2.0
+	var pad_y := (sin(max_angle) * card.x + cos(max_angle) * card.y - card.y) * 0.5
+	var step := minf(maxf(0.0, area.size.x - card.x - pad_x * 2.0) / maxf(1.0, float(count - 1)),
+		card.x * FAN_SPREAD)
+	var centre := area.position.x + area.size.x * 0.5
+	var deepest := minf(edge * edge * FAN_LIFT * 0.5, 12.0)
+	var base_y := area.end.y - card.y - BOTTOM - deepest - pad_y
 	for i in count:
-		var offset := float(i) - float(count - 1) * 0.5
-		var lift := absf(offset) * absf(offset) * FAN_LIFT * 0.5
+		var offset := float(i) - edge
+		var fraction := offset / maxf(1.0, edge)
 		out.append({
-			"position": Vector2(centre + offset * step - card.x * 0.5, base_y + lift),
-			"angle": offset * FAN_ARC,
+			"position": Vector2(centre + offset * step - card.x * 0.5, base_y + fraction * fraction * deepest),
+			"angle": fraction * max_angle,
 		})
 	return out
 
@@ -98,8 +94,12 @@ func visible_count() -> int:
 ## unplayable card is dimmed rather than missing -- you should be able to see
 ## what you cannot afford.
 func show_hand(fight: FightState, playable: Dictionary) -> void:
+	_cancel_hover_tweens()
+	if hovered >= fight.hand.size():
+		hovered = -1
 	while views.size() < fight.hand.size():
 		var view := CardView.new()
+		view.managed_hover = true
 		var slot := views.size()
 		view.pressed.connect(_on_pressed)
 		view.mouse_entered.connect(func() -> void: hover(slot))
@@ -114,6 +114,7 @@ func show_hand(fight: FightState, playable: Dictionary) -> void:
 		views[i].visible = used
 		if not used:
 			continue
+		move_child(views[i], i)
 		views[i].size = CardView.CARD_SIZE
 		views[i].pivot_offset = CardView.CARD_SIZE * 0.5
 		views[i].scale = Vector2.ONE * CARD_SCALE
@@ -138,13 +139,15 @@ func hand_area() -> Rect2:
 
 ## Measured from the widgets that actually sit there, not guessed. A guessed
 ## 60 put the vitals plate straight over the first card.
-const LEFT_GUTTER := HeroPanel.PANEL_SIZE.x + 34.0
+const LEFT_GUTTER := HeroPanel.PANEL_SIZE.x + 24.0
 const RIGHT_GUTTER := 84.0
 
 
 ## The hovered card grows and lifts clear of its neighbours, and it is drawn
 ## last so nothing overlaps it.
 func hover(index: int) -> void:
+	if index < 0 or index >= visible_count():
+		index = -1
 	if hovered == index:
 		return
 	hovered = index
@@ -152,6 +155,10 @@ func hover(index: int) -> void:
 
 
 func _raise(index: int) -> void:
+	# Restore the fan order before lifting one card; the last hovered card
+	# must not keep covering its neighbours after the pointer leaves it.
+	for i in views.size():
+		move_child(views[i], i)
 	for i in views.size():
 		if not views[i].visible or i >= _seats.size():
 			continue
@@ -165,8 +172,13 @@ func _raise(index: int) -> void:
 		if not is_inside_tree():
 			views[i].scale = to_scale
 			views[i].position = to_pos
+			views[i].rotation = 0.0 if lifted else float(seat["angle"])
 			continue
+		var previous: Tween = _hover_tweens.get(i)
+		if previous != null and previous.is_valid():
+			previous.kill()
 		var tween := create_tween()
+		_hover_tweens[i] = tween
 		tween.set_parallel(true)
 		tween.tween_property(views[i], "scale", to_scale, HOVER_SECONDS)
 		tween.tween_property(views[i], "position", to_pos, HOVER_SECONDS)
@@ -180,10 +192,18 @@ func select(index: int) -> void:
 
 
 func clear() -> void:
+	_cancel_hover_tweens()
 	select(-1)
 	hovered = -1
 	for v in views:
 		v.visible = false
+
+
+func _cancel_hover_tweens() -> void:
+	for tween: Tween in _hover_tweens.values():
+		if tween != null and tween.is_valid():
+			tween.kill()
+	_hover_tweens.clear()
 
 
 func _on_pressed(hand_index: int) -> void:

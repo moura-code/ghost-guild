@@ -140,6 +140,13 @@ func read_input() -> Vector2:
 		Input.get_action_strength("move_back") - Input.get_action_strength("move_forward"))
 
 
+## Share the pitch with combat framing so mouse look resumes without a snap.
+func set_pitch(value: float) -> void:
+	_pitch = clamp_pitch(value)
+	if head != null:
+		head.rotation.x = _pitch
+
+
 func _physics_process(delta: float) -> void:
 	var speed := SPRINT if Input.is_action_pressed("sprint") else SPEED
 	var wish := Vector3.ZERO if frozen else wish_direction(read_input(), rotation.y) * speed
@@ -183,8 +190,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		var speed := SENSITIVITY * sensitivity_scale
 		rotate_y(-motion.relative.x * speed)
 		var dy := motion.relative.y * speed
-		_pitch = clamp_pitch(_pitch + (dy if invert_y else -dy))
-		head.rotation.x = _pitch
+		set_pitch(_pitch + (dy if invert_y else -dy))
 		return
 	# Escape gives the mouse back rather than quitting: a captured cursor with
 	# no way out is the fastest way to make a build feel broken.

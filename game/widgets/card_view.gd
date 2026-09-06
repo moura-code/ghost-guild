@@ -14,28 +14,21 @@ extends PanelContainer
 
 signal pressed(hand_index: int)
 
-## Four lines of rules text at FONT_SMALL, which is what the longest cards in
-## the game need -- `ashes`, `death_knell` and `hallowed_strike` all wrap to
-## three, and content is only ever going to get wordier. The card is sized to
-## fit the text rather than the text clipped to fit the card: a card whose
-## rules are cut off mid-sentence is a card the player cannot play, which is
-## what the reward picker was shipping.
-## Three lines at FONT_SMALL. Measured, not guessed: the game's longest card
-## text is 167px wide in Pixelify at 6, and a 82px card has 74px of usable
-## width, so it wraps to three. Six-pixel text doubles to twelve on screen,
-## which is the same apparent size the old vector body had.
+## Four lines cover the longest shipped rules. Apply the same spacing to the
+## labels and their measured minimum heights, including outside the HUD theme.
 const TEXT_LINES := 4
+const RULE_FONT_SIZE := 9
 ## Two lines at FONT_BODY: "Hallowed Strike" does not fit one.
 const NAME_LINES := 2
 ## Godot stacks lines at font height PLUS this, and forgetting it is what
 ## silently ate a line off three cards the last time.
-const LINE_SPACING := 3.0
-const CARD_SIZE := Vector2(82.0, 159.0)
+const LINE_SPACING := 1.0
+const CARD_SIZE := Vector2(96.0, 146.0)
 ## How much of the card's width is margin rather than content. Everything the
 ## player reads lives inside this inset, which is what makes a fan possible at
 ## all: cards may overlap each other's margins, never each other's text.
 const CONTENT_INSET := 8.0
-const ART_SIZE := Vector2(64.0, 38.0)
+const ART_SIZE := Vector2(78.0, 40.0)
 const HOVER_LIFT := 14.0
 const HOVER_SCALE := 1.06
 const FLY_SECONDS := 0.28
@@ -43,6 +36,10 @@ const FLY_SECONDS := 0.28
 var hand_index: int = -1
 var playable: bool = true
 var selected: bool = false
+
+## HandView owns hover transforms when cards are in the combat fan.
+var managed_hover: bool = false
+var hover_scale: float = HOVER_SCALE
 
 var _cost: Label
 var _name: Label
@@ -54,6 +51,8 @@ var _rest_y: float = 0.0
 var _rest_position: Vector2 = Vector2.ZERO
 var _rest_rotation: float = 0.0
 var _hover_tween: Tween
+var _hovered: bool = false
+var _rest_scale: Vector2 = Vector2.ONE
 
 
 ## The discard flight. Held so a re-bind can kill it.
@@ -106,7 +105,6 @@ func _build() -> void:
 	add_theme_stylebox_override("panel", UiTheme.card_box(Palette.STONE_RAISED, Palette.STONE_EDGE))
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
-	box.add_theme_constant_override("separation", 4)
 	box.custom_minimum_size = Vector2(CARD_SIZE.x - CONTENT_INSET, 0.0)
 	add_child(box)
 
@@ -115,6 +113,7 @@ func _build() -> void:
 	# The cost sits in its own bubble: it is the number the player checks
 	# before anything else on the card.
 	_cost = UiTheme.number("", Palette.SOUL)
+	_cost.add_theme_font_size_override("font_size", 14)
 	_cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_cost.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_cost.custom_minimum_size = Vector2(15.0, 15.0)
@@ -152,6 +151,7 @@ func _build() -> void:
 	# minimum, and an autowrapping Label with no width bound reports a
 	# minimum tall enough to blow the card out to three times its size.
 	_name = UiTheme.body("")
+	_name.add_theme_constant_override("line_spacing", int(LINE_SPACING))
 	_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_name.custom_minimum_size = Vector2(0.0, name_height())
 	_name.clip_text = true
@@ -161,6 +161,8 @@ func _build() -> void:
 	# height with no width bound reports something enormous, and in a
 	# PanelContainer that becomes the card's height.
 	_text = UiTheme.small("", Palette.BONE_DIM)
+	_text.add_theme_font_size_override("font_size", RULE_FONT_SIZE)
+	_text.add_theme_constant_override("line_spacing", int(LINE_SPACING))
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_text.custom_minimum_size = Vector2(0.0, text_height())
 	_text.clip_text = true
@@ -178,7 +180,7 @@ static func text_safe_step() -> float:
 
 
 static func text_height() -> float:
-	return _lines(UiTheme.FONT_SMALL, TEXT_LINES)
+	return _lines(RULE_FONT_SIZE, TEXT_LINES)
 
 
 static func name_height() -> float:
@@ -202,6 +204,10 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 	# clickable until the next action rebound it.
 	if _fly != null and _fly.is_valid():
 		_fly.kill()
+	if _hover_tween != null and _hover_tween.is_valid():
+		_hover_tween.kill()
+	_hovered = false
+	_rest_scale = Vector2.ONE
 	rotation = 0.0
 	modulate.a = 1.0
 	scale = Vector2.ONE
@@ -290,8 +296,12 @@ static func hover_headroom() -> float:
 ## A playable card lifts under the cursor; an unaffordable one does not,
 ## which is a second, wordless way of saying you cannot afford it.
 func _on_hover(entered: bool) -> void:
-	if not is_inside_tree():
+	if managed_hover or not is_inside_tree():
 		return
+	if entered and not _hovered and (_hover_tween == null or not _hover_tween.is_valid()):
+		_rest_scale = scale
+		_rest_y = position.y
+	_hovered = entered
 	var raise := entered and playable
 	if _hover_tween != null and _hover_tween.is_valid():
 		_hover_tween.kill()
@@ -300,7 +310,7 @@ func _on_hover(entered: bool) -> void:
 	_hover_tween.tween_property(self, "position:y", _rest_y - (HOVER_LIFT if raise else 0.0), 0.10) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	_hover_tween.tween_property(self, "scale",
-		Vector2.ONE * (HOVER_SCALE if raise else 1.0), 0.10) \
+		_rest_scale * (hover_scale if raise else 1.0), 0.10) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	# A raised card must draw over its neighbours, or the fan clips it.
 	z_index = 10 if raise else 0

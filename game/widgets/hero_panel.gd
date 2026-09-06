@@ -8,8 +8,8 @@ extends PanelContainer
 ## and whether the incoming hit kills them, and both answers should be
 ## readable at a glance rather than parsed out of a sentence.
 
-const PANEL_SIZE := Vector2(172.0, 62.0)
-const BAR_HEIGHT := 7.0
+const PANEL_SIZE := Vector2(124.0, 82.0)
+const BAR_HEIGHT := 5.0
 const ORB_RADIUS := 4.0
 const ORB_GAP := 4.0
 
@@ -27,6 +27,7 @@ var _shield: Control
 var _shield_text: Label
 var _turn: Label
 var _piles: Label
+var _energy_text: Label
 var _status_row: HBoxContainer
 var _flash: float = 0.0
 var _figure: TextureRect
@@ -41,25 +42,27 @@ func _init() -> void:
 
 func _build() -> void:
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 5)
+	box.add_theme_constant_override("separation", 4)
 	add_child(box)
 
 	# The hero had no body in the fight: every hit they took registered only
 	# as a bar flash, while enemies flash, squash and spring back. Now they
 	# have a figure that reacts the same way.
 	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 8)
-	_plate = Icons.make_plate(Icons.ui("hero"), 38.0, Palette.BONE,
+	top.add_theme_constant_override("separation", 5)
+	_plate = Icons.make_plate(Icons.ui("hero"), 17.0, Palette.BONE,
 		Palette.PLATE_SKILL, Palette.STONE_EDGE)
 	_figure = _plate.get_child(0)
 	top.add_child(_plate)
 	_hp_text = UiTheme.body("")
+	_hp_text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	top.add_child(_hp_text)
 
 	# The shield only appears when there is block to show; an empty shield
 	# outline would read as "you have protection" when you have none.
 	_shield = Control.new()
-	_shield.custom_minimum_size = Vector2(15.0, 11.0)
+	_shield.custom_minimum_size = Vector2(15.0, 17.0)
+	_shield.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_shield.draw.connect(_draw_shield)
 	_shield.visible = false
 	top.add_child(_shield)
@@ -71,7 +74,7 @@ func _build() -> void:
 	_shield_text.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_shield.add_child(_shield_text)
 
-	_turn = UiTheme.small("", Palette.BONE_FAINT)
+	_turn = UiTheme.small("", Palette.BONE_DIM)
 	_turn.size_flags_horizontal = Control.SIZE_SHRINK_END | Control.SIZE_EXPAND
 	top.add_child(_turn)
 	box.add_child(top)
@@ -84,13 +87,17 @@ func _build() -> void:
 	_orbs = Control.new()
 	_orbs.custom_minimum_size = Vector2(0.0, ORB_RADIUS * 2.0 + 4.0)
 	_orbs.draw.connect(_draw_orbs)
+	_energy_text = UiTheme.small("", Palette.SOUL)
+	_energy_text.set_anchors_preset(Control.PRESET_RIGHT_WIDE)
+	_energy_text.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_orbs.add_child(_energy_text)
 	box.add_child(_orbs)
 
 	_status_row = HBoxContainer.new()
 	_status_row.add_theme_constant_override("separation", 4)
 	box.add_child(_status_row)
 
-	_piles = UiTheme.small("", Palette.BONE_FAINT)
+	_piles = UiTheme.small("", Palette.BONE_DIM)
 	box.add_child(_piles)
 
 
@@ -102,6 +109,7 @@ func bind(content: Content, fight: FightState) -> void:
 	energy = fight.energy
 	max_energy = maxi(1, fight.max_energy)
 	turn = fight.turn
+	_energy_text.text = "%d / %d %s" % [energy, max_energy, content.text("ui.fight.energy")]
 
 	_hp_text.text = "%d/%d" % [hp, max_hp]
 	_hp_text.add_theme_color_override("font_color", _hp_colour())

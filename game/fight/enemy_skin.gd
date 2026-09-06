@@ -35,10 +35,10 @@ const REST_EMISSION := 0.05
 ## wins, so the order is the priority: what something is made of beats what it
 ## used to be, and a fungal corpse reads as fungus.
 const TAG_TINT := [
-	["fungal", Color(0.46, 0.40, 0.52)],
+	["fungal", Color(0.58, 0.55, 0.46)],
 	["construct", Color(0.36, 0.36, 0.40)],
 	["flesh", Color(0.48, 0.36, 0.34)],
-	["undead", Color(0.52, 0.49, 0.42)],
+	["undead", Color(0.86, 0.79, 0.63)],
 ]
 const DEFAULT_TINT := Color(0.44, 0.42, 0.38)
 
@@ -74,6 +74,7 @@ static func material_for(def: EnemyDef) -> StandardMaterial3D:
 	m.uv1_scale = Vector3.ONE / TEXEL
 	m.albedo_texture = _texture("color")
 	m.normal_enabled = true
+	m.normal_scale = 0.38
 	m.normal_texture = _texture("normal")
 	m.roughness_texture = _texture("roughness")
 	m.ao_enabled = true

@@ -9,11 +9,11 @@ extends GdUnitTestSuite
 ## never built is a joint the pose writes into nothing.
 
 
-func _rig(kind: int, height: float = 1.8) -> Array:
+func _rig(kind: int, height: float = 1.8, enemy_id: String = "") -> Array:
 	var holder: Node3D = auto_free(Node3D.new())
 	add_child(holder)
 	var rig := CreatureRig.build(holder, kind, height, StandardMaterial3D.new(),
-		Color(0.5, 0.9, 1.0))
+		Color(0.5, 0.9, 1.0), enemy_id)
 	return [rig, holder]
 
 
@@ -77,6 +77,34 @@ func test_a_beast_stands_on_four_legs_under_two_joint_names() -> void:
 		places[(leg as Node3D).position] = true
 	assert_int(places.size()).override_failure_message(
 		"the four legs are stacked in one spot").is_equal(4)
+
+
+func test_spider_variants_have_eight_distinct_articulated_legs() -> void:
+	for id in ["crypt_spider", "flesh_weaver"]:
+		var rig: CreatureRig = _rig(EnemyShape.Kind.BEAST, 1.8, id)[0]
+		var legs: Array = rig.joints[CreaturePose.LEG_L] + rig.joints[CreaturePose.LEG_R]
+		assert_array(legs).has_size(8)
+		var places: Dictionary = {}
+		for leg: Node3D in legs:
+			places[leg.position] = true
+			assert_object(leg.get_node_or_null("Knee")).is_not_null()
+		assert_int(places.size()).is_equal(8)
+
+
+func test_every_shipped_variant_supports_its_pose_and_can_put_out_its_lights() -> void:
+	var content := TestFixtures.content()
+	for id in content.enemies:
+		var def: EnemyDef = content.enemies[id]
+		var kind := EnemyShape.kind_for(def)
+		var rig: CreatureRig = _rig(kind, EnemyBody.stand_in_height(def), id)[0]
+		var pose := CreaturePose.idle(kind, 0.4, 0.1)
+		for joint in pose:
+			assert_bool(rig.has_joint(joint)).override_failure_message("%s lacks joint %s" % [id, joint]).is_true()
+		rig.apply(CreaturePose.pose(kind, 0.4, 0.1, 0.7, 0.5))
+		rig.set_light(0.0)
+		for light in rig.lights:
+			assert_float(light.emission_energy_multiplier).is_equal(0.0)
+		rig.apply({})
 
 
 func test_only_a_wisp_burns_without_a_skull() -> void:

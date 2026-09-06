@@ -286,3 +286,14 @@ knowing where an asset came from is worth more than the licence demands.
 They arrive at true real-world scale — the statue is 1.74 m, an urn 0.4 m — so
 none of them were resized to fit the kit. That is the "one physical scale"
 rule in the spec doing its job rather than a lucky coincidence.
+
+
+## Procedural creatures and spirits — original project geometry
+
+`game/fight/bone_mesh.gd`, `creature_rig.gd` and `creature_details.gd` build
+skulls, articulated limbs, spider anatomy, segmented grubs, armor, weapons,
+fungal growths and furnace details directly in Godot. `game/world/ghost_figure.gd`
+builds the pleated shrouds and spectral faces. No external character model
+or animation files are used for these figures. Their surface detail reuses
+the ambientCG Rock051 maps credited above; equipment colors and ghost
+materials are authored in code.

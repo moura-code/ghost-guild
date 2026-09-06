@@ -59,3 +59,16 @@ func test_rising_starts_below_the_floor_and_invisible() -> void:
 	f.rise()
 	assert_float(f.position.y).is_less(0.0)
 	assert_float(f.material().albedo_color.a).is_equal(0.0)
+
+
+func test_idle_drift_does_not_move_the_rise_target() -> void:
+	var f := _figure(Vector3(2, 0.4, 3))
+	f._process(0.2)
+	assert_float(f.position.y).is_equal_approx(0.4, 0.0001)
+	f.rise(1.0, 0.15)
+	for mat in f._details:
+		assert_float(mat.albedo_color.a).is_equal(0.0)
+	assert_float(f._lamp.light_energy).is_equal(0.0)
+	await await_millis(250)
+	assert_float(f.position.y).is_equal_approx(0.4, 0.0001)
+	assert_float(f.material().albedo_color.a).is_greater(0.0)

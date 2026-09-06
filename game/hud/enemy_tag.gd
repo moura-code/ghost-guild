@@ -13,18 +13,20 @@ extends Control
 
 ## Narrow on purpose. A bar as wide as the creature is tall stops reading as
 ## "that thing's health" and starts reading as a stripe across the room.
-const WIDTH := 58.0
+const WIDTH := 82.0
 const BAR_HEIGHT := 4.0
 const GAP := 2.0
 ## Two enemies at similar depth project to nearly the same point, and their
 ## tags stack until neither is readable. This is the smallest vertical
 ## distance two tags may end up apart.
-const STACK_GAP := 30.0
+const STACK_GAP := 44.0
 
 var index: int = -1
 
 var _name: Label
 var _intent: Label
+var _health: Label
+var _intent_icon: TextureRect
 var _hp: int = 1
 var _max_hp: int = 1
 var _block: int = 0
@@ -41,21 +43,33 @@ static func create(enemy_index: int) -> EnemyTag:
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	custom_minimum_size = Vector2(WIDTH, 32.0)
+	custom_minimum_size = Vector2(WIDTH, 38.0)
 	size = custom_minimum_size
 
-	_name = UiTheme.small("", Palette.BONE)
+	_name = UiTheme.body("", Palette.BONE)
 	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_name.size = Vector2(WIDTH, 11.0)
+	_name.size = Vector2(WIDTH, 12.0)
+	_name.clip_text = true
 	_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_name)
 
+	_health = UiTheme.small("", Palette.BONE_DIM)
+	_health.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_health.position = Vector2(0, 12)
+	_health.size = Vector2(WIDTH, 9)
+	_health.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_health)
+	_intent_icon = Icons.make_rect(null, 9, Palette.DANGER)
+	_intent_icon.position = Vector2(18, 28)
+	add_child(_intent_icon)
+
 	# Bright, not blood-red: the intent sits on a dark plate over dark stone,
 	# and a dark warm red on that is a number you have to lean in to read.
-	_intent = UiTheme.small("", Palette.BONE)
+	_intent = UiTheme.body("", Palette.BONE)
 	_intent.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_intent.position = Vector2(0.0, 20.0)
-	_intent.size = Vector2(WIDTH, 11.0)
+	_intent.position = Vector2(11.0, 27.0)
+	_intent.size = Vector2(WIDTH - 15, 11.0)
+	_intent.clip_text = true
 	_intent.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_intent)
 
@@ -68,6 +82,16 @@ func bind(content: Content, fight: FightState, enemy_index: int) -> void:
 	_hp = e.hp
 	_max_hp = maxi(1, e.max_hp)
 	_block = e.block
+	_health.text = "%d / %d" % [_hp, _max_hp]
+	if _block > 0:
+		_health.text += "  +%d" % _block
+	var kind := String(EnemyAI.intent_of(fight, enemy_index).get("kind", "unknown"))
+	_intent_icon.texture = Icons.get_icon("intent", kind)
+	_intent_icon.modulate = Palette.DANGER if kind == "attack" else Palette.EDGE_LIGHT
+	_intent.add_theme_color_override("font_color", Palette.DANGER if kind == "attack" else Palette.BONE)
+	_intent_icon.visible = kind in ["attack", "block"]
+	_intent.position.x = 11 if _intent_icon.visible else 0
+	_intent.size.x = WIDTH - _intent.position.x
 	_intent.text = intent_text(content, fight, enemy_index)
 	visible = e.alive
 	queue_redraw()
@@ -111,7 +135,7 @@ func _draw() -> void:
 	# the day the theme was actually applied.
 	draw_style_box(_plate, Rect2(-4.0, -2.0, WIDTH + 8.0, size.y + 4.0))
 
-	var top := 12.0
+	var top := 22.0
 	# The same bar the hero's own health uses: banded, lit along the top, with
 	# block sitting in front of the health rather than beside it -- it is the
 	# part you have to get through first.
@@ -132,11 +156,12 @@ static func spread(points: Array) -> Array:
 		order.append(i)
 	order.sort_custom(func(a: int, b: int) -> bool: return float(points[a].y) < float(points[b].y))
 	var out: Array = points.duplicate()
-	var last := -1e9
+	var placed: Array[Vector2] = []
 	for i in order:
 		var at: Vector2 = out[i]
-		if at.y - last < STACK_GAP:
-			at.y = last + STACK_GAP
-			out[i] = at
-		last = at.y
+		for previous in placed:
+			if absf(at.x - previous.x) < WIDTH + 8.0 and at.y - previous.y < STACK_GAP:
+				at.y = previous.y + STACK_GAP
+		out[i] = at
+		placed.append(at)
 	return out

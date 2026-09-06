@@ -29,9 +29,10 @@ func _init() -> void:
 	win.size = Vector2i(1280, 720)
 
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("user://saves"))
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
+	_clear_save()
 
 	var game := GameRoot.new()
+	game.clock = func() -> int: return 1720000042
 	game.save_path = SAVE
 	game.autosave_seconds = 0.0
 	win.add_child(game)
@@ -179,8 +180,17 @@ func _init() -> void:
 	await process_frame
 	var err := win.get_texture().get_image().save_png(out)
 	print("hud_shot[%s] -> %s err=%d" % [mode, out, err])
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
-	quit()
+	crawl.queue_free()
+	game.queue_free()
+	await process_frame
+	await process_frame
+	_clear_save()
+	quit(0 if err == OK else 1)
+
+
+func _clear_save() -> void:
+	for suffix in ["", ".bak1", ".bak2"]:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE + suffix))
 
 
 func _descend(game: GameRoot, crawl: Crawl, entry: int = 1) -> void:

@@ -362,12 +362,21 @@ func _face(at: Vector3) -> void:
 	if yaw.length_squared() < 0.0001:
 		return
 	var target := atan2(-yaw.x, -yaw.z)
+	var tallest := 1.6
+	for body in bodies:
+		tallest = maxf(tallest, body.head_point().y - body.global_position.y - 0.22)
+	var focus_height := clampf(tallest * 0.55, 0.90, Player.EYE)
+	var pitch := atan2(focus_height - Player.EYE, ENGAGE)
 	if not is_inside_tree():
 		player.rotation.y = target
+		player.set_pitch(pitch)
 		return
-	var turn := create_tween()
+	var turn := create_tween().set_parallel(true)
 	turn.tween_property(player, "rotation:y", target, TURN_SECONDS) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	if player.head != null:
+		turn.tween_method(player.set_pitch, player.head.rotation.x, pitch, TURN_SECONDS) \
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 ## The spatial pool for this fight, parented to the director so it is torn
@@ -417,10 +426,13 @@ func _build_hud() -> void:
 
 	vitals = HeroPanel.new()
 	vitals.custom_minimum_size = HeroPanel.PANEL_SIZE
+	vitals.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	vitals_plate.add_child(vitals)
 
 	_end_turn = Button.new()
 	_end_turn.text = game.text("ui.fight.end_turn")
+	_end_turn.custom_minimum_size = Vector2(72, 27)
+	_end_turn.add_theme_stylebox_override("normal", UiTheme.primary_box(Palette.EDGE_LIGHT))
 	# Anchored, not positioned by arithmetic: the button auto-sizes to its
 	# text, and the arithmetic version put its left edge 70px from the right
 	# of the screen and let the rest run off the side.

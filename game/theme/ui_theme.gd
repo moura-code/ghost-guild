@@ -30,7 +30,7 @@ static var _fonts_tried: bool = false
 
 ## Sizes are in the HUD's 640x360 authoring space, which `HudRoot` scales up to
 ## the window -- so body text is 16 real pixels on a 720p screen.
-const FONT_SMALL := 6
+const FONT_SMALL := 7
 const FONT_BODY := 8
 const FONT_NUMBER := 16
 const FONT_TITLE := 16
@@ -109,6 +109,15 @@ static func build() -> Theme:
 	t.set_color("font_disabled_color", "Button", Palette.BONE_FAINT)
 	t.set_font_size("font_size", "Button", FONT_BODY)
 	t.set_constant("outline_size", "Label", 0)
+	t.set_constant("line_spacing", "Label", 1)
+	# Godot's popup tooltip is outside the scaled HUD transform.
+	t.set_font_size("font_size", "TooltipLabel", FONT_BODY * 2)
+	t.set_color("font_color", "TooltipLabel", Palette.BONE)
+	t.set_stylebox("panel", "TooltipPanel", panel_box(Palette.STONE))
+	t.set_stylebox("normal", "LineEdit", panel_box(Palette.VOID))
+	t.set_stylebox("focus", "LineEdit", lit_box(Palette.VOID, Palette.EDGE_LIGHT))
+	t.set_color("font_color", "LineEdit", Palette.BONE)
+	t.set_color("caret_color", "LineEdit", Palette.LANTERN)
 
 	# Scrollbars. A stock scrollbar is the loudest remaining "this is an app"
 	# signal on any screen long enough to need one: a carved groove with a
@@ -328,6 +337,9 @@ static func body(text: String, colour: Color = Palette.BONE) -> Label:
 	l.text = text
 	l.add_theme_font_size_override("font_size", FONT_BODY)
 	l.add_theme_color_override("font_color", colour)
+	var face := body_font()
+	if face != null:
+		l.add_theme_font_override("font", face)
 	return l
 
 
@@ -336,6 +348,9 @@ static func small(text: String, colour: Color = Palette.BONE_DIM) -> Label:
 	l.text = text
 	l.add_theme_font_size_override("font_size", FONT_SMALL)
 	l.add_theme_color_override("font_color", colour)
+	var face := body_font()
+	if face != null:
+		l.add_theme_font_override("font", face)
 	return l
 
 
@@ -344,4 +359,7 @@ static func number(text: String, colour: Color = Palette.SOUL) -> Label:
 	l.text = text
 	l.add_theme_font_size_override("font_size", FONT_NUMBER)
 	l.add_theme_color_override("font_color", colour)
+	var face := body_font()
+	if face != null:
+		l.add_theme_font_override("font", face)
 	return l

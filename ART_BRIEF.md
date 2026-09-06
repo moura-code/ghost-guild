@@ -4,10 +4,9 @@ Rewritten on 2026-08-29 for the 3D pivot. The previous brief described a
 2D pixel-art game; that direction is on `main` and is not what this branch
 builds.
 
-Everything below is **already wired**. The game reads these folders at
-startup and falls back to a placeholder when a file is missing, so a
-delivered asset appears in the build with no code change. Deliver one file,
-see it in the game.
+The environment and interface load assets from the folders listed below.
+Creatures and spirits are built in code from meshes attached to animated
+joints; their entry points are listed alongside the file-backed assets.
 
 Run it and look before starting: `godot --path .`, or render a still with
 `godot --path . --rendering-method forward_plus --resolution 1280x720 -s tools/crawl_shot.gd -- out.png 3 30 0.35 [guild|fight|diag]`.
@@ -46,39 +45,37 @@ when sources disagree. These are the agreements:
 | Lighting and fog | **Done.** Torch pools, cold ambient, per-depth fog | `Grade.environment` |
 | The guild | **Done, unpolished.** Room, four stations, well, shaft | `GuildRoom._plinth`, and the well head in `GuildRoom._build_well_head` |
 | Props | **Done.** Eight CC0 Poly Haven models, placed by `Dressing` against walls, never blocking a route | `Dressing.CATALOGUE` |
-| **Enemies** | **PLACEHOLDER**, but five distinguishable silhouettes (humanoid, beast, wisp, stack, hulk) with per-archetype idles rather than one capsule for everything | `EnemyShape.build` + `EnemyBody.recoil` / `die` |
-| **Ghosts** | **PLACEHOLDER.** Translucent capsule stand-ins | `GhostFigure._build` |
-| Cards, panels, icons, fonts | **Done**, carried over from the 2D game unchanged | — |
+| **Enemies** | Thirty enemies built from articulated bones, armor, weapons and growths. Spiders have eight legs; grubs have segmented bodies. | `CreatureRig.build`, `CreatureDetails.dress`, `CreaturePose` |
+| **Ghosts** | Pleated burial shrouds, hollow hoods, glowing eyes and sleeves. Color reflects true, echo, prepared or restless state. | `GhostFigure._build` |
+| Cards, panels, icons, fonts | Scalable Inter/Cinzel text, a compact combat HUD, larger card rules and explicit enemy health/intent. | `UiTheme`, `HandView`, `HeroPanel`, `EnemyTag` |
 
-## The open question: enemies
+## Creature workflow
 
-This is the only part of the pipeline that is not proven, and it has been
-the open question since stage 0.
+`EnemyShape` selects the movement archetype. `CreatureRig` builds jointed
+anatomy, `CreatureDetails` attaches equipment and biome growths, and
+`CreaturePose` supplies idle, flinch and collapse offsets. Keep new details
+under the joint that should move them. Eye and ember names are collected by
+`BoneMesh.lights_in` so death extinguishes them; `EnemyBody` fades every other
+material with the corpse. Floating and low creatures use matching hitboxes.
 
-Environments are solved: CC0 PBR materials are effectively unlimited, legally
-clean, and with correct texel density and torchlight they read as a
-commercial game with no art skill. **Creatures are not.** They need a rig and
-at minimum four animation states — idle, attack, take hit, die.
+The Catacombs equipment includes an archer's bow and quiver, the knight's
+visor and sword, the warden's shield, plague vials and a bone crown. Fungal
+variants carry caps and stalks; Kiln constructs carry furnace grilles and
+exhausts. These are original procedural geometry, using the existing CC0
+surface maps where appropriate.
 
-What is known:
+Inspect the actual rigs in a neutral studio before checking dungeon light:
 
-- The rigged-animation **pipeline works**. A skinned humanoid imports from
-  glTF, animates, takes torchlight, casts a real shadow and stands at correct
-  scale under Forward+ (proven in stage 0 with a borrowed model).
-- Godot 4.7.2 has `ufbx` compiled in, so FBX imports natively — Mixamo's
-  export format needs no converter.
-- **Mixamo has no usable API.** `/api/v1/characters` returns 401 and
-  `/api/v1/products` 403 without an Adobe IMS session. Downloads are manual.
-- Poly Haven has no characters. Quaternius has CC0 rigged monsters but they
-  are explicitly low-poly and will clash with photoreal stone.
+```sh
+godot --path . -s tools/creature_shot.gd -- creatures.png bone_rat crypt_spider bone_archer hollow_knight plague_bearer
+godot --path . -s tools/creature_shot.gd -- spirits.png ghosts
+godot --path . -s tools/hud_shot.gd -- combat.png fight 50
+```
 
-The roster is ten enemies, of which **four need no humanoid rig** —
-`grave_wisp`, `skull_stack`, `crypt_spider`, `bone_rat` — and six do,
-including the boss `mother_of_bones`.
-
-Everything around the model is finished and model-agnostic: staging,
-targeting, the event-driven animator, the HUD, the death fall. Dropping in a
-creature is one function and an `AnimationPlayer`.
+The studio accepts any enemy IDs from `data/enemies/`. Both screenshot tools
+run with a framebuffer; headless tests cover joint contracts, interaction,
+layout and lifecycle behavior. HUD shots use a fixed clock and a disposable
+save, including its backups, so repeated captures are comparable.
 
 ## Attribution
 

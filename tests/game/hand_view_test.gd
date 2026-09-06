@@ -54,14 +54,25 @@ func test_the_outer_cards_tilt_outward_and_hang_lower() -> void:
 	assert_float(float(left["position"].y)).is_greater(float(mid["position"].y))
 
 
-func test_cards_never_overlap_closer_than_their_text_allows() -> void:
-	# The old floor was three quarters of a card, which let the card in front
-	# eat the rules text of the one behind it. A ten-card hand is where that
-	# shows.
-	var seats := HandView.fan(10, _area())
+func test_a_normal_hand_leaves_the_rules_readable() -> void:
+	var seats := HandView.fan(5, _area())
 	for i in range(1, seats.size()):
 		var step: float = float(seats[i]["position"].x) - float(seats[i - 1]["position"].x)
 		assert_float(step).is_greater_equal(CardView.text_safe_step() * HandView.CARD_SCALE - 0.01)
+
+
+func test_large_hands_keep_every_rotated_corner_inside_the_screen() -> void:
+	var area := Rect2(148, 0, 408, 360)
+	var card := HandView.card_size()
+	for count in [5, 8, 10, 14]:
+		var seats := HandView.fan(count, area)
+		assert_array(seats).has_size(count)
+		for seat: Dictionary in seats:
+			var centre: Vector2 = seat["position"] + card * 0.5
+			for corner in [Vector2.ZERO, Vector2(card.x, 0), card, Vector2(0, card.y)]:
+				var point: Vector2 = centre + (corner - card * 0.5).rotated(float(seat["angle"]))
+				assert_bool(area.has_point(point)).override_failure_message(
+					"%d-card hand leaves a corner outside its area: %s" % [count, point]).is_true()
 
 
 func test_the_hand_stays_inside_the_area_it_was_given() -> void:
@@ -146,6 +157,21 @@ func test_a_cleared_hand_forgets_what_was_hovered() -> void:
 	h.show_hand(_fight(["strike"]), {})
 	h.hover(0)
 	h.clear()
+	assert_int(h.hovered).is_equal(-1)
+
+
+func test_rapid_hover_changes_settle_at_the_latest_card_without_competing_tweens() -> void:
+	var h := _hand()
+	h.show_hand(_fight(["strike", "brace", "strike"]), {})
+	h.hover(0)
+	h.views[0]._on_hover(true)
+	h.hover(2)
+	h.views[0]._on_hover(false)
+	h.views[2]._on_hover(true)
+	await await_millis(220)
+	assert_vector(h.views[0].scale).is_equal_approx(Vector2.ONE * HandView.CARD_SCALE, Vector2.ONE * 0.001)
+	assert_vector(h.views[2].scale).is_equal_approx(Vector2.ONE * HandView.CARD_SCALE * HandView.HOVER_SCALE, Vector2.ONE * 0.001)
+	h.show_hand(_fight(["strike"]), {})
 	assert_int(h.hovered).is_equal(-1)
 
 

@@ -25,7 +25,7 @@ extends RefCounted
 ## smaller than the socket it sits in, or it reads as a googly eye rather than
 ## as something burning inside the skull.
 const EYE_ENERGY := 2.6
-const EYE_RADIUS := 0.07
+const EYE_RADIUS := 0.045
 
 
 ## A skull: cranium, brow, a muzzle that juts, a jaw hung under it, and two
@@ -38,45 +38,38 @@ static func skull(size: float, material: StandardMaterial3D, eye_colour: Color) 
 	var root := Node3D.new()
 	root.name = "Skull"
 
-	var cranium := SphereMesh.new()
-	cranium.radius = size * 0.5
-	cranium.height = size
-	var head := _part(root, "Cranium", cranium, material, Vector3.ZERO)
-	# Longer than it is wide, and flattened at the back: a sphere reads as a
-	# ball and a ball on a neck reads as a snowman.
-	head.scale = Vector3(0.86, 1.0, 1.12)
-
+	ellipsoid(root, "Cranium", Vector3(0, size * 0.06, size * 0.03),
+		Vector3(size * 0.88, size * 0.94, size * 1.04), material)
 	var muzzle := BoxMesh.new()
-	muzzle.size = Vector3(size * 0.44, size * 0.34, size * 0.5)
-	_part(root, "Muzzle", muzzle, material, Vector3(0.0, -size * 0.12, -size * 0.5))
+	muzzle.size = Vector3(size * 0.38, size * 0.16, size * 0.30)
+	_part(root, "Muzzle", muzzle, material, Vector3(0, -size * 0.19, -size * 0.40))
+	var dark := _socket_material()
+	ellipsoid(root, "SocketNose", Vector3(0, -size * 0.11, -size * 0.55),
+		Vector3(size * 0.12, size * 0.20, size * 0.07), dark)
 
 	var jaw_node := Node3D.new()
 	jaw_node.name = "Jaw"
-	# Hinged at the back of the skull, so rotating it opens the mouth instead
-	# of sliding the whole jaw down the face.
-	jaw_node.position = Vector3(0.0, -size * 0.18, -size * 0.12)
+	jaw_node.position = Vector3(0, -size * 0.18, -size * 0.12)
 	root.add_child(jaw_node)
 	var jaw := BoxMesh.new()
-	jaw.size = Vector3(size * 0.42, size * 0.16, size * 0.52)
-	_part(jaw_node, "Bone", jaw, material, Vector3(0.0, -size * 0.06, -size * 0.28))
-
-	for side in [-1.0, 1.0]:
-		var socket := SphereMesh.new()
-		socket.radius = size * 0.15
-		socket.height = size * 0.3
-		var hole := _part(root, "Socket%d" % int(side), socket, material,
-			Vector3(side * size * 0.21, size * 0.02, -size * 0.44))
-		hole.scale = Vector3(1.0, 0.85, 0.6)
-		# The socket is a hole, so it takes its own black material rather than
-		# the body's: a lit sphere where an eye should be is a googly eye.
-		hole.material_override = _socket_material()
-
-		var spark := SphereMesh.new()
-		spark.radius = size * EYE_RADIUS
-		spark.height = size * EYE_RADIUS * 2.0
-		var eye := _part(root, "Eye%d" % int(side), spark, null,
-			Vector3(side * size * 0.21, size * 0.02, -size * 0.5))
-		eye.material_override = eye_material(eye_colour)
+	jaw.size = Vector3(size * 0.46, size * 0.11, size * 0.42)
+	_part(jaw_node, "Bone", jaw, material, Vector3(0, -size * 0.18, -size * 0.24))
+	for side: float in [-1.0, 1.0]:
+		link(jaw_node, "Hinge", Vector3(side * size * 0.24, 0, 0),
+			Vector3(side * size * 0.20, -size * 0.18, -size * 0.40), size * 0.045, material)
+		ellipsoid(root, "Socket%d" % int(side), Vector3(side * size * 0.205, size * 0.015, -size * 0.465),
+			Vector3(size * 0.29, size * 0.265, size * 0.14), dark)
+		link(root, "Brow", Vector3(side * size * 0.065, size * 0.11, -size * 0.49),
+			Vector3(side * size * 0.34, size * 0.16, -size * 0.39), size * 0.05, material)
+		ellipsoid(root, "Cheek", Vector3(side * size * 0.31, -size * 0.12, -size * 0.37),
+			Vector3(size * 0.19, size * 0.16, size * 0.28), material)
+		ellipsoid(root, "Eye%d" % int(side), Vector3(side * size * 0.205, size * 0.015, -size * 0.54),
+			Vector3.ONE * size * EYE_RADIUS * 2.0, eye_material(eye_colour))
+	for i in 6:
+		var tooth := BoxMesh.new()
+		tooth.size = Vector3(size * 0.045, size * (0.072 if i % 2 == 0 else 0.06), size * 0.06)
+		_part(root, "Tooth%d" % i, tooth, material,
+			Vector3((float(i) - 2.5) * size * 0.057, -size * 0.28, -size * 0.53))
 
 	return root
 
@@ -96,9 +89,11 @@ static func rib_cage(length: float, width: float, material: StandardMaterial3D,
 		var ring := TorusMesh.new()
 		ring.inner_radius = maxf(0.001, r - width * 0.055)
 		ring.outer_radius = r
+		ring.rings = 32
+		ring.ring_segments = 10
 		var rib := _part(root, "Rib%d" % i, ring, material,
 			Vector3(0.0, -length * t, 0.0))
-		rib.rotation = Vector3(PI * 0.5, 0.0, 0.0)
+		rib.rotation = Vector3(0.08 + t * 0.10, 0.0, 0.0)
 		rib.scale = Vector3(1.0, 1.0, 0.72)
 
 	var spine_link := BoxMesh.new()
@@ -116,11 +111,14 @@ static func long_bone(length: float, radius: float, material: StandardMaterial3D
 	shaft.top_radius = radius * 0.72
 	shaft.bottom_radius = radius * 0.62
 	shaft.height = length
+	shaft.radial_segments = 12
 	_part(root, "Shaft", shaft, material, Vector3(0.0, -length * 0.5, 0.0))
 	for end in [0.0, -length]:
 		var knuckle := SphereMesh.new()
 		knuckle.radius = radius
 		knuckle.height = radius * 1.7
+		knuckle.radial_segments = 16
+		knuckle.rings = 8
 		_part(root, "End%d" % int(end * 100.0), knuckle, material, Vector3(0.0, end, 0.0))
 	return root
 
@@ -233,6 +231,54 @@ static func _socket_material() -> StandardMaterial3D:
 	m.roughness = 1.0
 	m.metallic = 0.0
 	return m
+
+
+## A continuous surface of revolution, with optional fabric pleats and a
+## ragged hem. Shared by robes, armor and fungal stalks. UVs and outward
+## normals are authored alongside the vertices so small folds catch light.
+static func loft(profile: Array[Vector2], segments: int = 32, pleat: float = 0.0,
+		ragged: float = 0.0) -> ArrayMesh:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for row in range(profile.size() - 1):
+		for side in segments:
+			for corner in [Vector2i(0, 0), Vector2i(1, 1), Vector2i(1, 0),
+					Vector2i(0, 0), Vector2i(0, 1), Vector2i(1, 1)]:
+				var level: int = row + corner.x
+				var angle := TAU * float(side + corner.y) / float(segments)
+				var section := profile[level]
+				var radius := section.x * (1.0 + cos(angle * 8.0) * pleat)
+				var height := section.y + (sin(angle * 5.0) * ragged if level == 0 else 0.0)
+				var slope := profile[mini(level + 1, profile.size() - 1)] - profile[maxi(0, level - 1)]
+				surface.set_normal(Vector3(cos(angle) * slope.y, -slope.x, sin(angle) * slope.y).normalized())
+				surface.set_uv(Vector2(float(side + corner.y) / float(segments), float(level) / float(profile.size() - 1)))
+				surface.add_vertex(Vector3(cos(angle) * radius, height, sin(angle) * radius))
+	return surface.commit()
+
+
+## A tapered connection, useful for fingers, bow limbs and articulated legs.
+static func link(parent: Node3D, name: String, from: Vector3, to: Vector3,
+		radius: float, material: StandardMaterial3D, taper: float = 0.72) -> MeshInstance3D:
+	var shape := CylinderMesh.new()
+	shape.height = from.distance_to(to)
+	shape.bottom_radius = radius
+	shape.top_radius = radius * taper
+	shape.radial_segments = 10
+	var part := _part(parent, name, shape, material, (from + to) * 0.5)
+	part.quaternion = Quaternion(Vector3.UP, (to - from).normalized())
+	return part
+
+
+static func ellipsoid(parent: Node3D, name: String, at: Vector3, extent: Vector3,
+		material: StandardMaterial3D) -> MeshInstance3D:
+	var shape := SphereMesh.new()
+	shape.radius = 0.5
+	shape.height = 1.0
+	shape.radial_segments = 20
+	shape.rings = 12
+	var part := _part(parent, name, shape, material, at)
+	part.scale = extent
+	return part
 
 
 static func _part(holder: Node3D, part: String, mesh: Mesh,
