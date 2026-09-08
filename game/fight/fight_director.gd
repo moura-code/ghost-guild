@@ -1,0 +1,662 @@
+class_name FightDirector
+extends Node3D
+## Stages a fight where the player is standing: bodies in the room, the hand
+## on the HUD, and the turn flow between them. Replaces `fight_screen.gd`.
+##
+## The camera does not cut away. Spec §8 says "the camera locks to it", and in
+## a first-person game that means your own body is frozen and your own head
+## turns -- you are still looking through your own eyes, which is the entire
+## point of the pivot. A cutaway would put the fight back on a stage you watch
+## instead of in a room you are in.
+##
+## Nothing here writes to RunState. Every action goes through
+## GameRoot.run_action, which is the only channel (spec §4).
+
+signal fight_finished()
+signal input_context_changed()
+signal inspection_requested(pile: String)
+signal card_inspection_requested(card: CardInstance)
+
+## Whether the fight has finished settling. `Crawl` holds the screen until
+## it has: the run leaves the fight phase on the frame the last enemy dies,
+## and the animation of that death has not started yet.
+func is_settled() -> bool:
+	return _finished
+
+## How far in front of the room's centre the front rank stands.
+const DEPTH := 1.6
+const SPACING := 1.35
+## Outer enemies stand a little further back, so a line of three reads as a
+## group rather than a wall.
+const BACK_STEP := 0.45
+const TURN_SECONDS := 0.35
+## How much room you get during a fight, in metres. Wide enough to circle the
+## thing you are fighting, tight enough that you cannot leave.
+const ARENA := 7.0
+const SHAKE_SECONDS := 0.22
+## How far from the group the fight opens, in metres.
+##
+## Wherever the player triggered the encounter from -- and they trigger it by
+## walking into a marker that can sit anywhere in a room nine metres across --
+## the first frame of a fight has to be a composition. A creature six metres
+## back in an unlit room is a smudge, and the entire reason these are bodies
+## standing in a room rather than portraits on a card is that you can see what
+## you are fighting.
+##
+## Closed rather than cut. The camera never leaves your head (spec 8), so the
+## hero walks the difference; half a second of stepping up to something is
+## also the best half-second in the fight.
+const ENGAGE := 3.4
+const CLOSE_SECONDS := 0.55
+## The fight brings its own light: a low warm pool at the group's feet rather
+## than a spotlight, so the thing trying to kill you is legible from across a
+## dark room without the room stopping being dark.
+## Dim on purpose. At 2.2 it lit the walls as well as the creatures and the
+## crypt stopped being dark, which costs more than legibility buys: the whole
+## threat of this place is that you cannot see.
+const STAGE_LIGHT := 1.1
+const STAGE_RANGE := 5.5
+
+var game: GameRoot
+var hud: HudRoot
+var player: Player
+var hand: HandView
+var animator: FightAnimator3D
+## Where the fight's blows are heard from.
+var voices: Voices3D
+var vitals: HeroPanel
+var bodies: Array[EnemyBody] = []
+var tags: Array[EnemyTag] = []
+## Hand index -> whether that card needs an enemy chosen. Mirrors the engine.
+var playable: Dictionary = {}
+
+## Everything this director puts on the HUD lives under one node, so it can
+## all be taken down together. The widgets are children of the HUD, not of the
+## director, so freeing the director does not free them -- and a second fight
+## would otherwise deal a second hand next to the first one, forever.
+var _hud_layer: Control
+var _crosshair: Crosshair
+var _end_turn: Button
+var _banner: TurnBanner
+var _finished: bool = false
+var suspended: bool = false
+var staging: bool = true
+var _shake: Tween
+var _piles: HFlowContainer
+
+
+## Where each enemy stands, given the centre of the room and the direction the
+## player is looking. Pure, so the arrangement can be checked without staging
+## anything.
+static func stage_points(count: int, at: Vector3, facing: Vector3) -> Array:
+	var out: Array = []
+	if count <= 0:
+		return out
+	var fwd := Vector3(facing.x, 0.0, facing.z)
+	if fwd.length_squared() < 0.0001:
+		fwd = Vector3(0.0, 0.0, -1.0)
+	fwd = fwd.normalized()
+	var right := fwd.cross(Vector3.UP).normalized()
+	for i in count:
+		var offset := float(i) - float(count - 1) * 0.5
+		out.append(at + right * (offset * SPACING) + fwd * (DEPTH + absf(offset) * BACK_STEP))
+	return out
+
+
+func begin(g: GameRoot, h: HudRoot, p: Player, at: Vector3) -> void:
+	game = g
+	hud = h
+	player = p
+	_finished = false
+
+	var facing := Vector3(at.x - p.global_position.x, 0.0, at.z - p.global_position.z)
+	if facing.length_squared() < 0.0001:
+		facing = -p.global_transform.basis.z
+	_stage(at, facing)
+	_light(_centroid(at))
+	# Face what you are fighting, not the middle of the room. Walking in from a
+	# corner put the enemies off to one side of the screen while the camera
+	# obediently looked at the geometric centre of the floor.
+	_face(_centroid(at))
+
+	# You stay in your body. The cards need the cursor, so the mouse is free,
+	# but you can still walk around the room and look at what you are fighting
+	# -- from the moment the hero has finished stepping up to them, half a
+	# second in. Being walked and walking at the same time is neither.
+	#
+	# The movement is ATMOSPHERIC, not tactical, and the difference matters:
+	# core/combat is a pure state machine with no concept of space -- no
+	# positions, no range, no line of sight -- so where you stand cannot change
+	# the rules without a redesign of the combat AND the economy that is
+	# balanced against it. Promising positional agency and not delivering it
+	# would be worse than the freeze it replaces. What this buys is that the
+	# fight stops feeling like the game paused and put a menu over the room.
+	# Frozen only for as long as it takes to step up to them. `_close_in`
+	# hands it back.
+	player.frozen = true
+	player.look_enabled = false
+	_close_in(_centroid(at))
+	_fence(at)
+	_build_hud()
+	hud.set_pointer(true)
+	refresh()
+
+
+## An invisible wall around the fight. You can walk the room; you cannot walk
+## out of it and down the corridor while something is swinging at you.
+func _fence(at: Vector3) -> void:
+	var body := StaticBody3D.new()
+	body.name = "Ring"
+	body.collision_layer = DungeonBuilder.LAYER_WORLD
+	body.collision_mask = 0
+	add_child(body)
+	var half := ARENA * 0.5
+	for step in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		var shape := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(0.4, Kit.WALL_H, ARENA) if step.y == 0 else Vector3(ARENA, Kit.WALL_H, 0.4)
+		shape.shape = box
+		shape.position = Vector3(at.x + float(step.x) * half, Kit.WALL_H * 0.5, at.z + float(step.y) * half)
+		body.add_child(shape)
+
+
+func fight() -> FightState:
+	if game == null or game.campaign == null or game.campaign.run == null:
+		return null
+	return game.campaign.run.fight
+
+
+func living_bodies() -> Array:
+	var out: Array = []
+	for b in bodies:
+		if not b.dying:
+			out.append(b)
+	return out
+
+
+func body_of(index: int) -> EnemyBody:
+	for b in bodies:
+		if b.index == index:
+			return b
+	return null
+
+
+## Camera ray at a screen point -> the enemy index under it, or -1.
+func target_under(screen: Vector2) -> int:
+	if player == null or player.camera == null:
+		return -1
+	var space := get_world_3d().direct_space_state
+	var from := player.camera.project_ray_origin(screen)
+	var to := from + player.camera.project_ray_normal(screen) * 40.0
+	var query := PhysicsRayQueryParameters3D.create(from, to)
+	query.collision_mask = EnemyBody.LAYER_ENEMY
+	var hit := space.intersect_ray(query)
+	if hit.is_empty():
+		return -1
+	var body := hit["collider"] as EnemyBody
+	return body.index if body != null and not body.dying else -1
+
+
+func needs_target(hand_index: int) -> bool:
+	# One living enemy means there is nothing to choose, and asking the player
+	# to click it is friction, not depth. Most fights are one enemy.
+	if living_bodies().size() <= 1:
+		return false
+	return bool(playable.get(hand_index, false))
+
+
+## Where a number should appear for each thing the events can name, in screen
+## space. Re-asked by the animator every beat, because a body that recoiled
+## has moved.
+func anchors() -> Dictionary:
+	var out: Dictionary = {}
+	var camera := player.camera if player != null else null
+	var screen := hud.ui.size if hud != null else Vector2(640.0, 360.0)
+	out["hero"] = Vector2(screen.x * 0.5, screen.y * 0.72)
+	for b in bodies:
+		out[b.index] = _to_screen(camera, b.head_point(), screen)
+	return out
+
+
+func play_card(hand_index: int, target: int) -> void:
+	var f := fight()
+	if suspended or f == null or f.is_over() or not playable.has(hand_index):
+		return
+	var action := {"kind": "play", "hand_index": hand_index, "target": target}
+	if animator.is_playing() or not CombatEngine.legal_actions(f).has(action):
+		return
+	hand.select(-1)
+	if hand_index < hand.views.size():
+		hand.views[hand_index].fly_out(_discard_corner())
+	_sound("card_play")
+	animator.play(game.run_action({"kind": "play", "hand_index": hand_index, "target": target}))
+	_after_action()
+
+
+func end_turn() -> void:
+	var f := fight()
+	if suspended or f == null or f.is_over() or animator.is_playing():
+		return
+	hand.select(-1)
+	_banner.announce(game.text("ui.fight.enemy_turn"), false)
+	animator.play(game.run_action({"kind": "end_turn"}))
+	_after_action()
+
+
+## Idempotent: called after every action and again when the animator settles,
+## so whichever notices first, the fight ends exactly once.
+func check_over() -> void:
+	if _finished or suspended:
+		return
+	if game.campaign.run != null and game.campaign.run.phase == "fight":
+		return
+	# The blow that ended the fight is still landing. `animator.finished`
+	# calls this again when the queue empties -- without the wait the
+	# reward panel snapped up on the same frame as the killing card, over a
+	# damage number, a spark and a whole collapse nobody ever saw.
+	if animator != null and animator.is_playing():
+		return
+	_finished = true
+	player.frozen = false
+	player.look_enabled = true
+	var ring := get_node_or_null("Ring")
+	if ring != null:
+		ring.queue_free()
+	hud.set_pointer(false)
+	hand.clear()
+	for t in tags:
+		(t as EnemyTag).visible = false
+	fight_finished.emit()
+
+
+func refresh() -> void:
+	var f := fight()
+	if f == null:
+		return
+	_recompute_playable(f)
+	vitals.bind(game.content, f)
+	hand.show_hand(f, playable)
+	for t in tags:
+		var tag: EnemyTag = t
+		if tag.index < f.enemies.size():
+			tag.bind(game.content, f, tag.index)
+	for b in bodies:
+		var alive := b.index < f.enemies.size() and f.enemies[b.index].alive
+		if not alive and not b.dying:
+			b.die()
+	_end_turn.disabled = f.is_over()
+	_focus_route()
+
+
+## Explicit links survive card hover moving children to the top of the fan.
+func _focus_route() -> void:
+	var route: Array[Control] = []
+	for card in hand.views:
+		if card.visible:
+			route.append(card)
+	for tag in tags:
+		if tag.visible:
+			route.append(tag)
+	if not _end_turn.disabled:
+		route.append(_end_turn)
+	for button in _piles.get_children():
+		route.append(button)
+	for i in route.size():
+		route[i].focus_next = route[i].get_path_to(route[(i + 1) % route.size()])
+		route[i].focus_previous = route[i].get_path_to(route[posmod(i - 1, route.size())])
+
+
+## The engine is the authority on what can be played; this only mirrors it.
+func _recompute_playable(f: FightState) -> void:
+	playable.clear()
+	for action in CombatEngine.legal_actions(f):
+		if String(action.get("kind", "")) != "play":
+			continue
+		var index := int(action["hand_index"])
+		var wants_enemy := int(action.get("target", -1)) >= 0
+		playable[index] = bool(playable.get(index, false)) or wants_enemy
+
+
+func _stage(at: Vector3, facing: Vector3) -> void:
+	var f := fight()
+	if f == null:
+		return
+	var points := stage_points(f.enemies.size(), at, facing)
+	for i in f.enemies.size():
+		var def: EnemyDef = game.content.enemies[f.enemies[i].def_id]
+		var body := EnemyBody.create(def, i)
+		add_child(body)
+		body.global_position = points[i]
+		body.look_at_from_position(points[i], Vector3(at.x, points[i].y, at.z) - facing * 4.0, Vector3.UP)
+		bodies.append(body)
+
+
+## Where the player should be standing to see the group. Pure, so the framing
+## can be checked without a room to stand in. Never pushes anybody backwards:
+## if you walked right up to the thing, you are already close enough.
+static func engage_point(from: Vector3, group: Vector3, distance: float) -> Vector3:
+	var flat := Vector3(from.x - group.x, 0.0, from.z - group.z)
+	if flat.length_squared() < 0.0001 or flat.length() <= distance:
+		return from
+	var to := group + flat.normalized() * distance
+	return Vector3(to.x, from.y, to.z)
+
+
+## Walks the hero into position, then gives them their legs back.
+func _close_in(group: Vector3) -> void:
+	var want := engage_point(player.global_position, group, ENGAGE)
+	if not is_inside_tree() or player.reduced_motion or want.is_equal_approx(player.global_position):
+		player.global_position = want
+		_finish_staging()
+		return
+	var step := create_tween()
+	step.tween_property(player, "global_position", want, CLOSE_SECONDS) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	step.tween_callback(_finish_staging)
+
+
+## The pool of light the fight happens in.
+func _light(group: Vector3) -> void:
+	var lamp := OmniLight3D.new()
+	lamp.name = "StageLight"
+	lamp.light_color = Palette.LANTERN
+	lamp.light_energy = STAGE_LIGHT
+	lamp.omni_range = STAGE_RANGE
+	# Low and slightly in front, so the creatures are lit from the player's
+	# side and their own shadows fall away from the camera. Lighting them from
+	# above turns every skull into two black holes.
+	lamp.position = Vector3(group.x, 1.4, group.z)
+	lamp.shadow_enabled = false
+	add_child(lamp)
+
+
+## The middle of the group, on the floor. Falls back to the room centre when
+## there is nobody to look at.
+func _centroid(fallback: Vector3) -> Vector3:
+	if bodies.is_empty():
+		return fallback
+	var sum := Vector3.ZERO
+	for b in bodies:
+		sum += b.global_position
+	return sum / float(bodies.size())
+
+
+## Turns the player to face the group. Tweened rather than snapped: the head
+## whipping round is the difference between "a fight started" and "the screen
+## changed".
+func _face(at: Vector3) -> void:
+	var to := Vector3(at.x, player.global_position.y, at.z)
+	var yaw := player.global_position.direction_to(to)
+	if yaw.length_squared() < 0.0001:
+		return
+	var target := atan2(-yaw.x, -yaw.z)
+	var tallest := 1.6
+	for body in bodies:
+		tallest = maxf(tallest, body.head_point().y - body.global_position.y - 0.22)
+	var focus_height := clampf(tallest * 0.55, 0.90, Player.EYE)
+	# Keep low creatures above the hand. Fade this lower eye line out for
+	# tall groups so bosses retain room for their heads and intent tags.
+	focus_height -= 0.45 * (1.0 - clampf((tallest - 1.6) / 1.4, 0.0, 1.0))
+	var pitch := atan2(focus_height - Player.EYE, ENGAGE)
+	if not is_inside_tree() or player.reduced_motion:
+		player.rotation.y = target
+		player.set_pitch(pitch)
+		return
+	var turn := create_tween().set_parallel(true)
+	turn.tween_property(player, "rotation:y", target, TURN_SECONDS) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	if player.head != null:
+		turn.tween_method(player.set_pitch, player.head.rotation.x, pitch, TURN_SECONDS) \
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+
+## The spatial pool for this fight, parented to the director so it is torn
+## down with the fight rather than accumulating one pool per room.
+func _build_voices() -> Voices3D:
+	voices = Voices3D.new()
+	voices.name = "Voices"
+	voices.sfx = game.sfx
+	add_child(voices)
+	return voices
+
+
+func _build_hud() -> void:
+	_hud_layer = Control.new()
+	_hud_layer.name = "FightHud"
+	_hud_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hud_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hud.ui.add_child(_hud_layer)
+
+	animator = FightAnimator3D.new()
+	animator.bind(game.content, game.sfx, _build_voices())
+	animator.anchors_supplier = anchors
+	animator.body_supplier = func(i: int) -> Node3D: return body_of(i)
+	animator.shake_requested.connect(_on_shake)
+	animator.finished.connect(check_over)
+	_hud_layer.add_child(animator)
+
+	hand = HandView.new()
+	hand.bind(game.content)
+	hand.card_pressed.connect(_on_card_pressed)
+	hand.card_inspected.connect(func(card: CardInstance) -> void: card_inspection_requested.emit(card))
+	_hud_layer.add_child(hand)
+
+	# The vitals get a plate of their own. Over a lit 3D room the bar, the orbs
+	# and the numbers were floating loose on stone -- each one legible, the
+	# group reading as debris rather than as a panel.
+	var vitals_plate := PanelContainer.new()
+	vitals_plate.name = "Vitals"
+	vitals_plate.add_theme_stylebox_override("panel", UiTheme.panel_box(Palette.STONE))
+	vitals_plate.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	vitals_plate.grow_horizontal = Control.GROW_DIRECTION_END
+	vitals_plate.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	vitals_plate.offset_left = 8.0
+	vitals_plate.offset_top = -HeroPanel.PANEL_SIZE.y - 14.0
+	vitals_plate.offset_right = 8.0 + HeroPanel.PANEL_SIZE.x + 10.0
+	vitals_plate.offset_bottom = -8.0
+	_hud_layer.add_child(vitals_plate)
+
+	vitals = HeroPanel.new()
+	vitals.custom_minimum_size = HeroPanel.PANEL_SIZE
+	vitals.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	vitals_plate.add_child(vitals)
+
+	_end_turn = Button.new()
+	_end_turn.text = game.text("ui.fight.end_turn")
+	_end_turn.custom_minimum_size = Vector2(72, 27)
+	_end_turn.add_theme_stylebox_override("normal", UiTheme.primary_box(Palette.EDGE_LIGHT))
+	# Anchored, not positioned by arithmetic: the button auto-sizes to its
+	# text, and the arithmetic version put its left edge 70px from the right
+	# of the screen and let the rest run off the side.
+	_end_turn.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_end_turn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_end_turn.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_end_turn.offset_right = -10.0
+	_end_turn.offset_bottom = -10.0
+	_end_turn.pressed.connect(end_turn)
+	_hud_layer.add_child(_end_turn)
+
+	_piles = HFlowContainer.new()
+	_piles.position = Vector2(8, 8)
+	_piles.size.x = 135
+	for pile in ["deck", "draw", "discard", "hand", "status"]:
+		var button := Button.new()
+		button.text = game.text("ui.inspect." + pile)
+		button.pressed.connect(func() -> void: inspection_requested.emit(pile))
+		_piles.add_child(button)
+	_hud_layer.add_child(_piles)
+	_banner = TurnBanner.new()
+	_hud_layer.add_child(_banner)
+
+	_crosshair = Crosshair.new()
+	_hud_layer.add_child(_crosshair)
+
+	# One tag per enemy, above the hand so a card never covers the number you
+	# are deciding against.
+	for b in bodies:
+		var tag := EnemyTag.create((b as EnemyBody).index)
+		_hud_layer.add_child(tag)
+		tag.targeted.connect(select_target)
+		tags.append(tag)
+
+
+func _on_card_pressed(hand_index: int) -> void:
+	var f := fight()
+	if suspended or f == null or f.is_over() or not playable.has(hand_index):
+		return
+	if hand.selected == hand_index:
+		hand.select(-1)
+		return
+	if needs_target(hand_index):
+		hand.select(hand_index)
+		hud.ui.get_viewport().gui_release_focus()
+		for tag in tags:
+			if tag.visible:
+				tag.grab_focus()
+				break
+		return
+	# One living enemy, or a card that only touches the hero: resolve now.
+	var only := living_bodies()
+	play_card(hand_index, int((only[0] as EnemyBody).index) if only.size() == 1 and bool(playable[hand_index]) else -1)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if suspended or _finished or hand == null or hand.selected < 0:
+		return
+	if not (event is InputEventMouseButton):
+		return
+	var click: InputEventMouseButton = event
+	if not click.pressed or click.button_index != MOUSE_BUTTON_LEFT:
+		return
+	var target := target_under(click.position)
+	if target >= 0:
+		play_card(hand.selected, target)
+		get_viewport().set_input_as_handled()
+
+
+func _after_action() -> void:
+	if game.campaign.run == null or game.campaign.run.phase != "fight":
+		# The animator is still playing the blow that ended it; check_over runs
+		# again when it settles, and it is idempotent.
+		check_over()
+		return
+	refresh()
+
+
+## The tags follow the bodies every frame: a recoiling enemy that leaves its
+## health bar behind reads as a bug before it reads as a hit.
+func _process(_delta: float) -> void:
+	if _finished or hud == null:
+		return
+	# The reticle reports whether the click would land on an enemy, which is
+	# the only aiming this game has.
+	if _crosshair != null:
+		_crosshair.set_target(hand != null and hand.selected >= 0 and target_under(hud.ui.get_global_mouse_position() * _hud_scale()) >= 0)
+	for tag in tags:
+		var f := fight()
+		tag.set_targetable(hand != null and hand.selected >= 0 and f != null and f.living_enemy_indices().has(tag.index))
+		var body := body_of(tag.index)
+		if body != null:
+			body.set_highlight(tag.targetable)
+	var anchor := anchors()
+	var points: Array = []
+	for t in tags:
+		points.append(anchor.get((t as EnemyTag).index, Vector2.ZERO))
+	points = EnemyTag.spread(points)
+	for i in tags.size():
+		var tag: EnemyTag = tags[i]
+		var body := body_of(tag.index)
+		if body == null or body.dying:
+			tag.visible = false
+			continue
+		var at: Vector2 = points[i]
+		at.x = clampf(at.x, EnemyTag.WIDTH * 0.5 + 10, hud.ui.size.x - EnemyTag.WIDTH * 0.5 - 10)
+		at.y = clampf(at.y, tag.size.y + 12, hud.ui.size.y - 100)
+		tag.place(at)
+
+
+func _on_shake(strength: float) -> void:
+	if player == null or player.reduced_motion or player.head == null or strength <= 0.0:
+		return
+	if _shake != null and _shake.is_valid():
+		_shake.kill()
+	var rest := Vector3(0.0, Player.EYE, 0.0)
+	var kick := rest + Vector3(0.0, -strength * 0.006, 0.0)
+	_shake = create_tween()
+	_shake.tween_property(player.head, "position", kick, SHAKE_SECONDS * 0.3)
+	_shake.tween_property(player.head, "position", rest, SHAKE_SECONDS * 0.7) \
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
+func _to_screen(camera: Camera3D, at: Vector3, screen: Vector2) -> Vector2:
+	if camera == null or not camera.is_inside_tree() or camera.is_position_behind(at):
+		return screen * 0.5
+	# The camera unprojects into the real viewport; the HUD is a scaled space
+	# over it, so the point has to be brought back into the HUD's coordinates.
+	var k := hud.ui.scale.x
+	return camera.unproject_position(at) / k
+
+
+func _discard_corner() -> Vector2:
+	return Vector2(hud.ui.size.x - 40.0, hud.ui.size.y - 24.0)
+
+
+func _sound(id: String) -> void:
+	if game != null and game.sfx != null:
+		game.sfx.play(id)
+
+
+## The hand, the vitals, the end-turn button and the tags are children of the
+## HUD rather than of this node, so they do not go when it does. They have to
+## be taken down explicitly or every fight leaves its interface on screen.
+func _exit_tree() -> void:
+	if _hud_layer != null and is_instance_valid(_hud_layer):
+		_hud_layer.queue_free()
+		_hud_layer = null
+
+
+## The HUD is a scaled space over the real viewport, so a mouse position read
+## in HUD coordinates has to be scaled back up before a camera ray can use it.
+func _hud_scale() -> float:
+	if player == null or player.camera == null or not player.camera.is_inside_tree():
+		return 1.0
+	return hud.ui.scale.x
+
+
+func _finish_staging() -> void:
+	staging = false
+	if not suspended and not _finished:
+		player.frozen = false
+	input_context_changed.emit()
+
+
+func set_suspended(value: bool) -> void:
+	suspended = value
+	process_mode = Node.PROCESS_MODE_DISABLED if value else Node.PROCESS_MODE_INHERIT
+	if _hud_layer != null:
+		_hud_layer.visible = not value
+		_hud_layer.process_mode = process_mode
+	# Node-bound tweens (staging, bodies, animator, cards) stop at their
+	# current playhead. No timer is restarted when the caller returns.
+	if not value:
+		check_over.call_deferred()
+	_pause_voices(self, value)
+
+
+func cancel_selection() -> bool:
+	if hand == null or hand.selected < 0:
+		return false
+	hand.select(-1)
+	return true
+
+
+func select_target(index: int) -> void:
+	if not suspended and hand != null and hand.selected >= 0:
+		play_card(hand.selected, index)
+
+
+func _pause_voices(node: Node, value: bool) -> void:
+	if node is AudioStreamPlayer3D:
+		node.stream_paused = value
+	for child in node.get_children():
+		_pause_voices(child, value)

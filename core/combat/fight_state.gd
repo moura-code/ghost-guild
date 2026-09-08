@@ -10,6 +10,15 @@ extends RefCounted
 var content: Content
 var rng: Rng
 var floor: int = 1
+## Which cycle of the dungeon this fight is in (§2). Always 1 for the first
+## thirty floors, which is what keeps every existing number unchanged.
+var tier: int = 1
+## The invoked Legend's trait (§6.1), or null. Null is the identity: a guild
+## that has never prestiged plays the game it always played.
+var hero_trait: TraitDef = null
+## What the run's Depth Seal multiplies enemy scaling by (spec §6.2). 1.0
+## for an unsealed descent, which is every descent until Ink buys a seal.
+var seal: float = 1.0
 var turn: int = 0
 var phase: String = "player"
 var hero_hp: int = 1
@@ -18,6 +27,10 @@ var hero_block: int = 0
 var energy: int = 0
 var max_energy: int = 3
 var draw_per_turn: int = 5
+## The Legend's Blessing on hero damage and block (spec §4.4). Exactly 1.0
+## until the first prestige, which is what keeps every existing number and
+## every demo unchanged.
+var blessing: float = 1.0
 var stats: Dictionary = {"might": 0, "wit": 0, "vigor": 0, "focus": 0}
 var statuses: Dictionary = {}
 var relics: Array[String] = []
@@ -118,6 +131,9 @@ func clone() -> FightState:
 	s.content = content
 	s.rng = rng.clone()
 	s.floor = floor
+	s.tier = tier
+	s.hero_trait = hero_trait
+	s.seal = seal
 	s.turn = turn
 	s.phase = phase
 	s.hero_hp = hero_hp
@@ -126,6 +142,7 @@ func clone() -> FightState:
 	s.energy = energy
 	s.max_energy = max_energy
 	s.draw_per_turn = draw_per_turn
+	s.blessing = blessing
 	s.stats = stats.duplicate()
 	s.statuses = statuses.duplicate()
 	s.relics = relics.duplicate()
@@ -139,3 +156,44 @@ func clone() -> FightState:
 	s.next_uid = next_uid
 	s.pending_x = pending_x
 	return s
+
+
+const SAVED_INTS := ["floor", "tier", "turn", "hero_hp", "hero_max_hp", "hero_block", "energy",
+	"max_energy", "draw_per_turn", "cards_played_this_turn", "next_uid", "pending_x"]
+const SAVED_PILES := ["draw_pile", "hand", "discard_pile", "exhaust_pile"]
+
+
+func to_dict() -> Dictionary:
+	var d := {"rng": rng.to_dict(), "phase": phase, "seal": seal, "blessing": blessing,
+		"stats": stats.duplicate(), "statuses": statuses.duplicate(), "relics": relics.duplicate()}
+	for key in SAVED_INTS:
+		d[key] = get(key)
+	for key in SAVED_PILES:
+		var pile: Array = get(key)
+		d[key] = pile.map(func(card: CardInstance) -> Dictionary: return card.to_dict())
+	d["enemies"] = enemies.map(func(enemy: EnemyState) -> Dictionary: return enemy.to_dict())
+	return d
+
+
+static func from_dict(p_content: Content, d: Dictionary) -> FightState:
+	d = Content.normalize_json(d)
+	var f := FightState.new()
+	f.content = p_content
+	f.rng = Rng.from_dict(d.get("rng", {}))
+	f.phase = String(d.get("phase", "player"))
+	for key in SAVED_INTS:
+		f.set(key, int(d.get(key, f.get(key))))
+	for key in SAVED_PILES:
+		var pile: Array[CardInstance] = []
+		for raw in d.get(key, []):
+			pile.append(CardInstance.from_dict(raw))
+		f.set(key, pile)
+	f.seal = float(d.get("seal", 1.0))
+	f.blessing = float(d.get("blessing", 1.0))
+	f.stats = d.get("stats", {}).duplicate()
+	f.statuses = d.get("statuses", {}).duplicate()
+	for relic in d.get("relics", []):
+		f.relics.append(String(relic))
+	for enemy in d.get("enemies", []):
+		f.enemies.append(EnemyState.from_dict(enemy))
+	return f

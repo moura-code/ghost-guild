@@ -18,11 +18,12 @@ signal buy_pressed(id: String)
 ## Sized so a group fits one row and both groups fit one screen with nothing
 ## to scroll -- that is the whole point of the wall, and a tablet ten pixels
 ## too wide puts half the guild below the fold again.
-## Height is what the tallest tablet actually measures, not a wish: names
-## like "Lantern Discipline" wrap to two lines at this width, and declaring
-## a size the content overruns is how the second group ended up below the
-## fold twice.
-const PLAQUE_SIZE := Vector2(85.0, 90.0)
+## Height is what the tallest tablet measures with a two-line name, plus the
+## carved frame's own margins -- which the tablet only started paying once the
+## theme was actually applied to the HUD. Godot's minimum-size for an
+## autowrapped Label is one line, so it cannot be trusted to report this: the
+## check is looking at the wall.
+const PLAQUE_SIZE := Vector2(85.0, 98.0)
 const COLUMNS := 6
 
 var upgrade_id: String = ""

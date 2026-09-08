@@ -1,0 +1,400 @@
+[
+  {
+    "id": "spore_cloud",
+    "name": "card.spore_cloud.name",
+    "text": "card.spore_cloud.text",
+    "pool": "fungal_deep",
+    "type": "skill",
+    "cost": 1,
+    "rarity": "common",
+    "tags": [
+      "poison"
+    ],
+    "keywords": [],
+    "target": "all_enemies",
+    "effects": [
+      {
+        "op": "apply_status",
+        "status": "poison",
+        "stacks": 3,
+        "scale": "wit"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "apply_status",
+          "status": "poison",
+          "stacks": 5,
+          "scale": "wit"
+        }
+      ]
+    },
+    "ai_value": 8
+  },
+  {
+    "id": "cutting_fungus",
+    "name": "card.cutting_fungus.name",
+    "text": "card.cutting_fungus.text",
+    "pool": "fungal_deep",
+    "type": "attack",
+    "cost": 1,
+    "rarity": "common",
+    "tags": [
+      "poison"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "damage",
+        "amount": 5,
+        "scale": "might"
+      },
+      {
+        "op": "apply_status",
+        "status": "poison",
+        "stacks": 2,
+        "scale": "wit"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "damage",
+          "amount": 7,
+          "scale": "might"
+        },
+        {
+          "op": "apply_status",
+          "status": "poison",
+          "stacks": 3,
+          "scale": "wit"
+        }
+      ]
+    },
+    "ai_value": 9
+  },
+  {
+    "id": "mycelium",
+    "name": "card.mycelium.name",
+    "text": "card.mycelium.text",
+    "pool": "fungal_deep",
+    "type": "skill",
+    "cost": 1,
+    "rarity": "common",
+    "tags": [
+      "shield"
+    ],
+    "keywords": [],
+    "target": "self",
+    "effects": [
+      {
+        "op": "block",
+        "amount": 5,
+        "scale": "wit"
+      },
+      {
+        "op": "apply_status",
+        "status": "regen",
+        "stacks": 2,
+        "target": "self"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "block",
+          "amount": 7,
+          "scale": "wit"
+        },
+        {
+          "op": "apply_status",
+          "status": "regen",
+          "stacks": 3,
+          "target": "self"
+        }
+      ]
+    },
+    "ai_value": 7
+  },
+  {
+    "id": "gut_hook",
+    "name": "card.gut_hook.name",
+    "text": "card.gut_hook.text",
+    "pool": "fungal_deep",
+    "type": "attack",
+    "cost": 1,
+    "rarity": "common",
+    "tags": [
+      "bone"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "damage",
+        "amount": 6,
+        "scale": "might"
+      },
+      {
+        "op": "apply_status",
+        "status": "vulnerable",
+        "stacks": 1
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "damage",
+          "amount": 8,
+          "scale": "might"
+        },
+        {
+          "op": "apply_status",
+          "status": "vulnerable",
+          "stacks": 2
+        }
+      ]
+    },
+    "ai_value": 9
+  },
+  {
+    "id": "deep_roots",
+    "name": "card.deep_roots.name",
+    "text": "card.deep_roots.text",
+    "pool": "fungal_deep",
+    "type": "skill",
+    "cost": 0,
+    "rarity": "common",
+    "tags": [
+      "draw"
+    ],
+    "keywords": [
+      "exhaust"
+    ],
+    "target": "self",
+    "effects": [
+      {
+        "op": "draw",
+        "amount": 1
+      },
+      {
+        "op": "energy",
+        "amount": 1
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "draw",
+          "amount": 2
+        },
+        {
+          "op": "energy",
+          "amount": 1
+        }
+      ]
+    },
+    "ai_value": 4
+  },
+  {
+    "id": "rupture",
+    "name": "card.rupture.name",
+    "text": "card.rupture.text",
+    "pool": "fungal_deep",
+    "type": "attack",
+    "cost": 2,
+    "rarity": "uncommon",
+    "tags": [
+      "poison"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "damage",
+        "amount": 9,
+        "scale": "might"
+      },
+      {
+        "op": "apply_status",
+        "status": "poison",
+        "stacks": 4,
+        "scale": "wit"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "damage",
+          "amount": 12,
+          "scale": "might"
+        },
+        {
+          "op": "apply_status",
+          "status": "poison",
+          "stacks": 6,
+          "scale": "wit"
+        }
+      ]
+    },
+    "ai_value": 14
+  },
+  {
+    "id": "chitin_plate",
+    "name": "card.chitin_plate.name",
+    "text": "card.chitin_plate.text",
+    "pool": "fungal_deep",
+    "type": "skill",
+    "cost": 2,
+    "rarity": "uncommon",
+    "tags": [
+      "shield"
+    ],
+    "keywords": [],
+    "target": "self",
+    "effects": [
+      {
+        "op": "block",
+        "amount": 12,
+        "scale": "wit"
+      },
+      {
+        "op": "apply_status",
+        "status": "thorns",
+        "stacks": 2,
+        "target": "self"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "block",
+          "amount": 16,
+          "scale": "wit"
+        },
+        {
+          "op": "apply_status",
+          "status": "thorns",
+          "stacks": 3,
+          "target": "self"
+        }
+      ]
+    },
+    "ai_value": 11
+  },
+  {
+    "id": "harvest",
+    "name": "card.harvest.name",
+    "text": "card.harvest.text",
+    "pool": "fungal_deep",
+    "type": "skill",
+    "cost": 1,
+    "rarity": "uncommon",
+    "tags": [
+      "draw"
+    ],
+    "keywords": [],
+    "target": "self",
+    "effects": [
+      {
+        "op": "draw",
+        "amount": 2
+      },
+      {
+        "op": "heal",
+        "amount": 3
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "draw",
+          "amount": 3
+        },
+        {
+          "op": "heal",
+          "amount": 4
+        }
+      ]
+    },
+    "ai_value": 7
+  },
+  {
+    "id": "rotbloom",
+    "name": "card.rotbloom.name",
+    "text": "card.rotbloom.text",
+    "pool": "fungal_deep",
+    "type": "power",
+    "cost": 2,
+    "rarity": "rare",
+    "tags": [
+      "poison"
+    ],
+    "keywords": [],
+    "target": "self",
+    "effects": [
+      {
+        "op": "apply_status",
+        "status": "knell",
+        "stacks": 2,
+        "target": "self"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "apply_status",
+          "status": "knell",
+          "stacks": 3,
+          "target": "self"
+        }
+      ]
+    },
+    "ai_value": 10
+  },
+  {
+    "id": "the_deep_breath",
+    "name": "card.the_deep_breath.name",
+    "text": "card.the_deep_breath.text",
+    "pool": "fungal_deep",
+    "type": "skill",
+    "cost": 2,
+    "rarity": "rare",
+    "tags": [
+      "shield"
+    ],
+    "keywords": [
+      "exhaust"
+    ],
+    "target": "self",
+    "effects": [
+      {
+        "op": "heal",
+        "amount": 8
+      },
+      {
+        "op": "apply_status",
+        "status": "wit_buff",
+        "stacks": 2,
+        "target": "self"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "heal",
+          "amount": 11
+        },
+        {
+          "op": "apply_status",
+          "status": "wit_buff",
+          "stacks": 3,
+          "target": "self"
+        }
+      ]
+    },
+    "ai_value": 10
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {"id": "strike_first", "name": "rule.strike_first.name", "text": "rule.strike_first.text",
+   "weights": {"damage": {"mul": 1.7}, "block_useful": {"mul": 0.5}, "block_excess": {"mul": 0.4}}},
+
+  {"id": "hold_the_line", "name": "rule.hold_the_line.name", "text": "rule.hold_the_line.text",
+   "weights": {"block_useful": {"mul": 1.9}, "unblocked": {"mul": 1.8}, "damage": {"mul": 0.75}}},
+
+  {"id": "finish_the_wounded", "name": "rule.finish_the_wounded.name", "text": "rule.finish_the_wounded.text",
+   "weights": {"kill": {"mul": 2.4}, "damage": {"mul": 0.9}}},
+
+  {"id": "spend_everything", "name": "rule.spend_everything.name", "text": "rule.spend_everything.text",
+   "weights": {"energy_left": {"mul": 8.0}}},
+
+  {"id": "save_your_strength", "name": "rule.save_your_strength.name", "text": "rule.save_your_strength.text",
+   "weights": {"energy_left": {"add": 0.7}}},
+
+  {"id": "poison_before_blades", "name": "rule.poison_before_blades.name", "text": "rule.poison_before_blades.text",
+   "weights": {"enemy_status.poison": {"mul": 2.6}, "enemy_status.burn": {"mul": 2.0}, "damage": {"mul": 0.8}}},
+
+  {"id": "break_them_first", "name": "rule.break_them_first.name", "text": "rule.break_them_first.text",
+   "weights": {"enemy_status.vulnerable": {"mul": 2.2}, "enemy_status.weak": {"mul": 2.2}, "damage": {"mul": 0.85}}},
+
+  {"id": "powers_first", "name": "rule.powers_first.name", "text": "rule.powers_first.text",
+   "weights": {"powers_played": {"add": 14.0}, "hero_status.*": {"mul": 1.6}}},
+
+  {"id": "draw_before_striking", "name": "rule.draw_before_striking.name", "text": "rule.draw_before_striking.text",
+   "weights": {"cards_drawn": {"add": 6.0}, "damage": {"mul": 0.85}}},
+
+  {"id": "nurse_the_wound", "name": "rule.nurse_the_wound.name", "text": "rule.nurse_the_wound.text",
+   "weights": {"heal": {"mul": 3.0}, "hp_lost": {"mul": 1.6}}},
+
+  {"id": "trade_blood_for_ground", "name": "rule.trade_blood_for_ground.name", "text": "rule.trade_blood_for_ground.text",
+   "weights": {"hp_lost": {"mul": 0.35}, "damage": {"mul": 1.35}}},
+
+  {"id": "block_only_against_lethal", "name": "rule.block_only_against_lethal.name", "text": "rule.block_only_against_lethal.text",
+   "weights": {"block_excess": {"mul": 0.0}, "block_useful": {"mul": 0.6}, "unblocked": {"mul": 2.5}}}
+]

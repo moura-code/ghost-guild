@@ -88,3 +88,17 @@ func test_run_stats_round_trip() -> void:
 	var back := RunStats.from_dict(JSON.parse_string(JSON.stringify(s.to_dict())))
 	assert_dict(back.measured(2)).is_equal(s.measured(2))
 	assert_bool(back.floors.has(2)).is_true()
+
+
+func test_a_class_relic_is_never_offered_as_loot() -> void:
+	# A Sexton handed the Hexer's Thimble is being given another class's
+	# identity as a drop, and the class that owns it already starts with it.
+	var content := TestFixtures.content()
+	var class_relics: Array = []
+	for class_id in content.classes:
+		class_relics.append((content.classes[class_id] as ClassDef).relic)
+	assert_array(class_relics).is_not_empty()
+	for seed_value in range(40):
+		var got := Rewards.relic_offer(content, [], Rng.new(seed_value))
+		assert_bool(class_relics.has(got)).override_failure_message(
+			"offered the class relic %s" % got).is_false()

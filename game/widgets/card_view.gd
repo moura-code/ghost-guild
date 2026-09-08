@@ -13,29 +13,24 @@ extends PanelContainer
 ## InputEvents in headless mode.
 
 signal pressed(hand_index: int)
+signal inspected(card: CardInstance)
+var record: CardInstance
 
-## Four lines of rules text at FONT_SMALL, which is what the longest cards in
-## the game need -- `ashes`, `death_knell` and `hallowed_strike` all wrap to
-## three, and content is only ever going to get wordier. The card is sized to
-## fit the text rather than the text clipped to fit the card: a card whose
-## rules are cut off mid-sentence is a card the player cannot play, which is
-## what the reward picker was shipping.
-## Three lines at FONT_SMALL. Measured, not guessed: the game's longest card
-## text is 167px wide in Pixelify at 6, and a 82px card has 74px of usable
-## width, so it wraps to three. Six-pixel text doubles to twelve on screen,
-## which is the same apparent size the old vector body had.
+## Four lines cover the longest shipped rules. Apply the same spacing to the
+## labels and their measured minimum heights, including outside the HUD theme.
 const TEXT_LINES := 4
+const RULE_FONT_SIZE := 9
 ## Two lines at FONT_BODY: "Hallowed Strike" does not fit one.
 const NAME_LINES := 2
 ## Godot stacks lines at font height PLUS this, and forgetting it is what
 ## silently ate a line off three cards the last time.
 const LINE_SPACING := 1.0
-const CARD_SIZE := Vector2(92.0, 164.0)
+const CARD_SIZE := Vector2(96.0, 146.0)
 ## How much of the card's width is margin rather than content. Everything the
 ## player reads lives inside this inset, which is what makes a fan possible at
 ## all: cards may overlap each other's margins, never each other's text.
 const CONTENT_INSET := 8.0
-const ART_SIZE := Vector2(74.0, 40.0)
+const ART_SIZE := Vector2(78.0, 40.0)
 const HOVER_LIFT := 14.0
 const HOVER_SCALE := 1.06
 const FLY_SECONDS := 0.28
@@ -43,6 +38,10 @@ const FLY_SECONDS := 0.28
 var hand_index: int = -1
 var playable: bool = true
 var selected: bool = false
+
+## HandView owns hover transforms when cards are in the combat fan.
+var managed_hover: bool = false
+var hover_scale: float = HOVER_SCALE
 
 var _cost: Label
 var _name: Label
@@ -54,6 +53,12 @@ var _rest_y: float = 0.0
 var _rest_position: Vector2 = Vector2.ZERO
 var _rest_rotation: float = 0.0
 var _hover_tween: Tween
+var _hovered: bool = false
+var _rest_scale: Vector2 = Vector2.ONE
+
+
+## The discard flight. Held so a re-bind can kill it.
+var _fly: Tween
 
 
 func _init() -> void:
@@ -64,6 +69,9 @@ func _init() -> void:
 	pivot_offset = CARD_SIZE * 0.5
 	mouse_entered.connect(_on_hover.bind(true))
 	mouse_exited.connect(_on_hover.bind(false))
+	focus_mode = Control.FOCUS_ALL
+	focus_entered.connect(_on_hover.bind(true))
+	focus_exited.connect(_on_hover.bind(false))
 	_build()
 
 
@@ -110,10 +118,10 @@ func _build() -> void:
 	# The cost sits in its own bubble: it is the number the player checks
 	# before anything else on the card.
 	_cost = UiTheme.number("", Palette.SOUL)
+	_cost.add_theme_font_size_override("font_size", 14)
 	_cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_cost.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_cost.custom_minimum_size = Vector2(15.0, 15.0)
-	_cost.add_theme_font_size_override("font_size", 15)
 	var bubble := PanelContainer.new()
 	bubble.add_theme_stylebox_override("panel", UiTheme.pip_box(Palette.STONE, Palette.SOUL))
 	bubble.add_child(_cost)
@@ -148,6 +156,7 @@ func _build() -> void:
 	# minimum, and an autowrapping Label with no width bound reports a
 	# minimum tall enough to blow the card out to three times its size.
 	_name = UiTheme.body("")
+	_name.add_theme_constant_override("line_spacing", int(LINE_SPACING))
 	_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_name.custom_minimum_size = Vector2(0.0, name_height())
 	_name.clip_text = true
@@ -157,6 +166,8 @@ func _build() -> void:
 	# height with no width bound reports something enormous, and in a
 	# PanelContainer that becomes the card's height.
 	_text = UiTheme.small("", Palette.BONE_DIM)
+	_text.add_theme_font_size_override("font_size", RULE_FONT_SIZE)
+	_text.add_theme_constant_override("line_spacing", int(LINE_SPACING))
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_text.custom_minimum_size = Vector2(0.0, text_height())
 	_text.clip_text = true
@@ -174,7 +185,7 @@ static func text_safe_step() -> float:
 
 
 static func text_height() -> float:
-	return _lines(UiTheme.FONT_SMALL, TEXT_LINES)
+	return _lines(RULE_FONT_SIZE, TEXT_LINES)
 
 
 static func name_height() -> float:
@@ -188,10 +199,21 @@ static func _lines(size: int, count: int) -> float:
 
 
 func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -> void:
+	record = card.clone()
 	hand_index = index
 	playable = is_playable
 	# The container owns layout; remember where it put us so hover can
 	# return the card to exactly that spot.
+	# The fly-out is a live tween on this very node, and the hand re-binds
+	# the same view to whichever card slid into the slot. Left running it
+	# drove the new card's alpha back to zero and left it invisible and
+	# clickable until the next action rebound it.
+	if _fly != null and _fly.is_valid():
+		_fly.kill()
+	if _hover_tween != null and _hover_tween.is_valid():
+		_hover_tween.kill()
+	_hovered = false
+	_rest_scale = Vector2.ONE
 	rotation = 0.0
 	modulate.a = 1.0
 	scale = Vector2.ONE
@@ -202,7 +224,9 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 	_name.text = content.text(def.name_key)
 	if card.upgraded:
 		_name.text += content.text("ui.upgraded")
-	_text.text = content.text(def.text_key)
+	# The card's own numbers, and the upgraded ones when it is upgraded. See
+	# CardText: an upgraded card used to read out its base numbers.
+	_text.text = CardText.of(content, def, card.upgraded)
 	_type_icon.texture = Icons.card_type(def.type)
 	# Real card art would load here; until then the type icon stands in it,
 	# at the size and aspect the illustration will occupy.
@@ -212,7 +236,8 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 	# different framing -- a glyph sits centred inside the slot with air
 	# around it, an illustration fills the window it is looking through.
 	var illustrated := Icons.has_card_art(card.def_id)
-	_art_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED if illustrated 		else TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_art_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED if illustrated \
+		else TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	if illustrated:
 		_art_image.modulate = Color.WHITE if playable else Color(0.45, 0.45, 0.5, 1.0)
 	else:
@@ -266,19 +291,33 @@ func set_selected(on: bool) -> void:
 			Palette.STONE_RAISED if playable else Palette.VOID, edge))
 
 
+## How far above its resting place a hovered card actually reaches: the lift,
+## plus half the height the scale adds, because the card scales about its own
+## centre. A layout that leaves only `HOVER_LIFT` of room still gets a card
+## printed over whatever is above it.
+static func hover_headroom() -> float:
+	return HOVER_LIFT + CARD_SIZE.y * (HOVER_SCALE - 1.0) * 0.5
+
+
 ## A playable card lifts under the cursor; an unaffordable one does not,
 ## which is a second, wordless way of saying you cannot afford it.
 func _on_hover(entered: bool) -> void:
-	if not is_inside_tree():
+	if managed_hover or not is_inside_tree():
 		return
+	if entered and not _hovered and (_hover_tween == null or not _hover_tween.is_valid()):
+		_rest_scale = scale
+		_rest_y = position.y
+	_hovered = entered
 	var raise := entered and playable
 	if _hover_tween != null and _hover_tween.is_valid():
 		_hover_tween.kill()
 	_hover_tween = create_tween()
 	_hover_tween.set_parallel(true)
-	_hover_tween.tween_property(self, "position:y", _rest_y - (HOVER_LIFT if raise else 0.0), 0.10) 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_hover_tween.tween_property(self, "position:y", _rest_y - (HOVER_LIFT if raise else 0.0), (0.0 if Settings.motion_reduced else 0.10)) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	_hover_tween.tween_property(self, "scale",
-		Vector2.ONE * (HOVER_SCALE if raise else 1.0), 0.10) 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		_rest_scale * (hover_scale if raise else 1.0), (0.0 if Settings.motion_reduced else 0.10)) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	# A raised card must draw over its neighbours, or the fan clips it.
 	z_index = 10 if raise else 0
 
@@ -286,7 +325,7 @@ func _on_hover(entered: bool) -> void:
 ## Flies in from the draw pile to the place the fan gave it. Cosmetic: the
 ## card is already in hand as far as the engine is concerned.
 func fly_in(from: Vector2, delay: float) -> void:
-	if not is_inside_tree():
+	if not is_inside_tree() or Settings.motion_reduced:
 		return
 	var to := _rest_position
 	position = from
@@ -305,11 +344,13 @@ func fly_in(from: Vector2, delay: float) -> void:
 ## Arcs away toward the discard pile. Purely cosmetic: the engine has
 ## already resolved the card by the time this plays.
 func fly_out(to: Vector2) -> void:
-	if not is_inside_tree():
+	if not is_inside_tree() or Settings.motion_reduced:
 		return
-	var tween := create_tween()
+	_fly = create_tween()
+	var tween := _fly
 	tween.set_parallel(true)
-	tween.tween_property(self, "global_position", to, FLY_SECONDS) 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, "global_position", to, FLY_SECONDS) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 	tween.tween_property(self, "rotation", 0.5, FLY_SECONDS)
 	tween.tween_property(self, "modulate:a", 0.0, FLY_SECONDS)
 
@@ -329,7 +370,19 @@ func press() -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
+	if not is_visible_in_tree() or event.is_echo():
+		return
+	if event.is_action_pressed("ui_accept"):
+		press()
+		accept_event()
+	elif event is InputEventKey and event.pressed and event.physical_keycode == KEY_F:
+		inspected.emit(record)
+		accept_event()
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
 			press()
+			accept_event()
+		elif mb.pressed and mb.button_index == MOUSE_BUTTON_RIGHT:
+			inspected.emit(record)
+			accept_event()

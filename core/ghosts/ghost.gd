@@ -22,6 +22,22 @@ var epitaph_key: String = ""
 var measured: Dictionary = {"fights": 0, "wins": 0, "win_rate": 0.0, "avg_turns": 0.0}
 var strength: float = 0.0
 var fixed_strength: bool = false
+## How this ghost fights (spec 3.3, 5.2). Inherited from the hero, and the
+## reason "the ghost fights as you fought" is true of the simulated half of
+## its strength and not only the measured half.
+var rules: Array[String] = []
+## The Depth Seal the run that left this ghost was under (spec §6.2), or 0.
+## Kept on the ghost rather than applied once to its strength, so a tend
+## that re-prices it does not quietly wash the seal off.
+var seal: int = 0
+## What this ghost's deck was mostly made of, worked out once on demand.
+##
+## Not saved and not a constructor argument: a deck never changes after the
+## ghost is made, so the answer is stable, and the three constructors take a
+## Hero rather than the Content it would take to read a card's tags. Cached
+## because `Campaign.modifiers()` asks every ghost on the ladder for it, and
+## that is a path the Soul counter walks ten times a second.
+var _archetype: String = ""
 
 
 static func from_run(hero: Hero, outcome: Dictionary, p_measured: Dictionary, p_created_at: int) -> Ghost:
@@ -44,6 +60,7 @@ static func from_run(hero: Hero, outcome: Dictionary, p_measured: Dictionary, p_
 	g.restless = g.cause == "death"
 	g.created_at = p_created_at
 	g.measured = p_measured.duplicate()
+	g.rules = hero.rules.duplicate()
 	if g.cause == "watch":
 		g.epitaph_key = "epitaph.watch"
 	elif g.killer != "":
@@ -53,8 +70,64 @@ static func from_run(hero: Hero, outcome: Dictionary, p_measured: Dictionary, p_
 	return g
 
 
+## The guild's own dead (spec §3.5). A true ghost for every purpose that
+## matters -- the waypoint, echoes -- but NOT prepared: only manual play earns
+## the +25%, which is the whole reason to still play the game yourself.
+static func from_expedition(hero: Hero, p_floor: int, p_created_at: int) -> Ghost:
+	var g := Ghost.new()
+	g.name = hero.name
+	g.class_id = hero.class_id
+	for card in hero.deck:
+		g.deck.append(card.clone())
+	g.relics = hero.relics.duplicate()
+	for key in hero.stats:
+		g.stats[key] = int(hero.stats[key])
+	g.max_hp = hero.max_hp
+	g.floor = p_floor
+	g.kind = "expedition"
+	g.cause = "watch"
+	g.prepared = false
+	g.restless = false
+	g.created_at = p_created_at
+	g.rules = hero.rules.duplicate()
+	g.epitaph_key = "epitaph.expedition"
+	return g
+
+
+## Whether this ghost counts as one of the guild's own rather than as a copy.
+##
+## Spec §5.1: an expedition ghost "counts as true for the waypoint and as an
+## echo source". There were six scattered `kind == "true"` checks before this
+## existed, and adding a second true-ish kind to all six independently is how a
+## ghost ends up real on one screen and a copy on the next.
+## The card tag this ghost's deck carries most of (spec §5.6). Empty for a
+## ghost with no deck, which then joins no haunting.
+func archetype(content: Content) -> String:
+	if _archetype != "":
+		return _archetype
+	var counts: Dictionary = {}
+	for card in deck:
+		var def_id := (card as CardInstance).def_id
+		if not content.cards.has(def_id):
+			continue
+		for tag in (content.cards[def_id] as CardDef).tags:
+			counts[tag] = int(counts.get(tag, 0)) + 1
+	var names: Array = counts.keys()
+	names.sort()
+	var most := 0
+	for tag in names:
+		if int(counts[tag]) > most:
+			most = int(counts[tag])
+			_archetype = String(tag)
+	return _archetype
+
+
+func is_true() -> bool:
+	return kind == "true" or kind == "expedition"
+
+
 static func founder(content: Content, p_created_at: int) -> Ghost:
-	var klass: ClassDef = content.classes["sexton"]
+	var klass: ClassDef = content.classes[Classes.starting(content)]
 	var g := Ghost.new()
 	g.name = content.text("ghost.founder.name")
 	g.class_id = klass.id
@@ -118,6 +191,7 @@ func to_dict() -> Dictionary:
 		"stats": stats.duplicate(), "max_hp": max_hp, "floor": floor, "kind": kind, "source_id": source_id,
 		"cause": cause, "killer": killer, "prepared": prepared, "restless": restless, "created_at": created_at,
 		"epitaph_key": epitaph_key, "measured": measured.duplicate(), "strength": strength, "fixed_strength": fixed_strength,
+		"rules": rules.duplicate(), "seal": seal,
 	}
 
 
@@ -136,6 +210,7 @@ static func from_dict(d: Dictionary) -> Ghost:
 	g.max_hp = int(d.get("max_hp", 1))
 	g.floor = int(d.get("floor", 1))
 	g.kind = String(d.get("kind", "true"))
+	g.seal = int(d.get("seal", 0))
 	g.source_id = int(d.get("source_id", 0))
 	g.cause = String(d.get("cause", "watch"))
 	g.killer = String(d.get("killer", ""))
@@ -147,4 +222,6 @@ static func from_dict(d: Dictionary) -> Ghost:
 	g.measured = {"fights": int(m.get("fights", 0)), "wins": int(m.get("wins", 0)), "win_rate": float(m.get("win_rate", 0.0)), "avg_turns": float(m.get("avg_turns", 0.0))}
 	g.strength = float(d.get("strength", 0.0))
 	g.fixed_strength = bool(d.get("fixed_strength", false))
+	for raw in d.get("rules", []):
+		g.rules.append(String(raw))
 	return g

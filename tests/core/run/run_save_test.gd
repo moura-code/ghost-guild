@@ -16,11 +16,12 @@ func test_round_trip_between_nodes() -> void:
 	run.stat_bonus["wit"] = 1
 	var back := _round_trip(run)
 	assert_int(back.run_seed).is_equal(5)
-	assert_str(back.biome_id).is_equal("catacombs")
+	assert_str(back.biome().id).is_equal("catacombs")
 	assert_int(back.entry_floor).is_equal(2)
 	assert_int(back.floor).is_equal(2)
 	assert_str(back.phase).is_equal("node")
-	assert_int(back.node_index).is_equal(1)
+	assert_bool(back.is_resolved(0)).is_true()
+	assert_int(back.next_unresolved()).is_equal(1)
 	assert_array(back.nodes).is_equal(run.nodes)
 	assert_int(back.fight_counter).is_equal(1)
 	assert_int(back.coin).is_equal(run.coin)
@@ -52,24 +53,19 @@ func test_resumed_run_replays_the_same_fight() -> void:
 	assert_str(run.fight.enemies[0].next_move).is_equal(back.fight.enemies[0].next_move)
 
 
-func test_saving_during_a_fight_resumes_at_the_node_start() -> void:
+func test_saving_during_a_fight_preserves_the_turn_and_rng() -> void:
 	var run := TestFixtures.new_run(1, 4)
 	TestFixtures.set_nodes(run, [{"kind": "fight", "enemies": ["bone_rat"]}])
 	RunEngine.apply(run, {"kind": "enter"})
-	var first_hand: Array = []
-	for card in run.fight.hand:
-		first_hand.append(card.def_id)
 	RunEngine.apply(run, {"kind": "end_turn"})
-	var d := run.to_dict()
-	assert_str(d["phase"]).is_equal("node")
-	assert_int(d["fight_counter"]).is_equal(0)
-	var back := RunState.from_dict(TestFixtures.content(), JSON.parse_string(JSON.stringify(d)))
-	assert_int(back.hero.hp).is_equal(70)
-	RunEngine.apply(back, {"kind": "enter"})
-	var hand: Array = []
-	for card in back.fight.hand:
-		hand.append(card.def_id)
-	assert_array(hand).is_equal(first_hand)
+	var before := run.fight.to_dict()
+	var back := _round_trip(run)
+	assert_str(back.phase).is_equal("fight")
+	assert_int(back.fight_counter).is_equal(run.fight_counter)
+	assert_dict(back.fight.to_dict()).is_equal(before)
+	RunEngine.apply(run, {"kind": "end_turn"})
+	RunEngine.apply(back, {"kind": "end_turn"})
+	assert_dict(back.fight.to_dict()).is_equal(run.fight.to_dict())
 
 
 func test_pending_offers_and_shop_survive() -> void:

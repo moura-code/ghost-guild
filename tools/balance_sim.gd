@@ -16,8 +16,8 @@ func _init() -> void:
 	var args := OS.get_cmdline_user_args()
 	var sim := BalanceSim.new()
 	sim.content = content
-	sim.runs = int(args[0]) if args.size() > 0 else 4
-	sim.sim_fights = int(args[1]) if args.size() > 1 else 12
+	sim.runs = int(args[0]) if args.size() > 0 else sim.runs
+	sim.sim_fights = int(args[1]) if args.size() > 1 else sim.sim_fights
 	var rep := sim.report()
 	var keys: Array = rep["floors"].keys()
 	keys.sort()

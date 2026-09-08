@@ -18,6 +18,11 @@ black, which then multiplies to black under any tint). No other changes.
 
 - `assets/icons/enemies/crypt_spider.svg` — *spider-alt*
 - `assets/icons/status/burn.svg` — *flame*
+- `assets/icons/enemies/flesh_weaver.svg` — *spider-face*
+
+### cathelineau
+
+- `assets/icons/card_art/witchs_mark.svg` — *witch-face*
 
 ### delapouite
 
@@ -27,6 +32,8 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/card_art/dig_in.svg` — *dig-hole*
 - `assets/icons/upgrade/ghost_spawn.svg` — *dig-hole* (the same glyph, reused:
   Deeper Burrows digs more of the floor out, which is the same idea)
+- `assets/icons/upgrade/expedition.svg` — *hiking*
+- `assets/icons/upgrade/expedition_slots.svg` — *three-friends*
 - `assets/icons/card_art/grave_coin.svg` — *two-coins*
 - `assets/icons/card_art/grave_moss.svg` — *grass*
 - `assets/icons/card_art/lantern_oil.svg` — *oil-can*
@@ -55,6 +62,18 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/ui/ladder.svg` — *ladder*
 - `assets/icons/ui/soul.svg` — *soul*
 - `assets/icons/vitals/discard.svg` — *card-burn*
+- `assets/icons/enemies/the_bloom.svg` — *carnivorous-plant*
+- `assets/icons/card_art/mycelium.svg` — *plant-roots*
+- `assets/icons/card_art/deep_roots.svg` — *tree-roots*
+- `assets/icons/card_art/harvest.svg` — *sickle*
+- `assets/icons/card_art/the_deep_breath.svg` — *lungs*
+- `assets/icons/card_art/miasma.svg` — *fog*
+- `assets/icons/enemies/clay_sentinel.svg` — *rock-golem*
+- `assets/icons/enemies/kiln_warden.svg` — *golem-head*
+- `assets/icons/enemies/the_bellows.svg` — *bellows*
+- `assets/icons/enemies/furnace_drone.svg` — *furnace*
+- `assets/icons/card_art/slake.svg` — *healing*
+- `assets/icons/card_art/pry_bar.svg` — *war-pick*
 
 ### faithtoken
 
@@ -63,6 +82,8 @@ black, which then multiplies to black under any tint). No other changes.
 ### lorc
 
 - `assets/icons/card/attack.svg` — *sword-hilt*
+- `assets/icons/upgrade/auto_draft.svg` — *scroll-unfurled*
+- `assets/icons/upgrade/expedition_speed.svg` — *walking-boot*
 - `assets/icons/card/power.svg` — *flat-star*
 - `assets/icons/card_art/ashes.svg` — *burning-embers*
 - `assets/icons/card_art/bone_shard.svg` — *bone-knife*
@@ -106,6 +127,45 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/ui/seance.svg` — *candle-skull*
 - `assets/icons/vitals/energy.svg` — *lightning-arc*
 - `assets/icons/vitals/turn.svg` — *sands-of-time*
+- `assets/icons/enemies/spore_hound.svg` — *hound*
+- `assets/icons/enemies/rot_grub.svg` — *maggot*
+- `assets/icons/enemies/bloom_wretch.svg` — *spiral-bloom*
+- `assets/icons/enemies/mycelial_husk.svg` — *fleshy-mass*
+- `assets/icons/enemies/cap_thrower.svg` — *spotted-mushroom*
+- `assets/icons/enemies/thorn_polyp.svg` — *thorny-vine*
+- `assets/icons/enemies/deep_lurker.svg` — *curled-tentacle*
+- `assets/icons/enemies/sporemother.svg` — *mushroom-gills*
+- `assets/icons/card_art/cutting_fungus.svg` — *dripping-blade*
+- `assets/icons/card_art/gut_hook.svg` — *meat-hook*
+- `assets/icons/card_art/rupture.svg` — *burst-blob*
+- `assets/icons/card_art/chitin_plate.svg` — *beetle-shell*
+- `assets/icons/card_art/rotbloom.svg` — *spoted-flower*
+- `assets/icons/card_art/wither.svg` — *chemical-drop*
+- `assets/icons/card_art/flinch.svg` — *hood*
+- `assets/icons/card_art/ill_wish.svg` — *dead-eye*
+- `assets/icons/card_art/creeping_rot.svg` — *virus*
+- `assets/icons/card_art/sap_will.svg` — *magic-swirl*
+- `assets/icons/card_art/bitter_draught.svg` — *bottle-vapors*
+- `assets/icons/card_art/evil_eye.svg` — *bleeding-eye*
+- `assets/icons/card_art/bloodletting.svg` — *triple-needle*
+- `assets/icons/card_art/cold_comfort.svg` — *glass-heart*
+- `assets/icons/card_art/the_long_illness.svg` — *skull-in-jar*
+- `assets/icons/card_art/unmaking.svg` — *shadow-follower*
+- `assets/icons/relics/hexers_thimble.svg` — *sewing-needle*
+- `assets/icons/enemies/cinder_hound.svg` — *burning-tree*
+- `assets/icons/enemies/slag_crawler.svg` — *stone-sphere*
+- `assets/icons/enemies/ember_wisp.svg` — *burning-embers*
+- `assets/icons/enemies/glass_shrike.svg` — *shattered-glass*
+- `assets/icons/enemies/molten_husk.svg` — *flame-tunnel*
+- `assets/icons/enemies/the_first_flame.svg` — *fire-silhouette*
+- `assets/icons/card_art/hammer_blow.svg` — *hammer-drop*
+- `assets/icons/card_art/firebrand.svg` — *flaming-arrow*
+- `assets/icons/card_art/quench.svg` — *fire-shield*
+- `assets/icons/card_art/bellows_breath.svg` — *heat-haze*
+- `assets/icons/card_art/anvil_stance.svg` — *anvil*
+- `assets/icons/card_art/white_heat.svg` — *fire-ring*
+- `assets/icons/card_art/smiths_eye.svg` — *burning-eye*
+- `assets/icons/card_art/sunder.svg` — *crossed-slashes*
 
 ### lucasms
 
@@ -120,17 +180,23 @@ black, which then multiplies to black under any tint). No other changes.
 - `assets/icons/ui/guild.svg` — *tombstone*
 - `assets/icons/vitals/block.svg` — *shield*
 - `assets/icons/vitals/hp.svg` — *health-normal*
+- `assets/icons/card_art/spore_cloud.svg` — *poison-cloud*
 
 ### skoll
 
 - `assets/icons/intent/summon.svg` — *raise-skeleton*
+- `assets/icons/card_art/hex_bolt.svg` — *hexes*
+
+### willdabeast
+
+- `assets/icons/card_art/black_ledger.svg` — *black-book*
 
 ## Fonts — SIL Open Font License 1.1
 
-- **Cinzel** by Natanael Gama — display serif, used for titles.
-  Licence in `assets/fonts/OFL-Cinzel.txt`.
-- **Inter** by Rasmus Andersson — humanist sans, used for body text and numbers.
-  Licence in `assets/fonts/OFL-Inter.txt`.
+- **Cinzel** by Natanael Gama — display serif, used for titles, epitaphs and
+  the names of the dead. Licence in `assets/fonts/OFL-Cinzel.txt`.
+- **Inter** by Rasmus Andersson — humanist sans, used for body text, numbers
+  and every button. Licence in `assets/fonts/OFL-Inter.txt`.
 
 Both are unmodified. The OFL permits bundling in a commercial game; it does
 not permit selling the fonts on their own.
@@ -174,3 +240,70 @@ photograph sits against a sprite.
 The generator is deterministic from a fixed seed, so re-running it produces
 byte-identical files and a regenerated sound never silently becomes a
 different one.
+
+## PBR materials — ambientCG, CC0 1.0
+
+<https://ambientcg.com> · <https://creativecommons.org/publicdomain/zero/1.0/>
+
+CC0 is a public-domain dedication: no attribution is legally owed for these.
+They are listed anyway, because knowing where a texture came from is how the
+next one gets picked to match it, and because §7 of the 3D pivot spec makes
+provenance part of the pipeline rather than an afterthought.
+
+Downloaded at 1K-JPG and reduced to the five maps Godot uses — colour, OpenGL
+normal, roughness, ambient occlusion, displacement. The DirectX normal, the
+`.usdc`, `.blend`, `.mtlx` and the vendor `.tres` were discarded.
+
+- `assets/materials/bricks100/` — *Bricks100*, wall masonry
+- `assets/materials/pavingstones119/` — *PavingStones119*, Catacombs floor
+- `assets/materials/rock051/` — *Rock051*, Catacombs ceiling; also the creature
+  surface, projected triplanar (see `EnemySkin`)
+- `assets/materials/planks037a/` — *Planks037A*, wood for doors and props
+- `assets/materials/rock023/` — *Rock023*, Fungal Deep walls
+- `assets/materials/ground068/` — *Ground068*, Fungal Deep floor
+- `assets/materials/rock030/` — *Rock030*, Fungal Deep ceiling
+- `assets/materials/bricks056/` — *Bricks056*, Kiln walls (fired brick)
+- `assets/materials/rock020/` — *Rock020*, Kiln floor
+- `assets/materials/rock035/` — *Rock035*, Kiln ceiling
+
+Only PavingStones119 publishes a real-world size (115 cm); the others report
+zero, so their tiling is an art call rather than a measurement. That is
+worth remembering, because one texel density across the kit is the single
+discipline that stops mixed CC0 sources reading as an asset flip, and for all
+but one of these it has to be judged by eye. `Kit.TEXEL` is the number; a test
+walks every biome's three surfaces and checks it.
+
+## 3D props — Poly Haven, CC0 1.0
+
+Eight models under `assets/props/`, glTF at 1K textures, downloaded from
+<https://polyhaven.com> on 2026-08-29. Poly Haven publishes everything under
+CC0 1.0 Universal: no attribution is required, and this section exists because
+knowing where an asset came from is worth more than the licence demands.
+
+`gothic_statue`, `marble_bust_01`, `wooden_barrels_01`, `wooden_crate_01`,
+`ceramic_vase_01`, `antique_ceramic_vase_01`, `boulder_01`, `wooden_bucket_01`.
+
+They arrive at true real-world scale — the statue is 1.74 m, an urn 0.4 m — so
+none of them were resized to fit the kit. That is the "one physical scale"
+rule in the spec doing its job rather than a lucky coincidence.
+
+
+## Procedural creatures and spirits — original project geometry
+
+`game/fight/bone_mesh.gd`, `creature_rig.gd` and `creature_details.gd` build
+skulls, articulated limbs, spider anatomy, segmented grubs, armor, weapons,
+fungal growths and furnace details directly in Godot. `game/world/ghost_figure.gd`
+builds the pleated shrouds and spectral faces. No external character model
+or animation files are used for these figures. Their surface detail reuses
+the ambientCG Rock051 maps credited above; equipment colors and ghost
+materials are authored in code.
+
+
+## Hybrid hero previews and guild stations — original project geometry
+
+`game/art/hero_figure.gd` builds class clothing, tools and faces with the
+existing procedural mesh helpers. The anvil, ledger, séance candles and Hall
+monument in `GuildRoom` are also authored in code. Preview lighting and the
+floor schematic add no third-party assets. Existing font, icon, texture and
+audio credits above remain applicable. No new generated bitmap assets were
+added for this integration.

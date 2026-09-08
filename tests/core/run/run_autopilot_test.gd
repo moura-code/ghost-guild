@@ -52,14 +52,50 @@ func test_runs_are_deterministic_for_a_seed() -> void:
 	assert_int(a.hero.deck.size()).is_equal(b.hero.deck.size())
 
 
-func test_locked_watch_with_no_resolve_still_ends_at_the_last_floor() -> void:
-	var run := TestFixtures.new_run(1, 2, false)
-	run.hero.resolve = 0
+func test_an_unkillable_hero_stops_where_it_is_told_to() -> void:
+	# There is no last floor any more (§2: the descent is infinite), so a hero
+	# who cannot die never finishes a run on their own. `max_floor` is how a
+	# simulation bounds that.
+	#
+	# Unkillable AND strong enough to finish the fights: a hero who cannot die
+	# but also cannot kill loses to the turn cap, which would test the cap.
+	var run := TestFixtures.new_run(1, 2, true)
 	run.hero.hp = 100000
 	run.hero.max_hp = 100000
+	run.hero.stats["might"] = 60
+	run.hero.stats["wit"] = 60
 	var ap := _autopilot()
 	ap.push_threshold = 0.0
 	ap.survival_samples = 1
+	ap.max_floor = 12
 	var outcome := ap.play_run(run)
 	assert_str(outcome["kind"]).is_equal("watch")
-	assert_int(outcome["floor"]).is_equal(10)
+	assert_int(outcome["floor"]).override_failure_message(
+		"the autopilot did not stop where it was told to").is_equal(ap.max_floor)
+
+
+func test_the_cap_never_takes_away_the_last_way_out() -> void:
+	# A hero with no Resolve who has not unlocked the watch can only push. An
+	# autopilot that refused to push at the cap would deadlock rather than
+	# terminate, so the cap steers the choice and never removes the option.
+	var run := TestFixtures.new_run(1, 2, false)
+	run.hero.resolve = 0
+	TestFixtures.set_nodes(run, [])
+	RunEngine.apply(run, {"kind": "enter"})
+	if run.phase != "exit":
+		return
+	var ap := _autopilot()
+	ap.survival_samples = 1
+	ap.max_floor = 1
+	assert_str(String(ap.choose(run).get("kind", ""))).override_failure_message(
+		"the autopilot had no move at all").is_equal("push")
+
+
+func test_the_descent_has_no_bottom() -> void:
+	# Clearing the deepest authored floor used to end the run. It offers the
+	# next tier now, which is what a prestige is for.
+	var run := TestFixtures.new_run(1, 3, true)
+	run.floor = Biomes.depth(run.content)
+	assert_bool(RunEngine.can_push(run)).is_true()
+	run.floor = Biomes.depth(run.content) * 4
+	assert_bool(RunEngine.can_push(run)).is_true()

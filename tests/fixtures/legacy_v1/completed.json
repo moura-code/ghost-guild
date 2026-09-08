@@ -1,0 +1,281 @@
+{
+	"biome_id": "catacombs",
+	"campaign_seed": 73019,
+	"created_at": 1000,
+	"hero": {
+		"camp": 0,
+		"class_id": "sexton",
+		"deck": [
+			{
+				"def_id": "strike",
+				"uid": 1,
+				"upgraded": false
+			},
+			{
+				"def_id": "strike",
+				"uid": 2,
+				"upgraded": false
+			},
+			{
+				"def_id": "strike",
+				"uid": 3,
+				"upgraded": false
+			},
+			{
+				"def_id": "strike",
+				"uid": 4,
+				"upgraded": false
+			},
+			{
+				"def_id": "strike",
+				"uid": 5,
+				"upgraded": false
+			},
+			{
+				"def_id": "brace",
+				"uid": 6,
+				"upgraded": false
+			},
+			{
+				"def_id": "brace",
+				"uid": 7,
+				"upgraded": false
+			},
+			{
+				"def_id": "brace",
+				"uid": 8,
+				"upgraded": false
+			},
+			{
+				"def_id": "brace",
+				"uid": 9,
+				"upgraded": false
+			},
+			{
+				"def_id": "last_rites",
+				"uid": 10,
+				"upgraded": false
+			}
+		],
+		"hp": 73,
+		"id": 2,
+		"max_hp": 73,
+		"max_resolve": 1,
+		"name": "Corvin",
+		"next_uid": 11,
+		"picks_taken": {},
+		"relics": [
+			"sextons_lantern"
+		],
+		"resolve": 1,
+		"runs": 0,
+		"stats": {
+			"focus": 0,
+			"might": 0,
+			"vigor": 1,
+			"wit": 0
+		}
+	},
+	"hero_counter": 2,
+	"ladder": {
+		"ghosts": [
+			{
+				"cause": "founder",
+				"class_id": "sexton",
+				"created_at": 1000,
+				"deck": [
+					{
+						"def_id": "strike",
+						"uid": 1,
+						"upgraded": false
+					},
+					{
+						"def_id": "strike",
+						"uid": 2,
+						"upgraded": false
+					},
+					{
+						"def_id": "strike",
+						"uid": 3,
+						"upgraded": false
+					},
+					{
+						"def_id": "strike",
+						"uid": 4,
+						"upgraded": false
+					},
+					{
+						"def_id": "strike",
+						"uid": 5,
+						"upgraded": false
+					},
+					{
+						"def_id": "brace",
+						"uid": 6,
+						"upgraded": false
+					},
+					{
+						"def_id": "brace",
+						"uid": 7,
+						"upgraded": false
+					},
+					{
+						"def_id": "brace",
+						"uid": 8,
+						"upgraded": false
+					},
+					{
+						"def_id": "brace",
+						"uid": 9,
+						"upgraded": false
+					},
+					{
+						"def_id": "last_rites",
+						"uid": 10,
+						"upgraded": false
+					}
+				],
+				"epitaph_key": "epitaph.founder",
+				"fixed_strength": true,
+				"floor": 1,
+				"id": 1,
+				"killer": "",
+				"kind": "true",
+				"max_hp": 70,
+				"measured": {
+					"avg_turns": 0.0,
+					"fights": 0,
+					"win_rate": 0.0,
+					"wins": 0
+				},
+				"name": "Ilse",
+				"prepared": false,
+				"relics": [
+					"sextons_lantern"
+				],
+				"restless": false,
+				"source_id": 0,
+				"stats": {
+					"focus": 0,
+					"might": 0,
+					"vigor": 0,
+					"wit": 0
+				},
+				"strength": 40.0
+			},
+			{
+				"cause": "watch",
+				"class_id": "sexton",
+				"created_at": 1000,
+				"deck": [
+					{
+						"def_id": "strike",
+						"uid": 1,
+						"upgraded": false
+					},
+					{
+						"def_id": "strike",
+						"uid": 2,
+						"upgraded": false
+					},
+					{
+						"def_id": "strike",
+						"uid": 3,
+						"upgraded": false
+					},
+					{
+						"def_id": "strike",
+						"uid": 4,
+						"upgraded": false
+					},
+					{
+						"def_id": "strike",
+						"uid": 5,
+						"upgraded": false
+					},
+					{
+						"def_id": "brace",
+						"uid": 6,
+						"upgraded": false
+					},
+					{
+						"def_id": "brace",
+						"uid": 7,
+						"upgraded": false
+					},
+					{
+						"def_id": "brace",
+						"uid": 8,
+						"upgraded": false
+					},
+					{
+						"def_id": "brace",
+						"uid": 9,
+						"upgraded": false
+					},
+					{
+						"def_id": "last_rites",
+						"uid": 10,
+						"upgraded": false
+					},
+					{
+						"def_id": "bone_wall",
+						"uid": 11,
+						"upgraded": false
+					},
+					{
+						"def_id": "bone_wall",
+						"uid": 12,
+						"upgraded": false
+					}
+				],
+				"epitaph_key": "epitaph.watch",
+				"fixed_strength": false,
+				"floor": 3,
+				"id": 2,
+				"killer": "",
+				"kind": "true",
+				"max_hp": 73,
+				"measured": {
+					"avg_turns": 2.0,
+					"fights": 1,
+					"win_rate": 1.0,
+					"wins": 1
+				},
+				"name": "Edda",
+				"prepared": true,
+				"relics": [
+					"sextons_lantern"
+				],
+				"restless": false,
+				"source_id": 0,
+				"stats": {
+					"focus": 0,
+					"might": 0,
+					"vigor": 1,
+					"wit": 0
+				},
+				"strength": 90.0
+			}
+		],
+		"next_ghost_id": 3
+	},
+	"last_tick": 1000,
+	"onboarding": {
+		"first_death_seen": false,
+		"founder_seeded": true,
+		"free_tend_available": true,
+		"watch_unlocked": true
+	},
+	"rate_per_hour": 238.33205188,
+	"record_depth": 3,
+	"run": {},
+	"run_counter": 1,
+	"soul": 1218.297,
+	"upgrades": {
+		"levels": {
+			"vigor": 1
+		}
+	},
+	"version": 1
+}

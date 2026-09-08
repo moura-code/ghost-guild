@@ -6,6 +6,18 @@ extends RefCounted
 var fight_ap: Autopilot = Autopilot.new()
 var push_threshold: float = 0.5
 var survival_samples: int = 8
+## The deepest floor this autopilot will *choose* to descend to, or 0 for no
+## limit. Nothing in the shipped game sets it.
+##
+## The descent is infinite (§2), so the only thing that ends a run is the hero
+## dying -- right for a game, wrong for a simulation that wants a bounded
+## sample from an artificially durable hero.
+##
+## Advisory, not a stop: a hero with no Resolve who has not unlocked the watch
+## has *no* legal exit action other than pushing, and an autopilot that refused
+## to push there would deadlock rather than terminate. So the cap steers the
+## choice and never removes the last option.
+var max_floor: int = 0
 
 
 func play_run(run: RunState) -> Dictionary:
@@ -52,7 +64,9 @@ func choose(run: RunState) -> Dictionary:
 			return {"kind": "leave"}
 		"exit":
 			var summary := RunEngine.exit_summary(run, survival_samples)
-			if bool(summary["can_push"]) and float(summary["survival"]) >= push_threshold:
+			var capped := max_floor > 0 and run.floor >= max_floor
+			var keen := float(summary["survival"]) >= push_threshold
+			if not capped and bool(summary["can_push"]) and keen:
 				return {"kind": "push"}
 			if bool(summary["can_watch"]):
 				return {"kind": "watch"}

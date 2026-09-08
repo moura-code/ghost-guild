@@ -16,14 +16,28 @@ const WIDE_COLUMN := 450.0
 
 ## Wraps `content` in a centred column of at most `width` and returns the
 ## wrapper, which is what gets added to the screen.
-static func centred(content: Control, width: float = COLUMN_WIDTH) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.custom_minimum_size = Vector2(width, content.custom_minimum_size.y)
-	content.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	row.add_child(content)
-	return row
+static func centred(content: Control, width: float = COLUMN_WIDTH) -> Container:
+	var column := Column.new()
+	column.preferred_width = width
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.add_child(content)
+	return column
+
+
+## Preferred width must not enter the parent's minimum-size calculation:
+## that circular constraint prevents a scroll host from ever shrinking.
+class Column extends Container:
+	var preferred_width: float = COLUMN_WIDTH
+
+	func _get_minimum_size() -> Vector2:
+		return (get_child(0) as Control).get_combined_minimum_size() if get_child_count() > 0 else Vector2.ZERO
+
+	func _notification(what: int) -> void:
+		if what != NOTIFICATION_SORT_CHILDREN or get_child_count() == 0:
+			return
+		var width := minf(preferred_width, size.x)
+		fit_child_in_rect(get_child(0), Rect2(Vector2((size.x - width) * 0.5, 0), Vector2(width, size.y)))
 
 
 ## A label that centres itself, for the headings and captions these screens
@@ -56,6 +70,17 @@ static func section(text: String, accent: Color = Palette.SOUL) -> Control:
 		UiTheme.fill_box(Color(accent.r, accent.g, accent.b, 0.20)))
 	row.add_child(rule)
 	return row
+
+
+## Retitles a heading built by `section`, for a section whose caption is not
+## known until something is bound to it. The heading is three nodes and which
+## one is the label is `section`'s business, not its caller's.
+static func section_text(heading: Control, text: String) -> void:
+	for child in heading.get_children():
+		var label := child as Label
+		if label != null:
+			label.text = text
+			return
 
 
 ## Wraps content in a bounded, translucent slab.

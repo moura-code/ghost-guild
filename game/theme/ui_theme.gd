@@ -8,8 +8,19 @@ extends RefCounted
 ## A missing font file is survivable: the loaders return null and Godot
 ## falls back to its own face rather than the game refusing to start.
 
-## Readable at the minimum window size; Cinzel gives the crypt its carved
-## title lettering while Inter keeps rules and counters clear.
+## Cinzel for titles, Inter for everything a player reads as information --
+## spec §9, and the two faces `assets/fonts/` has been carrying all along.
+##
+## These constants pointed at Silkscreen and PixelifySans, the pixel faces from
+## the 2D direction that the pivot spec says "dies with `PaletteLayer`", while
+## the docstrings above them said Inter and Cinzel. Nobody noticed for two
+## milestones because the theme was never applied to the running HUD at all:
+## every label rendered in Godot's default Open Sans, which is a humanist sans
+## and therefore looked approximately right.
+##
+## A pixel face over photoreal PBR stone would have been a worse clash than the
+## accident. The 3D direction wants type that belongs to the same century as
+## the rendering.
 const BODY_FONT_PATH := "res://assets/fonts/Inter.ttf"
 const TITLE_FONT_PATH := "res://assets/fonts/Cinzel.ttf"
 
@@ -17,12 +28,15 @@ static var _body_font: Font = null
 static var _title_font: Font = null
 static var _fonts_tried: bool = false
 
-const FONT_SMALL := 8
-const FONT_BODY := 10
-const FONT_NUMBER := 20
-const FONT_TITLE := 24
+## Sizes are in the HUD's 640x360 authoring space, which `HudRoot` scales up to
+## the window -- so body text is 16 real pixels on a 720p screen.
+const FONT_SMALL := 7
+const FONT_BODY := 8
+const FONT_NUMBER := 16
+const FONT_TITLE := 16
 
-## Inter for everything a player reads as information.
+
+## Inter. Everything a player reads as information.
 static func body_font() -> Font:
 	_load_fonts()
 	return _body_font
@@ -79,25 +93,31 @@ static func build() -> Theme:
 	var off := StoneBox.make(Palette.STONE, 3.0, false)
 	off.lit = Palette.STONE_EDGE
 	t.set_stylebox("disabled", "Button", off)
+	# Focus. Godot draws a bright blue rounded rectangle when a control has
+	# keyboard focus and the theme does not say otherwise -- and something
+	# always has focus, so every panel in the game was wearing one stock blue
+	# box the moment the theme was applied. The focus ring is the carved slab
+	# with its edge lit warm, which is the same language as hover without the
+	# fill: focus says "this is where the keyboard is", not "you are pointing
+	# at this".
+	var focus := StoneBox.make(Palette.STONE_HIGH, 2.0)
+	focus.lit = Palette.EDGE_LIGHT
+	focus.accent = Color(Palette.EDGE_LIGHT.r, Palette.EDGE_LIGHT.g, Palette.EDGE_LIGHT.b, 0.35)
+	t.set_stylebox("focus", "Button", focus)
 	t.set_color("font_color", "Button", Palette.BONE)
 	t.set_color("font_hover_color", "Button", Palette.LANTERN)
 	t.set_color("font_disabled_color", "Button", Palette.BONE_FAINT)
 	t.set_font_size("font_size", "Button", FONT_BODY)
 	t.set_constant("outline_size", "Label", 0)
 	t.set_constant("line_spacing", "Label", 1)
-	var focus := StyleBoxFlat.new()
-	focus.bg_color = Color.TRANSPARENT
-	focus.border_color = Palette.LANTERN
-	focus.set_border_width_all(1)
-	focus.set_corner_radius_all(0)
-	t.set_stylebox("focus", "Button", focus)
+	# Godot's popup tooltip is outside the scaled HUD transform.
+	t.set_font_size("font_size", "TooltipLabel", FONT_BODY * 2)
+	t.set_color("font_color", "TooltipLabel", Palette.BONE)
+	t.set_stylebox("panel", "TooltipPanel", panel_box(Palette.STONE))
 	t.set_stylebox("normal", "LineEdit", panel_box(Palette.VOID))
-	t.set_stylebox("focus", "LineEdit", focus)
+	t.set_stylebox("focus", "LineEdit", lit_box(Palette.VOID, Palette.EDGE_LIGHT))
 	t.set_color("font_color", "LineEdit", Palette.BONE)
 	t.set_color("caret_color", "LineEdit", Palette.LANTERN)
-	t.set_color("font_color", "TooltipLabel", Palette.BONE)
-	t.set_font_size("font_size", "TooltipLabel", FONT_BODY)
-	t.set_stylebox("panel", "TooltipPanel", panel_box(Palette.STONE))
 
 	# Scrollbars. A stock scrollbar is the loudest remaining "this is an app"
 	# signal on any screen long enough to need one: a carved groove with a
@@ -317,6 +337,9 @@ static func body(text: String, colour: Color = Palette.BONE) -> Label:
 	l.text = text
 	l.add_theme_font_size_override("font_size", FONT_BODY)
 	l.add_theme_color_override("font_color", colour)
+	var face := body_font()
+	if face != null:
+		l.add_theme_font_override("font", face)
 	return l
 
 
@@ -325,6 +348,9 @@ static func small(text: String, colour: Color = Palette.BONE_DIM) -> Label:
 	l.text = text
 	l.add_theme_font_size_override("font_size", FONT_SMALL)
 	l.add_theme_color_override("font_color", colour)
+	var face := body_font()
+	if face != null:
+		l.add_theme_font_override("font", face)
 	return l
 
 
@@ -333,4 +359,7 @@ static func number(text: String, colour: Color = Palette.SOUL) -> Label:
 	l.text = text
 	l.add_theme_font_size_override("font_size", FONT_NUMBER)
 	l.add_theme_color_override("font_color", colour)
+	var face := body_font()
+	if face != null:
+		l.add_theme_font_override("font", face)
 	return l

@@ -81,23 +81,40 @@ func test_hovering_a_button_lights_it_like_a_lantern() -> void:
 	assert_float(Palette.luma(hover.fill)).is_greater(Palette.luma(normal.fill))
 
 
-## The whole frame is snapped to the palette (pixel-art pivot, 2026-08-24).
-## Asserted as "the shader is loaded and running", not by reading pixels:
-## if it fails to load the game still plays, and that failure has to surface
-## somewhere other than by eye.
-func test_the_palette_snap_covers_the_whole_frame() -> void:
-	var layer: PaletteLayer = auto_free(PaletteLayer.new())
-	add_child(layer)
+## The palette snap died with the pixel-art direction (3D pivot, 2026-08-29):
+## a whole-frame colour quantise over a PBR crypt is the one thing that would
+## guarantee it looks cheap. What replaced it is Grade -- one Environment, one
+## ACES tonemap, over everything -- and grade_test covers that.
+
+
+func test_nothing_falls_back_to_a_stock_godot_box() -> void:
+	# Godot draws its own bright blue rounded rectangle for any state the
+	# theme leaves undefined, and something always has focus -- so a missing
+	# focus stylebox put one stock blue box on every panel in the game.
+	var t := UiTheme.build()
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+		var box := t.get_stylebox(state, "Button")
+		assert_object(box).override_failure_message(
+			"Button has no '%s' stylebox" % state).is_not_null()
+		assert_bool(box is StoneBox).override_failure_message(
+			"Button's '%s' is a %s, not carved stone" % [state, box.get_class()]) \
+			.is_true()
+
+
+func test_the_theme_is_the_one_the_hud_actually_wears() -> void:
+	# It was built and never applied for two milestones: the HUD drew in
+	# Godot's default face and every carved box in the theme was dead code.
+	var hud: HudRoot = auto_free(HudRoot.new())
+	add_child(hud)
 	await await_idle_frame()
-	assert_bool(layer.is_active()) \
-		.override_failure_message("the palette snap shader did not load") \
-		.is_true()
-	assert_int(layer._rect.mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
-
-
-func test_the_snap_sits_above_everything_the_game_draws() -> void:
-	# Godot draws CanvasLayers in order. A snap below anything snaps a frame
-	# that is missing whatever drew after it.
-	var layer: PaletteLayer = auto_free(PaletteLayer.new())
-	assert_int(layer.layer).is_greater(0)
-	assert_int(layer.layer).is_equal(PaletteLayer.LAYER)
+	assert_object(hud.ui.theme).override_failure_message(
+		"the HUD has no theme").is_not_null()
+	var label := UiTheme.body("x")
+	hud.ui.add_child(label)
+	await await_idle_frame()
+	assert_object(label.get_theme_font("font")).is_same(UiTheme.body_font())
+	var button := Button.new()
+	hud.ui.add_child(button)
+	await await_idle_frame()
+	assert_int(button.get_theme_font_size("font_size")).override_failure_message(
+		"buttons are still at Godot's default size").is_equal(UiTheme.FONT_BODY)

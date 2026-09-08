@@ -47,12 +47,19 @@ static func card_offer(content: Content, pools: Array, rng: Rng, balance: Dictio
 	return offer
 
 
+## A relic drop. Class relics are excluded: a Sexton offered the Hexer's
+## Thimble is being handed another class's identity as loot, and the class
+## that owns it already starts with it. Derived from the classes rather than
+## flagged in the relic data, so the two cannot drift apart.
 static func relic_offer(content: Content, owned: Array, rng: Rng) -> String:
+	var class_relics: Array = []
+	for class_id in content.classes:
+		class_relics.append((content.classes[class_id] as ClassDef).relic)
 	var keys: Array = content.relics.keys()
 	keys.sort()
 	var candidates: Array = []
 	for id in keys:
-		if not owned.has(id):
+		if not owned.has(id) and not class_relics.has(id):
 			candidates.append(id)
 	if candidates.is_empty():
 		return ""

@@ -79,12 +79,25 @@ func floor_strength(floor: int, balance: Dictionary, modifiers: Dictionary) -> f
 	return total
 
 
+## The floor's own spawn multiplier: the global upgrade, times whatever a
+## haunting on this floor is worth (spec §5.6).
+##
+## Hauntings arrive through `modifiers` rather than being computed here, and
+## that is the point: a haunting is decided by what the ghosts' *decks* were
+## made of, and this class holds ghosts and knows nothing about cards.
+## `Campaign.modifiers()` has the content and does the reading.
+static func spawn_mult(floor: int, modifiers: Dictionary) -> float:
+	var haunted: Dictionary = modifiers.get("haunting", {})
+	return float(modifiers.get("global_spawn", 1.0)) * float(haunted.get(floor, 1.0))
+
+
 func floor_output(floor: int, balance: Dictionary, modifiers: Dictionary) -> float:
-	return output_for(floor_strength(floor, balance, modifiers), floor, balance, float(modifiers.get("global_spawn", 1.0)))
+	return output_for(floor_strength(floor, balance, modifiers), floor, balance,
+		spawn_mult(floor, modifiers))
 
 
 func saturation(floor: int, balance: Dictionary, modifiers: Dictionary) -> float:
-	var rate := spawn_rate(floor, balance) * float(modifiers.get("global_spawn", 1.0))
+	var rate := spawn_rate(floor, balance) * spawn_mult(floor, modifiers)
 	return floor_strength(floor, balance, modifiers) / rate if rate > 0.0 else 0.0
 
 
@@ -96,15 +109,16 @@ func total_output(balance: Dictionary, modifiers: Dictionary) -> float:
 
 
 func marginal_yield(floor: int, candidate_strength: float, balance: Dictionary, modifiers: Dictionary) -> float:
-	var spawn_mult := float(modifiers.get("global_spawn", 1.0))
+	var mult := spawn_mult(floor, modifiers)
 	var current := floor_strength(floor, balance, modifiers)
-	return output_for(current + candidate_strength, floor, balance, spawn_mult) - output_for(current, floor, balance, spawn_mult)
+	return output_for(current + candidate_strength, floor, balance, mult) \
+		- output_for(current, floor, balance, mult)
 
 
 func waypoint() -> int:
 	var deepest := 0
 	for g in ghosts:
-		if g.kind == "true" and g.floor > deepest:
+		if g.is_true() and g.floor > deepest:
 			deepest = g.floor
 	return deepest
 

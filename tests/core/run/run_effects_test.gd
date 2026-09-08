@@ -6,7 +6,6 @@ func _run() -> RunState:
 	run.content = TestFixtures.content()
 	run.hero = Hero.create(TestFixtures.content(), "sexton", "Tester")
 	run.run_seed = 5
-	run.biome_id = "catacombs"
 	return run
 
 

@@ -19,7 +19,8 @@ const ADD_CARD_WHERE: Array[String] = ["hand", "discard", "draw"]
 const RUN_OPS: Array[String] = ["heal", "heal_percent", "damage", "coin", "soul", "add_card", "relic", "stat", "max_hp"]
 const STATS: Array[String] = ["might", "wit", "vigor", "focus"]
 const UPGRADE_GROUPS: Array[String] = ["hero", "ghosts", "descent", "seance"]
-const UPGRADE_EFFECTS: Array[String] = ["stat", "max_resolve", "mend_discount", "global_strength", "global_spawn", "offline_cap", "restless_penalty"]
+const UPGRADE_EFFECTS: Array[String] = ["stat", "max_resolve", "mend_discount", "global_strength", "global_spawn", "offline_cap", "restless_penalty",
+	"auto_draft", "expedition_unlock", "expedition_slots", "expedition_speed"]
 
 
 static func validate(c: Content) -> Array[String]:
@@ -35,11 +36,112 @@ static func validate(c: Content) -> Array[String]:
 		_class(c, c.classes[id], errors)
 	for id in c.biomes:
 		_biome(c, c.biomes[id], errors)
+	for id in c.mutations:
+		_mutation(c, c.mutations[id], errors)
+	for id in c.traits:
+		_trait(c, c.traits[id], errors)
+	for id in c.chapters:
+		_chapter(c, c.chapters[id], errors)
 	for id in c.events:
 		_event(c, c.events[id], errors)
 	for id in c.upgrades:
 		_upgrade(c, c.upgrades[id], errors)
+	for id in c.rules:
+		_rule(c, c.rules[id], errors)
 	return errors
+
+
+## A priority rule may bend any of these. `death` and `lethal` are deliberately
+## absent: they are what stop the autopilot walking into a loss, and the
+## 30-turn fight cap (spec 10) rests on them. A rule that could soften them
+## would be a rule that can hang a simulation.
+static func _rule(c: Content, r: RuleDef, errors: Array[String]) -> void:
+	var where := "rule '%s'" % r.id
+	if r.id == "":
+		errors.append("rule with no id")
+	_key(c, where, r.name_key, errors)
+	_key(c, where, r.text_key, errors)
+	if r.weights.is_empty():
+		errors.append("%s: adjusts nothing" % where)
+	for path in r.weights:
+		var name := String(path)
+		if not PriorityRules.ADJUSTABLE.has(name):
+			errors.append("%s: unknown or protected weight '%s'" % [where, name])
+		var entry: Variant = r.weights[path]
+		if not (entry is Dictionary):
+			errors.append("%s: weight '%s' is not an adjustment" % [where, name])
+			continue
+		var adjust: Dictionary = entry
+		if adjust.is_empty():
+			errors.append("%s: weight '%s' adjusts nothing" % [where, name])
+		for op in adjust:
+			if not ["mul", "add"].has(String(op)):
+				errors.append("%s: weight '%s' has unknown op '%s'" % [where, name, op])
+			elif not (adjust[op] is float or adjust[op] is int):
+				# Not `_amount_ok`: that one also accepts the string "x" for
+				# X-cost card effects, and an X-cost multiplier is nothing.
+				errors.append("%s: weight '%s' has a non-numeric %s" % [where, name, op])
+
+
+## A tier's rule (spec §2). Its ops are a closed vocabulary on purpose: a
+## vocabulary that grows per mutation is a vocabulary nobody can balance.
+static func _mutation(c: Content, m: MutationDef, errors: Array[String]) -> void:
+	var where := "mutation " + m.id
+	_key(c, where, m.name_key, errors)
+	_key(c, where, m.text_key, errors)
+	if not MutationDef.OPS.has(m.op):
+		errors.append("%s: unknown op '%s'" % [where, m.op])
+		return
+	match m.op:
+		"enemy_status", "hero_status":
+			if not STATUSES.has(m.status):
+				errors.append("%s: unknown status '%s'" % [where, m.status])
+			if m.stacks <= 0:
+				errors.append("%s: needs a positive stacks" % where)
+		"hero_draw", "hero_energy":
+			if is_zero_approx(m.amount):
+				errors.append("%s: changes nothing" % where)
+		"enemy_hp":
+			if m.amount <= 0.0:
+				errors.append("%s: needs a positive multiplier" % where)
+
+
+## A Legend's trait (spec §6.1). Keyed to a card tag, so the failure this
+## catches is a trait authored for a tag no card carries -- which is a whole
+## prestige cycle that buys the player nothing and never errors.
+static func _trait(c: Content, t: TraitDef, errors: Array[String]) -> void:
+	var where := "trait " + t.id
+	_key(c, where, t.name_key, errors)
+	_key(c, where, t.text_key, errors)
+	if not TraitDef.OPS.has(t.op):
+		errors.append("%s: unknown op '%s'" % [where, t.op])
+	if t.amount <= 0:
+		errors.append("%s: adds nothing" % where)
+	if t.tag == "":
+		errors.append("%s: is not keyed to a tag" % where)
+		return
+	for other_id in c.traits:
+		var other: TraitDef = c.traits[other_id]
+		if other.id != t.id and other.tag == t.tag:
+			errors.append("%s: '%s' already has a trait (%s)" % [where, t.tag, other.id])
+
+
+## A Chapter of the Chronicle (spec §6.2). Ink arrives one per rite, so a
+## Chapter that costs more than a handful of levels' worth is one the player
+## will never finish -- the validator holds the whole book to a budget a real
+## campaign can reach.
+static func _chapter(c: Content, ch: ChapterDef, errors: Array[String]) -> void:
+	var where := "chapter " + ch.id
+	_key(c, where, ch.name_key, errors)
+	_key(c, where, ch.text_key, errors)
+	if not ChapterDef.OPS.has(ch.op):
+		errors.append("%s: unknown op '%s'" % [where, ch.op])
+	if ch.cost <= 0:
+		errors.append("%s: is free" % where)
+	if ch.max_level <= 0:
+		errors.append("%s: cannot be written" % where)
+	if is_zero_approx(ch.amount):
+		errors.append("%s: changes nothing" % where)
 
 
 static func _key(c: Content, where: String, key: String, errors: Array[String]) -> void:

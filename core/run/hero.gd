@@ -23,6 +23,11 @@ var camp: int = 0
 var picks_taken: Dictionary = {}
 var next_uid: int = 1
 var runs: int = 0
+## Ordered, at most `PriorityRules.MAX`. How this hero's autopilot fights --
+## for auto-draft and Expeditions now, and for the ghost they leave behind
+## (spec 3.3). Empty until the player picks, which is what keeps every
+## existing measurement of the game unchanged.
+var rules: Array[String] = []
 
 
 static func generate_name(rng: Rng) -> String:
@@ -115,6 +120,7 @@ func to_dict() -> Dictionary:
 		"picks_taken": picks_taken.duplicate(),
 		"next_uid": next_uid,
 		"runs": runs,
+		"rules": rules.duplicate(),
 	}
 
 
@@ -140,4 +146,6 @@ static func from_dict(d: Dictionary) -> Hero:
 		h.picks_taken[int(key)] = true
 	h.next_uid = int(d.get("next_uid", 1))
 	h.runs = int(d.get("runs", 0))
+	for raw in d.get("rules", []):
+		h.rules.append(String(raw))
 	return h

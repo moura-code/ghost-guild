@@ -1,0 +1,127 @@
+[
+  {
+    "id": "the_kiln",
+    "name": "biome.the_kiln.name",
+    "floors": [
+      21,
+      30
+    ],
+    "card_pool": "the_kiln",
+    "encounters": [
+      {
+        "floors": [
+          21,
+          23
+        ],
+        "groups": [
+          [
+            "cinder_hound"
+          ],
+          [
+            "ember_wisp",
+            "ember_wisp"
+          ],
+          [
+            "slag_crawler"
+          ],
+          [
+            "glass_shrike"
+          ],
+          [
+            "cinder_hound",
+            "ember_wisp"
+          ]
+        ]
+      },
+      {
+        "floors": [
+          24,
+          26
+        ],
+        "groups": [
+          [
+            "furnace_drone"
+          ],
+          [
+            "clay_sentinel"
+          ],
+          [
+            "slag_crawler",
+            "glass_shrike"
+          ],
+          [
+            "cinder_hound",
+            "cinder_hound"
+          ],
+          [
+            "molten_husk"
+          ]
+        ]
+      },
+      {
+        "floors": [
+          27,
+          30
+        ],
+        "groups": [
+          [
+            "kiln_warden"
+          ],
+          [
+            "molten_husk",
+            "ember_wisp"
+          ],
+          [
+            "clay_sentinel",
+            "furnace_drone"
+          ],
+          [
+            "glass_shrike",
+            "glass_shrike",
+            "cinder_hound"
+          ]
+        ]
+      }
+    ],
+    "elites": [
+      [
+        "the_bellows"
+      ]
+    ],
+    "boss": [
+      "the_first_flame"
+    ],
+    "node_patterns": [
+      [
+        "fight",
+        "shop",
+        "fight"
+      ],
+      [
+        "fight",
+        "fight",
+        "rest"
+      ],
+      [
+        "fight",
+        "fight",
+        "elite"
+      ],
+      [
+        "fight",
+        "event",
+        "rest"
+      ],
+      [
+        "fight",
+        "elite",
+        "shop"
+      ],
+      [
+        "event",
+        "fight",
+        "shop"
+      ]
+    ]
+  }
+]

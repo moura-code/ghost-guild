@@ -1,0 +1,389 @@
+[
+  {
+    "id": "spore_hound",
+    "name": "enemy.spore_hound.name",
+    "biome": "fungal_deep",
+    "tags": [
+      "flesh"
+    ],
+    "hp": 19,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "lunge",
+        "intent": "attack",
+        "damage": 7,
+        "hits": 1
+      },
+      {
+        "id": "spore_bite",
+        "intent": "attack",
+        "damage": 4,
+        "hits": 1,
+        "status": "poison",
+        "stacks": 2
+      }
+    ],
+    "pattern": {
+      "kind": "weighted",
+      "moves": [
+        {
+          "move": "lunge",
+          "weight": 2
+        },
+        {
+          "move": "spore_bite",
+          "weight": 3
+        }
+      ],
+      "no_repeat": false
+    }
+  },
+  {
+    "id": "rot_grub",
+    "name": "enemy.rot_grub.name",
+    "biome": "fungal_deep",
+    "tags": [
+      "flesh"
+    ],
+    "hp": 16,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "burrow",
+        "intent": "attack",
+        "damage": 3,
+        "hits": 1,
+        "status": "bleed",
+        "stacks": 2
+      },
+      {
+        "id": "thrash",
+        "intent": "attack",
+        "damage": 6,
+        "hits": 1
+      }
+    ],
+    "pattern": {
+      "kind": "weighted",
+      "moves": [
+        {
+          "move": "burrow",
+          "weight": 3
+        },
+        {
+          "move": "thrash",
+          "weight": 2
+        }
+      ],
+      "no_repeat": false
+    }
+  },
+  {
+    "id": "bloom_wretch",
+    "name": "enemy.bloom_wretch.name",
+    "biome": "fungal_deep",
+    "tags": [
+      "flesh",
+      "fungal"
+    ],
+    "hp": 23,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "flail",
+        "intent": "attack",
+        "damage": 5,
+        "hits": 2
+      },
+      {
+        "id": "open_wound",
+        "intent": "debuff",
+        "status": "vulnerable",
+        "stacks": 2
+      }
+    ],
+    "pattern": {
+      "kind": "weighted",
+      "moves": [
+        {
+          "move": "flail",
+          "weight": 2
+        },
+        {
+          "move": "open_wound",
+          "weight": 1
+        }
+      ],
+      "no_repeat": true
+    }
+  },
+  {
+    "id": "mycelial_husk",
+    "name": "enemy.mycelial_husk.name",
+    "biome": "fungal_deep",
+    "tags": [
+      "undead",
+      "fungal"
+    ],
+    "hp": 27,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "crust",
+        "intent": "block",
+        "block": 8
+      },
+      {
+        "id": "collapse",
+        "intent": "attack",
+        "damage": 10,
+        "hits": 1
+      }
+    ],
+    "pattern": {
+      "kind": "sequence",
+      "moves": [
+        "crust",
+        "collapse"
+      ]
+    }
+  },
+  {
+    "id": "cap_thrower",
+    "name": "enemy.cap_thrower.name",
+    "biome": "fungal_deep",
+    "tags": [
+      "fungal"
+    ],
+    "hp": 18,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "spore_shot",
+        "intent": "attack",
+        "damage": 5,
+        "hits": 1,
+        "status": "poison",
+        "stacks": 3
+      },
+      {
+        "id": "choking_cloud",
+        "intent": "debuff",
+        "status": "weak",
+        "stacks": 2
+      }
+    ],
+    "pattern": {
+      "kind": "weighted",
+      "moves": [
+        {
+          "move": "spore_shot",
+          "weight": 3
+        },
+        {
+          "move": "choking_cloud",
+          "weight": 1
+        }
+      ],
+      "no_repeat": false
+    }
+  },
+  {
+    "id": "thorn_polyp",
+    "name": "enemy.thorn_polyp.name",
+    "biome": "fungal_deep",
+    "tags": [
+      "fungal"
+    ],
+    "hp": 21,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "bristle",
+        "intent": "buff",
+        "status": "thorns",
+        "stacks": 3
+      },
+      {
+        "id": "lash",
+        "intent": "attack",
+        "damage": 4,
+        "hits": 2
+      }
+    ],
+    "pattern": {
+      "kind": "sequence",
+      "moves": [
+        "bristle",
+        "lash",
+        "lash"
+      ]
+    }
+  },
+  {
+    "id": "flesh_weaver",
+    "name": "enemy.flesh_weaver.name",
+    "biome": "fungal_deep",
+    "tags": [
+      "flesh"
+    ],
+    "hp": 31,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "unmake",
+        "intent": "debuff",
+        "status": "vulnerable",
+        "stacks": 2
+      },
+      {
+        "id": "suture",
+        "intent": "attack",
+        "damage": 11,
+        "hits": 1
+      }
+    ],
+    "pattern": {
+      "kind": "sequence",
+      "moves": [
+        "unmake",
+        "suture",
+        "suture"
+      ]
+    }
+  },
+  {
+    "id": "deep_lurker",
+    "name": "enemy.deep_lurker.name",
+    "biome": "fungal_deep",
+    "tags": [
+      "flesh",
+      "fungal"
+    ],
+    "hp": 35,
+    "kind": "regular",
+    "moves": [
+      {
+        "id": "hunker",
+        "intent": "block",
+        "block": 10
+      },
+      {
+        "id": "maul",
+        "intent": "attack",
+        "damage": 8,
+        "hits": 2,
+        "status": "bleed",
+        "stacks": 2
+      }
+    ],
+    "pattern": {
+      "kind": "weighted",
+      "moves": [
+        {
+          "move": "hunker",
+          "weight": 1
+        },
+        {
+          "move": "maul",
+          "weight": 2
+        }
+      ],
+      "no_repeat": true
+    }
+  },
+  {
+    "id": "sporemother",
+    "name": "enemy.sporemother.name",
+    "biome": "fungal_deep",
+    "tags": [
+      "fungal"
+    ],
+    "hp": 68,
+    "kind": "elite",
+    "moves": [
+      {
+        "id": "seed",
+        "intent": "summon",
+        "enemy": "spore_hound"
+      },
+      {
+        "id": "crush",
+        "intent": "attack",
+        "damage": 13,
+        "hits": 1
+      },
+      {
+        "id": "bloom",
+        "intent": "debuff",
+        "status": "vulnerable",
+        "stacks": 3
+      }
+    ],
+    "pattern": {
+      "kind": "sequence",
+      "moves": [
+        "seed",
+        "crush",
+        "bloom",
+        "crush"
+      ]
+    }
+  },
+  {
+    "id": "the_bloom",
+    "name": "enemy.the_bloom.name",
+    "biome": "fungal_deep",
+    "tags": [
+      "flesh",
+      "fungal"
+    ],
+    "hp": 128,
+    "kind": "boss",
+    "moves": [
+      {
+        "id": "rend",
+        "intent": "attack",
+        "damage": 9,
+        "hits": 2,
+        "status": "bleed",
+        "stacks": 3
+      },
+      {
+        "id": "bud",
+        "intent": "summon",
+        "enemy": "bloom_wretch"
+      },
+      {
+        "id": "rot",
+        "intent": "debuff",
+        "status": "vulnerable",
+        "stacks": 3
+      },
+      {
+        "id": "engulf",
+        "intent": "attack",
+        "damage": 20,
+        "hits": 1
+      },
+      {
+        "id": "harden",
+        "intent": "buff",
+        "status": "thorns",
+        "stacks": 4
+      }
+    ],
+    "pattern": {
+      "kind": "sequence",
+      "moves": [
+        "rend",
+        "bud",
+        "rot",
+        "engulf",
+        "rend",
+        "harden"
+      ]
+    }
+  }
+]

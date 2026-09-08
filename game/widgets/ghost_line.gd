@@ -4,23 +4,33 @@ extends PanelContainer
 ## how hard it works, and the things that can be done to it. A widget -- it
 ## renders the state it is given and reports clicks through signals.
 
+signal inspected(ghost_id: int)
+
 signal echo_pressed(ghost_id: int, floor: int)
 signal call_pressed(ghost_id: int, floor: int)
 signal tend_pressed(ghost_id: int)
+signal upgrade_pressed(ghost_id: int)
+signal relic_pressed(ghost_id: int)
 
 var ghost_id: int = 0
 
 var _mark: GhostMark
-var _name: Label
+var _name: Button
 var _detail: Label
+var _doctrine: Label
 var _floor: SpinBox
 var _floor_seeded: bool = false
 var _echo: Button
 var _call: Button
 var _tend: Button
+## The two tends that make a ghost permanently worth more (spec §5.5).
+var _upgrade: Button
+var _relic: Button
 var _echo_cost: float = 0.0
 var _call_cost: float = 0.0
 var _tend_cost: float = 0.0
+var _upgrade_cost: float = 0.0
+var _relic_cost: float = 0.0
 
 
 func _init() -> void:
@@ -28,8 +38,9 @@ func _init() -> void:
 
 
 func _build() -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 6)
+	row.add_theme_constant_override("v_separation", 4)
 	add_child(row)
 
 	# Large enough to read as somebody. This screen is a list of the people
@@ -42,10 +53,20 @@ func _build() -> void:
 	var text_box := VBoxContainer.new()
 	text_box.add_theme_constant_override("separation", 1)
 	text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_name = UiTheme.body("")
+	_name = Button.new()
+	_name.pressed.connect(func() -> void: inspected.emit(ghost_id))
 	_detail = UiTheme.small("", Palette.BONE_DIM)
 	text_box.add_child(_name)
 	text_box.add_child(_detail)
+
+	# What this one was told to do. The picker's whole promise is that the
+	# choice matters, and a choice the player can never see again is one they
+	# will not make carefully a second time.
+	_doctrine = UiTheme.small("", Palette.GHOST)
+	_doctrine.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text_box.custom_minimum_size.x = 120
+	_doctrine.visible = false
+	text_box.add_child(_doctrine)
 	row.add_child(text_box)
 
 	_floor = SpinBox.new()
@@ -59,6 +80,14 @@ func _build() -> void:
 	_tend.pressed.connect(func() -> void: tend_pressed.emit(ghost_id))
 	row.add_child(_tend)
 
+	_upgrade = Button.new()
+	_upgrade.pressed.connect(func() -> void: upgrade_pressed.emit(ghost_id))
+	row.add_child(_upgrade)
+
+	_relic = Button.new()
+	_relic.pressed.connect(func() -> void: relic_pressed.emit(ghost_id))
+	row.add_child(_relic)
+
 	_echo = Button.new()
 	_echo.pressed.connect(func() -> void: echo_pressed.emit(ghost_id, int(_floor.value)))
 	row.add_child(_echo)
@@ -66,6 +95,21 @@ func _build() -> void:
 	_call = Button.new()
 	_call.pressed.connect(func() -> void: call_pressed.emit(ghost_id, int(_floor.value)))
 	row.add_child(_call)
+
+
+## The rules this ghost fights by, as one line, or "" if it has none. Static
+## so the epitaph screen and anything else that shows a ghost can say the same
+## sentence the same way.
+static func doctrine_text(content: Content, ghost: Ghost) -> String:
+	var names: Array[String] = []
+	for id in ghost.rules:
+		if not content.rules.has(id):
+			continue
+		var rule: RuleDef = content.rules[id]
+		names.append(content.text(rule.name_key))
+	if names.is_empty():
+		return ""
+	return content.text("ui.ghost.doctrine").replace("{rules}", ", ".join(names))
 
 
 ## ctx = {waypoint: int, echo_cost: float, call_cost: float,
@@ -83,6 +127,10 @@ func bind(content: Content, ghost: Ghost, ctx: Dictionary) -> void:
 	if ghost.restless:
 		bits.append(content.text("ui.restless"))
 	_detail.text = " · ".join(bits)
+	_doctrine.text = doctrine_text(content, ghost)
+	# Hidden rather than blank when there is nothing to say: an empty line
+	# under every ghost turns a list of people into a list of gaps.
+	_doctrine.visible = _doctrine.text != ""
 
 	var waypoint := maxi(1, int(ctx["waypoint"]))
 	var soul := float(ctx["soul"])
@@ -92,7 +140,7 @@ func bind(content: Content, ghost: Ghost, ctx: Dictionary) -> void:
 		_floor.value = float(ghost.floor)
 		_floor_seeded = true
 
-	var is_true := ghost.kind == "true"
+	var is_true := ghost.is_true()
 	_echo.visible = is_true
 	_call.visible = not is_true
 	_tend.visible = is_true and ghost.restless
@@ -100,14 +148,29 @@ func bind(content: Content, ghost: Ghost, ctx: Dictionary) -> void:
 
 	if is_true:
 		_echo_cost = float(ctx["echo_cost"])
-		_echo.text = Num.short(_echo_cost)
+		# The verb, not just the price. A button whose entire label is `50`
+		# tells a new player nothing about what pressing it does.
+		_echo.text = "%s %s" % [content.text("ui.echo"), Num.short(_echo_cost)]
 	else:
 		_call_cost = float(ctx["call_cost"])
-		_call.text = Num.short(_call_cost)
+		_call.text = "%s %s" % [content.text("ui.call"), Num.short(_call_cost)]
 
 	if _tend.visible:
 		_tend_cost = float(ctx["tend_cost"])
-		_tend.text = content.text("ui.free") if _tend_cost <= 0.0 else Num.short(_tend_cost)
+		_tend.text = "%s %s" % [content.text("ui.tend"),
+			content.text("ui.free") if _tend_cost <= 0.0 else Num.short(_tend_cost)]
+
+	# Hidden rather than disabled when there is nothing left to sharpen or
+	# nothing in the compendium it does not already carry: a permanently dead
+	# button on every row teaches the player the row is mostly dead.
+	_upgrade.visible = is_true and bool(ctx.get("can_upgrade", false))
+	if _upgrade.visible:
+		_upgrade_cost = float(ctx["upgrade_cost"])
+		_upgrade.text = "%s %s" % [content.text("ui.tend.sharpen"), Num.short(_upgrade_cost)]
+	_relic.visible = is_true and bool(ctx.get("can_relic", false))
+	if _relic.visible:
+		_relic_cost = float(ctx["relic_cost"])
+		_relic.text = "%s %s" % [content.text("ui.tend.relic"), Num.short(_relic_cost)]
 
 	set_affordability(soul)
 

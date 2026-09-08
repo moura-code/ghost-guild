@@ -56,3 +56,12 @@ func test_duration_reads_as_hours_and_minutes() -> void:
 func test_the_tier_boundary_rounds_the_way_it_reads() -> void:
 	assert_str(Num.short(999.4)).is_equal("999.4")
 	assert_str(Num.short(1_000_000.0 - 1.0)).is_equal("1000K")
+
+
+func test_a_countdown_keeps_moving_where_a_duration_would_sit_still() -> void:
+	# `duration` reports a span and rounds to minutes; a countdown is watched.
+	assert_str(Num.duration(40)).is_equal("0m")
+	assert_str(Num.countdown(40)).is_equal("40s")
+	assert_str(Num.countdown(125)).is_equal("2m 5s")
+	assert_str(Num.countdown(3720)).is_equal("1h 2m")
+	assert_str(Num.countdown(-5)).is_equal("0s")

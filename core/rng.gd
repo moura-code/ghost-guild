@@ -71,3 +71,23 @@ func clone() -> Rng:
 		rng.state = src.state
 		c._streams[name] = rng
 	return c
+
+
+## RNG states are 64-bit integers; decimal strings survive JSON's float parser.
+func to_dict() -> Dictionary:
+	var streams: Dictionary = {}
+	for key in _streams:
+		var source: RandomNumberGenerator = _streams[key]
+		streams[key] = {"seed": str(source.seed), "state": str(source.state)}
+	return {"seed": str(seed_value), "streams": streams}
+
+
+static func from_dict(d: Dictionary) -> Rng:
+	var rng := Rng.new(int(d.get("seed", "0")))
+	for key in d.get("streams", {}):
+		var raw: Dictionary = d["streams"][key]
+		var stream := RandomNumberGenerator.new()
+		stream.seed = int(raw["seed"])
+		stream.state = int(raw["state"])
+		rng._streams[key] = stream
+	return rng

@@ -4,13 +4,22 @@ extends RefCounted
 ## return the events they produced. Pure with respect to the scene tree.
 
 
-static func start_fight(content: Content, hero: HeroSnapshot, enemy_ids: Array, floor: int, rng: Rng) -> FightState:
+## `mutation` is the tier's rule (spec §2), applied after the enemies exist and
+## before the first turn, so a status it grants is already in the intent the
+## player reads. Null on tier 1, which is every floor of the authored dungeon.
+static func start_fight(content: Content, hero: HeroSnapshot, enemy_ids: Array, floor: int,
+		rng: Rng, mutation: MutationDef = null, hero_trait: TraitDef = null,
+		seal: float = 1.0) -> FightState:
 	var s := FightState.new()
 	s.content = content
 	s.rng = rng
 	s.floor = floor
+	s.tier = Biomes.tier_of(content, floor)
+	s.hero_trait = hero_trait
+	s.seal = seal
 	s.hero_hp = hero.hp
 	s.hero_max_hp = hero.max_hp
+	s.blessing = hero.blessing
 	s.stats = hero.stats.duplicate()
 	s.relics = hero.relics.duplicate()
 	var focus := int(s.stats.get("focus", 0))
@@ -26,6 +35,7 @@ static func start_fight(content: Content, hero: HeroSnapshot, enemy_ids: Array, 
 	s.emit({"type": "fight_start", "floor": floor})
 	for enemy_id in enemy_ids:
 		EnemyAI.spawn(s, String(enemy_id))
+	Mutations.apply(s, mutation)
 	Relics.fire(s, "on_fight_start")
 	_begin_player_turn(s)
 	return s

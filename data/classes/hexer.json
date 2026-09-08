@@ -1,0 +1,28 @@
+[
+  {
+    "id": "hexer",
+    "name": "class.hexer.name",
+    "base_hp": 60,
+    "stats": {
+      "might": 0,
+      "wit": 0,
+      "vigor": 0,
+      "focus": 0
+    },
+    "starting_deck": [
+      "wither",
+      "wither",
+      "wither",
+      "wither",
+      "flinch",
+      "flinch",
+      "flinch",
+      "flinch",
+      "ill_wish",
+      "creeping_rot"
+    ],
+    "relic": "hexers_thimble",
+    "pool": "hexer",
+    "unlocked_by": "fungal_deep"
+  }
+]

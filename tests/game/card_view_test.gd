@@ -85,3 +85,23 @@ func test_the_art_slot_crops_rather_than_spilling_over_the_card() -> void:
 	assert_bool(view._art.clip_contents) \
 		.override_failure_message("a full-bleed illustration would paint over the card name") \
 		.is_true()
+
+
+func test_the_headroom_a_hover_needs_counts_the_scale_too() -> void:
+	# A card scales about its own centre as it lifts, so it reaches higher
+	# than HOVER_LIFT. A layout that budgeted only the lift printed the
+	# hovered reward card over the screen's title.
+	assert_float(CardView.hover_headroom()).is_greater(CardView.HOVER_LIFT)
+	assert_float(CardView.hover_headroom()).is_equal_approx(
+		CardView.HOVER_LIFT + CardView.CARD_SIZE.y * (CardView.HOVER_SCALE - 1.0) * 0.5, 0.001)
+
+
+func test_a_scaled_deck_card_returns_to_its_original_size_after_hover() -> void:
+	var view := _card("strike", TestFixtures.content())
+	view.scale = Vector2.ONE * 0.56
+	view.hover_scale = 1.5
+	view._on_hover(true)
+	await await_millis(150)
+	view._on_hover(false)
+	await await_millis(150)
+	assert_vector(view.scale).is_equal_approx(Vector2.ONE * 0.56, Vector2.ONE * 0.001)

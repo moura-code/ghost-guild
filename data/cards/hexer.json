@@ -1,0 +1,581 @@
+[
+  {
+    "id": "wither",
+    "name": "card.wither.name",
+    "text": "card.wither.text",
+    "pool": "hexer",
+    "type": "attack",
+    "cost": 1,
+    "rarity": "basic",
+    "tags": [
+      "poison"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "damage",
+        "amount": 4,
+        "scale": "might"
+      },
+      {
+        "op": "apply_status",
+        "status": "poison",
+        "stacks": 2
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "damage",
+          "amount": 6,
+          "scale": "might"
+        },
+        {
+          "op": "apply_status",
+          "status": "poison",
+          "stacks": 3
+        }
+      ]
+    },
+    "ai_value": 6
+  },
+  {
+    "id": "flinch",
+    "name": "card.flinch.name",
+    "text": "card.flinch.text",
+    "pool": "hexer",
+    "type": "skill",
+    "cost": 1,
+    "rarity": "basic",
+    "tags": [
+      "shield"
+    ],
+    "keywords": [],
+    "target": "self",
+    "effects": [
+      {
+        "op": "block",
+        "amount": 4,
+        "scale": "wit"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "block",
+          "amount": 7,
+          "scale": "wit"
+        }
+      ]
+    },
+    "ai_value": 4
+  },
+  {
+    "id": "ill_wish",
+    "name": "card.ill_wish.name",
+    "text": "card.ill_wish.text",
+    "pool": "hexer",
+    "type": "skill",
+    "cost": 1,
+    "rarity": "basic",
+    "tags": [
+      "weak"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "apply_status",
+        "status": "weak",
+        "stacks": 2
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "apply_status",
+          "status": "weak",
+          "stacks": 3
+        }
+      ]
+    },
+    "ai_value": 6
+  },
+  {
+    "id": "creeping_rot",
+    "name": "card.creeping_rot.name",
+    "text": "card.creeping_rot.text",
+    "pool": "hexer",
+    "type": "skill",
+    "cost": 1,
+    "rarity": "common",
+    "tags": [
+      "poison"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "apply_status",
+        "status": "poison",
+        "stacks": 4,
+        "scale": "wit"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "apply_status",
+          "status": "poison",
+          "stacks": 6,
+          "scale": "wit"
+        }
+      ]
+    },
+    "ai_value": 8
+  },
+  {
+    "id": "hex_bolt",
+    "name": "card.hex_bolt.name",
+    "text": "card.hex_bolt.text",
+    "pool": "hexer",
+    "type": "attack",
+    "cost": 1,
+    "rarity": "common",
+    "tags": [
+      "poison"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "damage",
+        "amount": 5,
+        "scale": "might"
+      },
+      {
+        "op": "apply_status",
+        "status": "weak",
+        "stacks": 1
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "damage",
+          "amount": 7,
+          "scale": "might"
+        },
+        {
+          "op": "apply_status",
+          "status": "weak",
+          "stacks": 2
+        }
+      ]
+    },
+    "ai_value": 8
+  },
+  {
+    "id": "sap_will",
+    "name": "card.sap_will.name",
+    "text": "card.sap_will.text",
+    "pool": "hexer",
+    "type": "skill",
+    "cost": 1,
+    "rarity": "common",
+    "tags": [
+      "weak"
+    ],
+    "keywords": [],
+    "target": "all_enemies",
+    "effects": [
+      {
+        "op": "apply_status",
+        "status": "weak",
+        "stacks": 2
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "apply_status",
+          "status": "weak",
+          "stacks": 3
+        }
+      ]
+    },
+    "ai_value": 7
+  },
+  {
+    "id": "bitter_draught",
+    "name": "card.bitter_draught.name",
+    "text": "card.bitter_draught.text",
+    "pool": "hexer",
+    "type": "skill",
+    "cost": 0,
+    "rarity": "common",
+    "tags": [
+      "shield"
+    ],
+    "keywords": [],
+    "target": "self",
+    "effects": [
+      {
+        "op": "block",
+        "amount": 3,
+        "scale": "wit"
+      },
+      {
+        "op": "draw",
+        "amount": 1
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "block",
+          "amount": 5,
+          "scale": "wit"
+        },
+        {
+          "op": "draw",
+          "amount": 1
+        }
+      ]
+    },
+    "ai_value": 4
+  },
+  {
+    "id": "evil_eye",
+    "name": "card.evil_eye.name",
+    "text": "card.evil_eye.text",
+    "pool": "hexer",
+    "type": "skill",
+    "cost": 1,
+    "rarity": "common",
+    "tags": [
+      "weak"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "apply_status",
+        "status": "vulnerable",
+        "stacks": 2
+      },
+      {
+        "op": "draw",
+        "amount": 1
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "apply_status",
+          "status": "vulnerable",
+          "stacks": 3
+        },
+        {
+          "op": "draw",
+          "amount": 1
+        }
+      ]
+    },
+    "ai_value": 6
+  },
+  {
+    "id": "bloodletting",
+    "name": "card.bloodletting.name",
+    "text": "card.bloodletting.text",
+    "pool": "hexer",
+    "type": "attack",
+    "cost": 1,
+    "rarity": "uncommon",
+    "tags": [
+      "poison"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "damage",
+        "amount": 3,
+        "hits": 2,
+        "scale": "might"
+      },
+      {
+        "op": "apply_status",
+        "status": "bleed",
+        "stacks": 2,
+        "target": "self"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "damage",
+          "amount": 5,
+          "hits": 2,
+          "scale": "might"
+        },
+        {
+          "op": "apply_status",
+          "status": "bleed",
+          "stacks": 2,
+          "target": "self"
+        }
+      ]
+    },
+    "ai_value": 9
+  },
+  {
+    "id": "miasma",
+    "name": "card.miasma.name",
+    "text": "card.miasma.text",
+    "pool": "hexer",
+    "type": "skill",
+    "cost": 2,
+    "rarity": "uncommon",
+    "tags": [
+      "poison"
+    ],
+    "keywords": [],
+    "target": "all_enemies",
+    "effects": [
+      {
+        "op": "apply_status",
+        "status": "poison",
+        "stacks": 4,
+        "scale": "wit"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "apply_status",
+          "status": "poison",
+          "stacks": 6,
+          "scale": "wit"
+        }
+      ]
+    },
+    "ai_value": 12
+  },
+  {
+    "id": "witchs_mark",
+    "name": "card.witchs_mark.name",
+    "text": "card.witchs_mark.text",
+    "pool": "hexer",
+    "type": "attack",
+    "cost": 2,
+    "rarity": "uncommon",
+    "tags": [
+      "poison"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "damage",
+        "amount": 8,
+        "scale": "might"
+      },
+      {
+        "op": "apply_status",
+        "status": "poison",
+        "stacks": 3,
+        "scale": "wit"
+      },
+      {
+        "op": "apply_status",
+        "status": "vulnerable",
+        "stacks": 2
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "damage",
+          "amount": 11,
+          "scale": "might"
+        },
+        {
+          "op": "apply_status",
+          "status": "poison",
+          "stacks": 5,
+          "scale": "wit"
+        },
+        {
+          "op": "apply_status",
+          "status": "vulnerable",
+          "stacks": 2
+        }
+      ]
+    },
+    "ai_value": 14
+  },
+  {
+    "id": "cold_comfort",
+    "name": "card.cold_comfort.name",
+    "text": "card.cold_comfort.text",
+    "pool": "hexer",
+    "type": "skill",
+    "cost": 1,
+    "rarity": "uncommon",
+    "tags": [
+      "shield"
+    ],
+    "keywords": [],
+    "target": "self",
+    "effects": [
+      {
+        "op": "block",
+        "amount": 6,
+        "scale": "wit"
+      },
+      {
+        "op": "apply_status",
+        "status": "regen",
+        "stacks": 2,
+        "target": "self"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "block",
+          "amount": 9,
+          "scale": "wit"
+        },
+        {
+          "op": "apply_status",
+          "status": "regen",
+          "stacks": 3,
+          "target": "self"
+        }
+      ]
+    },
+    "ai_value": 8
+  },
+  {
+    "id": "black_ledger",
+    "name": "card.black_ledger.name",
+    "text": "card.black_ledger.text",
+    "pool": "hexer",
+    "type": "skill",
+    "cost": 1,
+    "rarity": "uncommon",
+    "tags": [
+      "draw"
+    ],
+    "keywords": [
+      "exhaust"
+    ],
+    "target": "self",
+    "effects": [
+      {
+        "op": "draw",
+        "amount": 2
+      },
+      {
+        "op": "apply_status",
+        "status": "wit_buff",
+        "stacks": 1,
+        "target": "self"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "draw",
+          "amount": 2
+        },
+        {
+          "op": "apply_status",
+          "status": "wit_buff",
+          "stacks": 2,
+          "target": "self"
+        }
+      ]
+    },
+    "ai_value": 8
+  },
+  {
+    "id": "the_long_illness",
+    "name": "card.the_long_illness.name",
+    "text": "card.the_long_illness.text",
+    "pool": "hexer",
+    "type": "power",
+    "cost": 2,
+    "rarity": "rare",
+    "tags": [
+      "poison"
+    ],
+    "keywords": [],
+    "target": "self",
+    "effects": [
+      {
+        "op": "apply_status",
+        "status": "knell",
+        "stacks": 3,
+        "target": "self"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "apply_status",
+          "status": "knell",
+          "stacks": 4,
+          "target": "self"
+        }
+      ]
+    },
+    "ai_value": 12
+  },
+  {
+    "id": "unmaking",
+    "name": "card.unmaking.name",
+    "text": "card.unmaking.text",
+    "pool": "hexer",
+    "type": "attack",
+    "cost": 3,
+    "rarity": "rare",
+    "tags": [
+      "poison"
+    ],
+    "keywords": [],
+    "target": "enemy",
+    "effects": [
+      {
+        "op": "damage",
+        "amount": 14,
+        "scale": "might"
+      },
+      {
+        "op": "apply_status",
+        "status": "poison",
+        "stacks": 8,
+        "scale": "wit"
+      }
+    ],
+    "upgrade": {
+      "effects": [
+        {
+          "op": "damage",
+          "amount": 18,
+          "scale": "might"
+        },
+        {
+          "op": "apply_status",
+          "status": "poison",
+          "stacks": 11,
+          "scale": "wit"
+        }
+      ]
+    },
+    "ai_value": 20
+  }
+]

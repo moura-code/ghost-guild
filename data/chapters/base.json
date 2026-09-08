@@ -1,0 +1,38 @@
+[
+  {
+    "id": "deeper_roots",
+    "name": "chapter.deeper_roots.name",
+    "text": "chapter.deeper_roots.text",
+    "op": "founder_floor",
+    "cost": 2,
+    "max_level": 3,
+    "amount": 3.0
+  },
+  {
+    "id": "breeding_dark",
+    "name": "chapter.breeding_dark.name",
+    "text": "chapter.breeding_dark.text",
+    "op": "global_spawn",
+    "cost": 1,
+    "max_level": 4,
+    "amount": 0.1
+  },
+  {
+    "id": "old_blood",
+    "name": "chapter.old_blood.name",
+    "text": "chapter.old_blood.text",
+    "op": "soul_kept",
+    "cost": 2,
+    "max_level": 3,
+    "amount": 0.1
+  },
+  {
+    "id": "depth_seals",
+    "name": "chapter.depth_seals.name",
+    "text": "chapter.depth_seals.text",
+    "op": "seals",
+    "cost": 3,
+    "max_level": 3,
+    "amount": 1.0
+  }
+]

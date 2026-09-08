@@ -5,20 +5,27 @@ extends RefCounted
 ## During a fight node, actions are forwarded to CombatEngine.
 
 
-static func start_run(content: Content, hero: Hero, biome_id: String, entry_floor: int, run_seed: int, watch_unlocked: bool) -> RunState:
+static func start_run(content: Content, hero: Hero, entry_floor: int, run_seed: int,
+		watch_unlocked: bool, claimed_pools: Array = [], blessing: float = 1.0,
+		campaign_seed: int = 0, trait_tag: String = "", seal: int = 0) -> RunState:
 	var run := RunState.new()
 	run.content = content
 	run.hero = hero
 	run.run_seed = run_seed
-	run.biome_id = biome_id
+	for pool in claimed_pools:
+		run.claimed_pools.append(String(pool))
+	run.blessing = blessing
+	run.campaign_seed = campaign_seed
+	run.trait_tag = trait_tag
+	run.seal = seal
 	run.entry_floor = entry_floor
 	run.floor = entry_floor
 	run.watch_unlocked = watch_unlocked
 	hero.runs += 1
 	run.emit({"type": "run_start", "seed": run_seed, "entry_floor": entry_floor, "hero": hero.name})
-	run.descent_offers = DescentDraft.offers(content, hero, run.biome(), entry_floor, run_seed)
+	run.descent_offers = DescentDraft.offers(content, hero, pools(run), entry_floor, run_seed)
 	for offer in run.descent_offers:
-		run.emit({"type": "draft_offer", "floor": offer["floor"], "cards": offer["cards"]})
+		run.emit({"type": "draft_offer", "floor": offer["floor"], "cards": (offer["cards"] as Array).duplicate(true)})
 	if run.descent_offers.is_empty():
 		_enter_floor(run)
 	else:
@@ -35,7 +42,9 @@ static func legal_actions(run: RunState) -> Array:
 				out.append({"kind": "draft_pick", "floor": int(offer["floor"]), "card": card_id})
 			out.append({"kind": "draft_skip", "floor": int(offer["floor"])})
 		"node":
-			out.append({"kind": "enter"})
+			for i in run.nodes.size():
+				if not run.is_resolved(i):
+					out.append({"kind": "enter", "index": i})
 		"fight":
 			out = CombatEngine.legal_actions(run.fight)
 		"reward":
@@ -77,12 +86,30 @@ static func apply(run: RunState, action: Dictionary) -> Array:
 	var start := run.events.size()
 	var kind := String(action.get("kind", ""))
 	var combat_events: Array = []
+	# Giving up is legal from anywhere, including mid-fight. A run you cannot
+	# leave is a run that traps the player, and "quit the game and never come
+	# back" is the workaround they will use instead.
+	#
+	# It resolves as a retreat, which the economy already prices: the hero
+	# lives, you keep the Soul and coin banked so far, and nothing new is
+	# earned. That makes abandoning strictly worse than playing on unless you
+	# are about to die -- which is exactly what a retreat is for -- so it adds
+	# no new dominant strategy to balance.
+	#
+	# Deliberately NOT in legal_actions: the autopilot must never choose it, or
+	# the balance simulator would start abandoning runs and every §12 invariant
+	# would be measuring a different game.
+	if kind == "abandon":
+		_end_run(run, "retreat")
+		return run.events.slice(start)
 	match run.phase:
 		"descent":
 			_apply_descent(run, kind, action)
 		"node":
 			if kind == "enter":
-				_enter_node(run)
+				# No index means "the next one", which is what the autopilot, the
+				# demos and the balance simulator all send.
+				_enter_node(run, int(action.get("index", run.next_unresolved())))
 			else:
 				push_error("run: expected enter, got " + kind)
 		"fight":
@@ -98,7 +125,7 @@ static func apply(run: RunState, action: Dictionary) -> Array:
 		"shop":
 			_apply_shop(run, kind, action)
 		"exit":
-			_apply_exit(run, kind)
+			_apply_exit(run, kind, action)
 		_:
 			push_error("run: no handler for phase " + run.phase)
 	var out: Array = combat_events.duplicate()
@@ -154,11 +181,16 @@ static func _enter_floor(run: RunState) -> void:
 		if String(node["kind"]) == "event":
 			run.used_events.append(String(node["event"]))
 	run.node_index = 0
+	run.resolved = []
 	run.phase = "node"
 	run.emit({"type": "floor_enter", "floor": run.floor, "nodes": kinds})
 
 
-static func _enter_node(run: RunState) -> void:
+static func _enter_node(run: RunState, index: int) -> void:
+	if index < 0 or index >= run.nodes.size() or run.is_resolved(index):
+		push_error("enter: cannot enter node %d" % index)
+		return
+	run.node_index = index
 	var node := run.current_node()
 	var kind := String(node.get("kind", ""))
 	run.emit({"type": "node_enter", "index": run.node_index, "kind": kind})
@@ -180,7 +212,9 @@ static func _enter_node(run: RunState) -> void:
 static func _start_fight(run: RunState, node: Dictionary) -> void:
 	run.fight_counter += 1
 	var enemies: Array = node.get("enemies", [])
-	run.fight = CombatEngine.start_fight(run.content, run.hero_snapshot(), enemies, run.floor, run.sub_rng("fight", run.fight_counter))
+	run.fight = CombatEngine.start_fight(run.content, run.hero_snapshot(), enemies,
+		run.floor, run.sub_rng("fight", run.fight_counter), run.mutation(), run.hero_trait(),
+		run.seal_scaling())
 	run.phase = "fight"
 	run.emit({"type": "fight_begin", "index": run.node_index, "kind": String(node["kind"]), "enemies": enemies.duplicate()})
 
@@ -209,15 +243,17 @@ static func _finish_fight(run: RunState) -> void:
 		var relic_id := Rewards.relic_offer(run.content, run.hero.relics, rng)
 		if relic_id != "":
 			run.grant_relic(relic_id)
-	var cards := Rewards.card_offer(run.content, _pools(run), rng, run.content.balance, Rewards.OFFER_SIZE, kind == "boss")
+	var cards := Rewards.card_offer(run.content, pools(run), rng, run.content.balance, Rewards.OFFER_SIZE, kind == "boss")
 	run.reward = {"cards": cards.duplicate()}
 	run.phase = "reward"
 	run.emit({"type": "reward_offer", "cards": cards.duplicate()})
 
 
-static func _pools(run: RunState) -> Array:
+## Where this run's card offers are drawn from (spec §5.6). See
+## `Biomes.pools_for`, which the expedition hero's auto-draft shares.
+static func pools(run: RunState) -> Array:
 	var klass: ClassDef = run.content.classes[run.hero.class_id]
-	return [klass.pool, run.biome().card_pool]
+	return Biomes.pools_for(run.content, klass.pool, run.claimed_pools, run.floor)
 
 
 static func _apply_reward(run: RunState, kind: String, action: Dictionary) -> void:
@@ -237,9 +273,13 @@ static func _apply_reward(run: RunState, kind: String, action: Dictionary) -> vo
 	_advance(run)
 
 
+## The floor exits only when every node is behind you. Keeping the count of
+## encounters per floor fixed is what lets the balance invariants of spec
+## §12 stand unchanged through the pivot -- you choose the order, not the
+## number.
 static func _advance(run: RunState) -> void:
-	if run.node_index < run.nodes.size() - 1:
-		run.node_index += 1
+	run.resolve(run.node_index)
+	if run.next_unresolved() >= 0:
 		run.phase = "node"
 	else:
 		run.phase = "exit"
@@ -254,6 +294,10 @@ static func _end_run(run: RunState, kind: String, killer: String = "", cause: St
 	run.outcome = {
 		"kind": kind,
 		"floor": run.floor,
+		# Where it ended from. A retreat out of the exit means the floor was
+		# cleared; an `abandon` is also a "retreat" and can come from any
+		# phase, including the middle of a fight.
+		"from_phase": run.phase,
 		"killer": killer,
 		"cause": cause,
 		"coin": run.coin,
@@ -303,7 +347,7 @@ static func _apply_rest(run: RunState, kind: String, action: Dictionary) -> void
 static func _open_shop(run: RunState) -> void:
 	var balance := run.content.balance
 	var rng := run.sub_rng("shop", run.floor)
-	var cards := Rewards.card_offer(run.content, _pools(run), rng, balance, int(balance.get("shop_card_count", 3)))
+	var cards := Rewards.card_offer(run.content, pools(run), rng, balance, int(balance.get("shop_card_count", 3)))
 	run.shop = {
 		"cards": cards.duplicate(),
 		"relic": Rewards.relic_offer(run.content, run.hero.relics, rng),
@@ -356,8 +400,11 @@ static func _apply_shop(run: RunState, kind: String, action: Dictionary) -> void
 			push_error("run: unknown shop action " + kind)
 
 
-static func can_push(run: RunState) -> bool:
-	return run.floor < run.biome().last_floor
+## Always. The descent is infinite (§2): past the authored floors the biomes
+## cycle at tier 2, 3 and so on, so there is no last floor to stop at -- what
+## stops a run is the hero, which is the point.
+static func can_push(_run: RunState) -> bool:
+	return true
 
 
 static func can_watch(run: RunState) -> bool:
@@ -368,7 +415,20 @@ static func exit_summary(run: RunState, samples: int = -1) -> Dictionary:
 	var n := samples if samples >= 0 else int(run.content.balance.get("survival_samples", 20))
 	var survival := -1.0
 	if can_push(run):
-		survival = RunProjection.survival_chance(run.content, run.hero_snapshot(), run.biome(), run.floor + 1, run.run_seed, n)
+		# The floor being projected, not the one being stood on -- they are
+		# different biomes on the one floor where this reading matters most.
+		# Same rules, same fighter. Two of the three numbers on the exit screen
+		# came from the hero's own doctrine and this one did not.
+		# The floor below is projected under the rules it will actually be
+		# fought under -- its own tier's mutation, the invoked Legend and the
+		# Seal -- and by the hero's own doctrine, which the other two numbers
+		# on this screen were already using.
+		var next_floor := run.floor + 1
+		survival = RunProjection.survival_chance(run.content, run.hero_snapshot(),
+			run.biome_at(next_floor), next_floor, run.run_seed, n,
+			Autopilot.with_rules(run.hero.rules, run.content),
+			Mutations.for_floor(run.content, next_floor, run.campaign_seed),
+			run.hero_trait(), run.seal_scaling())
 	return {
 		"floor": run.floor,
 		"measured": run.stats.measured(run.floor),
@@ -380,7 +440,15 @@ static func exit_summary(run: RunState, samples: int = -1) -> Dictionary:
 	}
 
 
-static func _apply_exit(run: RunState, kind: String) -> void:
+## The floor's shape, derived from the run seed rather than stored with it: the
+## same floor of the same run always builds the same crypt, so the layout never
+## goes in the save file and can never disagree with it. Uses its own rng tag,
+## so generating geometry never disturbs the encounter or fight streams.
+static func layout_for(run: RunState) -> FloorLayout:
+	return LayoutGenerator.generate(run.nodes.size(), run.sub_rng("layout", run.floor))
+
+
+static func _apply_exit(run: RunState, kind: String, action: Dictionary) -> void:
 	match kind:
 		"push":
 			if not can_push(run):
@@ -401,7 +469,15 @@ static func _apply_exit(run: RunState, kind: String) -> void:
 			if not can_watch(run):
 				push_error("watch: locked until the first death")
 				return
-			run.emit({"type": "exit_decision", "floor": run.floor, "choice": "watch"})
+			# Choosing how your ghost will fight is the build-expression beat
+			# of dying (spec 3.3), so the rules arrive with the decision rather
+			# than being edited afterwards. Normalized here -- against the
+			# content, capped, deduplicated -- so nothing downstream has to
+			# wonder whether a ghost's rules are real.
+			if action.has("rules"):
+				run.hero.rules = PriorityRules.normalize_ids(action["rules"], run.content)
+			run.emit({"type": "exit_decision", "floor": run.floor, "choice": "watch",
+				"rules": run.hero.rules.duplicate()})
 			_end_run(run, "watch")
 		_:
 			push_error("run: unknown exit action " + kind)

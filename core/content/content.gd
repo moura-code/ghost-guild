@@ -11,13 +11,23 @@ var classes: Dictionary = {}
 var biomes: Dictionary = {}
 var events: Dictionary = {}
 var upgrades: Dictionary = {}
+## id -> RuleDef. Priority rules (spec 3.3): how a ghost fights.
+var rules: Dictionary = {}
+## id -> MutationDef. One rule per biome per tier past the first (spec §2).
+var mutations: Dictionary = {}
+## id -> TraitDef. What a Legend of each archetype is worth (spec §6.1).
+var traits: Dictionary = {}
+## id -> ChapterDef. What Ink buys (spec §6.2, The Chronicle).
+var chapters: Dictionary = {}
 var affinity: Dictionary = {}
 var balance: Dictionary = {}
 var strings: Dictionary = {}
+## Which language is loaded on top of English. "en" means none.
+var locale: String = "en"
 var load_errors: Array[String] = []
 
 
-static func load_from(root: String) -> Content:
+static func load_from(root: String, locale: String = "en") -> Content:
 	var c := Content.new()
 	if not DirAccess.dir_exists_absolute(root):
 		c.load_errors.append("missing content root: " + root)
@@ -29,9 +39,19 @@ static func load_from(root: String) -> Content:
 	c._load_dir(root.path_join("biomes"), func(d: Dictionary) -> void: c.biomes[d["id"]] = BiomeDef.from_dict(d))
 	c._load_dir(root.path_join("events"), func(d: Dictionary) -> void: c.events[d["id"]] = EventDef.from_dict(d))
 	c._load_dir(root.path_join("upgrades"), func(d: Dictionary) -> void: c.upgrades[d["id"]] = UpgradeDef.from_dict(d))
+	c._load_dir(root.path_join("rules"), func(d: Dictionary) -> void: c.rules[d["id"]] = RuleDef.from_dict(d))
+	c._load_dir(root.path_join("mutations"), func(d: Dictionary) -> void: c.mutations[d["id"]] = MutationDef.from_dict(d))
+	c._load_dir(root.path_join("traits"), func(d: Dictionary) -> void: c.traits[d["id"]] = TraitDef.from_dict(d))
+	c._load_dir(root.path_join("chapters"), func(d: Dictionary) -> void: c.chapters[d["id"]] = ChapterDef.from_dict(d))
 	c.affinity = c._load_object(root.path_join("affinity.json"))
 	c.balance = c._load_object(root.path_join("balance.json"))
+	# English first, always, then the chosen locale on top of it. A partial
+	# translation is the normal state of a translation, and the fallback is
+	# what stops a missing row rendering as its own key on screen.
 	c._load_strings(root.path_join("strings").path_join("en.csv"))
+	if locale != "" and locale != "en":
+		c.locale = locale
+		c._load_strings(root.path_join("strings").path_join(locale + ".csv"), true)
 	return c
 
 
@@ -105,10 +125,13 @@ func _load_object(path: String) -> Dictionary:
 	return normalize_json(parsed)
 
 
-func _load_strings(path: String) -> void:
+## `optional` is for a locale on top of English: a language nobody has
+## written yet is a missing file, not a broken content set.
+func _load_strings(path: String, optional: bool = false) -> void:
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
-		load_errors.append("missing strings file: " + path)
+		if not optional:
+			load_errors.append("missing strings file: " + path)
 		return
 	var first := true
 	while not file.eof_reached():

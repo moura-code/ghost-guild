@@ -17,7 +17,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 config/name="Ghost Guild"
 config/features=PackedStringArray("4.7")
 config/icon="res://icon.svg"
-run/main_scene="res://game/main.tscn"
+run/main_scene="res://game/crawl.tscn"
 
 [autoload]
 
@@ -29,23 +29,87 @@ gdscript/warnings/untyped_declaration=1
 
 [display]
 
-; Logical UI coordinates with native-resolution text and 3D illustrations.
-window/size/viewport_width=800
-window/size/viewport_height=450
-window/size/window_width_override=1280
-window/size/window_height_override=720
+; The 3D world renders at the window's native resolution. HudRoot scales
+; the interface independently so text stays sharp as panels reflow.
+window/size/viewport_width=1280
+window/size/viewport_height=720
 window/size/min_width=960
 window/size/min_height=540
-window/stretch/mode="canvas_items"
+window/stretch/mode="disabled"
 window/stretch/aspect="expand"
 
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
 
+[input]
+
+; Physical keycodes, not keycodes: WASD stays where the fingers are on an
+; AZERTY keyboard. 87=W 83=S 65=A 68=D 69=E 4194325=Shift.
+move_forward={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":87,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+move_back={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":83,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+move_left={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":65,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+move_right={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":68,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+sprint={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194325,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+interact={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":69,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+
+guild_menu={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":71)]
+}
+
+inspect_hero={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":73)]
+}
+
+floor_map={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":77)]
+}
+
+help={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":4194332)]
+}
+
+[layer_names]
+
+3d_physics/layer_1="world"
+3d_physics/layer_2="player"
+3d_physics/layer_3="interactable"
+3d_physics/layer_4="ghost"
+
 [rendering]
 
-; Native-resolution UI and smoothly sampled illustrations.
-textures/canvas_textures/default_texture_filter=1
-renderer/rendering_method="gl_compatibility"
+; Forward+: clustered lighting, real shadows, SSAO, volumetric-ready fog. The
+; torchlit crypt is the whole visual pitch and none of it exists under
+; gl_compatibility. This raises the minimum spec, which is the accepted cost
+; of the "textured PBR realism" decision (spec 2026-08-29 §1.3, §3.3).
+renderer/rendering_method="forward_plus"
 renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/anisotropic_filtering_level=4

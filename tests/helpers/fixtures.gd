@@ -58,7 +58,7 @@ static func hero(hero_name: String = "Tester") -> Hero:
 
 static func new_run(entry_floor: int = 1, run_seed: int = 1, watch_unlocked: bool = true, h: Hero = null) -> RunState:
 	var the_hero := h if h != null else hero()
-	return RunEngine.start_run(content(), the_hero, "catacombs", entry_floor, run_seed, watch_unlocked)
+	return RunEngine.start_run(content(), the_hero, entry_floor, run_seed, watch_unlocked)
 
 
 static func autofight(run: RunState) -> void:
@@ -75,6 +75,7 @@ static func autofight(run: RunState) -> void:
 static func set_nodes(run: RunState, nodes: Array) -> void:
 	run.nodes = nodes
 	run.node_index = 0
+	run.resolved = []
 	run.phase = "node"
 
 

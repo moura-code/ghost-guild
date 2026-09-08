@@ -14,8 +14,15 @@ extends Control
 ##
 ## Ghosts are real child nodes rather than drawn, because they bob and need
 ## their own colours; everything else is one _draw call.
+##
+## It draws a *window* of the shaft rather than all of it. The dungeon has no
+## bottom any more (spec §2: past the authored floors the biomes cycle for
+## ever), and a chamber per floor for ever is a gradient rather than a place.
+## While the whole authored dungeon still fits, the window is the whole
+## authored dungeon and nothing about this screen has changed.
 
 signal floor_clicked(floor: int)
+var selected_floor: int = 1
 
 const TOP_INSET := 0.04
 const BOTTOM_INSET := 0.26
@@ -23,12 +30,26 @@ const WALL := 2.0
 const SLAB := 2.0
 const MAX_MARKS := 8
 ## Fixed gutters either side of the shaft for the floor number and the rate.
+## The undug rock at the top of the shaft and at the bottom of it. Never zero:
+## rock the player cannot reach yet is a promise, not a hole.
+const SOLID_NEAR := 0.32
+const SOLID_FAR := 0.11
+## The rock kept under the deepest floor reached. Never zero: a shaft that
+## stops exactly where you are standing is a floor, and the rock below it is
+## the only thing on this screen promising there is somewhere left to go.
+const ROCK_BELOW := 4
+## A row is `size.y / floors` tall and a line of body text is about eleven
+## pixels, so twenty rows in a 360-pixel frame is the last count that fits.
+const EVERY_FLOOR_UP_TO := 20
+const NUMBER_EVERY := 5
 const NUMBER_COLUMN := 14.0
 const RATE_COLUMN := 34.0
 
+## The window the shaft draws: `floors` chambers, the first of them `top`.
+## It was floor 1 to the dungeon's depth until the dungeon stopped having one.
+var top: int = 1
 var floors: int = 10
 var hovered: int = 0
-var selected_floor: int = 1
 var _time: float = 0.0
 
 var _campaign: Campaign
@@ -40,16 +61,46 @@ var _rates: Dictionary = {}
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	focus_mode = Control.FOCUS_ALL
-	mouse_exited.connect(func() -> void:
-		hovered = 0
-		queue_redraw())
 	custom_minimum_size = Vector2(160.0, 200.0)
+
+
+## How many chambers the shaft draws at once: one dungeon's worth, and the
+## rock below it. That is the density this image was drawn for -- thirty
+## chambers in a 236-pixel frame is eight pixels each, which is the last
+## height a ghost fits in -- and it must not grow just because the descent
+## now does.
+##
+## Pure, so the window can be checked without rendering the thing it bounds.
+static func drawn_span(authored: int) -> int:
+	return maxi(1, authored + ROCK_BELOW)
+
+
+## The deepest floor worth drawing.
+##
+## It used to be the dungeon's depth, and there is no such number any more, so
+## the shaft is bounded by the player instead: everywhere they have stood, and
+## the rock under it. Never shallower than the authored dungeon -- a new guild
+## should be shown the thirty floors it is being asked to descend rather than
+## the one floor it has.
+static func last_drawn(reach: int, authored: int) -> int:
+	return maxi(authored, reach + ROCK_BELOW)
+
+
+## And the shallowest. Floor 1 for the whole of the authored dungeon and for
+## the rock under it, so nothing about the descent the game ships with moves
+## and the Founder never falls off the top of the shaft. Past that the window
+## slides down and the surface leaves the frame, which is what descending into
+## something bottomless ought to look like.
+static func first_drawn(reach: int, authored: int) -> int:
+	return maxi(1, last_drawn(reach, authored) - drawn_span(authored) + 1)
 
 
 func bind(campaign: Campaign) -> void:
 	_campaign = campaign
-	floors = campaign.biome().last_floor
+	var authored := Biomes.depth(campaign.content)
+	var reach := CampaignEngine.reach(campaign)
+	top = first_drawn(reach, authored)
+	floors = last_drawn(reach, authored) - top + 1
 	_rebuild()
 	# The container may not have sized this yet, in which case _layout has
 	# nothing to work with; run it again once it has.
@@ -67,19 +118,22 @@ func chamber_height() -> float:
 ## list going down a page.
 func chamber_rect(floor: int) -> Rect2:
 	var h := chamber_height()
-	var t := float(floor - 1) / float(maxi(1, floors - 1))
+	var t := float(floor - top) / float(maxi(1, floors - 1))
 	# The shaft lives between the two gutters, and tapers inside that.
 	var left := NUMBER_COLUMN
 	var right := size.x - RATE_COLUMN
 	var span := maxf(0.0, right - left)
 	var inset := lerpf(span * TOP_INSET, span * BOTTOM_INSET, t) * 0.5
-	return Rect2(Vector2(left + inset, float(floor - 1) * h),
+	return Rect2(Vector2(left + inset, float(floor - top) * h),
 		Vector2(maxf(0.0, span - inset * 2.0), h))
 
 
-## Light from the surface, dying with depth.
+## Light from the surface, dying with depth -- measured across the drawn
+## window rather than from floor 1. Once the surface is out of frame there is
+## no surface light left to fall, and a window rendered uniformly black is not
+## an image. What lights the deep shaft is its own lanterns.
 func light_at(floor: int) -> float:
-	var t := float(floor - 1) / float(maxi(1, floors - 1))
+	var t := float(floor - top) / float(maxi(1, floors - 1))
 	return lerpf(1.0, 0.16, t * t)
 
 
@@ -92,8 +146,8 @@ func _rebuild() -> void:
 	_rates.clear()
 	if _campaign == null:
 		return
-	for floor in range(1, floors + 1):
-		var number := UiTheme.body("%02d" % floor, Palette.BONE_DIM)
+	for floor in range(top, top + floors):
+		var number := UiTheme.number(str(floor), Palette.BONE_DIM)
 		add_child(number)
 		_numbers[floor] = number
 		var rate := UiTheme.small("", Palette.SOUL)
@@ -114,6 +168,8 @@ func _rebuild() -> void:
 ## signature image, representing its core loop, did not visibly produce
 ## anything.
 func _process(delta: float) -> void:
+	if Settings.motion_reduced or not is_visible_in_tree():
+		return
 	if _campaign == null:
 		return
 	_time += delta
@@ -126,6 +182,21 @@ func _notification(what: int) -> void:
 		queue_redraw()
 
 
+## Which floors are labelled.
+##
+## Every one, while the shaft is short enough for that to be readable. Thirty
+## floors in a 360-pixel frame is twelve pixels a row and a line of text is
+## taller than that, so the numbers collided into an unreadable column the day
+## the third biome landed. Past that it is a scale rather than a list: the ends
+## and every fifth floor, which is enough to count from.
+##
+## Pure, so the rule can be checked without rendering the thing that broke.
+static func numbered(floor: int, of_floors: int, from: int = 1) -> bool:
+	if of_floors <= EVERY_FLOOR_UP_TO:
+		return true
+	return floor == from or floor == from + of_floors - 1 or floor % NUMBER_EVERY == 0
+
+
 ## Ghosts stand on the slab at the bottom of their chamber, and the numbers
 ## sit outside the shaft so the chamber itself stays clear.
 func _layout() -> void:
@@ -133,7 +204,7 @@ func _layout() -> void:
 		return
 	var bal := _campaign.balance()
 	var mods := _campaign.modifiers()
-	for floor in range(1, floors + 1):
+	for floor in range(top, top + floors):
 		var rect := chamber_rect(floor)
 		var light := light_at(floor)
 
@@ -141,9 +212,10 @@ func _layout() -> void:
 		# taper made them wander diagonally down the screen, which read as a
 		# mistake rather than as perspective.
 		var number: Label = _numbers[floor]
-		number.size = Vector2(NUMBER_COLUMN - 1.0, 14.0)
+		number.size = Vector2(NUMBER_COLUMN - 12.0, 24.0)
 		number.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		number.position = Vector2(0.0, rect.position.y + rect.size.y * 0.5 - 7.0)
+		number.position = Vector2(0.0, rect.position.y + rect.size.y * 0.5 - 15.0)
+		number.visible = numbered(floor, floors, top)
 		number.add_theme_color_override("font_color",
 			Color(Palette.BONE.r, Palette.BONE.g, Palette.BONE.b, 0.25 + light * 0.6))
 
@@ -151,6 +223,11 @@ func _layout() -> void:
 		# And the rate holds a column at the right, for the same reason.
 		var rate: Label = _rates[floor]
 		rate.text = Num.rate(output) if output > 0.0 else ""
+		# A haunted floor (spec §5.6) pays more than its ghosts should be able
+		# to make it pay, and the number is the only place that shows. Amber,
+		# the colour the game already uses for a condition of the place.
+		var haunted: Dictionary = mods.get("haunting", {})
+		rate.modulate = Palette.PREPARED if haunted.has(floor) else Palette.SOUL
 		rate.size = Vector2(RATE_COLUMN - 10.0, 18.0)
 		rate.position = Vector2(size.x - RATE_COLUMN + 10.0, rect.position.y + rect.size.y * 0.5 - 9.0)
 
@@ -166,7 +243,7 @@ func _layout() -> void:
 			# Nearer floors are nearer the viewer. A ghost drawn the same size
 			# on floor 1 and floor 10 fights the shaft's perspective and flattens
 			# it back into a list.
-			var near := 1.0 - float(floor - 1) / float(maxi(1, floors - 1))
+			var near := 1.0 - float(floor - top) / float(maxi(1, floors - 1))
 			var wanted := GhostMark.BASE_SIZE * lerpf(1.0, 1.7, near)
 			# ...but never taller than the room they are standing in. On a
 			# 640x360 frame a chamber is about 24 pixels high, and a ghost
@@ -175,16 +252,10 @@ func _layout() -> void:
 			if wanted.y > headroom:
 				wanted *= headroom / wanted.y
 			mark.size = wanted
-			mark.position = Vector2(start + float(i) * 30.0, foot - wanted.y)
+			mark.position = Vector2(start + float(i) * 30.0, foot - GhostMark.BASE_SIZE.y)
 
 
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.is_pressed() and _campaign != null:
-		var key := (event as InputEventKey).keycode
-		if key in [KEY_UP, KEY_DOWN]:
-			var direction := -1 if key == KEY_UP else 1
-			floor_clicked.emit(clampi(selected_floor + direction, 1, CampaignEngine.reach(_campaign)))
-			accept_event()
 	if event is InputEventMouseMotion:
 		var was := hovered
 		hovered = _floor_at((event as InputEventMouseMotion).position)
@@ -210,9 +281,21 @@ func solid_rect(floor: int) -> Rect2:
 ## out of _draw so the rule that matters can be asserted: the floors you
 ## cannot reach must never outshine the ones you can.
 func undug_colour(floor: int) -> Color:
-	var solid := 0.34 - float(floor) * 0.022
+	var solid := solid_light(floor)
 	return Color(Palette.STONE_HIGH.r * solid, Palette.STONE_HIGH.g * solid,
 		Palette.STONE_HIGH.b * solid, 1.0)
+
+
+## How lit the undug rock on this floor is, 0..1.
+##
+## A fraction of the shaft rather than a fixed step per floor. It was written
+## as `0.34 - floor * 0.022` for a ten-floor shaft, which goes negative at
+## floor 16 -- so the day a second biome made the shaft twenty deep, the
+## bottom four floors turned into a black hole in the middle of the screen
+## that the game's own capsule image is built around.
+func solid_light(floor: int) -> float:
+	var t := float(floor - top) / float(maxi(1, floors - 1))
+	return lerpf(SOLID_NEAR, SOLID_FAR, t)
 
 
 func chamber_colour(floor: int) -> Color:
@@ -223,12 +306,12 @@ func chamber_colour(floor: int) -> Color:
 
 ## Which floor a point falls in, or 0 for none. The negative case matters:
 ## int() truncates toward zero, so a point above the shaft would otherwise
-## come back as floor 1.
+## come back as the floor at the top of the window.
 func _floor_at(at: Vector2) -> int:
 	if size.y <= 0.0 or at.y < 0.0 or at.y >= size.y:
 		return 0
-	var floor := int(at.y / chamber_height()) + 1
-	return floor if floor >= 1 and floor <= floors else 0
+	var floor := top + int(at.y / chamber_height())
+	return floor if floor >= top and floor < top + floors else 0
 
 
 func _draw() -> void:
@@ -236,16 +319,12 @@ func _draw() -> void:
 		return
 	var bal := _campaign.balance()
 	var mods := _campaign.modifiers()
-	var accent := Palette.biome_accent(_campaign.biome_id)
 	var waypoint := CampaignEngine.reach(_campaign)
 
-	for floor in range(1, floors + 1):
+	for floor in range(top, top + floors):
 		var rect := chamber_rect(floor)
 		var light := light_at(floor)
 		var reachable := floor <= waypoint
-		if floor == selected_floor:
-			draw_rect(Rect2(Vector2(0, rect.position.y), Vector2(size.x, rect.size.y)), Color(0.79, 0.66, 0.42, 0.10))
-			draw_rect(Rect2(Vector2(0, rect.position.y + 3), Vector2(2, rect.size.y - 6)), Palette.EDGE_LIGHT)
 
 		# The rock the shaft is cut through.
 		var rock := Rect2(Vector2(NUMBER_COLUMN, rect.position.y),
@@ -265,7 +344,7 @@ func _draw() -> void:
 			# Unreached floors are a promise, not the subject. They recede.
 			draw_rect(rock, undug_colour(floor))
 			# How lit this rock is, reused to keep the courses in step with it.
-			var solid := 0.34 - float(floor) * 0.022
+			var solid := solid_light(floor)
 			# Courses, faint. Enough texture that it reads as laid stone
 			# rather than as a hole in the screen, not enough to compete.
 			var courses := 3
@@ -289,6 +368,8 @@ func _draw() -> void:
 
 		# The chamber itself: darker than the rock, lit from above.
 		draw_rect(rect, chamber_colour(floor))
+		if floor == selected_floor:
+			draw_rect(rect.grow(1), Palette.SOUL, false, 1.5)
 		# Its back wall catches the light near the ceiling and falls away.
 		for i in 6:
 			var t := float(i) / 5.0
@@ -318,7 +399,11 @@ func _draw() -> void:
 		# trapezoid narrowing toward the back is a floor you are looking down
 		# onto, and it is most of what turns ten stacked rectangles into ten
 		# rooms one above another.
-		var slab := accent if reachable else Palette.STONE_EDGE
+		# The colour bands §9 calls the capsule image: the shaft changes colour
+		# where it crosses into another biome, which is the only thing on this
+		# screen that says the descent goes somewhere rather than just down.
+		var slab := Palette.biome_accent(_campaign.biome_at(floor).id) \
+			if reachable else Palette.STONE_EDGE
 		var back := rect.size.x * 0.14
 		var deep_y := rect.end.y - rect.size.y * 0.26
 		draw_colored_polygon(PackedVector2Array([

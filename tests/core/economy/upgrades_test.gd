@@ -32,7 +32,11 @@ func test_modifiers_from_levels() -> void:
 	var base := u.modifiers(_content())
 	assert_float(base["global_strength"]).is_equal(1.0)
 	assert_float(base["global_spawn"]).is_equal(1.0)
-	assert_float(base["restless_penalty"]).is_equal_approx(0.3, 0.0001)
+	# Read rather than repeated: this is the authored default, and a balance
+	# pass that moves it should not have to come and edit a test that was
+	# only ever asserting that no upgrade had been applied yet.
+	var authored := float(_content().balance["restless_penalty"])
+	assert_float(base["restless_penalty"]).is_equal_approx(authored, 0.0001)
 	assert_float(base["offline_cap_hours"]).is_equal(8.0)
 	assert_float(base["mend_discount"]).is_equal(0.0)
 	assert_int(base["max_resolve_bonus"]).is_equal(0)
@@ -46,7 +50,11 @@ func test_modifiers_from_levels() -> void:
 	assert_float(m["global_strength"]).is_equal_approx(1.3, 0.0001)
 	assert_float(m["global_spawn"]).is_equal_approx(1.1, 0.0001)
 	assert_float(m["offline_cap_hours"]).is_equal_approx(24.0, 0.0001)
-	assert_float(m["restless_penalty"]).is_equal_approx(0.1, 0.0001)
+	# Two levels of relief off the authored default. The relief is what is
+	# being tested; the default is not.
+	var relief: UpgradeDef = _content().upgrades["restless_relief"]
+	var relieved := authored - 2.0 * float(relief.effect["amount"])
+	assert_float(m["restless_penalty"]).is_equal_approx(maxf(0.0, relieved), 0.0001)
 	assert_float(m["mend_discount"]).is_equal_approx(0.3, 0.0001)
 
 

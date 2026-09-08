@@ -97,13 +97,21 @@ func test_a_maxed_upgrade_says_so_and_cannot_be_bought() -> void:
 	assert_int(row._max_level).is_equal(1)
 
 
-func test_upgrades_are_grouped_hero_then_ghosts() -> void:
+func test_upgrades_are_grouped_in_the_order_the_spec_names() -> void:
+	# Hero, then ghosts, then descent (spec §5.9) -- which is also the order
+	# they are earned in. A group with no nodes yet is not shown at all.
 	var g := _game()
 	var s := _screen(g)
 	await await_idle_frame()
-	assert_int(s._groups.size()).is_equal(2)
+	var expected: Array[String] = []
+	for group in GuildScreen.GROUP_ORDER:
+		for id in g.content.upgrades:
+			if (g.content.upgrades[id] as UpgradeDef).group == group:
+				expected.append(String(group))
+				break
+	assert_array(s._group_order).is_equal(expected)
+	assert_int(s._groups.size()).is_equal(expected.size())
 	assert_str(s._group_order[0]).is_equal("hero")
-	assert_str(s._group_order[1]).is_equal("ghosts")
 
 
 func test_buying_refreshes_affordability_across_every_row() -> void:
@@ -168,5 +176,109 @@ func test_every_tablet_explains_itself_on_hover() -> void:
 	for id in s.rows:
 		var plaque: UpgradePlaque = s.rows[id]
 		var def: UpgradeDef = g.content.upgrades[id]
-		assert_str(plaque.tooltip_text) 			.override_failure_message("%s has no tooltip" % id) 			.contains(g.text(def.text_key))
+		assert_str(plaque.tooltip_text) \
+			.override_failure_message("%s has no tooltip" % id) \
+			.contains(g.text(def.text_key))
 		assert_int(plaque.mouse_filter).is_not_equal(Control.MOUSE_FILTER_IGNORE)
+
+
+func _with_expeditions(g: GameRoot) -> void:
+	g.campaign.upgrades.levels["expedition"] = 1
+	# The real pace is two minutes a floor and a twelve-fight pricing; these
+	# tests care about the band, not about how long the wait is.
+	g.content.balance["expedition_seconds_per_floor"] = 60
+	g.content.balance["expedition_samples"] = 1
+	g.content.balance["expedition_sim_fights"] = 2
+
+
+func test_the_expedition_band_is_not_there_until_it_is_bought() -> void:
+	var g := _game()
+	var s := _screen(g)
+	await await_idle_frame()
+	assert_bool(s._band.visible).is_false()
+	assert_array(s.slots).is_empty()
+
+
+func test_buying_it_opens_one_slot_offering_to_send_somebody() -> void:
+	var g := _game()
+	var s := _screen(g)
+	_with_expeditions(g)
+	s.refresh()
+	await await_idle_frame()
+	assert_bool(s._band.visible).is_true()
+	assert_array(s.slots).has_size(1)
+	assert_bool(s.slots[0]._send.visible).is_true()
+
+
+func test_sending_somebody_fills_the_slot_with_who_went() -> void:
+	var g := _game()
+	var s := _screen(g)
+	_with_expeditions(g)
+	s.refresh()
+	s.slots[0]._send.pressed.emit()
+	await await_idle_frame()
+	assert_array(g.campaign.expeditions).has_size(1)
+	assert_bool(s.slots[0]._send.visible).is_false()
+	var e: Expedition = g.campaign.expeditions[0]
+	assert_str(s.slots[0]._name.text).contains(e.ghost.name)
+
+
+func test_the_slots_upgrade_adds_a_row() -> void:
+	var g := _game()
+	var s := _screen(g)
+	_with_expeditions(g)
+	s.refresh()
+	g.campaign.upgrades.levels["expedition_slots"] = 1
+	s.refresh()
+	await await_idle_frame()
+	assert_array(s.slots).has_size(2)
+	assert_int(s._band_slots.get_child_count()).is_equal(2)
+
+
+func test_the_countdown_follows_the_ticking_counter() -> void:
+	# The Guild is a screen the player leaves open, so the bar has to move
+	# without anything being clicked. soul_changed is the only heartbeat.
+	var g := _game()
+	var s := _screen(g)
+	_with_expeditions(g)
+	s.refresh()
+	s.slots[0]._send.pressed.emit()
+	var early := s.slots[0]._detail.text
+	g.clock = func() -> int: return 1030
+	g.soul_changed.emit(g.displayed_soul(), g.campaign.rate_per_hour)
+	await await_idle_frame()
+	assert_str(s.slots[0]._detail.text).is_not_equal(early)
+	assert_float(s.slots[0]._progress).is_greater(0.0)
+
+
+func test_the_screen_stays_inside_the_frame_however_much_the_wall_holds() -> void:
+	# The wall was sized to fit exactly, and a third group of upgrades quietly
+	# pushed it past the bottom of the HUD -- with no error, because nothing
+	# measures a panel that simply overflows. The shared frame bounds the
+	# screen, with the full catalogue available through its scrollbar.
+	var g := _game()
+	var s := _screen(g)
+	_with_expeditions(g)
+	g.campaign.upgrades.levels["expedition_slots"] = 2
+	var frame: PanelFrame = auto_free(PanelFrame.new())
+	add_child(frame)
+	frame.size = HudRoot.REFERENCE
+	s.get_parent().remove_child(s)
+	frame.host(s)
+	s.refresh()
+	await await_idle_frame()
+	assert_int(s.slots.size()).is_equal(3)
+	assert_float(frame.get_combined_minimum_size().y) \
+		.override_failure_message("the Guild runs off the bottom of the HUD") \
+		.is_less_equal(HudRoot.REFERENCE.y)
+	frame.scroll.scroll_vertical = 10000
+	await await_idle_frame()
+	assert_int(frame.scroll.scroll_vertical).is_greater(0)
+
+
+func test_every_group_the_order_names_has_a_heading() -> void:
+	var g := _game()
+	for group in GuildScreen.GROUP_ORDER:
+		var key := "ui.group.%s" % group
+		assert_str(g.text(key)).override_failure_message(
+			"%s has no heading" % key).is_not_equal(key)

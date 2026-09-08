@@ -1,4 +1,15 @@
 {
-  "poison": {"construct": 0.0, "flesh": 1.5},
-  "holy": {"undead": 1.5}
+  "poison": {
+    "construct": 0.0,
+    "flesh": 1.5
+  },
+  "holy": {
+    "undead": 1.5
+  },
+  "bone": {
+    "construct": 1.25
+  },
+  "ember": {
+    "construct": 0.6
+  }
 }

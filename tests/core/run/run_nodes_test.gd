@@ -14,7 +14,8 @@ func test_event_choice_applies_effects_and_advances() -> void:
 	assert_int(run.stat_bonus["wit"]).is_equal(1)
 	assert_int(run.hero_snapshot().stats["wit"]).is_equal(1)
 	assert_str(run.phase).is_equal("node")
-	assert_int(run.node_index).is_equal(1)
+	assert_bool(run.is_resolved(0)).is_true()
+	assert_int(run.next_unresolved()).is_equal(1)
 	assert_str(run.event_id).is_equal("")
 	var choice: Dictionary = TestFixtures.run_events_of(run, "event_choice")[0]
 	assert_str(choice["choice"]).is_equal("offer")

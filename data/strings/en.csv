@@ -2,65 +2,65 @@ key,text
 class.sexton.name,Sexton
 biome.catacombs.name,Catacombs
 card.strike.name,Strike
-card.strike.text,Deal 6 damage.
+card.strike.text,Deal {0} damage.
 card.brace.name,Brace
-card.brace.text,Gain 5 Block.
+card.brace.text,Gain {0} Block.
 card.last_rites.name,Last Rites
-card.last_rites.text,Deal 4 damage. Apply 2 Weak.
+card.last_rites.text,Deal {0} damage. Apply {1} Weak.
 card.shovel_swing.name,Shovel Swing
-card.shovel_swing.text,Deal 8 damage.
+card.shovel_swing.text,Deal {0} damage.
 card.bone_wall.name,Bone Wall
-card.bone_wall.text,Gain 11 Block.
+card.bone_wall.text,Gain {0} Block.
 card.grave_dust.name,Grave Dust
-card.grave_dust.text,Apply 1 Vulnerable. Draw 1 card.
+card.grave_dust.text,Apply {0} Vulnerable. Draw {1} card.
 card.reaping.name,Reaping
-card.reaping.text,Deal 4 damage 3 times.
+card.reaping.text,Deal {0} damage {1} times.
 card.vigil.name,Vigil
-card.vigil.text,At the start of each turn gain 3 Block.
+card.vigil.text,At the start of each turn gain {0} Block.
 card.censer_smoke.name,Censer Smoke
-card.censer_smoke.text,Gain 4 Block. Apply 1 Weak to all enemies.
+card.censer_smoke.text,Gain {0} Block. Apply {1} Weak to all enemies.
 card.exhume.name,Exhume
-card.exhume.text,Draw 2 cards. Exhaust.
+card.exhume.text,Draw {0} cards. Exhaust.
 card.lantern_oil.name,Lantern Oil
-card.lantern_oil.text,Gain 1 Energy. Draw 1 card. Exhaust.
+card.lantern_oil.text,Gain {0} Energy. Draw {1} card. Exhaust.
 card.bone_shard.name,Bone Shard
-card.bone_shard.text,Deal 3 damage.
+card.bone_shard.text,Deal {0} damage.
 card.sanctify.name,Sanctify
-card.sanctify.text,Gain 8 Block. Heal 3.
+card.sanctify.text,Gain {0} Block. Heal {1}.
 card.hallowed_strike.name,Hallowed Strike
-card.hallowed_strike.text,Deal 12 damage. Holy: 50% more against the undead.
+card.hallowed_strike.text,Deal {0} damage. Holy: 50% more against the undead.
 card.bulwark.name,Bulwark
-card.bulwark.text,Gain 3 Thorns.
+card.bulwark.text,Gain {0} Thorns.
 card.requiem.name,Requiem
-card.requiem.text,Deal 20 damage to all enemies.
+card.requiem.text,Deal {0} damage to all enemies.
 card.second_wind.name,Second Wind
-card.second_wind.text,Heal 6. Exhaust.
+card.second_wind.text,Heal {0}. Exhaust.
 card.dig_in.name,Dig In
-card.dig_in.text,Gain 3 Block. Gain 1 Wit this fight.
+card.dig_in.text,Gain {0} Block. Gain {1} Wit this fight.
 card.sharpen_spade.name,Sharpen Spade
-card.sharpen_spade.text,Gain 2 Might this fight. Exhaust.
+card.sharpen_spade.text,Gain {0} Might this fight. Exhaust.
 card.tolling_bell.name,Tolling Bell
-card.tolling_bell.text,Apply 2 Vulnerable to all enemies.
+card.tolling_bell.text,Apply {0} Vulnerable to all enemies.
 card.rat_swarm.name,Rat Swarm
-card.rat_swarm.text,Deal 2 damage 4 times.
+card.rat_swarm.text,Deal {0} damage {1} times.
 card.cold_iron.name,Cold Iron
-card.cold_iron.text,Deal 7 damage. Apply 1 Weak.
+card.cold_iron.text,Deal {0} damage. Apply {1} Weak.
 card.shroud.name,Shroud
-card.shroud.text,Gain 6 Block. Retain.
+card.shroud.text,Gain {0} Block. Retain.
 card.grave_moss.name,Grave Moss
-card.grave_moss.text,Gain 3 Regen.
+card.grave_moss.text,Gain {0} Regen.
 card.tomb_lantern.name,Tomb Lantern
-card.tomb_lantern.text,Draw 2 cards.
+card.tomb_lantern.text,Draw {0} cards.
 card.bone_spear.name,Bone Spear
-card.bone_spear.text,Deal 14 damage.
+card.bone_spear.text,Deal {0} damage.
 card.plague_vial.name,Plague Vial
-card.plague_vial.text,Apply 4 Poison.
+card.plague_vial.text,Apply {0} Poison.
 card.death_knell.name,Death Knell
-card.death_knell.text,At the start of each turn deal 4 damage to all enemies.
+card.death_knell.text,At the start of each turn deal {0} damage to all enemies.
 card.cairn.name,Cairn
-card.cairn.text,Gain 14 Block. Gain 2 Thorns.
+card.cairn.text,Gain {0} Block. Gain {1} Thorns.
 card.ashes.name,Ashes
-card.ashes.text,Deal 3 damage to all enemies. Apply 2 Burn to all enemies.
+card.ashes.text,Deal {0} damage to all enemies. Apply {1} Burn to all enemies.
 enemy.bone_rat.name,Bone Rat
 enemy.shambler.name,Shambler
 enemy.grave_wisp.name,Grave Wisp
@@ -130,6 +130,8 @@ ui.guild,Guild
 ui.maxed,Maxed
 ui.group.hero,Hero
 ui.group.ghosts,Ghosts
+ui.group.descent,Descent
+ui.group.seance,Séance
 ui.seance,Séance
 ui.seance.rites,Rites
 ui.seance.dead,Your Dead
@@ -172,6 +174,7 @@ ui.run.continue,Continue
 ui.run.bank,Bank the run
 ui.run.over,The run is over.
 ui.run.floor,Floor {floor}
+ui.run.floor_biome,Floor {floor} · {biome}
 ui.run.phase.descent,Descending
 ui.run.phase.node,Choose a path
 ui.run.phase.fight,Fight
@@ -218,15 +221,13 @@ ui.choice.rest_heal,Rest and heal {amount}
 ui.choice.rest_upgrade,Sharpen {card}
 ui.choice.remove,Burn {card}
 ui.exit.title,Floor {floor} cleared
-ui.exit.here,A ghost left here earns
-ui.exit.next,A ghost on the next floor earns
-ui.exit.survival,Chance you survive the next floor
-ui.exit.no_push,The biome ends here.
+ui.exit.here,Soul each hour from a ghost left here
+ui.exit.next,Soul each hour from a ghost one floor down
+ui.exit.survival,Your odds of surviving the next floor
 ui.exit.pending,Reckoning...
 ui.exit.push,Push deeper
 ui.exit.retreat,Retreat and mend
 ui.exit.watch,Take the Watch
-ui.exit.watch_locked,Take the Watch — locked until your first death
 ui.epitaph.stands,Still stands on Floor {floor}
 ui.epitaph.banked,Soul brought home
 ui.epitaph.rite,Next time — take the watch before you fall.
@@ -239,10 +240,324 @@ ui.fight.becoming,If you fall here
 ui.fight.yield_here,this floor pays
 ui.fight.blocked,Blocked
 ui.fight.watching,{count} of your dead watch this floor
-ui.crypt.chapter,CHAPTER I  /  THE UNDERGUILD
-ui.crypt.title,The Catacombs
-ui.crypt.entry,Entry floor
-ui.crypt.depths,The depths
-ui.crypt.choose,Select a lit floor to descend
-ui.crypt.residents,Floor {floor}  ·  {count} spirits on watch
-ui.hero.living,THE LIVING  /  YOUR NEXT DESCENT
+ui.use.table,Use the upgrade table
+ui.use.circle,Step into the seance circle
+ui.use.desk,Read the hero ledger
+ui.use.well,Look down the well
+ui.use.close,Back
+ui.menu.paused,Paused
+ui.menu.resume,Resume
+ui.menu.options,Options
+ui.menu.abandon,Abandon the run
+ui.menu.quit,Quit to desktop
+ui.menu.back,Back
+ui.options.sensitivity,Mouse sensitivity
+ui.options.invert_y,Invert look
+ui.options.fov,Field of view
+ui.options.volume,Volume
+ui.options.fullscreen,Fullscreen
+ui.hint.close,Esc to close
+ui.run.rooms_left,{n} rooms still stir
+ui.run.one_room_left,One room still stirs
+ui.run.stairs_open,The stairs are open
+ui.menu.title,Ghost Guild
+ui.menu.continue,Continue
+ui.menu.new,New guild
+rule.strike_first.name,Strike first
+rule.strike_first.text,Damage over guard. Kill it before it swings.
+rule.hold_the_line.name,Hold the line
+rule.hold_the_line.text,"Guard first, and never take a blow you could have stopped."
+rule.finish_the_wounded.name,Finish the wounded
+rule.finish_the_wounded.text,One dead enemy beats two hurt ones.
+rule.spend_everything.name,Spend everything
+rule.spend_everything.text,Energy left at the end of a turn is energy wasted.
+rule.save_your_strength.name,Save your strength
+rule.save_your_strength.text,Hold energy back. Some cards are worth waiting for.
+rule.poison_before_blades.name,Poison before blades
+rule.poison_before_blades.text,Let it rot. Strike only when there is nothing left to apply.
+rule.break_them_first.name,Break them first
+rule.break_them_first.text,Weaken and expose before striking.
+rule.powers_first.name,Powers first
+rule.powers_first.text,Set up early. A fight is won on the first turn.
+rule.draw_before_striking.name,Draw before striking
+rule.draw_before_striking.text,Cards in hand before blows landed.
+rule.nurse_the_wound.name,Nurse the wound
+rule.nurse_the_wound.text,Stay whole. Healing is worth more than a hit.
+rule.trade_blood_for_ground.name,Trade blood for ground
+rule.trade_blood_for_ground.text,Take the hit. Give a worse one back.
+rule.block_only_against_lethal.name,Block only against lethal
+rule.block_only_against_lethal.text,"Guard exactly what is coming, and not one point more."
+ui.watch.title,How will they fight?
+ui.watch.hint,"Up to three, in order. The first weighs heaviest."
+ui.watch.confirm,Take the watch
+ui.watch.back,Back
+ui.watch.none,No orders. They will fight as anyone would.
+ui.watch.order,They will fight by: {rules}
+ui.ghost.doctrine,Fights by: {rules}
+upgrade.auto_draft.name,Standing Orders
+upgrade.auto_draft.text,Descent picks resolve themselves by your priority rules.
+upgrade.expedition.name,Expeditions
+upgrade.expedition.text,The guild sends a hero down on its own. They take the watch where they can hold.
+upgrade.expedition_slots.name,A Larger Guild
+upgrade.expedition_slots.text,One more expedition in the field at a time.
+upgrade.expedition_speed.name,Sure Footing
+upgrade.expedition_speed.text,Expeditions travel faster.
+epitaph.expedition,"{name} was sent down, and holds Floor {floor}"
+ui.expedition.title,Expeditions
+ui.expedition.send,Send
+ui.expedition.none,An empty slot
+ui.expedition.away,{name} is descending to Floor {floor}
+ui.expedition.returns,takes the watch in {time}
+ui.expedition.returned,{name} holds Floor {floor}
+ui.offline.expeditions,Expeditions returned
+biome.fungal_deep.name,The Fungal Deep
+enemy.spore_hound.name,Spore Hound
+enemy.rot_grub.name,Rot Grub
+enemy.bloom_wretch.name,Bloom Wretch
+enemy.mycelial_husk.name,Mycelial Husk
+enemy.cap_thrower.name,Cap Thrower
+enemy.thorn_polyp.name,Thorn Polyp
+enemy.flesh_weaver.name,Flesh Weaver
+enemy.deep_lurker.name,Deep Lurker
+enemy.sporemother.name,Sporemother
+enemy.the_bloom.name,The Bloom
+card.spore_cloud.name,Spore Cloud
+card.spore_cloud.text,Apply {0} Poison to all enemies.
+card.cutting_fungus.name,Cutting Fungus
+card.cutting_fungus.text,Deal {0} damage. Apply {1} Poison.
+card.mycelium.name,Mycelium
+card.mycelium.text,Gain {0} Block and {1} Regen.
+card.gut_hook.name,Gut Hook
+card.gut_hook.text,Deal {0} damage. Apply {1} Vulnerable.
+card.deep_roots.name,Deep Roots
+card.deep_roots.text,Draw {0}. Gain {1} energy. Exhaust.
+card.rupture.name,Rupture
+card.rupture.text,Deal {0} damage. Apply {1} Poison.
+card.chitin_plate.name,Chitin Plate
+card.chitin_plate.text,Gain {0} Block and {1} Thorns.
+card.harvest.name,Harvest
+card.harvest.text,Draw {0}. Heal {1}.
+card.rotbloom.name,Rotbloom
+card.rotbloom.text,Gain {0} Knell.
+card.the_deep_breath.name,The Deep Breath
+card.the_deep_breath.text,Heal {0}. Gain {1} Wit. Exhaust.
+class.hexer.name,Hexer
+relic.hexers_thimble.name,Hexer's Thimble
+relic.hexers_thimble.text,Enemies start every fight with 3 Poison.
+card.wither.name,Wither
+card.wither.text,Deal {0} damage. Apply {1} Poison.
+card.flinch.name,Flinch
+card.flinch.text,Gain {0} Block.
+card.ill_wish.name,Ill Wish
+card.ill_wish.text,Apply {0} Weak.
+card.creeping_rot.name,Creeping Rot
+card.creeping_rot.text,Apply {0} Poison.
+card.hex_bolt.name,Hex Bolt
+card.hex_bolt.text,Deal {0} damage. Apply {1} Weak.
+card.sap_will.name,Sap Will
+card.sap_will.text,Apply {0} Weak to all enemies.
+card.bitter_draught.name,Bitter Draught
+card.bitter_draught.text,Gain {0} Block. Draw {1}.
+card.evil_eye.name,Evil Eye
+card.evil_eye.text,Apply {0} Vulnerable. Draw {1}.
+card.bloodletting.name,Bloodletting
+card.bloodletting.text,Deal {0} damage twice. Gain {1} Bleed.
+card.miasma.name,Miasma
+card.miasma.text,Apply {0} Poison to all enemies.
+card.witchs_mark.name,Witch's Mark
+card.witchs_mark.text,Deal {0} damage. Apply {1} Poison and {2} Vulnerable.
+card.cold_comfort.name,Cold Comfort
+card.cold_comfort.text,Gain {0} Block and {1} Regen.
+card.black_ledger.name,Black Ledger
+card.black_ledger.text,Draw {0}. Gain {1} Wit. Exhaust.
+card.the_long_illness.name,The Long Illness
+card.the_long_illness.text,Gain {0} Knell.
+card.unmaking.name,Unmaking
+card.unmaking.text,Deal {0} damage. Apply {1} Poison.
+ui.class.locked,Opens when one of your dead holds {biome}.
+ui.class.current,Who you are.
+ui.class.swap,Send this one down instead. Only before you descend.
+biome.the_kiln.name,The Kiln
+enemy.cinder_hound.name,Cinder Hound
+enemy.slag_crawler.name,Slag Crawler
+enemy.ember_wisp.name,Ember Wisp
+enemy.furnace_drone.name,Furnace Drone
+enemy.clay_sentinel.name,Clay Sentinel
+enemy.glass_shrike.name,Glass Shrike
+enemy.kiln_warden.name,Kiln Warden
+enemy.molten_husk.name,Molten Husk
+enemy.the_bellows.name,The Bellows
+enemy.the_first_flame.name,The First Flame
+card.hammer_blow.name,Hammer Blow
+card.hammer_blow.text,Deal {0} damage.
+card.firebrand.name,Firebrand
+card.firebrand.text,Deal {0} damage. Apply {1} Burn.
+card.slake.name,Slake
+card.slake.text,Gain {0} Block. Heal {1}.
+card.quench.name,Quench
+card.quench.text,Gain {0} Block and {1} Regen.
+card.pry_bar.name,Pry Bar
+card.pry_bar.text,Deal {0} damage. Apply {1} Vulnerable.
+card.bellows_breath.name,Bellows Breath
+card.bellows_breath.text,Apply {0} Burn to all enemies.
+card.anvil_stance.name,Anvil Stance
+card.anvil_stance.text,Gain {0} Block and {1} Thorns.
+card.white_heat.name,White Heat
+card.white_heat.text,Gain {0} Might.
+card.smiths_eye.name,Smith's Eye
+card.smiths_eye.text,Draw {0}. Gain {1} energy. Exhaust.
+card.sunder.name,Sunder
+card.sunder.text,Deal {0} damage. Apply {1} Vulnerable.
+ui.hall.title,The Hall of Legends
+ui.hall.blessing,What every Legend adds to your dead and to your hands
+ui.hall.legends,The Merged
+ui.hall.none,Nobody has been merged yet.
+ui.hall.rite,Perform the rite
+ui.hall.needed,The rite needs one of your own standing on Floor {floor}. The deepest stands on {standing}.
+ui.hall.cost,"It takes all {ghosts} of your dead and every Soul you have ({soul}). It keeps your reach, your upgrades and your unlocks."
+ui.hall.legend,"{name}, cycle {cycle} — +{bonus}, {trait}"
+ui.hall.and_more,and {count} more
+ui.use.hall,Read the Hall of Legends
+tag.bone.name,Bone
+tag.shield.name,Shield
+tag.poison.name,Poison
+tag.ember.name,Ember
+tag.draw.name,Draw
+tag.holy.name,Holy
+tag.weak.name,Weak
+mutation.thorned.name,Thorned
+mutation.thorned.text,Every enemy starts with 3 Thorns.
+mutation.hardened.name,Hardened
+mutation.hardened.text,Every enemy starts with 2 Might.
+mutation.the_cold.name,The Cold
+mutation.the_cold.text,You start every fight with 2 Weak.
+mutation.the_rot.name,The Rot
+mutation.the_rot.text,You start every fight with 3 Poison.
+mutation.the_dark.name,The Dark
+mutation.the_dark.text,You draw one card fewer each turn.
+mutation.the_weight.name,The Weight
+mutation.the_weight.text,You have one less energy each turn.
+mutation.second_wind.name,Second Wind
+mutation.second_wind.text,You have one more energy each turn.
+mutation.the_kindling.name,The Kindling
+mutation.the_kindling.text,You start every fight with 2 Burn.
+mutation.the_swollen.name,The Swollen
+mutation.the_swollen.text,Every enemy has far more health.
+ui.run.floor_tier,Floor {floor} · {biome} · Tier {tier}
+ui.run.mutation,{name} — {text}
+trait.poison.name,The Rotted
+trait.poison.text,Your Poison cards apply 1 more stack.
+trait.ember.name,The Kindled
+trait.ember.text,Your Ember cards apply 1 more stack.
+trait.weak.name,The Unmaking
+trait.weak.text,Your Weak cards apply 1 more stack.
+trait.bone.name,The Bonebreaker
+trait.bone.text,Your Bone cards deal 2 more damage.
+trait.holy.name,The Consecrated
+trait.holy.text,Your Holy cards deal 3 more damage.
+trait.shield.name,The Unyielding
+trait.shield.text,Your Shield cards give 2 more Block.
+trait.draw.name,The Far-Sighted
+trait.draw.text,Your Draw cards draw 1 more card.
+ui.hall.carry,Carry into the descent
+ui.hall.carried,Carried
+ui.hall.carrying,{name} walks with you.
+ui.hall.carry_none,No Legend walks with you.
+ui.hall.invoke_hint,One Legend may be invoked per descent. Its trait is yours for the run.
+ui.haunting,"Floor {floor} is haunted: {count} {tag} dead, +{bonus} spawn."
+ui.haunting.none,Three of your dead sharing an archetype haunt their floor.
+ui.tend.sharpen,Sharpen
+ui.tend.relic,Arm
+chapter.deeper_roots.name,Deeper Roots
+chapter.deeper_roots.text,Every cycle's Founder stands three floors deeper.
+chapter.breeding_dark.name,The Breeding Dark
+chapter.breeding_dark.text,Every floor spawns 10% more.
+chapter.old_blood.name,Old Blood
+chapter.old_blood.text,Keep a tenth of your Soul through the rite.
+chapter.depth_seals.name,Depth Seals
+chapter.depth_seals.text,"Set a Seal before a descent: harder below, and your dead are worth more."
+ui.chronicle.title,The Chronicle
+ui.chronicle.locked,The Chronicle opens at {count} Legends. You have {have}.
+ui.chronicle.ink,Ink
+ui.chronicle.write,Write
+ui.chronicle.written,Written
+ui.chronicle.level,Level {level} of {max}
+ui.seal.none,No Seal
+ui.seal.set,"Seal {seal}: enemies +{harder}, your dead +{richer}"
+ui.seal.locked,Depth Seals are written in the Chronicle.
+ui.options.language,Language
+ui.language.en,English
+ui.language.es,Español
+ui.exit.terms,"Take the Watch ends this hero on purpose. They stay here as a prepared ghost -- worth {prepared} more for ever -- and the guild keeps your reach, your Soul and your upgrades. Retreat spends 1 Resolve and walks them home."
+ui.exit.watch_locked,Take the Watch — the guild will not hold a vigil until a hero of yours has fallen
+
+ui.menu.kicker,A GUILD BEYOND THE GRAVE
+ui.menu.premise,Descend into the dark. Your dead will keep the watch.
+ui.close,Return
+ui.nav.depths,Depths
+ui.nav.upgrades,Upgrades / Expeditions
+ui.help.title,Controls
+ui.help.move_forward,WASD: walk; mouse: look
+ui.help.sprint,Sprint
+ui.help.ui_cancel,"Cancel a target, return, or pause. Required choices stay pending."
+ui.help.help,Controls and help
+ui.help.guild_menu,Open or close guild management
+ui.help.interact,Use the focused station or inspect a ghost
+ui.help.inspect_hero,Inspect hero and deck
+ui.help.floor_map,Open the floor map; click to mark a destination
+ui.help.keyboard,Tab / Shift+Tab: focus · Enter: activate · Right click or F: inspect a card. Combat movement does not affect damage or turns.
+ui.help.guild_hint,{guild}: manage guild · {use}: use station · {back}: return / pause · {help}: controls
+ui.options.ui_scale,Interface scale (100–150%)
+ui.options.reduced_motion,Reduced motion
+ui.inspect.deck,Deck
+ui.inspect.hand,Hand
+ui.inspect.draw,Draw pile
+ui.inspect.discard,Discard
+ui.inspect.card,Card inspection
+ui.inspect.cost,Cost {n}
+ui.inspect.unordered,Composition only — shuffle order is hidden.
+ui.inspect.modifiers,Current Might {might} · Wit {wit}. Card rules show their base/upgraded values; combat applies statuses and relics when played.
+ui.inspect.energy,Not enough energy to play this card.
+ui.inspect.ghost,Inspect ghost
+ui.ghost.detail,"Floor {floor} · {state}
+Effective strength {strength}
+Whole floor production {rate} Soul/h"
+ui.ghost.state.true,At rest
+ui.ghost.state.echo,Echo
+ui.ghost.state.expedition,Expedition
+ui.ghost.state.restless,Restless
+ui.ghost.state.prepared,Prepared Watch
+ui.floor.details,"Floor {floor} · {count} residents
+{rate} Soul/h"
+ui.floor.eligible,Within descent reach
+ui.floor.locked,Beyond current descent reach
+ui.floor.deeper,Deeper than the visible well. These are the exact ledger records.
+ui.map.title,Floor {floor} · Map
+ui.map.legend,"E Entry · S Stairs · ○ Pending · ✓ Complete · × Locked · Cyan arrow: you
+Select a cell or room number to mark it on the compass."
+ui.map.mark,Mark on compass
+ui.saves.title,Campaigns / Import
+ui.saves.explain,Import a copy into a new slot. The source and current campaign are retained. Select a campaign to continue it.
+ui.saves.import,Import legacy campaign…
+ui.saves.current,Current
+ui.saves.imported,Imported {name} into {slot}. Select that campaign to continue.
+ui.saves.future,This save requires a newer version of the game. It has not been changed.
+ui.saves.invalid,This file is not a valid campaign. Existing saves are unchanged.
+ui.saves.content,The campaign refers to unknown game content. Import cancelled.
+ui.saves.missing,No campaign file was found.
+ui.saves.write,The campaign could not be saved. The previous save is still available.
+ui.saves.recovered,Campaign recovered from a valid backup.
+ui.inspect.status,Status
+ui.inspect.no_status,No active statuses.
+ui.fight.target_hint,"Select a card, then click this tag or press Enter to target. ◎ marks a valid target."
+status.poison.help,"At turn start, lose {n} HP through Block; lose one stack."
+status.burn.help,"At turn end, lose {n} HP through Block; lose one stack."
+status.bleed.help,Lose {n} HP through Block when attacking. Lose one stack at turn end.
+status.weak.help,Attack damage is multiplied by {weak}. Lose one stack at turn end.
+status.vulnerable.help,Incoming hit damage is multiplied by {vulnerable}. Lose one stack at turn end.
+status.might_buff.help,Adds {n} Might to effects that scale with Might.
+status.wit_buff.help,Adds {n} Wit to effects that scale with Wit.
+status.thorns.help,An attacker loses {n} HP through Block after an attack hits.
+status.regen.help,"At turn start, heal {n} HP; lose one stack."
+status.vigil.help,"At the hero’s turn start, gain {n} Block."
+status.knell.help,"At the hero’s turn start, deal {n} damage through Block to every living enemy."

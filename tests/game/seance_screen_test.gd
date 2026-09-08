@@ -101,7 +101,10 @@ func test_tend_only_appears_for_a_restless_ghost_and_the_first_one_is_free() -> 
 	await await_idle_frame()
 	var line: GhostLine = s.lines[founder.id]
 	assert_bool(line._tend.visible).is_true()
-	assert_str(line._tend.text).is_equal(g.text("ui.free"))
+	# The verb and the price. A button whose whole label was `Free` told a
+	# new player nothing about what pressing it would do.
+	assert_str(line._tend.text).contains(g.text("ui.tend"))
+	assert_str(line._tend.text).contains(g.text("ui.free"))
 	line._tend.emit_signal("pressed")
 	await await_idle_frame()
 	assert_bool(founder.restless).is_false()

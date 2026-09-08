@@ -17,3 +17,13 @@ event.fx_well.drink,Drink.
 event.fx_well.leave,Leave.
 upgrade.fx_might.name,Fixture Might
 upgrade.fx_might.text,+1 Might.
+rule.fx_aggressive.name,Aggressive
+rule.fx_aggressive.text,Damage over guard.
+rule.fx_defensive.name,Defensive
+rule.fx_defensive.text,Guard over damage.
+mutation.fx_mutation.name,Fixture Rule
+mutation.fx_mutation.text,Every enemy starts with 2 Thorns.
+trait.fx.name,Fixture Trait
+trait.fx.text,Fixture cards do more.
+chapter.fx.name,Fixture Chapter
+chapter.fx.text,More of everything.

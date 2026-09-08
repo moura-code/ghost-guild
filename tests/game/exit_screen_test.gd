@@ -58,7 +58,6 @@ func test_it_shows_the_three_numbers_once_the_reckoning_lands() -> void:
 	assert_str(s._here.text).contains("/h")
 	assert_str(s._next.text).contains("/h")
 	assert_str(s._survival.text).contains("%")
-	assert_str(s._note.text).is_equal("")
 
 
 func test_the_yield_numbers_are_marginal_and_positive() -> void:
@@ -147,17 +146,17 @@ func test_retreat_is_refused_with_no_resolve_left() -> void:
 	assert_bool(s._retreat.disabled).is_true()
 
 
-func test_the_last_floor_of_the_biome_cannot_be_pushed_past() -> void:
+func test_the_deepest_authored_floor_still_offers_the_next_one() -> void:
+	# It used to be the bottom of the dungeon. The biomes cycle now (§2), so
+	# floor 30 is an ordinary floor with floor 31 under it, and the screen
+	# offers the push like any other.
 	var g := _game()
-	var run := _at_exit(g, g.campaign.biome().last_floor)
+	var run := _at_exit(g, Biomes.depth(g.content))
 	var s := _screen(g, run)
 	await await_idle_frame()
-	assert_bool(bool(s.numbers["summary"]["can_push"])).is_false()
-	assert_bool(s._push.visible).is_false()
-	# The reading has nothing to show, and the note says why.
-	assert_str(s._next.text).is_equal("—")
-	assert_str(s._note.text).is_equal(g.text("ui.exit.no_push"))
-	assert_str(s._note.text).is_not_equal("ui.exit.no_push")
+	assert_bool(bool(s.numbers["summary"]["can_push"])).is_true()
+	assert_bool(s._push.visible).is_true()
+	assert_str(s._next.text).is_not_equal("—")
 
 
 func test_reckon_reads_without_mutating_the_run() -> void:
@@ -230,8 +229,10 @@ func test_the_slow_half_fills_in_without_losing_the_fast_half() -> void:
 func test_the_preview_simulates_less_than_the_balance_tools() -> void:
 	# The trade this screen makes: an estimate the player glances at does
 	# not need the accuracy a balance invariant does.
-	assert_int(ExitScreen.PREVIEW_FIGHTS) 		.is_less(int(TestFixtures.content().balance.get("strength_sim_fights", 50)))
-	assert_int(ExitScreen.PREVIEW_SAMPLES) 		.is_less(int(TestFixtures.content().balance.get("survival_samples", 20)))
+	assert_int(ExitScreen.PREVIEW_FIGHTS) \
+		.is_less(int(TestFixtures.content().balance.get("strength_sim_fights", 50)))
+	assert_int(ExitScreen.PREVIEW_SAMPLES) \
+		.is_less(int(TestFixtures.content().balance.get("survival_samples", 20)))
 
 
 func test_the_preview_restores_the_campaign_fight_count() -> void:
@@ -243,3 +244,83 @@ func test_the_preview_restores_the_campaign_fight_count() -> void:
 	# Trimming sim_fights for the preview must not leak into the campaign,
 	# or every ghost placed afterwards would be measured with fewer fights.
 	assert_int(g.campaign.sim_fights).is_equal(before)
+
+
+# ------------------------------------------------- taking the watch, in order
+
+func test_taking_the_watch_asks_how_before_it_ends_the_run() -> void:
+	# The one thing this screen asks the player to author rather than read.
+	# Ending the run on the first click would skip it entirely.
+	var g := _game()
+	g.campaign.onboarding.watch_unlocked = true
+	var run := _at_exit(g)
+	run.watch_unlocked = true
+	var s := _screen(g, run)
+	s._watch.pressed.emit()
+	assert_bool(s._picker.visible).override_failure_message("no picker").is_true()
+	assert_bool(s._face.visible).is_false()
+	assert_str(run.phase).override_failure_message("the run ended before the choice").is_equal("exit")
+
+
+func test_backing_out_of_the_picker_returns_the_numbers() -> void:
+	var g := _game()
+	g.campaign.onboarding.watch_unlocked = true
+	var run := _at_exit(g)
+	run.watch_unlocked = true
+	var s := _screen(g, run)
+	s._watch.pressed.emit()
+	s._picker.cancelled.emit()
+	assert_bool(s._picker.visible).is_false()
+	assert_bool(s._face.visible).is_true()
+	assert_str(run.phase).is_equal("exit")
+
+
+func test_confirming_ends_the_run_with_the_rules_the_player_ordered() -> void:
+	var g := _game()
+	g.campaign.onboarding.watch_unlocked = true
+	var run := _at_exit(g)
+	run.watch_unlocked = true
+	var s := _screen(g, run)
+	var decided: Array[String] = []
+	s.decided.connect(func(kind: String) -> void: decided.append(kind))
+	s._watch.pressed.emit()
+	s._picker.toggle("strike_first")
+	s._picker.toggle("finish_the_wounded")
+	s._picker._confirm.pressed.emit()
+	assert_array(decided).is_equal(["watch"])
+	assert_array(run.hero.rules).is_equal(["strike_first", "finish_the_wounded"])
+
+
+func test_the_ghost_that_walks_away_from_this_screen_carries_them() -> void:
+	# The whole chain: picker -> action -> hero -> ghost -> ladder.
+	var g := _game()
+	g.campaign.onboarding.watch_unlocked = true
+	var run := _at_exit(g)
+	run.watch_unlocked = true
+	var s := _screen(g, run)
+	s._watch.pressed.emit()
+	s._picker.toggle("hold_the_line")
+	s._picker._confirm.pressed.emit()
+	# The screen ends the run; banking it is Crawl's job, and this is the
+	# chain being tested rather than the screen alone.
+	g.finish_run()
+	var newest: Ghost = null
+	for ghost in g.campaign.ladder.ghosts:
+		if newest == null or ghost.id > newest.id:
+			newest = ghost
+	assert_object(newest).is_not_null()
+	assert_array(newest.rules).override_failure_message("the ghost forgot its orders").is_equal(["hold_the_line"])
+
+
+func test_rebinding_the_screen_puts_the_numbers_back_in_front() -> void:
+	# The panel is built once and reused for every floor exit. A picker left
+	# up would greet the player at the next exit instead of the readings.
+	var g := _game()
+	g.campaign.onboarding.watch_unlocked = true
+	var run := _at_exit(g)
+	run.watch_unlocked = true
+	var s := _screen(g, run)
+	s._watch.pressed.emit()
+	s.bind(g, run)
+	assert_bool(s._face.visible).is_true()
+	assert_bool(s._picker.visible).is_false()
