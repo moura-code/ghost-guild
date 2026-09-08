@@ -15,7 +15,7 @@ the roguelite, dead heroes become idle-farming ghosts.
   Exit 0 on success; exit 1 on content validation errors or an unknown enemy id.
 - Run demo: `"$GODOT_BIN" --headless --path . -s tools/run_demo.gd -- [entry_floor] [seed]`.
   Plays one autopilot run and prints its event log plus an `OUTCOME` line.
-  Exit 1 on content validation errors or an entry floor outside 1..10.
+  Exit 1 on content validation errors or an entry floor outside 1..30.
 - Campaign demo: `"$GODOT_BIN" --headless --path . -s tools/campaign_demo.gd -- [seed] [runs]`.
   Plays autopilot runs with the ghost economy between them and a save/load round trip.
 - Balance sim: `"$GODOT_BIN" --headless --path . -s tools/balance_sim.gd -- [runs] [sim_fights]`.

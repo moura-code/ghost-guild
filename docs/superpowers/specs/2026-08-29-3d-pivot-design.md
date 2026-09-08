@@ -1,6 +1,6 @@
 # Ghost Guild in 3D — Pivot Design Spec
 
-**Date:** 2026-08-29 · **Status:** approved for planning · **Engine:** Godot 4.7.2, Forward+ · **Branch:** `3d-pivot`
+**Date:** 2026-08-29 · **Status:** implemented; hybrid navigation amendment 2026-09-06 · **Engine:** Godot 4.7.2, Forward+ · **Branch:** `3d-pivot`
 **Supersedes:** spec §9 (UI and aesthetic) of `2026-08-21-ghost-guild-design.md`, and all of `2026-08-24-visual-overhaul-design.md`.
 
 ## 0. What changes, in one line
@@ -87,8 +87,8 @@ spec's own argument for keeping cards in 2D -- "a card rendered in perspective
 is a card you cannot read" -- is an argument about **text and choice**, not
 about cards. A shop list, a rest menu, an exit decision and a ladder of twenty
 ghosts are the same object. So the line is drawn between the 2D **world** and
-2D **navigation** (deleted -- 3D is the world now, and you walk to places
-instead of switching tabs) and the 2D **panels and furniture** (kept, re-hosted
+2D **dungeon navigation** (replaced by walking; the current-floor schematic
+only marks the compass) and the 2D **panels and furniture** (kept, re-hosted
 in `HudRoot`). `StoneBox` and `Prop` in particular are panel furniture, not
 world widgets, and deleting them broke every kept panel. Net: about 1,900 lines
 deleted rather than 7,486.
@@ -100,7 +100,7 @@ The pixel-art direction dies with `PaletteLayer`. `ART_BRIEF.md` is rewritten;
 
 - `renderer/rendering_method` → `forward_plus` (from `gl_compatibility`)
 - remove `window/stretch/mode="viewport"` and the 640x360 viewport; the game
-  renders at native resolution with `canvas_items` stretch for the HUD
+  renders at native resolution; `HudRoot` independently scales and reflows the HUD
 - remove `textures/canvas_textures/default_texture_filter=0`
 - add an input map: move, look, interact, sprint
 - add physics layers: world, player, interactable, ghost
@@ -292,8 +292,9 @@ animation on `enemy_died`. The event stream is the contract, and it is the same
 contract the 2D animator consumed.
 
 **The guild:** a walkable room with an upgrade table, a séance circle, the
-hero's desk, and the well. Looking down the well shows the tower of floors with
-your ghosts standing on them; walking into it starts the descent. This is the
+hero's desk, the Hall, and the well. Looking down the well shows your ghosts.
+Using the well opens the same Depths panel as the quick navigation. The panel
+checks the existing reach and draft requirements before starting a descent. This is the
 Steam capsule shot and the first three seconds of the trailer.
 
 **Ghosts in the world:** a ghost's floor is already in its record, and the
@@ -342,7 +343,27 @@ pivot changes how the existing slice is played and seen; it does not grow it.
 
 ## 12. Reversibility
 
-`main` keeps the finished 2D pixel-art slice. This branch replaces it rather
-than living alongside it: there is no configuration flag and no dual maintenance
-of two presentation layers. If the pivot is abandoned, the fallback is `main`,
-intact.
+`2d-legacy` and `archive/2d-2026-09-06` preserve the playable 2D edition at
+`5200eda`. `archive/3d-2026-09-06` preserves the first-person baseline at
+`1e8f8bf`. The hybrid is the development edition; it boots `game/crawl.tscn`
+with Forward+. There is no runtime switch between two dungeon implementations.
+See `docs/controls-and-saves.md` for isolated launch profiles and copy-only
+campaign import. The original checkout remains usable on `2d-legacy`.
+
+
+## Hybrid navigation amendment — 2026-09-06
+
+The integration plan supersedes the walking-only guild restriction. G and the
+five visible tabs open the same persistent management panels as world stations.
+I inspects the hero, M shows the current floor during exploration, E inspects a
+focused dungeon ghost, and F1 explains the controls. These overlays freeze the
+body and preserve the actual return context. Escape cancels targeting before
+closing optional panels; mandatory run choices remain underneath pause.
+
+`Crawl` owns input contexts. `GameRoot` remains the only campaign-action bridge.
+Combat stays deterministic and movement has no tactical effect. Hero and ghost
+previews use isolated visual instances; the map reads the existing layout. Save
+schema 3 adds exact fight/pile/RNG snapshots, with copy import for older saves.
+The newer Hexer, biomes, expeditions, Legends, hauntings, tending and Chronicle
+are retained; the historical section 11 scope describes the pivot's original
+slice, not the delivered hybrid's content.

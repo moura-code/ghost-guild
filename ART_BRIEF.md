@@ -1,8 +1,8 @@
 # Ghost Guild — art brief
 
 Rewritten on 2026-08-29 for the 3D pivot. The previous brief described a
-2D pixel-art game; that direction is on `main` and is not what this branch
-builds.
+2D pixel-art game; that direction is preserved on `2d-legacy`. The development
+edition combines the 3D world with the shared management and inspection HUD.
 
 The environment and interface load assets from the folders listed below.
 Creatures and spirits are built in code from meshes attached to animated
@@ -43,7 +43,7 @@ when sources disagree. These are the agreements:
 |---|---|---|
 | Walls, floors, ceilings | **Done.** Procedural boxes and planes with CC0 ambientCG PBR sets | `Kit.floor_mesh` / `wall_mesh` / `ceiling_mesh` |
 | Lighting and fog | **Done.** Torch pools, cold ambient, per-depth fog | `Grade.environment` |
-| The guild | **Done, unpolished.** Room, four stations, well, shaft | `GuildRoom._plinth`, and the well head in `GuildRoom._build_well_head` |
+| The guild | Room, five distinct stations: anvil table, ledger desk, séance candles, memorial Hall and well | `GuildRoom._plinth`, and the well head in `GuildRoom._build_well_head` |
 | Props | **Done.** Eight CC0 Poly Haven models, placed by `Dressing` against walls, never blocking a route | `Dressing.CATALOGUE` |
 | **Enemies** | Thirty enemies built from articulated bones, armor, weapons and growths. Spiders have eight legs; grubs have segmented bodies. | `CreatureRig.build`, `CreatureDetails.dress`, `CreaturePose` |
 | **Ghosts** | Pleated burial shrouds, hollow hoods, glowing eyes and sleeves. Color reflects true, echo, prepared or restless state. | `GhostFigure._build` |
@@ -80,3 +80,34 @@ save, including its backups, so repeated captures are comparable.
 ## Attribution
 
 Every asset lands in `ATTRIBUTION.md` as it is added, not at the end.
+
+
+## Hybrid presentation — 2026-09-06
+
+`game/art/hero_figure.gd` builds the Sexton with a spade and lantern and the
+Hexer with needle, charms and thimble. Both use the existing bone/material
+helpers. `ModelPreview` instances these and the production `GhostFigure` in
+a transparent, isolated 360×400 viewport with one unshadowed key light.
+Hidden previews disable rendering and animation; each panel displays at most
+one preview. Never reparent a live actor into a preview.
+
+The UI uses persistent `PanelFrame` scroll surfaces, 100–150% scale, Inter
+body text and Cinzel headings. Card inspection retains base/upgraded rules,
+shows current modifiers and status explanations, and sorts draw composition
+without exposing shuffle order. Reduced motion removes head bob, camera
+shake and forced travel, ornamental drift and panel/card travel; the death
+result and combat impacts remain visible.
+
+Capture sizes are explicit and rendered natively, independent of desktop window
+limits. For a production-room roster review, give the entry floor then enemy IDs:
+
+```sh
+GODOT_BIN=/path/to/Godot_v4.7.2-stable_linux.x86_64
+GG_PROFILE=review tools/launch.sh -s tools/hud_shot.gd -- /tmp/hero.png hexer 90 1280 720 1.25 es
+GG_PROFILE=review tools/launch.sh -s tools/hud_shot.gd -- /tmp/kiln.png roster 90 1280 720 1 en 21 cinder_hound slag_crawler ember_wisp
+GG_PROFILE=review tools/launch.sh -s tools/hybrid_bench.gd
+```
+
+See the hybrid validation record for the full 30-enemy review, UI captures and
+measured hardware/renderer conditions. No lower-spec claim follows from those
+measurements.

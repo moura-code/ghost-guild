@@ -1,10 +1,10 @@
 # Ghost Guild: integrate the 2D interface and 3D world
 
-Date: 2026-09-06. Status: implementation plan; new work below is pending.
+Date: 2026-09-06. Updated: 2026-09-08. Status: M0–M6 implemented; final integration validation in progress.
 
 Build one game with first-person exploration, visible enemies and ghosts, and a clear 2D interface for cards and management. Preserve the playable 2D edition as a reference. Use the newer combat, economy, content and progression on `3d-pivot` as the foundation.
 
-This document records completed work separately from proposed changes. Preparing this plan does not merge branches, change saves, or implement the features below.
+Completed checkboxes below describe the delivered implementation. Baseline descriptions retain the original comparison. See [the validation record](2026-09-06-hybrid-validation.md) for tests, native captures, migration evidence, performance limits and the legacy-change audit.
 
 ## 1. Baseline and completed improvements
 
@@ -109,11 +109,11 @@ Each milestone ends in a runnable build and a short record of changed behavior, 
 
 ### M0 — Preserve the editions and establish the baseline
 
-- [ ] Preserve the playable 2D snapshot at `5200eda` as `2d-legacy` and an archive tag, checking that the intended names are unused. Preserve the 3D baseline commit as well.
-- [ ] Start `hybrid-integration` from the verified current `3d-pivot` head. Bring this plan into that branch. Keep the user's active 2D checkout usable; use an isolated worktree while it is being played.
-- [ ] Give legacy play, hybrid development and automated tests separate user-data directories. Tests and screenshot tools use disposable saves; campaign migration operates on copies.
-- [ ] Record import/startup, core and game-suite results, and native captures of guild, hero, ladder, séance, Hall, combat, choices, exit and death. Recheck the known shutdown issue separately if it recurs.
-- [ ] Audit the current deferred-items document against newer code before treating an old entry as an open defect. Several entries describe superseded milestones.
+- [x] Preserve the playable 2D snapshot at `5200eda` as `2d-legacy` and an archive tag, checking that the intended names are unused. Preserve the 3D baseline commit as well.
+- [x] Start `hybrid-integration` from the verified current `3d-pivot` head. Bring this plan into that branch. Keep the user's active 2D checkout usable; use an isolated worktree while it is being played.
+- [x] Give legacy play, hybrid development and automated tests separate user-data directories. Tests and screenshot tools use disposable saves; campaign migration operates on copies.
+- [x] Record import/startup, core and game-suite results, and native captures of guild, hero, ladder, séance, Hall, combat, choices, exit and death. Recheck the known shutdown issue separately if it recurs.
+- [x] Audit the current deferred-items document against newer code before treating an old entry as an open defect. Several entries describe superseded milestones.
 
 Primary files/tools: Git refs, `project.godot`, `tools/test.cmd`, `tools/hud_shot.gd`, `tools/creature_shot.gd` and the launch environment. Add a small Linux launch/test wrapper only if needed to make save isolation and commands repeatable.
 
@@ -121,12 +121,12 @@ Acceptance: both original commits remain recoverable; development cannot overwri
 
 ### M1 — Connect guild navigation and make UI ownership consistent
 
-- [ ] Add `game/hud/guild_nav.gd` and its UID. Tabs: Depths, Hero, Upgrades/Expeditions, Séance and Hall. Display locked features with the existing requirements.
-- [ ] Route G, the navigation buttons and `GuildRoom` stations to the same existing panel instances. Include a visible Close/Return action; retain the selected floor and each panel's scroll position.
-- [ ] Centralize pointer, movement, HUD visibility and return-context decisions. Keep that helper local to presentation; do not turn it into a second run state machine.
-- [ ] Implement guild, hero-inspection, help and pause controls, including pause over rewards/exit/death screens, options returning to their caller, and correct combat restoration. Add M and dungeon-ghost inspection when those features land in M4; show their help prompts only when usable.
-- [ ] Prevent delayed fight staging, animation completion or a hidden button from restoring input to the wrong context.
-- [ ] Add the controls/help panel and teach G, E and Escape at the first relevant interaction. Existing onboarding unlocks remain authoritative.
+- [x] Add `game/hud/guild_nav.gd` and its UID. Tabs: Depths, Hero, Upgrades/Expeditions, Séance and Hall. Display locked features with the existing requirements.
+- [x] Route G, the navigation buttons and `GuildRoom` stations to the same existing panel instances. Include a visible Close/Return action; retain the selected floor and each panel's scroll position.
+- [x] Centralize pointer, movement, HUD visibility and return-context decisions. Keep that helper local to presentation; do not turn it into a second run state machine.
+- [x] Implement guild, hero-inspection, help and pause controls, including pause over rewards/exit/death screens, options returning to their caller, and correct combat restoration. Add M and dungeon-ghost inspection when those features land in M4; show their help prompts only when usable.
+- [x] Prevent delayed fight staging, animation completion or a hidden button from restoring input to the wrong context.
+- [x] Add the controls/help panel and teach G, E and Escape at the first relevant interaction. Existing onboarding unlocks remain authoritative.
 
 Primary files: `game/world/crawl.gd`, `player.gd`, `guild_room.gd`, `game/hud/hud_root.gd`, `pause_menu.gd`, `options_menu.gd`, `game/fight/fight_director.gd`, `project.godot`, and new navigation/help/context code as needed.
 
@@ -136,15 +136,15 @@ Acceptance: a player can manage the guild through stations or quick tabs, then d
 
 ### M2 — Make the 2D layer comfortable over the 3D scene
 
-- [ ] Establish shared panel margins, title/close placement, wallet spacing, button states and tooltip styling through `UiTheme`, `ScreenLayout` and `HudRoot`.
-- [ ] Replace fixed layouts that clip with responsive columns and bounded scrolling. Preserve focus and selection when content refreshes. Update stale comments that still describe old card dimensions/reference layouts.
-- [ ] Keep cards, enemy tags, vitals and End Turn in separate readable regions. Reserve space for selected-card text and target feedback without covering all the creatures.
-- [ ] Add a full card inspection view and accessible deck/draw/discard inspection using actual fight data. Show draw-pile composition without revealing hidden shuffle order, and never consume RNG during inspection. Preserve the existing single-enemy automatic targeting behavior.
-- [ ] Make enemy tags selectable through the same target action as models. Show valid target feedback on the tag and body; reject dead/stale targets and blocked clicks.
-- [ ] Ensure card costs, modified values, status explanations and invalid-action reasons come from current content/combat helpers. Keep engine results authoritative; describe any future damage preview as a preview until it matches all modifiers.
-- [ ] Show reward, shop, rest and exit consequences clearly, with the current deck/health/resources where relevant. Do not recreate the older floor-10 caps or progression assumptions.
-- [ ] Add UI-scale settings. Apply them immediately and persist them in `Settings`, separately from campaign data. The complete reduced-motion setting lands with its world and interface behavior in M6.
-- [ ] Add English and Spanish keys for new text; check long translations, numeric growth and tooltips. Preserve the established icon family and font pairing.
+- [x] Establish shared panel margins, title/close placement, wallet spacing, button states and tooltip styling through `UiTheme`, `ScreenLayout` and `HudRoot`.
+- [x] Replace fixed layouts that clip with responsive columns and bounded scrolling. Preserve focus and selection when content refreshes. Update stale comments that still describe old card dimensions/reference layouts.
+- [x] Keep cards, enemy tags, vitals and End Turn in separate readable regions. Reserve space for selected-card text and target feedback without covering all the creatures.
+- [x] Add a full card inspection view and accessible deck/draw/discard inspection using actual fight data. Show draw-pile composition without revealing hidden shuffle order, and never consume RNG during inspection. Preserve the existing single-enemy automatic targeting behavior.
+- [x] Make enemy tags selectable through the same target action as models. Show valid target feedback on the tag and body; reject dead/stale targets and blocked clicks.
+- [x] Ensure card costs, modified values, status explanations and invalid-action reasons come from current content/combat helpers. Keep engine results authoritative; describe any future damage preview as a preview until it matches all modifiers.
+- [x] Show reward, shop, rest and exit consequences clearly, with the current deck/health/resources where relevant. Do not recreate the older floor-10 caps or progression assumptions.
+- [x] Add UI-scale settings. Apply them immediately and persist them in `Settings`, separately from campaign data. The complete reduced-motion setting lands with its world and interface behavior in M6.
+- [x] Add English and Spanish keys for new text; check long translations, numeric growth and tooltips. Preserve the established icon family and font pairing.
 
 Primary files: `game/hud/hand_view.gd`, `enemy_tag.gd`, `hero_screen.gd`, `choice_screen.gd`, `exit_screen.gd`, `hall_screen.gd`, `game/widgets/card_view.gd`, `hero_panel.gd`, `wallet_bar.gd`, `game/theme/ui_theme.gd`, `screen_layout.gd`, `game/settings.gd`, `data/strings/en.csv`, `es.csv`, and new inspection widgets.
 
@@ -156,13 +156,13 @@ Acceptance: no clipped primary actions; every card can be inspected; targets are
 
 ### M3 — Share models between management and the world
 
-- [ ] Add `game/widgets/model_preview.gd` with its UID: an isolated `SubViewport`/`World3D`, a controlled camera and consistent lighting. Render only while visible; start with one active preview per open panel.
-- [ ] Build preview instances from the same visual factories as the world. Keep them free of campaign actions, encounter collision and gameplay audio. Never reparent a live world actor into the preview.
-- [ ] Replace the 3D branch hero sheet's static figure with a class-aware model. Add `game/art/hero_figure.gd` and its UID, reusing rig/material helpers where appropriate. Give the Sexton and Hexer distinct silhouettes tied to their established class/relic identities.
-- [ ] Adapt the legacy hero layout: model and identity/stats beside each other, deck below, and class/unlock choices preserved. On small windows the preview shrinks or collapses before the text becomes unreadable.
-- [ ] Adapt the legacy selected-floor panel to show residents, production, haunting state and descent eligibility next to the current tower. Keep support for cycling biomes and floors beyond thirty.
-- [ ] Add a ghost detail view keyed by `ghost_id`: name, floor, kind/state, deck, strength, relevant production information and a preview. Keep displayed calculated values sourced from the current economy helpers.
-- [ ] Preserve `CreatureRig`/`CreatureDetails` anatomy and `GhostFigure` colors, shrouds and fade behavior. Reuse the preview mechanism for selected creatures where it helps inspection; keep full roster browsing as a later optional feature.
+- [x] Add `game/widgets/model_preview.gd` with its UID: an isolated `SubViewport`/`World3D`, a controlled camera and consistent lighting. Render only while visible; start with one active preview per open panel.
+- [x] Build preview instances from the same visual factories as the world. Keep them free of campaign actions, encounter collision and gameplay audio. Never reparent a live world actor into the preview.
+- [x] Replace the 3D branch hero sheet's static figure with a class-aware model. Add `game/art/hero_figure.gd` and its UID, reusing rig/material helpers where appropriate. Give the Sexton and Hexer distinct silhouettes tied to their established class/relic identities.
+- [x] Adapt the legacy hero layout: model and identity/stats beside each other, deck below, and class/unlock choices preserved. On small windows the preview shrinks or collapses before the text becomes unreadable.
+- [x] Adapt the legacy selected-floor panel to show residents, production, haunting state and descent eligibility next to the current tower. Keep support for cycling biomes and floors beyond thirty.
+- [x] Add a ghost detail view keyed by `ghost_id`: name, floor, kind/state, deck, strength, relevant production information and a preview. Keep displayed calculated values sourced from the current economy helpers.
+- [x] Preserve `CreatureRig`/`CreatureDetails` anatomy and `GhostFigure` colors, shrouds and fade behavior. Reuse the preview mechanism for selected creatures where it helps inspection; keep full roster browsing as a later optional feature.
 
 Primary files: new preview/hero/detail components, `game/hud/hero_screen.gd`, `ladder_screen.gd`, `seance_screen.gd`, `game/widgets/tower_view.gd`, `ghost_line.gd`, and current creature/ghost visual factories. Legacy references: `main:game/art/crypt_view.gd`, `main:game/screens/hero_screen.gd`, `main:game/screens/ladder_screen.gd`.
 
@@ -172,13 +172,13 @@ Acceptance: the useful live-preview ideas from `main` are present with the newer
 
 ### M4 — Link the tower, ghosts and dungeon map
 
-- [ ] Add `game/hud/floor_map.gd` and its UID. Draw the current `FloorLayout.cells`, rooms, `node_rooms`, entry and stairs; derive encounter completion from the current run.
-- [ ] Use a full-floor schematic for the initial delivery. Include the player position/orientation and a legend. This requires no new exploration-save schema or duplicate floor generator.
-- [ ] Allow a map click to select a navigation marker for the existing compass. It must not enter/resolve a room, teleport the player or unlock the stairs.
-- [ ] Keep the map available during exploration. Required choices and fights retain their own interface; M cannot bypass them. Closing the map returns the same body and camera to exploration.
-- [ ] Add focused ghost interaction in the world, opening the same detail view by `ghost_id`. Dungeon ghost inspection is read-only; spending and tending remain guild actions.
-- [ ] Keep tower selection, ghost list selection and well highlights consistent for visible floors. For floors beyond the well's render range, show their exact ledger data and an explicit deeper-floor indicator instead of presenting the wrong floor as the real location.
-- [ ] Refresh visible figures and panels from existing campaign signals after tending, echo changes, returning expeditions and a new death. Avoid rebuilding the entire dungeon or well for numeric-only ticks.
+- [x] Add `game/hud/floor_map.gd` and its UID. Draw the current `FloorLayout.cells`, rooms, `node_rooms`, entry and stairs; derive encounter completion from the current run.
+- [x] Use a full-floor schematic for the initial delivery. Include the player position/orientation and a legend. This requires no new exploration-save schema or duplicate floor generator.
+- [x] Allow a map click to select a navigation marker for the existing compass. It must not enter/resolve a room, teleport the player or unlock the stairs.
+- [x] Keep the map available during exploration. Required choices and fights retain their own interface; M cannot bypass them. Closing the map returns the same body and camera to exploration.
+- [x] Add focused ghost interaction in the world, opening the same detail view by `ghost_id`. Dungeon ghost inspection is read-only; spending and tending remain guild actions.
+- [x] Keep tower selection, ghost list selection and well highlights consistent for visible floors. For floors beyond the well's render range, show their exact ledger data and an explicit deeper-floor indicator instead of presenting the wrong floor as the real location.
+- [x] Refresh visible figures and panels from existing campaign signals after tending, echo changes, returning expeditions and a new death. Avoid rebuilding the entire dungeon or well for numeric-only ticks.
 
 Primary files: new map/detail interaction code, `game/hud/compass.gd`, `prompts.gd`, `ladder_screen.gd`, `game/world/crawl.gd`, `interactable.gd`, `ghost_figure.gd`, `well_view.gd`. Read `core/run/floor_layout.gd` and `run_state.gd` without mutating them from the UI.
 
@@ -188,14 +188,14 @@ Acceptance: the player can connect a ledger entry to a ghost in the world and us
 
 ### M5 — Bring legacy campaigns forward safely
 
-- [ ] Capture synthetic version-1 fixtures from the preserved 2D implementation at guild, descent draft, node, fight, reward, event/shop/rest, exit and completed-run boundaries. Do not commit a user's personal campaign.
-- [ ] Verify the existing version-2 migration against those fixtures and current campaign defaults: hero/deck/relic identity, resources, upgrades, ghost records, reach, unresolved nodes and newer unlock/progression fields.
-- [ ] Verify that a loaded active phase gets the correct 3D room and interface. Reconstruct a safe player position from the logical run; exact old first-person coordinates do not exist in a 2D save.
-- [ ] Add an explicit legacy-save import entry to the title/options flow. Import a selected file into a separate campaign slot; show its identity and retain the source and the current campaign. Do not combine two campaigns' currencies, ghosts or progression.
-- [ ] Add only the slot-selection plumbing needed for importing and continuing those campaigns. Retain the existing `slot1` default for current players; normal 2D/3D views inside one campaign always use the same active slot.
-- [ ] Validate file shape and content references, reject unsupported future versions clearly, and report backup recovery. Audit the loader's behavior when the primary is missing but a backup exists.
-- [ ] Harden saves with a temporary write and validation before committing the replacement and rotating valid backups. Ensure a failed write leaves the last playable save recoverable.
-- [ ] Test offline catch-up with fixed timestamps and prove it is applied once across import, load and subsequent save. Bump the schema only if persisted data changes; UI settings stay in `Settings`.
+- [x] Capture synthetic version-1 fixtures from the preserved 2D implementation at guild, descent draft, node, fight, reward, event/shop/rest, exit and completed-run boundaries. Do not commit a user's personal campaign.
+- [x] Verify the existing version-2 migration against those fixtures and current campaign defaults: hero/deck/relic identity, resources, upgrades, ghost records, reach, unresolved nodes and newer unlock/progression fields.
+- [x] Verify that a loaded active phase gets the correct 3D room and interface. Reconstruct a safe player position from the logical run; exact old first-person coordinates do not exist in a 2D save.
+- [x] Add an explicit legacy-save import entry to the title/options flow. Import a selected file into a separate campaign slot; show its identity and retain the source and the current campaign. Do not combine two campaigns' currencies, ghosts or progression.
+- [x] Add only the slot-selection plumbing needed for importing and continuing those campaigns. Retain the existing `slot1` default for current players; normal 2D/3D views inside one campaign always use the same active slot.
+- [x] Validate file shape and content references, reject unsupported future versions clearly, and report backup recovery. Audit the loader's behavior when the primary is missing but a backup exists.
+- [x] Harden saves with a temporary write and validation before committing the replacement and rotating valid backups. Ensure a failed write leaves the last playable save recoverable.
+- [x] Test offline catch-up with fixed timestamps and prove it is applied once across import, load and subsequent save. Bump the schema only if persisted data changes; UI settings stay in `Settings`.
 
 Primary files: `core/save/save_game.gd`, `core/campaign.gd`, relevant `from_dict` methods in run/hero/ghost code, `game/game.gd`, `game/hud/title_menu.gd`, `options_menu.gd`, and new import/slot UI plus synthetic fixtures.
 
@@ -205,15 +205,15 @@ Acceptance: a copied 2D campaign continues in the hybrid with coherent progress;
 
 ### M6 — Finish the art, world readability and performance pass
 
-- [ ] Review every enemy in neutral light and its actual biome. Refine silhouettes, weapon/body clearance, contact with the floor, attack anticipation, impact and collapse where the review identifies a weakness.
-- [ ] Keep a consistent material scale, stone/metal/bone treatment and shared color grade across portraits, cards, ghosts and the world. Improve lighting around important creatures and stations while retaining the crypt's darkness.
-- [ ] Give the guild stations distinct, recognizable props matching the navigation icons: upgrade table, séance circle, hero desk, Hall and well. Check their collision and walking routes.
-- [ ] Preserve and refine the death-to-ghost sequence. The new figure, epitaph, ledger entry and production change must describe the same hero and resolve once. Reduced motion shortens camera/ornamental movement without hiding results.
-- [ ] Make focus, target and ghost states readable with labels/icons as well as color. Add and persist a reduced-motion setting covering camera shake, head bob, forced camera moves, panel/card transitions and preview animation; retain necessary impact feedback.
-- [ ] Measure CPU/GPU frame times, draw calls, active lights, viewport cost and repeated-open memory behavior. Start with 60 FPS at 1080p on the current development machine as a target, recording hardware/renderer; establish a measured lower-spec target before claiming support.
-- [ ] Reduce unnecessary shadow-casting lights and invisible preview updates, reuse shared meshes/materials, and update lists/figures incrementally. Profile simulation-driven preview stalls before introducing asynchronous work or changing simulation sample counts.
-- [ ] Add a modest lower-cost visual preset if measurements justify it. Preserve the same gameplay; a full Compatibility-renderer edition is a separate task.
-- [ ] Extend the existing screenshot tools to cover the hybrid screens and update `ART_BRIEF.md` and `ATTRIBUTION.md` for any added assets.
+- [x] Review every enemy in neutral light and its actual biome. Refine silhouettes, weapon/body clearance, contact with the floor, attack anticipation, impact and collapse where the review identifies a weakness.
+- [x] Keep a consistent material scale, stone/metal/bone treatment and shared color grade across portraits, cards, ghosts and the world. Improve lighting around important creatures and stations while retaining the crypt's darkness.
+- [x] Give the guild stations distinct, recognizable props matching the navigation icons: upgrade table, séance circle, hero desk, Hall and well. Check their collision and walking routes.
+- [x] Preserve and refine the death-to-ghost sequence. The new figure, epitaph, ledger entry and production change must describe the same hero and resolve once. Reduced motion shortens camera/ornamental movement without hiding results.
+- [x] Make focus, target and ghost states readable with labels/icons as well as color. Add and persist a reduced-motion setting covering camera shake, head bob, forced camera moves, panel/card transitions and preview animation; retain necessary impact feedback.
+- [x] Measure CPU/GPU frame times, draw calls, active lights, viewport cost and repeated-open memory behavior. Start with 60 FPS at 1080p on the current development machine as a target, recording hardware/renderer; establish a measured lower-spec target before claiming support.
+- [x] Reduce unnecessary shadow-casting lights and invisible preview updates, reuse shared meshes/materials, and update lists/figures incrementally. Profile simulation-driven preview stalls before introducing asynchronous work or changing simulation sample counts.
+- [x] Add a modest lower-cost visual preset if measurements justify it. Preserve the same gameplay; a full Compatibility-renderer edition is a separate task.
+- [x] Extend the existing screenshot tools to cover the hybrid screens and update `ART_BRIEF.md` and `ATTRIBUTION.md` for any added assets.
 
 Primary files: `game/fight/creature_rig.gd`, `creature_details.gd`, `creature_pose.gd`, `enemy_body.gd`, `fight_animator_3d.gd`, `game/world/ghost_figure.gd`, `guild_room.gd`, `well_view.gd`, `player.gd`, `game/theme/grade.gd`, `game/settings.gd`, preview code and capture tools.
 

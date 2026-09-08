@@ -297,3 +297,13 @@ builds the pleated shrouds and spectral faces. No external character model
 or animation files are used for these figures. Their surface detail reuses
 the ambientCG Rock051 maps credited above; equipment colors and ghost
 materials are authored in code.
+
+
+## Hybrid hero previews and guild stations — original project geometry
+
+`game/art/hero_figure.gd` builds class clothing, tools and faces with the
+existing procedural mesh helpers. The anvil, ledger, séance candles and Hall
+monument in `GuildRoom` are also authored in code. Preview lighting and the
+floor schematic add no third-party assets. Existing font, icon, texture and
+audio credits above remain applicable. No new generated bitmap assets were
+added for this integration.
