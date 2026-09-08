@@ -10,6 +10,7 @@ extends PanelContainer
 signal continued()
 signal started_new()
 signal options_requested()
+signal campaigns_requested()
 signal quit_requested()
 
 const CONTINUE := "continue"
@@ -69,6 +70,7 @@ func build(content: Content, has_save: bool) -> void:
 		_add(content, CONTINUE, "ui.menu.continue", continued)
 	_add(content, NEW, "ui.menu.new", started_new)
 	_add(content, OPTIONS, "ui.menu.options", options_requested)
+	_add(content, "campaigns", "ui.saves.title", campaigns_requested)
 	_add(content, QUIT, "ui.menu.quit", quit_requested)
 	var primary: Button = buttons[CONTINUE if has_save else NEW]
 	primary.add_theme_stylebox_override("normal", UiTheme.primary_box(Palette.EDGE_LIGHT))

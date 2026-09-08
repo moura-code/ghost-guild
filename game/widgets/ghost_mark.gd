@@ -51,6 +51,8 @@ func body_color() -> Color:
 
 
 func _process(delta: float) -> void:
+	if Settings.motion_reduced or not is_visible_in_tree():
+		return
 	if not floating:
 		return
 	_phase += delta

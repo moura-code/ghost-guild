@@ -7,11 +7,8 @@ extends CanvasLayer
 ## you cannot read" (§3.2) -- and the argument is about text and choice, not
 ## about cards, so a shop list and an exit decision live here too.
 ##
-## One scale for the whole layer. Every kept widget was authored against the
-## old 640x360 viewport (CardView.CARD_SIZE is 82x159, UiTheme's font sizes
-## match), and the 3D world now renders at the window's real resolution. So
-## `ui` is a 640x360 space scaled up to fill the window, and its children go on
-## using the coordinates they already use.
+## Native 3D resolution with a separately scaled logical UI. Containers reflow
+## and scroll as the user enlarges text. Projection uses ui.scale directly.
 
 const REFERENCE := Vector2(640.0, 360.0)
 
@@ -25,6 +22,8 @@ var dim: ColorRect
 ## to capture a cursor into, so it reads back VISIBLE whatever it was told --
 ## and the intent is the part worth asserting anyway.
 var pointer_free: bool = false
+var ui_scale: float = 1.0
+var _dim_tween: Tween
 
 
 ## Fractional, not integer: the pixel-art direction needed whole numbers so a
@@ -73,7 +72,7 @@ const DIM_SECONDS := 0.12
 
 
 func fit(viewport: Vector2) -> void:
-	var k := scale_for(viewport)
+	var k := scale_for(viewport) * ui_scale
 	ui.scale = Vector2(k, k)
 	ui.position = Vector2.ZERO
 	ui.size = viewport / k
@@ -90,8 +89,10 @@ func set_dim(on: bool) -> void:
 	if not is_inside_tree():
 		dim.color.a = to
 		return
-	var tween := create_tween()
-	tween.tween_property(dim, "color:a", to, DIM_SECONDS)
+	if _dim_tween != null and _dim_tween.is_valid():
+		_dim_tween.kill()
+	_dim_tween = create_tween()
+	_dim_tween.tween_property(dim, "color:a", to, 0.0 if Settings.motion_reduced else DIM_SECONDS)
 
 
 func has_panel() -> bool:

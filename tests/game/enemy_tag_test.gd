@@ -66,8 +66,10 @@ func test_the_tag_floats_above_the_head_it_was_given() -> void:
 	assert_float(t.position.y + t.size.y).is_less(200.0)
 
 
-func test_it_never_swallows_a_click_meant_for_a_card() -> void:
-	assert_int(_tag().mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
+func test_a_tag_owns_target_clicks_and_supports_keyboard_focus() -> void:
+	var tag := _tag()
+	assert_int(tag.mouse_filter).is_equal(Control.MOUSE_FILTER_STOP)
+	assert_int(tag.focus_mode).is_equal(Control.FOCUS_ALL)
 
 
 func test_two_tags_landing_on_the_same_spot_are_pushed_apart() -> void:

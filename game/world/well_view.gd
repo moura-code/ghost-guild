@@ -31,6 +31,8 @@ var rings: Array[Node3D] = []
 var figures: Array[GhostFigure] = []
 
 var _depth: int = 0
+var selected_floor: int = 1
+var _signature: String = ""
 
 
 ## The y a floor's ring sits at, relative to the guild's floor. Pure so the
@@ -44,6 +46,26 @@ static func floor_y(floor: int) -> float:
 static func ghost_point(floor: int, slot: int, of: int) -> Vector3:
 	var turn := TAU * float(slot) / float(maxi(1, of))
 	return Vector3(cos(turn) * RING_RADIUS, floor_y(floor) + 0.1, sin(turn) * RING_RADIUS)
+
+
+func refresh(campaign: Campaign) -> void:
+	var signature := str(CampaignEngine.reach(campaign)) + str(campaign.ladder.ghosts.map(func(g: Ghost) -> Array:
+		return [g.id, g.floor, g.restless, g.prepared, g.kind]))
+	if signature == _signature:
+		return
+	_signature = signature
+	build(campaign)
+	select_floor(selected_floor)
+
+
+func select_floor(floor: int) -> void:
+	selected_floor = floor
+	for ring in rings:
+		var mesh := ring as MeshInstance3D
+		var mat := mesh.material_override as StandardMaterial3D
+		mat.emission_enabled = ring == rings[floor - 1] if floor > 0 and floor <= rings.size() else false
+		mat.emission = Palette.SOUL
+		mat.emission_energy_multiplier = 0.5
 
 
 func build(campaign: Campaign) -> void:
@@ -89,9 +111,7 @@ func depth() -> int:
 	return _depth
 
 
-## A ghost deeper than the drawn tower still has to be somewhere. Clamped to
-## the bottom ring rather than dropped: a missing ghost is a player wondering
-## where their dead went.
+## Legacy geometry helper. Ledger selection never clamps a ghost to a false floor.
 static func clamp_floor(floor: int, depth: int) -> int:
 	return clampi(floor, 1, maxi(1, depth))
 

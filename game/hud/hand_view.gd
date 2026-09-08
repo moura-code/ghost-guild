@@ -9,6 +9,7 @@ extends Control
 ## which meant it could only ever be checked by looking at it.
 
 signal card_pressed(hand_index: int)
+signal card_inspected(card: CardInstance)
 
 const FAN_ARC := 0.048
 ## How far apart cards may sit, as a multiple of a card's width. Was 1.02,
@@ -102,6 +103,9 @@ func show_hand(fight: FightState, playable: Dictionary) -> void:
 		view.managed_hover = true
 		var slot := views.size()
 		view.pressed.connect(_on_pressed)
+		view.inspected.connect(func(card: CardInstance) -> void: card_inspected.emit(card))
+		view.focus_entered.connect(func() -> void: hover(slot))
+		view.focus_exited.connect(func() -> void: hover(-1))
 		view.mouse_entered.connect(func() -> void: hover(slot))
 		view.mouse_exited.connect(func() -> void: if hovered == slot: hover(-1))
 		add_child(view)
@@ -180,9 +184,9 @@ func _raise(index: int) -> void:
 		var tween := create_tween()
 		_hover_tweens[i] = tween
 		tween.set_parallel(true)
-		tween.tween_property(views[i], "scale", to_scale, HOVER_SECONDS)
-		tween.tween_property(views[i], "position", to_pos, HOVER_SECONDS)
-		tween.tween_property(views[i], "rotation", 0.0 if lifted else float(seat["angle"]), HOVER_SECONDS)
+		tween.tween_property(views[i], "scale", to_scale, (0.0 if Settings.motion_reduced else HOVER_SECONDS))
+		tween.tween_property(views[i], "position", to_pos, (0.0 if Settings.motion_reduced else HOVER_SECONDS))
+		tween.tween_property(views[i], "rotation", 0.0 if lifted else float(seat["angle"]), (0.0 if Settings.motion_reduced else HOVER_SECONDS))
 
 
 func select(index: int) -> void:

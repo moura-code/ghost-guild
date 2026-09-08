@@ -15,6 +15,8 @@ const PHASES := ["reward", "event", "rest", "shop", "descent"]
 const CHOICE_HEIGHT := 22.0
 ## A comfortable measure for a paragraph of authored text.
 const TEXT_WIDTH := 280.0
+signal card_inspected(card: CardInstance)
+signal deck_requested()
 
 var game: GameRoot
 var run: RunState
@@ -28,7 +30,8 @@ var _title: Label
 var _decor: HBoxContainer
 var _context: Label
 var _context_plate: PanelContainer
-var _fan: HBoxContainer
+var _fan: HFlowContainer
+var _resources: Button
 var _options: VBoxContainer
 var _buttons: Array[Button] = []
 var _cards: Array[CardView] = []
@@ -55,6 +58,9 @@ func _build() -> void:
 	alignment = BoxContainer.ALIGNMENT_CENTER
 	_title = ScreenLayout.centre(UiTheme.title(""))
 	add_child(_title)
+	_resources = Button.new()
+	_resources.pressed.connect(func() -> void: deck_requested.emit())
+	add_child(_resources)
 
 	# An authored encounter's text sits on something, the way a notice nailed
 	# to a wall does. Floating a single grey line in the middle of an empty
@@ -78,9 +84,10 @@ func _build() -> void:
 	add_child(lift_room)
 
 	# The prizes, laid out as cards; then everything else as a list.
-	_fan = HBoxContainer.new()
-	_fan.alignment = BoxContainer.ALIGNMENT_CENTER
-	_fan.add_theme_constant_override("separation", 26)
+	_fan = HFlowContainer.new()
+	_fan.alignment = FlowContainer.ALIGNMENT_CENTER
+	_fan.add_theme_constant_override("h_separation", 26)
+	_fan.add_theme_constant_override("v_separation", 20)
 	add_child(_fan)
 
 	_options = VBoxContainer.new()
@@ -92,7 +99,7 @@ func _build() -> void:
 	# gives the light somewhere to come from and the eye something to sit on.
 	_decor = HBoxContainer.new()
 	_decor.alignment = BoxContainer.ALIGNMENT_CENTER
-	_decor.add_theme_constant_override("separation", 330)
+	_decor.add_theme_constant_override("separation", 100)
 	_decor.add_child(Prop.of(Prop.Kind.CANDLE, 3))
 	_decor.add_child(Prop.of(Prop.Kind.CANDLE, 8))
 	add_child(_decor)
@@ -106,6 +113,7 @@ func refresh() -> void:
 	if game == null or run == null or not handles(run.phase):
 		return
 	_title.text = _title_text()
+	_resources.text = resources_text(game.content, run)
 	_context.text = _context_text()
 	if _context_plate != null:
 		# A rest or a card pick says nothing here, and an empty plate is
@@ -206,6 +214,7 @@ func _rebuild_options() -> void:
 	while _cards.size() < offers.size():
 		var card := CardView.new()
 		card.pressed.connect(_on_card_pressed)
+		card.inspected.connect(func(value: CardInstance) -> void: card_inspected.emit(value))
 		_fan.add_child(card)
 		_cards.append(card)
 	for i in _cards.size():
@@ -231,6 +240,7 @@ func _rebuild_options() -> void:
 			continue
 		var at: int = rows[i]
 		_buttons[i].text = label_for(_actions[at])
+		_buttons[i].autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		# Rebound every refresh: which action sits in which row moves as the
 		# list shrinks, and a lambda captured at creation would go stale.
 		for existing in _buttons[i].pressed.get_connections():
@@ -300,7 +310,14 @@ func label_for(action: Dictionary) -> String:
 
 func _rest_heal_amount() -> int:
 	var percent := float(game.content.balance.get("rest_heal_percent", 0.3))
-	return int(roundf(float(run.hero.max_hp) * percent))
+	return mini(run.hero.max_hp - run.hero.hp, int(roundf(float(run.hero.max_hp) * percent)))
+
+
+static func resources_text(content: Content, state: RunState) -> String:
+	return "%s %d/%d · %s %d · %s %d · %s %d/%d" % [
+		content.text("ui.hp"), state.hero.hp, state.hero.max_hp,
+		content.text("ui.coin"), state.coin, content.text("ui.deck"), state.hero.deck.size(),
+		content.text("ui.resolve"), state.hero.resolve, state.hero.max_resolve]
 
 
 func _card_name(def_id: String) -> String:

@@ -8,6 +8,7 @@ extends PanelContainer
 ## three times before you get it right.
 
 signal closed()
+signal campaigns_requested()
 signal changed(settings: Settings)
 
 var settings: Settings
@@ -59,9 +60,15 @@ func build(content: Content, s: Settings) -> void:
 	_slider(content, "fov", "ui.options.fov", Settings.FOV_MIN, Settings.FOV_MAX, 1.0, s.fov)
 	_slider(content, "master_volume", "ui.options.volume", 0.0, 1.0, 0.05, s.master_volume)
 	_check(content, "fullscreen", "ui.options.fullscreen", s.fullscreen)
+	_slider(content, "ui_scale", "ui.options.ui_scale", 1.0, 1.5, 0.25, s.ui_scale)
+	_check(content, "reduced_motion", "ui.options.reduced_motion", s.reduced_motion)
 	_language(content, s)
 
 	_column.add_child(HSeparator.new())
+	var campaigns := Button.new()
+	campaigns.text = content.text("ui.saves.title")
+	campaigns.pressed.connect(func() -> void: campaigns_requested.emit())
+	_column.add_child(campaigns)
 	var back := Button.new()
 	back.text = content.text("ui.menu.back")
 	back.custom_minimum_size = Vector2(0.0, 22.0)
@@ -98,6 +105,8 @@ func commit() -> void:
 	settings.sensitivity = float((sliders["sensitivity"] as HSlider).value)
 	settings.fov = float((sliders["fov"] as HSlider).value)
 	settings.master_volume = float((sliders["master_volume"] as HSlider).value)
+	settings.ui_scale = float((sliders["ui_scale"] as HSlider).value)
+	settings.reduced_motion = (checks["reduced_motion"] as CheckBox).button_pressed
 	settings.invert_y = (checks["invert_y"] as CheckBox).button_pressed
 	settings.fullscreen = (checks["fullscreen"] as CheckBox).button_pressed
 	if language != null and language.selected >= 0:

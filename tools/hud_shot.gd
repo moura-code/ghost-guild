@@ -6,11 +6,12 @@ extends SceneTree
 ## that was never asked.
 ##
 ##   godot --path . --rendering-method forward_plus --resolution 1280x720 \
-##         -s tools/hud_shot.gd -- <out.png> <mode> [frames]
+##         -s tools/hud_shot.gd -- <out.png> <mode> [frames] [width height] [ui_scale] [locale]
 ##
 ## Modes: walk, fight, reward, guild, panel, expedition, offline, exit, watch,
 ## deep, kiln, tier2, tier2fight, creatures, ladder, ladderdeep, seance, hero,
-## hall.
+## hexer, hall, title, help, options, ghost, map, death, watch_result, inspector,
+## pause, hover, roster. Roster additionally takes [entry_floor] [enemy_id ...].
 ##
 ## Runs against a throwaway save, so it never touches the player's campaign.
 
@@ -24,9 +25,10 @@ func _init() -> void:
 	var frames := int(args[2]) if args.size() > 2 and String(args[2]).is_valid_int() else 30
 
 	await process_frame
-	var win := get_root()
-	win.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
-	win.size = Vector2i(1280, 720)
+	var win := SubViewport.new()
+	win.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	get_root().add_child(win)
+	win.size = Vector2i(int(args[3]), int(args[4])) if args.size() > 4 else Vector2i(1280, 720)
 
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("user://saves"))
 	_clear_save()
@@ -39,12 +41,27 @@ func _init() -> void:
 
 	var crawl := Crawl.new()
 	crawl.set_meta("shot_mode", mode)
+	if mode == "roster":
+		crawl.set_meta("shot_cast", Array(args.slice(8)))
 	crawl.game = game
+	crawl.show_title = mode == "title"
+	crawl.settings_path = SAVE + ".cfg"
+	var shot_settings := Settings.new()
+	shot_settings.ui_scale = float(args[5]) if args.size() > 5 else 1.0
+	shot_settings.locale = String(args[6]) if args.size() > 6 else "en"
+	shot_settings.save(crawl.settings_path)
 	win.add_child(crawl)
 	crawl.bind(game)
+	if mode == "roster":
+		for enemy_id in args.slice(8):
+			if not game.content.enemies.has(enemy_id):
+				push_error("Unknown roster enemy: " + enemy_id)
+				game.sfx.release()
+				quit(1)
+				return
 
 	match mode:
-		"guild":
+		"guild", "title":
 			pass
 		"offline":
 			# A night away that finished an expedition, which is the version
@@ -53,6 +70,7 @@ func _init() -> void:
 			game.offline = {"elapsed": 30_000, "counted": 28_800, "capped": true,
 				"soul": 1840.0, "returned": [Ghost.from_expedition(hero, 4, 0)]}
 			crawl._maybe_show_offline()
+			crawl.set_meta("shot_scroll", true)
 		"hall":
 			# One cycle already merged and the next rite open, which is the
 			# state the screen has to be readable in.
@@ -103,10 +121,12 @@ func _init() -> void:
 			var circle := crawl.guild.station(GuildRoom.CIRCLE)
 			circle.enter(crawl.player)
 			circle.use()
-		"hero":
+		"hero", "hexer":
 			# The Deep claimed, so the class row has one open and one taken.
 			var deep := Hero.create(game.content, "sexton", "Deepwalker", {}, 1)
 			game.campaign.ladder.add(Ghost.from_expedition(deep, 14, 0))
+			if mode == "hexer":
+				game.choose_class("hexer")
 			var desk := crawl.guild.station(GuildRoom.DESK)
 			desk.enter(crawl.player)
 			desk.use()
@@ -125,6 +145,8 @@ func _init() -> void:
 			var well := crawl.guild.station(GuildRoom.WELL)
 			well.enter(crawl.player)
 			well.use()
+			if deep_run:
+				(crawl.panel as LadderScreen).select_floor(42)
 		"panel", "expedition":
 			if mode == "expedition":
 				# One slot in the field and one open, which is the state the
@@ -138,9 +160,27 @@ func _init() -> void:
 			var station := crawl.guild.station(GuildRoom.TABLE)
 			station.enter(crawl.player)
 			station.use()
-		"exit", "watch":
+		"help":
+			crawl.help.build(game.content, true, true)
+			crawl.overlay(crawl.help)
+		"options":
+			crawl._open_options()
+		"ghost":
+			crawl.inspect_ghost(game.campaign.ladder.ghosts[0].id)
+		"map":
+			_descend(game, crawl, 31)
+			crawl.floor_map.bind(crawl.layout, game.campaign.run, crawl.player.global_position, crawl.player.rotation.y)
+			crawl.overlay(crawl.floor_map)
+		"death":
+			_descend(game, crawl)
+			await _pick_a_fight(game, crawl)
+			crawl.director.fight().hero_hp = 1
+			crawl.director.end_turn()
+		"exit", "watch", "watch_result":
 			_descend(game, crawl)
 			await _to_the_exit(game, crawl)
+			if mode == "watch_result":
+				game.run_action({"kind": "watch"})
 			if mode == "watch":
 				# The picker, with a doctrine half chosen, which is the state
 				# it spends most of its life in.
@@ -151,6 +191,8 @@ func _init() -> void:
 			# `deep` walks the second biome instead of the first: the whole
 			# point of a biome is that you can see which one you are in.
 			var entry := 1
+			if mode == "roster" and args.size() > 7:
+				entry = int(args[7])
 			if mode == "deep":
 				entry = 11
 			elif mode == "kiln":
@@ -158,8 +200,14 @@ func _init() -> void:
 			elif mode == "tier2" or mode == "tier2fight":
 				entry = Biomes.depth(game.content) + 4
 			_descend(game, crawl, entry)
-			if mode == "fight" or mode == "tier2fight" or mode == "creatures":
+			if mode in ["fight", "tier2fight", "creatures", "inspector", "pause", "roster", "hover"]:
 				await _pick_a_fight(game, crawl)
+				if mode == "inspector":
+					crawl._inspect_pile("draw")
+				elif mode == "pause":
+					crawl._open_pause()
+				elif mode == "hover":
+					crawl.director.hand.hover(2)
 			elif mode == "reward":
 				await _pick_a_fight(game, crawl)
 				TestFixtures_autofight(game.campaign.run)
@@ -172,15 +220,21 @@ func _init() -> void:
 	# a shot that wants the bottom of one has to ask after the wait, not
 	# before it -- `scroll_vertical` is clamped to zero until then.
 	if bool(crawl.get_meta("shot_scroll", false)) and crawl.panel != null:
-		var sc := crawl.panel.get_child(0)
+		var sc := (crawl._frames[crawl.panel] as PanelFrame).scroll
 		if sc is ScrollContainer:
 			(sc as ScrollContainer).scroll_vertical = 100000
 		for _j in 6:
 			await process_frame
 	await process_frame
+	if crawl.panel != null:
+		var frame: PanelFrame = crawl._frames[crawl.panel]
+		var focus := win.gui_get_focus_owner()
+		print("panel scroll=%d focus=%s" % [frame.scroll.scroll_vertical, str(focus.get_path()) if focus != null else "none"])
 	var err := win.get_texture().get_image().save_png(out)
 	print("hud_shot[%s] -> %s err=%d" % [mode, out, err])
 	crawl.queue_free()
+	if game.sfx != null:
+		game.sfx.release()
 	game.queue_free()
 	await process_frame
 	await process_frame
@@ -234,6 +288,8 @@ func _pick_a_fight(game: GameRoot, crawl: Crawl) -> void:
 	# One of each silhouette when the shot is about the creatures, so the
 	# beast, the stack, the wisp and the hulk can be compared in one frame.
 	var cast := ["bone_rat", "hollow_knight"]
+	if crawl.has_meta("shot_cast"):
+		cast = crawl.get_meta("shot_cast")
 	if String(crawl.get_meta("shot_mode", "")) == "creatures":
 		cast = ["bone_rat", "skull_stack", "grave_wisp", "ossuary_warden"]
 	run.nodes = [{"kind": "fight", "enemies": cast}]

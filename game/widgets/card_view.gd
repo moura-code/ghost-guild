@@ -13,6 +13,8 @@ extends PanelContainer
 ## InputEvents in headless mode.
 
 signal pressed(hand_index: int)
+signal inspected(card: CardInstance)
+var record: CardInstance
 
 ## Four lines cover the longest shipped rules. Apply the same spacing to the
 ## labels and their measured minimum heights, including outside the HUD theme.
@@ -67,6 +69,9 @@ func _init() -> void:
 	pivot_offset = CARD_SIZE * 0.5
 	mouse_entered.connect(_on_hover.bind(true))
 	mouse_exited.connect(_on_hover.bind(false))
+	focus_mode = Control.FOCUS_ALL
+	focus_entered.connect(_on_hover.bind(true))
+	focus_exited.connect(_on_hover.bind(false))
 	_build()
 
 
@@ -194,6 +199,7 @@ static func _lines(size: int, count: int) -> float:
 
 
 func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -> void:
+	record = card.clone()
 	hand_index = index
 	playable = is_playable
 	# The container owns layout; remember where it put us so hover can
@@ -307,10 +313,10 @@ func _on_hover(entered: bool) -> void:
 		_hover_tween.kill()
 	_hover_tween = create_tween()
 	_hover_tween.set_parallel(true)
-	_hover_tween.tween_property(self, "position:y", _rest_y - (HOVER_LIFT if raise else 0.0), 0.10) \
+	_hover_tween.tween_property(self, "position:y", _rest_y - (HOVER_LIFT if raise else 0.0), (0.0 if Settings.motion_reduced else 0.10)) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	_hover_tween.tween_property(self, "scale",
-		_rest_scale * (hover_scale if raise else 1.0), 0.10) \
+		_rest_scale * (hover_scale if raise else 1.0), (0.0 if Settings.motion_reduced else 0.10)) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	# A raised card must draw over its neighbours, or the fan clips it.
 	z_index = 10 if raise else 0
@@ -319,7 +325,7 @@ func _on_hover(entered: bool) -> void:
 ## Flies in from the draw pile to the place the fan gave it. Cosmetic: the
 ## card is already in hand as far as the engine is concerned.
 func fly_in(from: Vector2, delay: float) -> void:
-	if not is_inside_tree():
+	if not is_inside_tree() or Settings.motion_reduced:
 		return
 	var to := _rest_position
 	position = from
@@ -338,7 +344,7 @@ func fly_in(from: Vector2, delay: float) -> void:
 ## Arcs away toward the discard pile. Purely cosmetic: the engine has
 ## already resolved the card by the time this plays.
 func fly_out(to: Vector2) -> void:
-	if not is_inside_tree():
+	if not is_inside_tree() or Settings.motion_reduced:
 		return
 	_fly = create_tween()
 	var tween := _fly
@@ -364,7 +370,19 @@ func press() -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
+	if not is_visible_in_tree() or event.is_echo():
+		return
+	if event.is_action_pressed("ui_accept"):
+		press()
+		accept_event()
+	elif event is InputEventKey and event.pressed and event.physical_keycode == KEY_F:
+		inspected.emit(record)
+		accept_event()
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
 			press()
+			accept_event()
+		elif mb.pressed and mb.button_index == MOUSE_BUTTON_RIGHT:
+			inspected.emit(record)
+			accept_event()

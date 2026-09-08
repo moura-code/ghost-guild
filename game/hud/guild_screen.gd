@@ -4,21 +4,15 @@ extends VBoxContainer
 ## wall of everything it can buy. Every purchase goes through Game, which
 ## settles production first and saves after.
 ##
-## The wall was built to fit one screen with nothing to scroll, and it did --
-## at ten upgrades in two groups. Fourteen in three does not, and the count
-## only goes one way, so the wall scrolls and the expedition band does not.
-## The band is the only thing on this screen that changes while you look at
-## it; the tablets are a catalogue, and a catalogue that runs past the bottom
-## of the frame is still a wall rather than a settings page.
+## The expedition band and upgrade groups share the bounded panel scroll.
+## Upgrade tablets wrap to the available width at each UI scale.
 
 ## Spec §5.9's own order, which is also the order they are earned in: what the
 ## living hero is, what the dead do, how far down the guild reaches, and what
 ## can be done to a ghost afterwards. `seance` has no nodes yet and is listed
 ## anyway, so it appears in the right place on the day it does.
 const GROUP_ORDER := ["hero", "ghosts", "descent", "seance"]
-## A whole group abreast, plus the gaps between the tablets and the plate's
-## own margins. Too narrow and the flow wraps, which puts the second group
-## below the fold and the screen starts scrolling again.
+## Preferred width for a full group; compact windows wrap the same tablets.
 const WALL_GAP := 5.0
 const WALL_WIDTH := UpgradePlaque.COLUMNS * UpgradePlaque.PLAQUE_SIZE.x \
 	+ (UpgradePlaque.COLUMNS - 1) * WALL_GAP + 44.0
@@ -60,11 +54,7 @@ func _build() -> void:
 	_wall = VBoxContainer.new()
 	_wall.add_theme_constant_override("separation", 12)
 	_wall.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.add_child(_wall)
-	add_child(scroll)
+	add_child(_wall)
 	for group in GROUP_ORDER:
 		if _has_group(group):
 			_add_group(group)
@@ -107,11 +97,7 @@ func _has_group(group: String) -> bool:
 	return false
 
 
-## A wall of tablets, not a column of rows.
-##
-## Every upgrade the guild offers is visible at once and nothing scrolls,
-## which is the difference between "a place you walk into and look around"
-## and "a settings page you page through". Ten of them fit five across.
+## A wrapping group of upgrade tablets.
 func _add_group(group: String) -> void:
 	if _groups.has(group):
 		return

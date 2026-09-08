@@ -4,6 +4,8 @@ extends VBoxContainer
 ## sink that is not a meta upgrade. All four go through Game, which settles
 ## production first and saves after.
 
+signal ghost_inspected(ghost_id: int)
+
 var game: GameRoot
 var lines: Dictionary = {}
 
@@ -162,6 +164,7 @@ func refresh() -> void:
 		var line: GhostLine = lines.get(ghost.id) as GhostLine
 		if line == null:
 			line = GhostLine.new()
+			line.inspected.connect(func(id: int) -> void: ghost_inspected.emit(id))
 			line.echo_pressed.connect(_on_echo)
 			line.call_pressed.connect(_on_call)
 			line.tend_pressed.connect(_on_tend)

@@ -22,6 +22,7 @@ extends Control
 ## authored dungeon and nothing about this screen has changed.
 
 signal floor_clicked(floor: int)
+var selected_floor: int = 1
 
 const TOP_INSET := 0.04
 const BOTTOM_INSET := 0.26
@@ -167,6 +168,8 @@ func _rebuild() -> void:
 ## signature image, representing its core loop, did not visibly produce
 ## anything.
 func _process(delta: float) -> void:
+	if Settings.motion_reduced or not is_visible_in_tree():
+		return
 	if _campaign == null:
 		return
 	_time += delta
@@ -365,6 +368,8 @@ func _draw() -> void:
 
 		# The chamber itself: darker than the rock, lit from above.
 		draw_rect(rect, chamber_colour(floor))
+		if floor == selected_floor:
+			draw_rect(rect.grow(1), Palette.SOUL, false, 1.5)
 		# Its back wall catches the light near the ceiling and falls away.
 		for i in 6:
 			var t := float(i) / 5.0

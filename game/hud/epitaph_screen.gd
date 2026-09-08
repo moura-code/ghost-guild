@@ -32,7 +32,7 @@ var _banked_caption: Label
 var _soul_target: float = 0.0
 var _rite: Label
 var _dismiss: Button
-var _timer: SceneTreeTimer
+var _timer: Tween
 
 
 func _init() -> void:
@@ -60,7 +60,7 @@ func _build() -> void:
 	var vigil := HBoxContainer.new()
 	vigil.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vigil.alignment = BoxContainer.ALIGNMENT_CENTER
-	vigil.add_theme_constant_override("separation", 420)
+	vigil.add_theme_constant_override("separation", 150)
 	vigil.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for i in 2:
 		var stand := VBoxContainer.new()
@@ -144,6 +144,8 @@ func bind(g: GameRoot, p_result: Dictionary) -> void:
 	game = g
 	result = p_result
 	stage = 0
+	if _timer != null and _timer.is_valid():
+		_timer.kill()
 
 	var ghost := g.campaign.ladder.find(int(p_result.get("ghost_id", 0)))
 	_name.text = ghost.name if ghost != null else ""
@@ -157,7 +159,7 @@ func bind(g: GameRoot, p_result: Dictionary) -> void:
 	_rite.text = g.text("ui.epitaph.rite") if _has_rite(p_result) else ""
 	_dismiss.text = g.text("ui.epitaph.dismiss")
 
-	if paced:
+	if paced and not Settings.motion_reduced:
 		_show_up_to(0)
 		_advance()
 	else:
@@ -212,7 +214,7 @@ func _show_up_to(n: int) -> void:
 	var was := stage
 	stage = n
 	var banked := _soul.get_parent().get_parent() as Control
-	if paced and n > was:
+	if paced and not Settings.motion_reduced and n > was:
 		# Arriving: fade each beat in as it lands.
 		if n >= 1: _reveal(_name)
 		if n >= 2: _reveal(_epitaph)
@@ -239,15 +241,16 @@ func _advance() -> void:
 	if stage >= stage_count():
 		return
 	_show_up_to(stage + 1)
-	if stage == 3 and is_inside_tree():
+	if stage == 3 and is_inside_tree() and not Settings.motion_reduced:
 		var to := _arrival.position
 		_arrival.position = to + Vector2(-SLIDE_PIXELS, 0.0)
 		var tween := create_tween()
 		tween.tween_property(_arrival, "position", to, STEP_SECONDS) \
 			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	if stage < stage_count() and is_inside_tree():
-		_timer = get_tree().create_timer(STEP_SECONDS)
-		_timer.timeout.connect(_advance)
+		_timer = create_tween()
+		_timer.tween_interval(STEP_SECONDS)
+		_timer.tween_callback(_advance)
 
 
 ## Lets an impatient player skip straight to the end of the beat.

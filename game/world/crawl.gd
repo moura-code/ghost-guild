@@ -22,6 +22,7 @@ var layout: FloorLayout
 var player: Player
 var hud: HudRoot
 var prompts: Prompts
+var _offline_summary: OfflineSummary
 var crosshair: Crosshair
 var compass: Compass
 var director: FightDirector
@@ -69,7 +70,20 @@ var _announced_biome: String = ""
 var _stations: Dictionary = {}
 var _mourning: bool = false
 var _had_save: bool = false
-var _options_came_from_title: bool = false
+var context := UiContext.new()
+var nav: GuildNav
+var help: HelpPanel
+var _panel_focus: Dictionary = {}
+var _frames: Dictionary = {}
+var campaign_menu: CampaignMenu
+var floor_map: FloorMap
+var _focused_ghost_id: int = 0
+var _map_marker := Vector2i(-1, -1)
+var ghost_detail: GhostDetail
+var inspector: CardInspector
+var _dungeon_ghosts: Array[GhostFigure] = []
+var _ghost_signature: String = ""
+var panel_return: Button
 
 
 ## Picks up the autoload only if nobody has claimed this node already. Tests
@@ -91,13 +105,16 @@ func bind(g: GameRoot) -> void:
 	# Settings before boot: the language is one of them, and content is
 	# loaded once, during boot, in whatever language it is told.
 	settings = Settings.load_from(settings_path)
+	settings.apply(null)
 	g.locale = settings.locale
+	if not g.is_booted and g.save_path == SaveGame.DEFAULT_PATH:
+		g.save_path = SaveGame.slot_path(settings.active_slot)
 	if not g.is_booted:
 		var result := g.boot()
 		if not bool(result["ok"]):
 			push_error("crawl: boot failed: %s" % result["reason"])
 			return
-	_had_save = SaveGame.exists(g.save_path)
+	_had_save = SaveGame.exists(g.save_path) and not g.save_blocked
 	_build_hud()
 	if not g.run_changed.is_connected(_sync):
 		g.run_changed.connect(_sync)
@@ -106,10 +123,16 @@ func bind(g: GameRoot) -> void:
 	# guards on null, so calling it before meant sensitivity, invert and
 	# field of view were silently thrown away on every launch.
 	settings.apply(player)
+	hud.ui_scale = settings.ui_scale
+	hud.fit(get_viewport().get_visible_rect().size)
 	if show_title:
 		# Built AFTER _sync, so the world behind the title is the world you are
 		# about to walk back into rather than an empty frame.
 		title.build(g.content, _had_save)
+		if g.load_notice != "":
+			var notice := UiTheme.body(g.text("ui.saves." + g.load_notice))
+			notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			title._column.add_child(notice)
 		open(title)
 	else:
 		_maybe_show_offline()
@@ -159,8 +182,11 @@ func _build_hud() -> void:
 	# purchase, and rebuilding the panel each time would throw away the scroll
 	# position along with the node.
 	choice = ChoiceScreen.new()
+	choice.card_inspected.connect(inspect_card)
+	choice.deck_requested.connect(_inspect_run_deck)
 	_host(choice)
 	exit_panel = ExitScreen.new()
+	exit_panel.deck_requested.connect(_inspect_run_deck)
 	exit_panel.decided.connect(_on_exit_decided)
 	_host(exit_panel)
 	epitaph = EpitaphScreen.new()
@@ -172,6 +198,7 @@ func _build_hud() -> void:
 	title.started_new.connect(_start_new_guild)
 	title.options_requested.connect(_open_options)
 	title.quit_requested.connect(_quit)
+	title.campaigns_requested.connect(_open_campaigns)
 	_host(title)
 
 	pause = PauseMenu.new()
@@ -182,7 +209,8 @@ func _build_hud() -> void:
 	_host(pause)
 
 	options = OptionsMenu.new()
-	options.closed.connect(_open_pause)
+	options.closed.connect(close_panel)
+	options.campaigns_requested.connect(_open_campaigns)
 	options.changed.connect(_on_settings_changed)
 	_host(options)
 
@@ -191,7 +219,52 @@ func _build_hud() -> void:
 		var screen := _guild_panel(String(id))
 		_stations[id] = screen
 		_host(screen)
+		if screen is HeroScreen:
+			screen.card_inspected.connect(inspect_card)
+		if screen is LadderScreen:
+			screen.floor_selected.connect(_select_floor)
+		if screen is LadderScreen or screen is SeanceScreen:
+			screen.ghost_inspected.connect(inspect_ghost)
 
+	nav = GuildNav.new()
+	nav.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	nav.offset_top = WALLET_HEIGHT
+	nav.chosen.connect(open_guild)
+	nav.closed.connect(close_panel)
+	nav.visible = false
+	hud.ui.add_child(nav)
+	help = HelpPanel.new()
+	help.closed.connect(close_panel)
+	_host(help)
+	campaign_menu = CampaignMenu.new()
+	campaign_menu.selected.connect(_continue_campaign)
+	campaign_menu.import_requested.connect(_import_campaign)
+	campaign_menu.closed.connect(close_panel)
+	_host(campaign_menu)
+	floor_map = FloorMap.new()
+	floor_map.closed.connect(close_panel)
+	floor_map.marked.connect(func(cell: Vector2i) -> void:
+		_map_marker = cell
+		_refresh_marks())
+	_host(floor_map)
+	ghost_detail = GhostDetail.new()
+	ghost_detail.closed.connect(close_panel)
+	ghost_detail.card_inspected.connect(inspect_card)
+	_host(ghost_detail)
+	game.ladder_changed.connect(_refresh_ghosts)
+	inspector = CardInspector.new()
+	inspector.closed.connect(close_panel)
+	_host(inspector)
+	panel_return = Button.new()
+	panel_return.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	panel_return.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	panel_return.offset_right = -10
+	panel_return.offset_top = 5
+	panel_return.text = game.text("ui.close")
+	panel_return.pressed.connect(close_panel)
+	panel_return.visible = false
+	hud.ui.add_child(panel_return)
+	nav.resized.connect(_layout_frames)
 	hud.set_pointer(false)
 
 
@@ -214,56 +287,129 @@ func _guild_panel(id: String) -> Control:
 
 
 func _host(screen: Control) -> void:
-	# A screen that centres itself keeps its own rect. The pause menu, the
-	# title and the options are authored as small carved cards -- stretching
-	# them to the full frame made the first thing the player ever sees a
-	# 640x360 stone plate with four buttons along the top of it.
-	if not screen.has_meta("keeps_own_rect"):
-		screen.set_anchors_preset(Control.PRESET_FULL_RECT)
-		# Below the wallet, for the screens that show one.
-		if wants_wallet(screen):
-			screen.offset_top = WALLET_HEIGHT
+	var frame := PanelFrame.new()
+	frame.visible = false
+	_frames[screen] = frame
+	hud.ui.add_child(frame)
+	frame.host(screen)
 	screen.visible = false
-	hud.ui.add_child(screen)
+	_layout_frames()
+
+
+func _layout_frames() -> void:
+	for screen in _frames:
+		var frame: PanelFrame = _frames[screen]
+		frame.offset_top = WALLET_HEIGHT + maxf(26.0, nav.size.y if nav != null else 26.0) + 5.0 if wants_wallet(screen) and place == Place.GUILD else 30.0
 
 
 ## A panel takes the screen, the cursor and the body at the same time, so "the
 ## mouse is free" and "the player cannot walk off mid-choice" can never
 ## disagree.
 func open(screen: Control) -> void:
+	if panel != null and is_instance_valid(panel):
+		_panel_focus[panel] = get_viewport().gui_get_focus_owner()
 	panel = screen
+	context.remember(game.campaign.run)
 	for child in hud.ui.get_children():
 		if child is Control and child != prompts and child != wallet:
-			(child as Control).visible = child == screen
-	if wallet != null:
-		wallet.visible = screen != null and wants_wallet(screen)
-		if wallet.visible:
-			wallet.bind(game)
-	if player != null:
-		player.frozen = screen != null
-		player.look_enabled = screen == null
-	hud.set_pointer(screen != null)
+			(child as Control).visible = child == _frames.get(screen, screen)
+	for hosted in _frames:
+		(hosted as Control).visible = hosted == screen
+		(hosted as Control).process_mode = Node.PROCESS_MODE_INHERIT if hosted == screen else Node.PROCESS_MODE_DISABLED
+	_layout_frames()
+	if panel_return != null:
+		panel_return.visible = screen != null and _can_close(screen) and not (wants_wallet(screen) and place == Place.GUILD)
+		panel_return.text = game.text("ui.close")
+	var management := screen != null and wants_wallet(screen) and place == Place.GUILD
+	wallet.visible = management
+	if management:
+		wallet.bind(game)
+	if nav != null:
+		nav.visible = management
+		if management:
+			for id in _stations:
+				if _stations[id] == screen:
+					nav.refresh(game.content, String(id))
+	_apply_input_context()
 	hud.set_dim(screen != null)
-	if crosshair != null:
-		# No reticle while a panel owns the cursor: you are pointing at a
-		# button, not at the room.
-		crosshair.visible = screen == null
-	if compass != null:
-		compass.visible = screen == null
 	if screen != null:
 		prompts.clear_prompt()
-		# A floor announcement still fading when a panel opens ends up printed
-		# across it. So does the objective line, which is anchored to the top
-		# of the screen and was landing across the exit screen's own title.
 		prompts.hush()
 		prompts.clear_objective()
 		prompts.clear_rule()
+		_restore_focus.call_deferred(screen, _panel_focus.get(screen))
+
+
+func _apply_input_context() -> void:
+	var fighting := director != null and not director.is_settled()
+	if director != null:
+		director.set_suspended(panel != null)
+	if player != null:
+		player.process_mode = Node.PROCESS_MODE_DISABLED if panel != null else Node.PROCESS_MODE_INHERIT
+		player.frozen = panel != null or (fighting and director.staging)
+		if player.frozen:
+			player.velocity.x = 0.0
+			player.velocity.z = 0.0
+		player.look_enabled = panel == null and not fighting
+	if _world != null:
+		_world.process_mode = Node.PROCESS_MODE_DISABLED if panel != null and panel != epitaph else Node.PROCESS_MODE_INHERIT
+	hud.set_pointer(panel != null or fighting)
+	crosshair.visible = panel == null and not fighting
+	compass.visible = panel == null and not fighting
+
+
+func _restore_focus(screen: Control, previous: Variant = null) -> void:
+	if screen == null or panel != screen or not screen.is_visible_in_tree():
+		return
+	if is_instance_valid(previous) and previous is Control and previous.is_visible_in_tree():
+		previous.grab_focus()
+		return
+	_focus_first(screen)
+
+
+func _focus_first(root: Control) -> bool:
+	if root.focus_mode == Control.FOCUS_ALL and root.is_visible_in_tree() and not (root is BaseButton and root.disabled):
+		root.grab_focus()
+		return true
+	for child in root.get_children():
+		if child is Control and _focus_first(child):
+			return true
+	return false
+
+
+func overlay(screen: Control) -> void:
+	if panel == screen:
+		return
+	context.push(panel, get_viewport().gui_get_focus_owner())
+	open(screen)
 
 
 func close_panel() -> void:
-	open(null)
+	var caller := context.pop() if context.valid(game.campaign.run) else {}
+	if not caller.is_empty():
+		var previous: Control = caller.get("panel")
+		open(previous if is_instance_valid(previous) else null)
+		_restore_focus.call_deferred(panel, caller.get("focus"))
+	else:
+		context.clear()
+		open(null)
+		# Required phases are re-hosted, including a save continued from title.
+		if game.campaign.run != null and ChoiceScreen.handles(game.campaign.run.phase) and director == null:
+			choice.bind(game, game.campaign.run)
+			open(choice)
 	_refresh_prompt()
 	_refresh_objective()
+
+
+func open_guild(id: String) -> void:
+	if place != Place.GUILD or game.campaign.run != null or _mourning:
+		return
+	var screen: Control = _stations.get(id)
+	if screen == null:
+		return
+	context.clear()
+	screen.call("bind", game)
+	open(screen)
 
 
 func panel_open() -> bool:
@@ -279,6 +425,12 @@ func _sync() -> void:
 	if game.campaign == null or _mourning:
 		return
 	var run := game.campaign.run
+	# Engine mutation precedes animation. Even death waits for its final beat.
+	if director != null and not director.is_settled():
+		return
+	if panel != null and not context.valid(run):
+		context.clear()
+		open(null)
 	if run == null:
 		_enter_guild()
 		return
@@ -297,10 +449,11 @@ func _enter_dungeon(run: RunState) -> void:
 		# biome the last one ended in.
 		_announced_biome = ""
 		place_changed.emit(place)
+	if not run.nodes.is_empty() and (layout == null or _built_floor != run.floor):
+		build_floor()
 	if run.phase == "fight":
-		# The director owns the screen and the body while a fight is staged.
-		# It is created by _on_marker_entered immediately after the action
-		# that put the run in this phase, so there is nothing to do here.
+		if director == null:
+			_stage_fight(run.node_index)
 		return
 	# A fight that has ended but is still settling keeps the screen. The run
 	# leaves the fight phase on the frame the killing card is played, which
@@ -313,9 +466,11 @@ func _enter_dungeon(run: RunState) -> void:
 		# Includes "descent", which happens before there is a floor to stand
 		# in: start_run leaves `nodes` empty until the last offer is taken.
 		choice.bind(game, run)
-		open(choice)
+		if context.callers.is_empty():
+			open(choice)
 		return
-	close_panel()
+	if panel == null or not context.valid(run):
+		close_panel()
 	if layout == null or _built_floor != run.floor:
 		build_floor()
 	else:
@@ -340,12 +495,17 @@ func build_floor() -> void:
 	_world.name = "World"
 	add_child(_world)
 
+	_map_marker = Vector2i(-1, -1)
+	_focused_ghost_id = 0
+	_dungeon_ghosts.clear()
+	_ghost_signature = ""
 	layout = RunEngine.layout_for(run)
 	_built_floor = run.floor
 	DungeonBuilder.build(layout, _world, run.biome().id)
 	_world.add_child(Grade.world_environment(grade_depth(run.content, run.floor), run.biome().id))
 	_dress()
-	_place_player(_stand_in(layout.entry_room), _open_facing(layout.room_center(layout.entry_room)))
+	var arrival := layout.room_of_node(run.node_index) if run.phase in ["fight", "reward", "event", "shop", "rest"] else layout.entry_room
+	_place_player(_stand_in(arrival), _open_facing(layout.room_center(arrival)))
 
 	# Your dead are standing on the floor they died on, in the corridors you
 	# walk back down. This is the pivot's first pillar (spec §2.1) and the
@@ -443,6 +603,17 @@ func _dress() -> void:
 ## an encounter in it: the ghost anchors are room centres and so is the fight
 ## staging, so a ghost would end up standing inside the thing you are fighting.
 func _place_ghosts(run: RunState) -> void:
+	var here := game.campaign.ladder.on_floor(run.floor)
+	var signature := str(here.map(func(ghost: Ghost) -> Array:
+		return [ghost.id, ghost.floor, ghost.name, ghost.kind, ghost.prepared, ghost.restless])) + str(run.resolved)
+	if signature == _ghost_signature:
+		return
+	_ghost_signature = signature
+	for figure in _dungeon_ghosts:
+		if is_instance_valid(figure):
+			figure.free()
+	_dungeon_ghosts.clear()
+	_focused_ghost_id = 0
 	var taken: Dictionary = {}
 	for i in run.nodes.size():
 		if not run.is_resolved(i):
@@ -457,18 +628,29 @@ func _place_ghosts(run: RunState) -> void:
 				break
 		if not busy:
 			free.append(cell)
-	var here := game.campaign.ladder.on_floor(run.floor)
 	for i in mini(here.size(), free.size()):
-		_world.add_child(GhostFigure.create(here[i], Kit.cell_to_world(free[i])))
+		var figure := GhostFigure.create(here[i], Kit.cell_to_world(free[i]))
+		_world.add_child(figure)
+		_dungeon_ghosts.append(figure)
+		var area := Area3D.new()
+		area.collision_layer = 8
+		area.collision_mask = 0
+		area.set_meta("ghost_id", here[i].id)
+		var shape := CollisionShape3D.new()
+		var capsule := CapsuleShape3D.new()
+		capsule.radius = 0.4
+		capsule.height = GhostFigure.HEIGHT
+		shape.shape = capsule
+		shape.position.y = GhostFigure.HEIGHT * 0.5
+		area.add_child(shape)
+		figure.add_child(area)
 
 
 func _on_marker_entered(index: int) -> void:
 	var run := game.campaign.run
-	if run == null or run.phase != "node":
+	if run == null or run.phase != "node" or panel_open():
 		return
 	game.run_action({"kind": "enter", "index": index})
-	if run.phase == "fight":
-		_stage_fight(index)
 
 
 ## The fight happens where you are standing. The camera does not cut away.
@@ -480,8 +662,12 @@ func _stage_fight(index: int) -> void:
 	director = FightDirector.new()
 	director.name = "Fight"
 	add_child(director)
+	director.inspection_requested.connect(_inspect_pile)
+	director.card_inspection_requested.connect(inspect_card)
+	director.input_context_changed.connect(_apply_input_context)
 	director.fight_finished.connect(_on_fight_finished, CONNECT_ONE_SHOT)
 	director.begin(game, hud, player, _stand_in(layout.room_of_node(index)))
+	_apply_input_context()
 
 
 func _on_fight_finished() -> void:
@@ -493,7 +679,7 @@ func _on_fight_finished() -> void:
 
 func _on_stairs_entered(_index: int) -> void:
 	var run := game.campaign.run
-	if run == null or run.phase != "exit":
+	if run == null or run.phase != "exit" or panel_open():
 		return
 	exit_panel.bind(game, run)
 	open(exit_panel)
@@ -510,7 +696,8 @@ func _on_stairs_entered(_index: int) -> void:
 ## decision is the one that carries it, because it is also the only one that
 ## knows what was chosen with it.
 func _on_exit_decided(_kind: String) -> void:
-	close_panel()
+	if panel == exit_panel:
+		close_panel()
 
 
 ## Marks every node the engine now considers resolved, and re-checks the
@@ -540,8 +727,6 @@ func _refresh_stairs() -> void:
 
 func _enter_guild() -> void:
 	if place == Place.GUILD and guild != null:
-		guild.well.build(game.campaign)
-		close_panel()
 		return
 	_leave_dungeon()
 	place = Place.GUILD
@@ -561,6 +746,9 @@ func _enter_guild() -> void:
 	close_panel()
 	_refresh_marks()
 	prompts.clear_objective()
+	prompts.show_objective(game.text("ui.help.guild_hint").replace("{guild}", HelpPanel.binding("guild_menu"))
+		.replace("{use}", HelpPanel.binding("interact")).replace("{back}", HelpPanel.binding("ui_cancel"))
+		.replace("{help}", HelpPanel.binding("help")))
 	place_changed.emit(place)
 
 
@@ -609,12 +797,7 @@ func _refocus() -> void:
 
 
 func _on_station_used(id: String) -> void:
-	var screen: Control = _stations.get(id, null)
-	if screen == null:
-		return
-	if screen.has_method("bind"):
-		screen.call("bind", game)
-	open(screen)
+	open_guild(id)
 
 
 func _refresh_prompt() -> void:
@@ -627,11 +810,12 @@ func _refresh_prompt() -> void:
 func _maybe_show_offline() -> void:
 	if not OfflineSummary.should_show(game.offline):
 		return
-	var summary := OfflineSummary.new()
-	summary.dismissed.connect(close_panel)
-	_host(summary)
-	summary.bind(game.content, game.offline)
-	open(summary)
+	if _offline_summary == null:
+		_offline_summary = OfflineSummary.new()
+		_offline_summary.dismissed.connect(close_panel)
+		_host(_offline_summary)
+	_offline_summary.bind(game.content, game.offline)
+	overlay(_offline_summary)
 
 
 # ------------------------------------------------------------------- the end
@@ -664,6 +848,19 @@ func _raise_the_dead() -> void:
 	var figure := GhostFigure.create(newest, player.global_position)
 	_world.add_child(figure)
 	figure.rise()
+	# Keep the ghost at the fallen body's position and reveal it from a
+	# short, collision-bounded camera retreat. A camera inside the shroud
+	# otherwise fills the entire Watch result with its back faces.
+	var from := player.camera.global_position
+	var backward := player.global_basis.z
+	var query := PhysicsRayQueryParameters3D.create(from, from + backward * 2.4)
+	query.collision_mask = DungeonBuilder.LAYER_WORLD
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	var distance := 2.2 if hit.is_empty() else maxf(0, from.distance_to(hit["position"]) - 0.2)
+	var reveal := epitaph.create_tween().set_parallel(true)
+	var seconds := 0.0 if settings.reduced_motion else 0.6
+	reveal.tween_property(player.camera, "position:z", distance, seconds)
+	reveal.tween_property(player.camera, "rotation:x", -0.22, seconds)
 
 
 func _on_epitaph_dismissed() -> void:
@@ -715,11 +912,13 @@ func _stand_in(room_index: int) -> Vector3:
 ## The reticle opens on anything you could act on: a station in the guild, a
 ## room you have not cleared, the stairs once they are open.
 func _process(_delta: float) -> void:
+	if _exploring():
+		_focus_ghost()
 	if player != null and compass != null and compass.visible:
 		compass.look(player.global_position, player.rotation.y)
 	if crosshair == null or not crosshair.visible:
 		return
-	crosshair.set_target(focused != null or _looking_at_a_door())
+	crosshair.set_target(focused != null or _focused_ghost_id > 0 or _looking_at_a_door())
 
 
 ## What still wants something from you, as compass marks. The stairs only
@@ -743,6 +942,8 @@ func _refresh_marks() -> void:
 			out.append({"at": Kit.cell_to_world(layout.room_center(layout.room_of_node(i))), "kind": "encounter"})
 	if run.phase == "exit":
 		out.append({"at": Kit.cell_to_world(layout.room_center(layout.stairs_room)), "kind": "stairs"})
+	if _map_marker.x >= 0:
+		out.append({"at": Kit.cell_to_world(_map_marker), "kind": "marker"})
 	compass.set_marks(out)
 
 
@@ -780,26 +981,62 @@ func _looking_at_a_door() -> bool:
 	return not space.intersect_ray(query).is_empty()
 
 
+func _input(event: InputEvent) -> void:
+	# Keys that belong to the coordinator are consumed before hidden controls
+	# or the player see them. Ordinary focus/activation remains GUI-owned.
+	if event is InputEventKey and not event.is_echo():
+		_unhandled_input(event)
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("interact") and not panel_open() and focused != null:
-		focused.use()
+	if event.is_echo() or game == null or hud == null:
 		return
-	if not event.is_action_pressed("ui_cancel"):
-		return
-	# ONE rule for Escape, because it used to mean three different things
-	# depending on who saw the key first: close the topmost thing that can be
-	# closed, and if nothing is open, pause.
-	if not panel_open():
-		_open_pause()
-	elif panel == options:
-		# Back to whichever menu opened the options, not straight into the room.
-		if _options_came_from_title:
-			title.build(game.content, _had_save)
-			open(title)
-		else:
+	var handled := true
+	if event.is_action_pressed("ui_cancel"):
+		if panel == title:
+			pass
+		elif panel == null and director != null and director.cancel_selection():
+			pass
+		elif panel == null or not _can_close(panel):
 			_open_pause()
-	elif _can_close(panel):
-		close_panel()
+		else:
+			close_panel()
+	elif event.is_action_pressed("help"):
+		if panel == help:
+			close_panel()
+		else:
+			help.build(game.content, place == Place.GUILD, _exploring())
+			overlay(help)
+	elif event.is_action_pressed("guild_menu"):
+		if nav.visible:
+			close_panel()
+		elif _exploring() and place == Place.GUILD:
+			open_guild(nav.last_tab)
+	elif event.is_action_pressed("inspect_hero"):
+		if _exploring():
+			var hero: Control = _stations[GuildRoom.DESK]
+			hero.call("bind", game)
+			overlay(hero)
+	elif event.is_action_pressed("floor_map"):
+		if panel == floor_map:
+			close_panel()
+		elif _exploring() and place == Place.DUNGEON and layout != null:
+			floor_map.bind(layout, game.campaign.run, player.global_position, player.rotation.y)
+			overlay(floor_map)
+	elif event.is_action_pressed("interact"):
+		if _exploring():
+			if _focused_ghost_id > 0:
+				inspect_ghost(_focused_ghost_id)
+			elif focused != null:
+				focused.use()
+	else:
+		handled = false
+	if handled:
+		get_viewport().set_input_as_handled()
+
+
+func _exploring() -> bool:
+	return game != null and game.campaign != null and panel == null and director == null and not _mourning and (game.campaign.run == null or game.campaign.run.phase in ["node", "exit"])
 
 
 ## A run's phase panels cannot be walked away from -- leaving a reward
@@ -820,7 +1057,16 @@ func _leave_title() -> void:
 ## only reachable from the title -- never from the pause menu, where a
 ## mis-click would cost a player their whole ladder.
 func _start_new_guild() -> void:
-	close_panel()
+	if game.save_blocked:
+		var number := 1
+		while SaveGame.exists(SaveGame.slot_path("new_%d" % number)):
+			number += 1
+		settings.active_slot = "new_%d" % number
+		game.save_path = SaveGame.slot_path(settings.active_slot)
+		game.save_blocked = false
+		settings.save(settings_path)
+	context.clear()
+	open(null)
 	game.campaign = CampaignEngine.new_campaign(game.content, game.now(), game.now())
 	place = Place.NONE
 	_leave_dungeon()
@@ -831,31 +1077,59 @@ func _start_new_guild() -> void:
 
 func _open_pause() -> void:
 	pause.build(game.content, game.campaign != null and game.campaign.run != null)
-	open(pause)
+	overlay(pause)
 
 
 func _open_options() -> void:
-	_options_came_from_title = panel == title
 	options.build(game.content, settings)
-	open(options)
+	overlay(options)
 
 
 func _on_settings_changed(s: Settings) -> void:
 	s.apply(player)
+	hud.ui_scale = s.ui_scale
+	hud.fit(get_viewport().get_visible_rect().size)
 	s.save(settings_path)
 	# A language change reloads the content underneath everything, so the
 	# menu that asked for it has to be rebuilt in the language it asked for.
 	if game.content != null and game.content.locale != s.locale:
+		var previous := game.content
 		if game.set_locale(s.locale):
+			_translate_labels(hud.ui, previous, game.content)
 			options.build(game.content, s)
+			if director != null:
+				director.refresh()
+			if choice.run != null and ChoiceScreen.handles(choice.run.phase):
+				choice.refresh()
+			if ghost_detail.campaign != null:
+				ghost_detail.refresh()
 			prompts.clear_objective()
 			prompts.clear_rule()
+
+
+## Static captions stay on their existing controls, retaining scroll/focus.
+## Dynamic record values are refreshed by the panels' campaign signals.
+func _translate_labels(node: Node, previous: Content, current: Content) -> void:
+	for property in (["text", "tooltip_text"] if node is Label or node is BaseButton else (["tooltip_text"] if node is Control else [])):
+		var value := String(node.get(property))
+		if value.is_empty():
+			continue
+		for key in previous.strings:
+			if value == previous.strings[key]:
+				node.set(property, current.text(key))
+				break
+	for child in node.get_children():
+		_translate_labels(child, previous, current)
 
 
 ## Giving up goes through RunEngine like everything else. The engine ends it
 ## as a retreat from whatever phase you were in, including mid-fight.
 func _abandon_run() -> void:
-	close_panel()
+	context.clear()
+	if director != null:
+		director.queue_free()
+		director = null
+	open(null)
 	var run := game.campaign.run
 	if run == null or run.is_over():
 		return
@@ -883,3 +1157,110 @@ func _notification(what: int) -> void:
 		if game.sfx != null:
 			game.sfx.release()
 	quit_action.call()
+
+
+func _inspect_pile(pile: String) -> void:
+	if panel != null or director == null or director.fight() == null:
+		return
+	var fight := director.fight()
+	var cards: Array[CardInstance] = []
+	match pile:
+		"draw": cards = fight.draw_pile
+		"discard": cards = fight.discard_pile
+		"deck": cards = game.campaign.run.hero.deck
+		"hand": cards = fight.hand
+	inspector.build(game.content, cards, "ui.inspect." + pile, fight)
+	overlay(inspector)
+
+
+func inspect_card(card: CardInstance) -> void:
+	inspector.build(game.content, [card] as Array[CardInstance], "ui.inspect.card", director.fight() if director != null else null)
+	overlay(inspector)
+
+
+func _inspect_run_deck() -> void:
+	if game.campaign.run == null:
+		return
+	inspector.build(game.content, game.campaign.run.hero.deck, "ui.inspect.deck")
+	overlay(inspector)
+
+
+func inspect_ghost(id: int) -> void:
+	var ghost := game.campaign.ladder.find(id)
+	if ghost == null:
+		return
+	ghost_detail.bind(game.campaign, id)
+	var ladder: LadderScreen = _stations[GuildRoom.WELL]
+	if ladder.game == null:
+		ladder.bind(game)
+	ladder.select_floor(ghost.floor)
+	_select_floor(ghost.floor)
+	overlay(ghost_detail)
+
+
+func _select_floor(floor: int) -> void:
+	if guild != null:
+		guild.well.select_floor(floor)
+
+
+func _refresh_ghosts() -> void:
+	if guild != null:
+		guild.well.refresh(game.campaign)
+	if panel == ghost_detail:
+		ghost_detail.refresh()
+	if place == Place.DUNGEON and game.campaign.run != null and is_instance_valid(_world):
+		_place_ghosts(game.campaign.run)
+
+
+func _focus_ghost() -> void:
+	if player == null or player.camera == null or place != Place.DUNGEON:
+		return
+	var from := player.camera.global_position
+	var query := PhysicsRayQueryParameters3D.create(from, from - player.camera.global_basis.z * 3.5)
+	query.collision_mask = 8 | DungeonBuilder.LAYER_WORLD
+	query.collide_with_areas = true
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	var id := 0
+	if not hit.is_empty():
+		id = int(hit["collider"].get_meta("ghost_id", 0))
+	if id != _focused_ghost_id:
+		_focused_ghost_id = id
+		if id > 0:
+			var ghost := game.campaign.ladder.find(id)
+			prompts.show_prompt(HelpPanel.binding("interact") + " · " + ghost.name + " · " + game.text("ui.inspect.ghost"))
+		else:
+			_refresh_prompt()
+
+
+func _open_campaigns() -> void:
+	campaign_menu.build(game.content, SaveGame.slots(game.content, game.save_path.get_base_dir()), game.save_path)
+	overlay(campaign_menu)
+
+
+func _import_campaign(source: String) -> void:
+	var result := game.import_campaign(source)
+	if bool(result["ok"]):
+		campaign_menu.build(game.content, SaveGame.slots(game.content, game.save_path.get_base_dir()), game.save_path)
+		campaign_menu.message.text = game.text("ui.saves.imported").replace("{name}", result["name"]).replace("{slot}", result["slot"])
+		if result.get("recovered", "") != "":
+			campaign_menu.message.text += "\n" + game.text("ui.saves.recovered")
+	else:
+		campaign_menu.message.text = game.text("ui.saves." + String(result["reason"]))
+
+
+func _continue_campaign(path: String) -> void:
+	var result := game.continue_slot(path)
+	if not result["ok"]:
+		campaign_menu.message.text = game.text("ui.saves." + String(result["reason"]))
+		return
+	settings.active_slot = path.get_file().get_basename()
+	settings.save(settings_path)
+	context.clear()
+	_mourning = false
+	_leave_dungeon()
+	_leave_guild()
+	place = Place.NONE
+	open(null)
+	_sync()
+	settings.apply(player)
+	_maybe_show_offline()

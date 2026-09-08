@@ -126,6 +126,8 @@ func head_point() -> Vector3:
 
 
 func _process(delta: float) -> void:
+	if Settings.motion_reduced:
+		return
 	_clock += delta
 	var phase := _clock * TAU / BOB_SECONDS + CreaturePose.phase_for(ghost_id)
 	var drift := sin(phase) * BOB
@@ -140,6 +142,9 @@ func _set_opacity(value: float) -> void:
 
 
 func rise(from_below: float = 1.4, seconds: float = 1.1) -> void:
+	if Settings.motion_reduced:
+		from_below = 0.0
+		seconds = 0.15
 	if _rise != null and _rise.is_valid():
 		_rise.kill()
 	var rest := position.y

@@ -52,6 +52,8 @@ static func is_pinned(from: Vector3, yaw: float, to: Vector3) -> bool:
 
 static func colour_for(kind: String) -> Color:
 	match kind:
+		"marker":
+			return Palette.LANTERN
 		"stairs":
 			return Palette.SOUL
 		"ghost":

@@ -4,7 +4,7 @@ extends GdUnitTestSuite
 ## layer bits by number. A rename here is a silent behaviour change
 ## everywhere, so it is asserted like any other interface.
 
-const ACTIONS := ["move_forward", "move_back", "move_left", "move_right", "sprint", "interact"]
+const ACTIONS := ["move_forward", "move_back", "move_left", "move_right", "sprint", "interact", "guild_menu", "inspect_hero", "floor_map", "help"]
 const LAYERS := {1: "world", 2: "player", 3: "interactable", 4: "ghost"}
 
 
@@ -16,7 +16,8 @@ func test_the_pixel_art_viewport_is_gone() -> void:
 	# 640x360 with an integer viewport stretch was the pixel-art direction.
 	# A 3D game renders at the window's real resolution.
 	assert_int(int(ProjectSettings.get_setting("display/window/size/viewport_width"))).is_greater(640)
-	assert_str(String(ProjectSettings.get_setting("display/window/stretch/mode"))).is_equal("canvas_items")
+	# HudRoot scales/reflows the UI independently of the native 3D viewport.
+	assert_str(String(ProjectSettings.get_setting("display/window/stretch/mode"))).is_equal("disabled")
 	# Nearest filtering was there to keep sprites crisp. On a PBR wall it is
 	# the difference between stone and static. has_setting() is no use here --
 	# the engine registers this one with a default whether the project sets it

@@ -254,20 +254,26 @@ func test_the_countdown_follows_the_ticking_counter() -> void:
 func test_the_screen_stays_inside_the_frame_however_much_the_wall_holds() -> void:
 	# The wall was sized to fit exactly, and a third group of upgrades quietly
 	# pushed it past the bottom of the HUD -- with no error, because nothing
-	# measures a panel that simply overflows. It scrolls now, so the screen's
-	# own height must not grow with the catalogue.
+	# measures a panel that simply overflows. The shared frame bounds the
+	# screen, with the full catalogue available through its scrollbar.
 	var g := _game()
 	var s := _screen(g)
 	_with_expeditions(g)
 	g.campaign.upgrades.levels["expedition_slots"] = 2
-	s.set_anchors_preset(Control.PRESET_FULL_RECT)
-	s.size = HudRoot.REFERENCE
+	var frame: PanelFrame = auto_free(PanelFrame.new())
+	add_child(frame)
+	frame.size = HudRoot.REFERENCE
+	s.get_parent().remove_child(s)
+	frame.host(s)
 	s.refresh()
 	await await_idle_frame()
 	assert_int(s.slots.size()).is_equal(3)
-	assert_float(s.get_combined_minimum_size().y) \
+	assert_float(frame.get_combined_minimum_size().y) \
 		.override_failure_message("the Guild runs off the bottom of the HUD") \
 		.is_less_equal(HudRoot.REFERENCE.y)
+	frame.scroll.scroll_vertical = 10000
+	await await_idle_frame()
+	assert_int(frame.scroll.scroll_vertical).is_greater(0)
 
 
 func test_every_group_the_order_names_has_a_heading() -> void:

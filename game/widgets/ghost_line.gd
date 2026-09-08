@@ -4,6 +4,8 @@ extends PanelContainer
 ## how hard it works, and the things that can be done to it. A widget -- it
 ## renders the state it is given and reports clicks through signals.
 
+signal inspected(ghost_id: int)
+
 signal echo_pressed(ghost_id: int, floor: int)
 signal call_pressed(ghost_id: int, floor: int)
 signal tend_pressed(ghost_id: int)
@@ -13,7 +15,7 @@ signal relic_pressed(ghost_id: int)
 var ghost_id: int = 0
 
 var _mark: GhostMark
-var _name: Label
+var _name: Button
 var _detail: Label
 var _doctrine: Label
 var _floor: SpinBox
@@ -36,8 +38,9 @@ func _init() -> void:
 
 
 func _build() -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 6)
+	row.add_theme_constant_override("v_separation", 4)
 	add_child(row)
 
 	# Large enough to read as somebody. This screen is a list of the people
@@ -50,7 +53,8 @@ func _build() -> void:
 	var text_box := VBoxContainer.new()
 	text_box.add_theme_constant_override("separation", 1)
 	text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_name = UiTheme.body("")
+	_name = Button.new()
+	_name.pressed.connect(func() -> void: inspected.emit(ghost_id))
 	_detail = UiTheme.small("", Palette.BONE_DIM)
 	text_box.add_child(_name)
 	text_box.add_child(_detail)
@@ -59,6 +63,8 @@ func _build() -> void:
 	# choice matters, and a choice the player can never see again is one they
 	# will not make carefully a second time.
 	_doctrine = UiTheme.small("", Palette.GHOST)
+	_doctrine.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text_box.custom_minimum_size.x = 120
 	_doctrine.visible = false
 	text_box.add_child(_doctrine)
 	row.add_child(text_box)

@@ -19,6 +19,13 @@ const TOWER_WIDTH := 186.0
 ## nobody anything.
 const TOWER_HEIGHT := 222.0
 
+signal floor_selected(floor: int)
+signal ghost_inspected(ghost_id: int)
+var selected_floor: int = 1
+var _floor_details: Label
+var _residents: VBoxContainer
+var _preview: ModelPreview
+var _floor_picker: SpinBox
 var game: GameRoot
 
 var _premise: Label
@@ -105,7 +112,27 @@ func _build() -> void:
 	_tower.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_tower.floor_clicked.connect(_on_floor_clicked)
 	tower_wrap.add_child(_tower)
-	add_child(tower_wrap)
+	var floors := HFlowContainer.new()
+	floors.alignment = FlowContainer.ALIGNMENT_CENTER
+	floors.add_theme_constant_override("h_separation", 14)
+	floors.add_child(tower_wrap)
+	var details := VBoxContainer.new()
+	details.custom_minimum_size.x = 210
+	details.add_theme_constant_override("separation", 6)
+	_floor_picker = SpinBox.new()
+	_floor_picker.min_value = 1
+	_floor_picker.max_value = 1000000000
+	_floor_picker.value_changed.connect(func(value: float) -> void: select_floor(int(value)))
+	details.add_child(_floor_picker)
+	_floor_details = UiTheme.body("")
+	_floor_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	details.add_child(_floor_details)
+	_preview = ModelPreview.new()
+	details.add_child(_preview)
+	_residents = VBoxContainer.new()
+	details.add_child(_residents)
+	floors.add_child(details)
+	add_child(floors)
 
 	_haunting = UiTheme.small("", Palette.PREPARED)
 	_haunting.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -127,6 +154,7 @@ func refresh() -> void:
 	if game == null or game.campaign == null:
 		return
 	_tower.bind(game.campaign)
+	select_floor(selected_floor)
 	_refresh_premise()
 	_refresh_haunting()
 	_cheapest_cost = _cheapest_upgrade_cost()
@@ -198,6 +226,7 @@ func _refresh_premise() -> void:
 func _on_floor_clicked(floor: int) -> void:
 	if game == null or game.campaign == null:
 		return
+	select_floor(floor)
 	if floor <= CampaignEngine.reach(game.campaign) and game.campaign.run == null:
 		_entry.value = float(floor)
 
@@ -227,3 +256,34 @@ func _cheapest_upgrade_cost() -> float:
 		if best < 0.0 or price < best:
 			best = price
 	return best
+
+
+func select_floor(floor: int) -> void:
+	selected_floor = maxi(1, floor)
+	_floor_picker.set_value_no_signal(selected_floor)
+	_tower.selected_floor = selected_floor
+	_tower.queue_redraw()
+	var c := game.campaign
+	var residents := c.ladder.on_floor(selected_floor)
+	var rate := c.ladder.floor_output(selected_floor, c.balance(), c.modifiers())
+	_floor_details.text = game.text("ui.floor.details").replace("{floor}", str(selected_floor)) \
+		.replace("{count}", str(residents.size())).replace("{rate}", Num.short(rate))
+	_floor_details.text += "\n" + game.text("ui.floor.eligible" if selected_floor <= CampaignEngine.reach(c) else "ui.floor.locked")
+	var haunting := Hauntings.describe(c.content, c.ladder, selected_floor, c.balance())
+	if not haunting.is_empty():
+		_floor_details.text += "\n" + game.text("ui.haunting").replace("{floor}", str(selected_floor)) \
+			.replace("{count}", str(int(haunting["count"]))).replace("{tag}", game.text("tag.%s.name" % haunting["tag"])) \
+			.replace("{bonus}", Num.percent(float(haunting["bonus"])))
+	if selected_floor > WellView.MAX_FLOORS:
+		_floor_details.text += "\n" + game.text("ui.floor.deeper")
+	for child in _residents.get_children():
+		child.free()
+	_preview.visible = not residents.is_empty()
+	if not residents.is_empty():
+		_preview.show_ghost(residents[0])
+	for ghost in residents:
+		var button := Button.new()
+		button.text = ghost.name + " · " + game.text("ui.inspect.ghost")
+		button.pressed.connect(func() -> void: ghost_inspected.emit(ghost.id))
+		_residents.add_child(button)
+	floor_selected.emit(selected_floor)

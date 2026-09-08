@@ -21,12 +21,15 @@ const GAP := 2.0
 ## distance two tags may end up apart.
 const STACK_GAP := 44.0
 
+signal targeted(index: int)
+var targetable: bool = false
 var index: int = -1
 
 var _name: Label
 var _intent: Label
 var _health: Label
 var _intent_icon: TextureRect
+var _target_icon: Label
 var _hp: int = 1
 var _max_hp: int = 1
 var _block: int = 0
@@ -42,9 +45,17 @@ static func create(enemy_index: int) -> EnemyTag:
 
 
 func _init() -> void:
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	focus_mode = Control.FOCUS_ALL
 	custom_minimum_size = Vector2(WIDTH, 38.0)
 	size = custom_minimum_size
+	focus_entered.connect(queue_redraw)
+	focus_exited.connect(queue_redraw)
+	_target_icon = UiTheme.body("◎", Palette.SOUL)
+	_target_icon.position = Vector2(-15, 10)
+	_target_icon.visible = false
+	_target_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_target_icon)
 
 	_name = UiTheme.body("", Palette.BONE)
 	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -79,6 +90,9 @@ func bind(content: Content, fight: FightState, enemy_index: int) -> void:
 	var e: EnemyState = fight.enemies[enemy_index]
 	var def: EnemyDef = content.enemies[e.def_id]
 	_name.text = content.text(def.name_key)
+	tooltip_text = _name.text + "\n" + content.text("ui.fight.target_hint")
+	for status in e.statuses:
+		tooltip_text += "\n" + CardInspector.status_text(content, String(status), int(e.statuses[status]))
 	_hp = e.hp
 	_max_hp = maxi(1, e.max_hp)
 	_block = e.block
@@ -94,6 +108,14 @@ func bind(content: Content, fight: FightState, enemy_index: int) -> void:
 	_intent.size.x = WIDTH - _intent.position.x
 	_intent.text = intent_text(content, fight, enemy_index)
 	visible = e.alive
+	queue_redraw()
+
+
+func set_targetable(value: bool) -> void:
+	if targetable == value:
+		return
+	targetable = value
+	_target_icon.visible = value
 	queue_redraw()
 
 
@@ -125,6 +147,8 @@ func place(at: Vector2) -> void:
 
 
 func _draw() -> void:
+	if targetable or has_focus():
+		draw_rect(Rect2(Vector2(-3, -3), size + Vector2(6, 6)), Palette.SOUL, false, 2)
 	# A backing plate under the whole tag. Without it the text and the bar sit
 	# straight on lit stone, and a red bar with nothing behind it reads as a
 	# stripe painted on the wall rather than as that creature's health.
@@ -165,3 +189,11 @@ static func spread(points: Array) -> Array:
 		out[i] = at
 		placed.append(at)
 	return out
+
+
+func _gui_input(event: InputEvent) -> void:
+	if not is_visible_in_tree() or event.is_echo():
+		return
+	if event.is_action_pressed("ui_accept") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
+		targeted.emit(index)
+		accept_event()

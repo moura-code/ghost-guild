@@ -183,20 +183,58 @@ func spawn_point() -> Vector3:
 ## Something to stand at. A station that is only a trigger volume is a station
 ## the player cannot see from across the room, which turns the guild into a
 ## hunt for invisible hotspots.
-func _plinth(at: Vector3, id: String) -> MeshInstance3D:
+func _plinth(at: Vector3, id: String) -> Node3D:
+	var root := Node3D.new()
+	root.name = "Plinth_" + id
+	root.position = at
+	var stone := HeroFigure.material(Color("494648"))
+	var wood := HeroFigure.material(Color("4a342a"))
+	var metal := HeroFigure.material(Color("b99d67"), 0.65)
+	var parchment := HeroFigure.material(Color("b7a17a"))
+	var tint := BoneMesh.eye_material(Palette.SOUL if id == CIRCLE else Palette.LANTERN)
+	tint.emission_energy_multiplier = 0.35
+	if id == CIRCLE:
+		for radius in [0.65, 0.9]:
+			var ring := TorusMesh.new()
+			ring.inner_radius = radius - 0.025
+			ring.outer_radius = radius
+			BoneMesh._part(root, "RiteCircle", ring, tint, Vector3(0, 0.025, 0))
+		for i in 6:
+			var angle := i * TAU / 6
+			var point := Vector3(cos(angle) * 0.8, 0.1, sin(angle) * 0.8)
+			BoneMesh.link(root, "Candle", point, point + Vector3.UP * 0.22, 0.04, parchment)
+			BoneMesh.ellipsoid(root, "Flame", point + Vector3.UP * 0.25, Vector3(0.05, 0.11, 0.05), tint)
+	elif id == HALL:
+		_box(root, "Monument", Vector3(1.3, 1.9, 0.3), Vector3(0, 0.95, 0), stone)
+		for i in 3:
+			_box(root, "LegendPlaque", Vector3(0.92, 0.34, 0.04), Vector3(0, 0.47 + i * 0.5, -0.18), metal)
+			BoneMesh.ellipsoid(root, "Seal", Vector3(0, 0.47 + i * 0.5, -0.22), Vector3(0.15, 0.21, 0.035), tint)
+	else:
+		_box(root, "Table", Vector3(1.2, 0.12, 0.85), Vector3(0, 0.85, 0), wood)
+		for x in [-0.5, 0.5]:
+			for z in [-0.32, 0.32]:
+				_box(root, "Leg", Vector3(0.10, 0.83, 0.1), Vector3(x, 0.42, z), wood)
+		if id == DESK:
+			_box(root, "Ledger", Vector3(0.56, 0.05, 0.38), Vector3(0, 0.96, 0), parchment)
+			BoneMesh.link(root, "Quill", Vector3(0.35, 0.92, 0), Vector3(0.45, 1.25, 0), 0.012, parchment)
+		else:
+			_box(root, "Anvil", Vector3(0.47, 0.2, 0.27), Vector3(-0.1, 1.03, 0), metal)
+			BoneMesh.link(root, "Hammer", Vector3(0.3, 0.95, -0.18), Vector3(0.3, 0.95, 0.18), 0.035, wood)
+			_box(root, "HammerHead", Vector3(0.23, 0.09, 0.1), Vector3(0.3, 0.96, 0.18), metal)
+	if id != CIRCLE:
+		var body := StaticBody3D.new()
+		body.collision_layer = DungeonBuilder.LAYER_WORLD
+		var shape := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(1.3, 1.9, 0.3) if id == HALL else Vector3(1.2, 0.9, 0.85)
+		shape.shape = box
+		shape.position.y = box.size.y * 0.5
+		body.add_child(shape)
+		root.add_child(body)
+	return root
+
+
+func _box(parent: Node3D, name: String, size: Vector3, at: Vector3, material: StandardMaterial3D) -> void:
 	var box := BoxMesh.new()
-	box.size = Vector3(1.1, 0.9, 1.1)
-	var m := StandardMaterial3D.new()
-	m.albedo_color = Color(0.30, 0.26, 0.22)
-	m.roughness = 0.9
-	# Barely lit, and warm rather than cold: enough to be picked out from
-	# across a dark room, not enough to read as a lightbox.
-	m.emission_enabled = true
-	m.emission = Color(0.90, 0.72, 0.45)
-	m.emission_energy_multiplier = 0.045
-	var inst := MeshInstance3D.new()
-	inst.name = "Plinth_" + id
-	inst.mesh = box
-	inst.material_override = m
-	inst.position = at + Vector3(0.0, 0.45, 0.0)
-	return inst
+	box.size = size
+	BoneMesh._part(parent, name, box, material, at)

@@ -490,3 +490,73 @@ ui.options.language,Idioma
 ui.language.en,English
 ui.language.es,Español
 ui.exit.terms,"Montar la Vigilia acaba con este héroe a propósito. Se queda aquí como espectro preparado -- vale un {prepared} más para siempre -- y el gremio conserva tu alcance, tu Alma y tus mejoras. Retirarse gasta 1 de Temple y lo trae a casa."
+ui.close,Volver
+ui.nav.depths,Profundidades
+ui.nav.upgrades,Mejoras / Expediciones
+ui.help.title,Controles
+ui.help.move_forward,WASD: caminar; ratón: mirar
+ui.help.sprint,Correr
+ui.help.ui_cancel,"Cancelar objetivo, volver o pausar. Las decisiones obligatorias siguen pendientes."
+ui.help.help,Controles y ayuda
+ui.help.guild_menu,Abrir o cerrar la gestión del gremio
+ui.help.interact,Usar la estación o inspeccionar un fantasma
+ui.help.inspect_hero,Inspeccionar héroe y mazo
+ui.help.floor_map,Abrir el mapa; hacer clic para marcar un destino
+ui.help.keyboard,Tab / Mayús+Tab: enfocar · Intro: activar · Clic derecho o F: inspeccionar carta. Moverse en combate no afecta al daño ni a los turnos.
+ui.help.guild_hint,{guild}: gestionar gremio · {use}: usar estación · {back}: volver / pausar · {help}: controles
+ui.options.ui_scale,Escala de interfaz (100–150 %)
+ui.options.reduced_motion,Reducir movimiento
+ui.inspect.deck,Mazo
+ui.inspect.hand,Mano
+ui.inspect.draw,Pila de robo
+ui.inspect.discard,Descarte
+ui.inspect.card,Inspección de carta
+ui.inspect.cost,Coste {n}
+ui.inspect.unordered,Solo composición; el orden de robo está oculto.
+ui.inspect.modifiers,Poder actual {might} · Ingenio {wit}. Las reglas muestran valores base/mejorados; el combate aplica estados y reliquias al jugar.
+ui.inspect.energy,No hay energía suficiente para jugar esta carta.
+ui.menu.kicker,UN GREMIO MÁS ALLÁ DE LA MUERTE
+ui.menu.premise,Desciende con los vivos. Construye con los muertos.
+ui.inspect.ghost,Inspeccionar fantasma
+ui.ghost.detail,"Piso {floor} · {state}
+Fuerza efectiva {strength}
+Producción total del piso {rate} Almas/h"
+ui.ghost.state.true,En reposo
+ui.ghost.state.echo,Eco
+ui.ghost.state.expedition,Expedición
+ui.ghost.state.restless,Inquieto
+ui.ghost.state.prepared,Guardia preparada
+ui.floor.details,"Piso {floor} · {count} residentes
+{rate} Almas/h"
+ui.floor.eligible,Al alcance del descenso
+ui.floor.locked,Fuera del alcance actual
+ui.floor.deeper,Más profundo que el pozo visible. Estos son los registros exactos.
+ui.map.title,Piso {floor} · Mapa
+ui.map.legend,"E Entrada · S Escaleras · ○ Pendiente · ✓ Completo · × Cerrado · Flecha cian: tú
+Elige una celda o número de sala para marcarlo en la brújula."
+ui.map.mark,Marcar en la brújula
+ui.saves.title,Campañas / Importar
+ui.saves.explain,Importa una copia en una ranura nueva. Se conservan el archivo original y la campaña actual. Elige una campaña para continuarla.
+ui.saves.import,Importar campaña antigua…
+ui.saves.current,Actual
+ui.saves.imported,Se importó {name} en {slot}. Elige esa campaña para continuar.
+ui.saves.future,Esta partida requiere una versión más reciente del juego. No se ha modificado.
+ui.saves.invalid,Este archivo no es una campaña válida. No se modificaron las partidas.
+ui.saves.content,La campaña contiene referencias a contenido desconocido. Se canceló la importación.
+ui.saves.missing,No se encontró el archivo de campaña.
+ui.saves.write,No se pudo guardar la campaña. La partida anterior sigue disponible.
+ui.saves.recovered,Se recuperó la campaña desde una copia de seguridad válida.
+ui.inspect.status,Estados
+ui.inspect.no_status,No hay estados activos.
+ui.fight.target_hint,Selecciona una carta y haz clic aquí o pulsa Intro para elegir el objetivo. ◎ indica un objetivo válido.
+status.poison.help,"Al empezar el turno, pierde {n} PV ignorando Bloqueo; pierde una carga."
+status.burn.help,"Al terminar el turno, pierde {n} PV ignorando Bloqueo; pierde una carga."
+status.bleed.help,Pierde {n} PV ignorando Bloqueo al atacar. Pierde una carga al terminar el turno.
+status.weak.help,El daño de ataque se multiplica por {weak}. Pierde una carga al terminar el turno.
+status.vulnerable.help,El daño de los golpes recibidos se multiplica por {vulnerable}. Pierde una carga al terminar el turno.
+status.might_buff.help,Añade {n} Fuerza a los efectos que escalan con Fuerza.
+status.wit_buff.help,Añade {n} Ingenio a los efectos que escalan con Ingenio.
+status.thorns.help,El atacante pierde {n} PV ignorando Bloqueo después de un golpe de ataque.
+status.regen.help,"Al empezar el turno, recupera {n} PV; pierde una carga."
+status.vigil.help,"Al empezar el turno del héroe, obtiene {n} Bloqueo."
+status.knell.help,"Al empezar el turno del héroe, inflige {n} de daño ignorando Bloqueo a cada enemigo vivo."

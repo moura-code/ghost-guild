@@ -493,3 +493,71 @@ ui.exit.watch_locked,Take the Watch — the guild will not hold a vigil until a 
 
 ui.menu.kicker,A GUILD BEYOND THE GRAVE
 ui.menu.premise,Descend into the dark. Your dead will keep the watch.
+ui.close,Return
+ui.nav.depths,Depths
+ui.nav.upgrades,Upgrades / Expeditions
+ui.help.title,Controls
+ui.help.move_forward,WASD: walk; mouse: look
+ui.help.sprint,Sprint
+ui.help.ui_cancel,"Cancel a target, return, or pause. Required choices stay pending."
+ui.help.help,Controls and help
+ui.help.guild_menu,Open or close guild management
+ui.help.interact,Use the focused station or inspect a ghost
+ui.help.inspect_hero,Inspect hero and deck
+ui.help.floor_map,Open the floor map; click to mark a destination
+ui.help.keyboard,Tab / Shift+Tab: focus · Enter: activate · Right click or F: inspect a card. Combat movement does not affect damage or turns.
+ui.help.guild_hint,{guild}: manage guild · {use}: use station · {back}: return / pause · {help}: controls
+ui.options.ui_scale,Interface scale (100–150%)
+ui.options.reduced_motion,Reduced motion
+ui.inspect.deck,Deck
+ui.inspect.hand,Hand
+ui.inspect.draw,Draw pile
+ui.inspect.discard,Discard
+ui.inspect.card,Card inspection
+ui.inspect.cost,Cost {n}
+ui.inspect.unordered,Composition only — shuffle order is hidden.
+ui.inspect.modifiers,Current Might {might} · Wit {wit}. Card rules show their base/upgraded values; combat applies statuses and relics when played.
+ui.inspect.energy,Not enough energy to play this card.
+ui.inspect.ghost,Inspect ghost
+ui.ghost.detail,"Floor {floor} · {state}
+Effective strength {strength}
+Whole floor production {rate} Soul/h"
+ui.ghost.state.true,At rest
+ui.ghost.state.echo,Echo
+ui.ghost.state.expedition,Expedition
+ui.ghost.state.restless,Restless
+ui.ghost.state.prepared,Prepared Watch
+ui.floor.details,"Floor {floor} · {count} residents
+{rate} Soul/h"
+ui.floor.eligible,Within descent reach
+ui.floor.locked,Beyond current descent reach
+ui.floor.deeper,Deeper than the visible well. These are the exact ledger records.
+ui.map.title,Floor {floor} · Map
+ui.map.legend,"E Entry · S Stairs · ○ Pending · ✓ Complete · × Locked · Cyan arrow: you
+Select a cell or room number to mark it on the compass."
+ui.map.mark,Mark on compass
+ui.saves.title,Campaigns / Import
+ui.saves.explain,Import a copy into a new slot. The source and current campaign are retained. Select a campaign to continue it.
+ui.saves.import,Import legacy campaign…
+ui.saves.current,Current
+ui.saves.imported,Imported {name} into {slot}. Select that campaign to continue.
+ui.saves.future,This save requires a newer version of the game. It has not been changed.
+ui.saves.invalid,This file is not a valid campaign. Existing saves are unchanged.
+ui.saves.content,The campaign refers to unknown game content. Import cancelled.
+ui.saves.missing,No campaign file was found.
+ui.saves.write,The campaign could not be saved. The previous save is still available.
+ui.saves.recovered,Campaign recovered from a valid backup.
+ui.inspect.status,Status
+ui.inspect.no_status,No active statuses.
+ui.fight.target_hint,"Select a card, then click this tag or press Enter to target. ◎ marks a valid target."
+status.poison.help,"At turn start, lose {n} HP through Block; lose one stack."
+status.burn.help,"At turn end, lose {n} HP through Block; lose one stack."
+status.bleed.help,Lose {n} HP through Block when attacking. Lose one stack at turn end.
+status.weak.help,Attack damage is multiplied by {weak}. Lose one stack at turn end.
+status.vulnerable.help,Incoming hit damage is multiplied by {vulnerable}. Lose one stack at turn end.
+status.might_buff.help,Adds {n} Might to effects that scale with Might.
+status.wit_buff.help,Adds {n} Wit to effects that scale with Wit.
+status.thorns.help,An attacker loses {n} HP through Block after an attack hits.
+status.regen.help,"At turn start, heal {n} HP; lose one stack."
+status.vigil.help,"At the hero’s turn start, gain {n} Block."
+status.knell.help,"At the hero’s turn start, deal {n} damage through Block to every living enemy."

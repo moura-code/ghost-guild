@@ -49,13 +49,14 @@ func test_it_handles_exactly_the_four_non_fight_nodes() -> void:
 func test_rest_offers_healing_and_a_card_to_sharpen() -> void:
 	var g := _game()
 	var run := _at(g, {"kind": "rest"})
+	run.hero.hp -= 5
 	var s := _screen(g, run)
 	await await_idle_frame()
 	assert_str(run.phase).is_equal("rest")
 	assert_str(s._title.text).is_equal(g.text("ui.run.phase.rest"))
 	assert_int(s._actions.size()).is_greater(1)
 	var heal := s.label_for({"kind": "rest_heal"})
-	assert_str(heal).contains(str(int(roundf(float(run.hero.max_hp) * 0.3))))
+	assert_str(heal).contains("5")
 	assert_str(heal).is_not_equal("ui.choice.rest_heal")
 
 

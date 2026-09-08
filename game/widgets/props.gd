@@ -85,6 +85,8 @@ func _init() -> void:
 
 
 func _process(delta: float) -> void:
+	if Settings.motion_reduced or not is_visible_in_tree():
+		return
 	# Only the things that move ask for a frame.
 	if kind == Kind.CANDLE or kind == Kind.CIRCLE:
 		advance(delta)

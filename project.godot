@@ -29,12 +29,13 @@ gdscript/warnings/untyped_declaration=1
 
 [display]
 
-; Native resolution. The 3D world is rendered at whatever the window is; the
-; HUD scales with "canvas_items" so cards and text stay sharp at any size.
-; The 640x360 integer viewport that made the pixel art work is gone with it.
+; The 3D world renders at the window's native resolution. HudRoot scales
+; the interface independently so text stays sharp as panels reflow.
 window/size/viewport_width=1280
 window/size/viewport_height=720
-window/stretch/mode="canvas_items"
+window/size/min_width=960
+window/size/min_height=540
+window/stretch/mode="disabled"
 window/stretch/aspect="expand"
 
 [editor_plugins]
@@ -74,6 +75,26 @@ interact={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":69,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
+}
+
+guild_menu={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":71)]
+}
+
+inspect_hero={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":73)]
+}
+
+floor_map={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":77)]
+}
+
+help={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":4194332)]
 }
 
 [layer_names]

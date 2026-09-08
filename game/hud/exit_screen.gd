@@ -21,6 +21,7 @@ extends VBoxContainer
 ## accuracy a balance invariant does.
 
 signal decided(kind: String)
+signal deck_requested()
 
 ## Tests set this false to compute inline and keep assertions deterministic.
 var threaded: bool = true
@@ -47,6 +48,9 @@ var _terms: Label
 ## The readings and the three choices, hidden while the rule picker is up.
 var _face: Control
 var _picker: RulePicker
+var _resources: Button
+var _task: int = -1
+var _generation: int = 0
 
 
 func _init() -> void:
@@ -78,13 +82,17 @@ func _build() -> void:
 	_title = UiTheme.title("")
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	face.add_child(_title)
+	_resources = Button.new()
+	_resources.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_resources.pressed.connect(func() -> void: deck_requested.emit())
+	face.add_child(_resources)
 
 	# The three numbers side by side, each in its own panel. Spec §9 says
 	# these are the numbers the player learns to read, and a stack of
 	# labels does not teach anyone to compare them -- a row does.
-	var numbers_row := HBoxContainer.new()
-	numbers_row.add_theme_constant_override("separation", 12)
-	numbers_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	var numbers_row := HFlowContainer.new()
+	numbers_row.add_theme_constant_override("h_separation", 12)
+	numbers_row.alignment = FlowContainer.ALIGNMENT_CENTER
 	_here = UiTheme.number("", Palette.SOUL)
 	_next = UiTheme.number("", Palette.BONE)
 	_survival = UiTheme.number("", Palette.BONE)
@@ -93,9 +101,9 @@ func _build() -> void:
 	numbers_row.add_child(_reading(_survival, game.text("ui.exit.survival"), "hp"))
 	_face.add_child(numbers_row)
 
-	var choices := HBoxContainer.new()
-	choices.add_theme_constant_override("separation", 10)
-	choices.alignment = BoxContainer.ALIGNMENT_CENTER
+	var choices := HFlowContainer.new()
+	choices.add_theme_constant_override("h_separation", 10)
+	choices.alignment = FlowContainer.ALIGNMENT_CENTER
 
 	_push = Button.new()
 	_push.custom_minimum_size = Vector2(88.0, 22.0)
@@ -186,11 +194,13 @@ static func reckon(campaign: Campaign, p_run: RunState, samples: int) -> Diction
 
 
 func _start_projection() -> void:
+	_finish_task()
+	_generation += 1
 	pending = true
-	var campaign := game.campaign
-	var live := run
-	# Trimmed for the preview: the balance tools keep the full counts.
-	var restore := campaign.sim_fights
+	# The worker owns a snapshot. Economy ticks and another campaign can
+	# safely proceed while it estimates this particular exit.
+	var campaign := Campaign.from_dict(game.content, game.campaign.to_dict())
+	var live := RunState.from_dict(game.content, run.to_dict())
 	campaign.sim_fights = PREVIEW_FIGHTS
 
 	# The measured half is nearly free, so it lands before the first frame
@@ -200,7 +210,6 @@ func _start_projection() -> void:
 	_refresh_buttons()
 
 	if not threaded:
-		campaign.sim_fights = restore
 		_on_reckoned(reckon(campaign, live, PREVIEW_SAMPLES))
 		return
 	# The screen can be freed while the task is still running -- leaving a
@@ -208,19 +217,30 @@ func _start_projection() -> void:
 	# object is still alive before calling back into it, or the deferred
 	# call lands on freed memory.
 	var id := get_instance_id()
-	WorkerThreadPool.add_task(func() -> void:
+	var generation := _generation
+	_task = WorkerThreadPool.add_task(func() -> void:
 		var result := reckon_ahead(campaign, live, PREVIEW_SAMPLES)
-		campaign.sim_fights = restore
-		_deliver.bind(id, result).call_deferred())
+		_deliver.bind(id, generation, result).call_deferred())
 
 
 ## Runs on the main thread after the worker finishes. Static, so it can
 ## verify the screen still exists before touching it.
-static func _deliver(id: int, result: Dictionary) -> void:
+static func _deliver(id: int, generation: int, result: Dictionary) -> void:
 	var screen := instance_from_id(id) as ExitScreen
-	if screen == null or not is_instance_valid(screen):
+	if screen == null or not is_instance_valid(screen) or screen._generation != generation:
 		return
+	screen._finish_task()
 	screen._on_reckoned(result)
+
+
+func _finish_task() -> void:
+	if _task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_task)
+		_task = -1
+
+
+func _exit_tree() -> void:
+	_finish_task()
 
 
 func _on_reckoned(result: Dictionary) -> void:
@@ -235,6 +255,7 @@ func _on_reckoned(result: Dictionary) -> void:
 
 func _refresh_labels() -> void:
 	_title.text = game.text("ui.exit.title").replace("{floor}", str(run.floor))
+	_resources.text = ChoiceScreen.resources_text(game.content, run)
 	var waiting := game.text("ui.exit.pending")
 	_here.text = Num.rate(float(numbers["here"])) if numbers.has("here") else waiting
 	if not numbers.has("summary"):

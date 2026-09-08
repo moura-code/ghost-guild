@@ -1,5 +1,5 @@
 class_name OfflineSummary
-extends Control
+extends MarginContainer
 ## "While you were away" (spec §5.8). Shown once on load when the ghosts
 ## earned something worth reporting. A capped return always shows, because
 ## the cap is the reason to buy Night Watch and hiding it reads as a bug.
@@ -158,7 +158,11 @@ func bind(content: Content, offline: Dictionary) -> void:
 	_away.text = content.text("ui.offline.away").replace("{duration}", Num.duration(counted))
 	# From zero, every time: the count IS the reward.
 	_earned_ticker.set_now(0.0)
-	_earned_ticker.to(float(offline.get("soul", 0.0)))
+	if Settings.motion_reduced:
+		_earned_ticker.set_now(float(offline.get("soul", 0.0)))
+	else:
+		_earned_ticker.to(float(offline.get("soul", 0.0)))
+	_motes.emitting = not Settings.motion_reduced
 	_capped.text = content.text("ui.offline.capped")
 	_capped.visible = capped
 	_bind_returned(content, offline.get("returned", []) as Array)
@@ -169,8 +173,7 @@ func bind(content: Content, offline: Dictionary) -> void:
 ## the silhouette that is now standing in the tower.
 func _bind_returned(content: Content, ghosts: Array) -> void:
 	for old in _returned.get_children():
-		_returned.remove_child(old)
-		old.queue_free()
+		old.free()
 	ScreenLayout.section_text(_returned_head, content.text("ui.offline.expeditions"))
 	_returned_head.visible = not ghosts.is_empty()
 	_returned.visible = not ghosts.is_empty()

@@ -46,14 +46,10 @@ func _build() -> void:
 	# Scrolled. Six Legends and a Chronicle under them is taller than a
 	# 360-pixel frame, and the half that went off the bottom was the half
 	# with the buttons on it.
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	add_child(scroll)
 	_body = VBoxContainer.new()
 	_body.add_theme_constant_override("separation", 8)
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(_body)
+	add_child(_body)
 	_body.add_child(ScreenLayout.centre(UiTheme.title(game.text("ui.hall.title"))))
 
 	# What the guild is worth, which is the only permanent number in the game.

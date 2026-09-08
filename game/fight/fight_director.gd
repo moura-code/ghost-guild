@@ -13,6 +13,9 @@ extends Node3D
 ## GameRoot.run_action, which is the only channel (spec §4).
 
 signal fight_finished()
+signal input_context_changed()
+signal inspection_requested(pile: String)
+signal card_inspection_requested(card: CardInstance)
 
 ## Whether the fight has finished settling. `Crawl` holds the screen until
 ## it has: the run leaves the fight phase on the frame the last enemy dies,
@@ -76,7 +79,10 @@ var _crosshair: Crosshair
 var _end_turn: Button
 var _banner: TurnBanner
 var _finished: bool = false
+var suspended: bool = false
+var staging: bool = true
 var _shake: Tween
+var _piles: HFlowContainer
 
 
 ## Where each enemy stands, given the centre of the room and the direction the
@@ -214,7 +220,10 @@ func anchors() -> Dictionary:
 
 func play_card(hand_index: int, target: int) -> void:
 	var f := fight()
-	if f == null or f.is_over() or not playable.has(hand_index):
+	if suspended or f == null or f.is_over() or not playable.has(hand_index):
+		return
+	var action := {"kind": "play", "hand_index": hand_index, "target": target}
+	if animator.is_playing() or not CombatEngine.legal_actions(f).has(action):
 		return
 	hand.select(-1)
 	if hand_index < hand.views.size():
@@ -226,7 +235,7 @@ func play_card(hand_index: int, target: int) -> void:
 
 func end_turn() -> void:
 	var f := fight()
-	if f == null or f.is_over():
+	if suspended or f == null or f.is_over() or animator.is_playing():
 		return
 	hand.select(-1)
 	_banner.announce(game.text("ui.fight.enemy_turn"), false)
@@ -237,7 +246,7 @@ func end_turn() -> void:
 ## Idempotent: called after every action and again when the animator settles,
 ## so whichever notices first, the fight ends exactly once.
 func check_over() -> void:
-	if _finished:
+	if _finished or suspended:
 		return
 	if game.campaign.run != null and game.campaign.run.phase == "fight":
 		return
@@ -276,6 +285,25 @@ func refresh() -> void:
 		if not alive and not b.dying:
 			b.die()
 	_end_turn.disabled = f.is_over()
+	_focus_route()
+
+
+## Explicit links survive card hover moving children to the top of the fan.
+func _focus_route() -> void:
+	var route: Array[Control] = []
+	for card in hand.views:
+		if card.visible:
+			route.append(card)
+	for tag in tags:
+		if tag.visible:
+			route.append(tag)
+	if not _end_turn.disabled:
+		route.append(_end_turn)
+	for button in _piles.get_children():
+		route.append(button)
+	for i in route.size():
+		route[i].focus_next = route[i].get_path_to(route[(i + 1) % route.size()])
+		route[i].focus_previous = route[i].get_path_to(route[posmod(i - 1, route.size())])
 
 
 ## The engine is the authority on what can be played; this only mirrors it.
@@ -317,14 +345,14 @@ static func engage_point(from: Vector3, group: Vector3, distance: float) -> Vect
 ## Walks the hero into position, then gives them their legs back.
 func _close_in(group: Vector3) -> void:
 	var want := engage_point(player.global_position, group, ENGAGE)
-	if not is_inside_tree() or want.is_equal_approx(player.global_position):
+	if not is_inside_tree() or player.reduced_motion or want.is_equal_approx(player.global_position):
 		player.global_position = want
-		player.frozen = false
+		_finish_staging()
 		return
 	var step := create_tween()
 	step.tween_property(player, "global_position", want, CLOSE_SECONDS) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	step.tween_callback(func() -> void: player.frozen = false)
+	step.tween_callback(_finish_staging)
 
 
 ## The pool of light the fight happens in.
@@ -366,8 +394,11 @@ func _face(at: Vector3) -> void:
 	for body in bodies:
 		tallest = maxf(tallest, body.head_point().y - body.global_position.y - 0.22)
 	var focus_height := clampf(tallest * 0.55, 0.90, Player.EYE)
+	# Keep low creatures above the hand. Fade this lower eye line out for
+	# tall groups so bosses retain room for their heads and intent tags.
+	focus_height -= 0.45 * (1.0 - clampf((tallest - 1.6) / 1.4, 0.0, 1.0))
 	var pitch := atan2(focus_height - Player.EYE, ENGAGE)
-	if not is_inside_tree():
+	if not is_inside_tree() or player.reduced_motion:
 		player.rotation.y = target
 		player.set_pitch(pitch)
 		return
@@ -407,6 +438,7 @@ func _build_hud() -> void:
 	hand = HandView.new()
 	hand.bind(game.content)
 	hand.card_pressed.connect(_on_card_pressed)
+	hand.card_inspected.connect(func(card: CardInstance) -> void: card_inspection_requested.emit(card))
 	_hud_layer.add_child(hand)
 
 	# The vitals get a plate of their own. Over a lit 3D room the bar, the orbs
@@ -444,6 +476,15 @@ func _build_hud() -> void:
 	_end_turn.pressed.connect(end_turn)
 	_hud_layer.add_child(_end_turn)
 
+	_piles = HFlowContainer.new()
+	_piles.position = Vector2(8, 8)
+	_piles.size.x = 135
+	for pile in ["deck", "draw", "discard", "hand", "status"]:
+		var button := Button.new()
+		button.text = game.text("ui.inspect." + pile)
+		button.pressed.connect(func() -> void: inspection_requested.emit(pile))
+		_piles.add_child(button)
+	_hud_layer.add_child(_piles)
 	_banner = TurnBanner.new()
 	_hud_layer.add_child(_banner)
 
@@ -455,18 +496,24 @@ func _build_hud() -> void:
 	for b in bodies:
 		var tag := EnemyTag.create((b as EnemyBody).index)
 		_hud_layer.add_child(tag)
+		tag.targeted.connect(select_target)
 		tags.append(tag)
 
 
 func _on_card_pressed(hand_index: int) -> void:
 	var f := fight()
-	if f == null or f.is_over() or not playable.has(hand_index):
+	if suspended or f == null or f.is_over() or not playable.has(hand_index):
 		return
 	if hand.selected == hand_index:
 		hand.select(-1)
 		return
 	if needs_target(hand_index):
 		hand.select(hand_index)
+		hud.ui.get_viewport().gui_release_focus()
+		for tag in tags:
+			if tag.visible:
+				tag.grab_focus()
+				break
 		return
 	# One living enemy, or a card that only touches the hero: resolve now.
 	var only := living_bodies()
@@ -474,7 +521,7 @@ func _on_card_pressed(hand_index: int) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _finished or hand == null or hand.selected < 0:
+	if suspended or _finished or hand == null or hand.selected < 0:
 		return
 	if not (event is InputEventMouseButton):
 		return
@@ -484,6 +531,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var target := target_under(click.position)
 	if target >= 0:
 		play_card(hand.selected, target)
+		get_viewport().set_input_as_handled()
 
 
 func _after_action() -> void:
@@ -504,6 +552,12 @@ func _process(_delta: float) -> void:
 	# the only aiming this game has.
 	if _crosshair != null:
 		_crosshair.set_target(hand != null and hand.selected >= 0 and target_under(hud.ui.get_global_mouse_position() * _hud_scale()) >= 0)
+	for tag in tags:
+		var f := fight()
+		tag.set_targetable(hand != null and hand.selected >= 0 and f != null and f.living_enemy_indices().has(tag.index))
+		var body := body_of(tag.index)
+		if body != null:
+			body.set_highlight(tag.targetable)
 	var anchor := anchors()
 	var points: Array = []
 	for t in tags:
@@ -515,11 +569,14 @@ func _process(_delta: float) -> void:
 		if body == null or body.dying:
 			tag.visible = false
 			continue
-		tag.place(points[i])
+		var at: Vector2 = points[i]
+		at.x = clampf(at.x, EnemyTag.WIDTH * 0.5 + 10, hud.ui.size.x - EnemyTag.WIDTH * 0.5 - 10)
+		at.y = clampf(at.y, tag.size.y + 12, hud.ui.size.y - 100)
+		tag.place(at)
 
 
 func _on_shake(strength: float) -> void:
-	if player == null or player.head == null or strength <= 0.0:
+	if player == null or player.reduced_motion or player.head == null or strength <= 0.0:
 		return
 	if _shake != null and _shake.is_valid():
 		_shake.kill()
@@ -536,7 +593,7 @@ func _to_screen(camera: Camera3D, at: Vector3, screen: Vector2) -> Vector2:
 		return screen * 0.5
 	# The camera unprojects into the real viewport; the HUD is a scaled space
 	# over it, so the point has to be brought back into the HUD's coordinates.
-	var k := HudRoot.scale_for(camera.get_viewport().get_visible_rect().size)
+	var k := hud.ui.scale.x
 	return camera.unproject_position(at) / k
 
 
@@ -563,4 +620,43 @@ func _exit_tree() -> void:
 func _hud_scale() -> float:
 	if player == null or player.camera == null or not player.camera.is_inside_tree():
 		return 1.0
-	return HudRoot.scale_for(player.camera.get_viewport().get_visible_rect().size)
+	return hud.ui.scale.x
+
+
+func _finish_staging() -> void:
+	staging = false
+	if not suspended and not _finished:
+		player.frozen = false
+	input_context_changed.emit()
+
+
+func set_suspended(value: bool) -> void:
+	suspended = value
+	process_mode = Node.PROCESS_MODE_DISABLED if value else Node.PROCESS_MODE_INHERIT
+	if _hud_layer != null:
+		_hud_layer.visible = not value
+		_hud_layer.process_mode = process_mode
+	# Node-bound tweens (staging, bodies, animator, cards) stop at their
+	# current playhead. No timer is restarted when the caller returns.
+	if not value:
+		check_over.call_deferred()
+	_pause_voices(self, value)
+
+
+func cancel_selection() -> bool:
+	if hand == null or hand.selected < 0:
+		return false
+	hand.select(-1)
+	return true
+
+
+func select_target(index: int) -> void:
+	if not suspended and hand != null and hand.selected >= 0:
+		play_card(hand.selected, index)
+
+
+func _pause_voices(node: Node, value: bool) -> void:
+	if node is AudioStreamPlayer3D:
+		node.stream_paused = value
+	for child in node.get_children():
+		_pause_voices(child, value)

@@ -5,7 +5,7 @@ extends VBoxContainer
 ## spendable lives in the Guild and the Séance.
 
 const STAT_IDS := ["might", "wit", "vigor", "focus"]
-## A whole starting deck has to fit on the sheet without scrolling.
+## Compact faces open a full, readable inspection view.
 const DECK_CARD_SCALE := 0.56
 
 var game: GameRoot
@@ -20,7 +20,11 @@ var _stats: Dictionary = {}
 var _deck: HFlowContainer
 var _relics: Label
 var _relic_row: HBoxContainer
-var _figure: TextureRect
+signal card_inspected(card: CardInstance)
+var _figure: ModelPreview
+var _visual_identity: String = ""
+var _deck_identity: String = ""
+var _relic_identity: String = ""
 
 
 func _init() -> void:
@@ -41,14 +45,22 @@ func _build() -> void:
 	# The hero stands at the top of their own sheet. Every other screen in
 	# the game now has a figure on it; a page of labels looked like the
 	# options menu by comparison.
-	_figure = Icons.make_rect(Icons.ui("hero"), 24.0, Palette.BONE)
-	_figure.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	add_child(_figure)
+	var header := HFlowContainer.new()
+	header.alignment = FlowContainer.ALIGNMENT_CENTER
+	header.add_theme_constant_override("h_separation", 16)
+	add_child(header)
+	_figure = ModelPreview.new()
+	_figure.custom_minimum_size = Vector2(145, 170)
+	header.add_child(_figure)
+	var identity := VBoxContainer.new()
+	identity.custom_minimum_size.x = 200
+	identity.add_theme_constant_override("separation", 6)
+	header.add_child(identity)
 
 	_name = ScreenLayout.centre(UiTheme.title(""))
-	add_child(_name)
+	identity.add_child(_name)
 	_class = ScreenLayout.centre(UiTheme.small(""))
-	add_child(_class)
+	identity.add_child(_class)
 
 	# Who goes down next. Every class in the data is here, the locked ones
 	# greyed with the biome that opens them on the tooltip -- a reward you
@@ -62,17 +74,14 @@ func _build() -> void:
 	for id in ids:
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(72.0, 16.0)
-		# Styled by hand, the way every other button in the game is: the
-		# carved theme in `UiTheme.build()` is never applied to the running
-		# HUD, so a Button with no overrides renders as a stock Godot control
-		# in 16px Open Sans. See the plan's note; it is the next stage.
+		# Inherit the shared HUD theme, including focus and disabled states.
 		button.add_theme_font_size_override("font_size", UiTheme.FONT_BODY)
 		button.pressed.connect(_on_class_pressed.bind(String(id)))
 		_class_row.add_child(button)
 		class_rows[String(id)] = button
-	add_child(_class_row)
+	identity.add_child(_class_row)
 	_vitals = ScreenLayout.centre(UiTheme.body(""))
-	add_child(_vitals)
+	identity.add_child(_vitals)
 
 	var stat_row := HBoxContainer.new()
 	stat_row.add_theme_constant_override("separation", 12)
@@ -90,7 +99,7 @@ func _build() -> void:
 		var chip := PanelContainer.new()
 		chip.add_child(box)
 		stat_row.add_child(chip)
-	add_child(stat_row)
+	identity.add_child(stat_row)
 
 	add_child(ScreenLayout.centre(UiTheme.small(game.text("ui.relics"))))
 	# Relics are objects you carry, so they are shown as objects. A relic
@@ -118,7 +127,11 @@ func _build() -> void:
 func refresh() -> void:
 	if game == null or game.campaign == null or game.campaign.hero == null:
 		return
-	var hero := game.campaign.hero
+	var hero := game.campaign.run.hero if game.campaign.run != null else game.campaign.hero
+	var visual_id := hero.name + ":" + hero.class_id
+	if _visual_identity != visual_id:
+		_visual_identity = visual_id
+		_figure.show_hero(hero)
 	_name.text = hero.name
 	_class.text = game.text(_class_name_key(hero.class_id))
 	_vitals.text = "%s %d/%d   %s %d/%d   %s %d" % [
@@ -206,9 +219,12 @@ func _class_name_key(class_id: String) -> String:
 
 
 func _refresh_relics(hero: Hero) -> void:
+	var identity := game.content.locale + str(hero.relics)
+	if identity == _relic_identity:
+		return
+	_relic_identity = identity
 	for child in _relic_row.get_children():
-		_relic_row.remove_child(child)
-		child.queue_free()
+		child.free()
 	if hero.relics.is_empty():
 		_relics.text = game.text("ui.none")
 		return
@@ -234,9 +250,12 @@ func _relic_name_key(relic_id: String) -> String:
 ## Cards collapse by definition and upgrade state, so a 30-card deck reads
 ## as a dozen lines rather than thirty.
 func _refresh_deck(hero: Hero) -> void:
+	var identity := game.content.locale + str(hero.deck.map(func(card: CardInstance) -> Dictionary: return card.to_dict()))
+	if identity == _deck_identity:
+		return
+	_deck_identity = identity
 	for child in _deck.get_children():
-		_deck.remove_child(child)
-		child.queue_free()
+		child.free()
 	var counts := {}
 	var order: Array[String] = []
 	for card in hero.deck:
@@ -250,7 +269,10 @@ func _refresh_deck(hero: Hero) -> void:
 		var def_id := String(parts[0])
 		var upgraded := parts[1] == "1"
 		var card := CardView.new()
-		card.bind(game.content, CardInstance.new(0, def_id, upgraded), 0, true)
+		var record := CardInstance.new(0, def_id, upgraded)
+		card.bind(game.content, record, 0, true)
+		card.pressed.connect(func(_index: int) -> void: card_inspected.emit(record))
+		card.inspected.connect(func(value: CardInstance) -> void: card_inspected.emit(value))
 		# Small enough that a thirty-card deck still fits the screen, big
 		# enough that the art and the cost are legible.
 		card.scale = Vector2(DECK_CARD_SCALE, DECK_CARD_SCALE)

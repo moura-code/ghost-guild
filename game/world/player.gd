@@ -53,6 +53,7 @@ var frozen: bool = false
 ## Set from Settings. Multiplies the authored SENSITIVITY.
 var sensitivity_scale: float = 1.0
 var invert_y: bool = false
+var reduced_motion: bool = false
 
 var _pitch: float = 0.0
 ## Where in the walk cycle the body is, in footfalls. See `Stride`.
@@ -131,6 +132,9 @@ func place_at(at: Vector3, yaw: float) -> void:
 		# Every descent and every retreat comes through here. A head left
 		# mid-dip would put the camera below eye level for a whole floor.
 		head.position = Vector3(0.0, EYE, 0.0)
+	if camera != null:
+		camera.position = Vector3.ZERO
+		camera.rotation = Vector3.ZERO
 	velocity = Vector3.ZERO
 
 
@@ -150,8 +154,8 @@ func set_pitch(value: float) -> void:
 func _physics_process(delta: float) -> void:
 	var speed := SPRINT if Input.is_action_pressed("sprint") else SPEED
 	var wish := Vector3.ZERO if frozen else wish_direction(read_input(), rotation.y) * speed
-	velocity.x = move_toward(velocity.x, wish.x, ACCEL * delta)
-	velocity.z = move_toward(velocity.z, wish.z, ACCEL * delta)
+	velocity.x = 0.0 if frozen else move_toward(velocity.x, wish.x, ACCEL * delta)
+	velocity.z = 0.0 if frozen else move_toward(velocity.z, wish.z, ACCEL * delta)
 	velocity.y = 0.0 if is_on_floor() else velocity.y - GRAVITY * delta
 	var was := position
 	move_and_slide()
@@ -172,7 +176,7 @@ func _walk(delta: float, speed: float, travelled: float) -> void:
 			footfall.emit(_step_index)
 		_stride_phase = next
 	if head != null:
-		head.position = Vector3(0.0, EYE, 0.0) + Stride.bob_offset(_stride_phase, _bob_amount)
+		head.position = Vector3(0.0, EYE, 0.0) + (Vector3.ZERO if reduced_motion else Stride.bob_offset(_stride_phase, _bob_amount))
 
 
 ## The torch you are carrying. Driven here rather than by the floor's `Torches`
@@ -192,12 +196,3 @@ func _unhandled_input(event: InputEvent) -> void:
 		var dy := motion.relative.y * speed
 		set_pitch(_pitch + (dy if invert_y else -dy))
 		return
-	# Escape gives the mouse back rather than quitting: a captured cursor with
-	# no way out is the fastest way to make a build feel broken.
-	#
-	# Not while frozen, though. _unhandled_input reaches children before
-	# parents, so a body that grabbed Escape here would recapture the cursor
-	# before Crawl ever saw the key -- and a panel you cannot click is worse
-	# than a cursor you cannot free.
-	if event.is_action_pressed("ui_cancel") and not frozen:
-		capture_mouse(Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED)

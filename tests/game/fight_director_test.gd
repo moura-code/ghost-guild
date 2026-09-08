@@ -151,8 +151,8 @@ func test_playing_a_card_reaches_the_run_and_nothing_else_does() -> void:
 	# `run.events`. The fight is where a played card is recorded.
 	var f := d.fight()
 	var before := f.events.size()
-	var index: int = d.playable.keys()[0]
-	d.play_card(index, -1)
+	var action: Dictionary = CombatEngine.legal_actions(f)[0]
+	d.play_card(int(action["hand_index"]), int(action["target"]))
 	assert_int(f.events.size()).is_greater(before)
 	# The whole pivot's invariant: what happened is exactly what the engine
 	# logged, because there is no other way in.
