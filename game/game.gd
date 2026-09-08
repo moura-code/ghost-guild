@@ -32,6 +32,8 @@ var content: Content
 var campaign: Campaign
 var offline: Dictionary = {"elapsed": 0, "counted": 0, "capped": false, "soul": 0.0, "returned": []}
 var is_booted: bool = false
+var load_notice: String = ""
+var save_blocked: bool = false
 var save_path: String = SaveGame.DEFAULT_PATH
 var autosave_seconds: float = 60.0
 var clock: Callable = func() -> int: return int(Time.get_unix_time_from_system())
@@ -94,12 +96,17 @@ func boot() -> Dictionary:
 	var loaded := SaveGame.load_and_catch_up(content, now(), save_path)
 	var c: Campaign = loaded["campaign"]
 	var new_game := c == null
+	save_blocked = c == null and SaveGame.exists(save_path)
+	load_notice = String(SaveGame.load_report(content, save_path)["reason"]) if save_blocked else ("recovered" if loaded.get("recovered", "") != "" else "")
 	if new_game:
 		c = CampaignEngine.new_campaign(content, now(), now())
 	else:
 		offline = loaded["offline"]
 	campaign = c
 	is_booted = true
+	if not new_game:
+		# Persist the catch-up timestamp before another load can repeat it.
+		SaveGame.save(campaign, save_path)
 	booted.emit()
 	_emit_all()
 	return {"ok": true, "reason": "", "errors": [], "new_game": new_game, "offline": offline}
@@ -135,6 +142,8 @@ func settle() -> Dictionary:
 
 
 func buy_upgrade(id: String) -> Dictionary:
+	if campaign != null and campaign.run != null:
+		return {"ok": false, "reason": "in_run", "cost": 0.0, "expedition": null}
 	settle()
 	var r := CampaignEngine.buy_upgrade(campaign, id)
 	if bool(r["ok"]):
@@ -143,6 +152,8 @@ func buy_upgrade(id: String) -> Dictionary:
 
 
 func create_echo(source_id: int, floor: int) -> Dictionary:
+	if campaign != null and campaign.run != null:
+		return {"ok": false, "reason": "in_run", "cost": 0.0, "expedition": null}
 	settle()
 	var r := Seance.create_echo(campaign, source_id, floor, now())
 	if bool(r["ok"]):
@@ -151,6 +162,8 @@ func create_echo(source_id: int, floor: int) -> Dictionary:
 
 
 func call_echo(echo_id: int, floor: int) -> Dictionary:
+	if campaign != null and campaign.run != null:
+		return {"ok": false, "reason": "in_run", "cost": 0.0, "expedition": null}
 	settle()
 	var r := Seance.call_echo(campaign, echo_id, floor)
 	if bool(r["ok"]):
@@ -159,6 +172,8 @@ func call_echo(echo_id: int, floor: int) -> Dictionary:
 
 
 func tend(ghost_id: int) -> Dictionary:
+	if campaign != null and campaign.run != null:
+		return {"ok": false, "reason": "in_run", "cost": 0.0, "expedition": null}
 	settle()
 	var r := Seance.tend(campaign, ghost_id)
 	if bool(r["ok"]):
@@ -167,6 +182,8 @@ func tend(ghost_id: int) -> Dictionary:
 
 
 func mend() -> Dictionary:
+	if campaign != null and campaign.run != null:
+		return {"ok": false, "reason": "in_run", "cost": 0.0, "expedition": null}
 	settle()
 	var r := Seance.mend(campaign)
 	if bool(r["ok"]):
@@ -181,6 +198,8 @@ func mend() -> Dictionary:
 ## draft, the strength simulation -- which is exactly why it happens on a click
 ## and not on load. See Expeditions.
 func launch_expedition() -> Dictionary:
+	if campaign != null and campaign.run != null:
+		return {"ok": false, "reason": "in_run", "cost": 0.0, "expedition": null}
 	if campaign == null:
 		return {"ok": false, "expedition": null, "reason": "unbooted"}
 	settle()
@@ -219,6 +238,8 @@ func _land_due() -> void:
 ## Re-makes the living hero as another class (spec §3.4). Costs no Soul, so
 ## it does not go through `_after_mutation` and its purchase sound.
 func choose_class(class_id: String) -> Dictionary:
+	if campaign != null and campaign.run != null:
+		return {"ok": false, "reason": "in_run", "cost": 0.0, "expedition": null}
 	if campaign == null:
 		return {"ok": false, "reason": "unbooted"}
 	settle()
@@ -235,6 +256,8 @@ func choose_class(class_id: String) -> Dictionary:
 ## Which Legend walks with you on the next descent (spec §6.1). Nothing under
 ## `game/` writes to the campaign; this is the channel.
 func invoke_legend(id: int) -> bool:
+	if campaign != null and campaign.run != null:
+		return false
 	if campaign == null:
 		return false
 	var ok := CampaignEngine.invoke_legend(campaign, id, now())
@@ -255,6 +278,8 @@ func tend_relic(ghost_id: int) -> Dictionary:
 
 
 func _seance_action(act: Callable) -> Dictionary:
+	if campaign != null and campaign.run != null:
+		return {"ok": false, "reason": "in_run", "cost": 0.0, "expedition": null}
 	if campaign == null:
 		return {"ok": false, "cost": 0.0, "reason": "unbooted"}
 	settle()
@@ -268,6 +293,8 @@ func _seance_action(act: Callable) -> Dictionary:
 ## Writing a Chapter of the Chronicle, and setting the Depth Seal for the
 ## next descent (spec §6.2). Nothing under `game/` writes to the campaign.
 func write_chapter(id: String) -> Dictionary:
+	if campaign != null and campaign.run != null:
+		return {"ok": false, "reason": "in_run", "cost": 0.0, "expedition": null}
 	if campaign == null:
 		return {"ok": false, "cost": 0, "reason": "unbooted"}
 	settle()
@@ -280,6 +307,8 @@ func write_chapter(id: String) -> Dictionary:
 
 
 func set_seal(seal: int) -> bool:
+	if campaign != null and campaign.run != null:
+		return false
 	if campaign == null:
 		return false
 	var ok := CampaignEngine.set_seal(campaign, seal, now())
@@ -290,6 +319,8 @@ func set_seal(seal: int) -> bool:
 
 
 func prestige() -> Dictionary:
+	if campaign != null and campaign.run != null:
+		return {"ok": false, "reason": "in_run", "cost": 0.0, "expedition": null}
 	if campaign == null:
 		return {"ok": false, "reason": "unbooted", "legend": null}
 	settle()
@@ -351,6 +382,8 @@ func drain_events() -> Array:
 
 
 func save() -> Error:
+	if save_blocked:
+		return ERR_FILE_CORRUPT
 	if campaign == null:
 		return ERR_UNCONFIGURED
 	settle()
@@ -371,3 +404,30 @@ func _emit_all() -> void:
 	soul_changed.emit(displayed_soul(), campaign.rate_per_hour)
 	ladder_changed.emit()
 	hero_changed.emit()
+
+
+func import_campaign(source: String) -> Dictionary:
+	return SaveGame.import_copy(content, source, now(), save_path.get_base_dir())
+
+
+func continue_slot(path: String) -> Dictionary:
+	var report := SaveGame.load_report(content, path)
+	var next: Campaign = report["campaign"]
+	if next == null:
+		return {"ok": false, "reason": report["reason"]}
+	if not save_blocked and save() != OK:
+		return {"ok": false, "reason": "write"}
+	# Re-read after saving when the selected slot is already active.
+	if path == save_path:
+		next = SaveGame.load_campaign(content, path)
+	var catchup := CampaignEngine.tick(next, now())
+	CampaignEngine.refresh_rate(next)
+	if SaveGame.save(next, path) != OK:
+		return {"ok": false, "reason": "write"}
+	campaign = next
+	save_path = path
+	save_blocked = false
+	load_notice = "recovered" if report["recovered"] != "" else ""
+	offline = catchup
+	_emit_all()
+	return {"ok": true, "reason": ""}

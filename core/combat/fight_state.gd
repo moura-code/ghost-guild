@@ -156,3 +156,44 @@ func clone() -> FightState:
 	s.next_uid = next_uid
 	s.pending_x = pending_x
 	return s
+
+
+const SAVED_INTS := ["floor", "tier", "turn", "hero_hp", "hero_max_hp", "hero_block", "energy",
+	"max_energy", "draw_per_turn", "cards_played_this_turn", "next_uid", "pending_x"]
+const SAVED_PILES := ["draw_pile", "hand", "discard_pile", "exhaust_pile"]
+
+
+func to_dict() -> Dictionary:
+	var d := {"rng": rng.to_dict(), "phase": phase, "seal": seal, "blessing": blessing,
+		"stats": stats.duplicate(), "statuses": statuses.duplicate(), "relics": relics.duplicate()}
+	for key in SAVED_INTS:
+		d[key] = get(key)
+	for key in SAVED_PILES:
+		var pile: Array = get(key)
+		d[key] = pile.map(func(card: CardInstance) -> Dictionary: return card.to_dict())
+	d["enemies"] = enemies.map(func(enemy: EnemyState) -> Dictionary: return enemy.to_dict())
+	return d
+
+
+static func from_dict(p_content: Content, d: Dictionary) -> FightState:
+	d = Content.normalize_json(d)
+	var f := FightState.new()
+	f.content = p_content
+	f.rng = Rng.from_dict(d.get("rng", {}))
+	f.phase = String(d.get("phase", "player"))
+	for key in SAVED_INTS:
+		f.set(key, int(d.get(key, f.get(key))))
+	for key in SAVED_PILES:
+		var pile: Array[CardInstance] = []
+		for raw in d.get(key, []):
+			pile.append(CardInstance.from_dict(raw))
+		f.set(key, pile)
+	f.seal = float(d.get("seal", 1.0))
+	f.blessing = float(d.get("blessing", 1.0))
+	f.stats = d.get("stats", {}).duplicate()
+	f.statuses = d.get("statuses", {}).duplicate()
+	for relic in d.get("relics", []):
+		f.relics.append(String(relic))
+	for enemy in d.get("enemies", []):
+		f.enemies.append(EnemyState.from_dict(enemy))
+	return f

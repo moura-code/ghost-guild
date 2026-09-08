@@ -117,7 +117,7 @@ func _expeditions_dict() -> Array:
 
 func to_dict() -> Dictionary:
 	return {
-		"version": 1,
+		"version": SaveGame.VERSION,
 		"campaign_seed": campaign_seed,
 		"ladder": ladder.to_dict(),
 		"upgrades": upgrades.to_dict(),

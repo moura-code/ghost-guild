@@ -5,43 +5,77 @@ extends RefCounted
 ## falls back through the backups before giving up. The only file I/O
 ## in core/.
 
-const VERSION := 2
+const VERSION := 3
 const DEFAULT_PATH := "user://saves/slot1.json"
 const BACKUPS := 2
 
 
 static func exists(path: String = DEFAULT_PATH) -> bool:
-	return FileAccess.file_exists(path)
+	for suffix in ["", ".bak1", ".bak2"]:
+		if FileAccess.file_exists(path + suffix):
+			return true
+	return false
 
 
 static func save(c: Campaign, path: String = DEFAULT_PATH) -> Error:
-	var dir := path.get_base_dir()
-	var made := DirAccess.make_dir_recursive_absolute(dir)
-	if made != OK and made != ERR_ALREADY_EXISTS:
-		return made
-	_rotate(path)
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	if file == null:
-		return FileAccess.get_open_error()
 	var d := c.to_dict()
 	d["version"] = VERSION
+	if SaveValidation.check(c.content, d) != "":
+		return ERR_INVALID_DATA
+	var made := DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	if made != OK and made != ERR_ALREADY_EXISTS:
+		return made
+	var temporary := path + ".tmp"
+	var file := FileAccess.open(temporary, FileAccess.WRITE)
+	if file == null:
+		return FileAccess.get_open_error()
 	file.store_string(JSON.stringify(d, "\t"))
+	file.flush()
+	var error := file.get_error()
 	file.close()
-	return OK
+	if error != OK:
+		return error
+	if SaveValidation.check(c.content, _parse(temporary)) != "":
+		return ERR_FILE_CORRUPT
+	# The primary is never moved/deleted to make room for a write. Only
+	# validated copies enter the backup chain. Failure leaves it playable.
+	if FileAccess.file_exists(path) and SaveValidation.check(c.content, _parse(path)) == "":
+		if FileAccess.file_exists(path + ".bak1") and SaveValidation.check(c.content, _parse(path + ".bak1")) == "":
+			error = _copy_atomic(path + ".bak1", path + ".bak2")
+			if error != OK:
+				return error
+		error = _copy_atomic(path, path + ".bak1")
+		if error != OK:
+			return error
+	return DirAccess.rename_absolute(temporary, path)
+
+
+static func _copy_atomic(from: String, to: String) -> Error:
+	var error := DirAccess.copy_absolute(from, to + ".tmp")
+	if error != OK:
+		return error
+	return DirAccess.rename_absolute(to + ".tmp", to)
+
+
+static func load_report(content: Content, path: String = DEFAULT_PATH) -> Dictionary:
+	var reason := "missing"
+	for suffix in ["", ".bak1", ".bak2"]:
+		if not FileAccess.file_exists(path + suffix):
+			continue
+		var raw: Variant = _parse(path + suffix)
+		var invalid := SaveValidation.check(content, raw)
+		if invalid == "future" and suffix == "":
+			return {"campaign": null, "reason": "future", "recovered": ""}
+		if invalid != "":
+			reason = invalid
+			continue
+		var d: Dictionary = Content.normalize_json(raw)
+		return {"campaign": Campaign.from_dict(content, migrate(d)), "reason": "", "recovered": suffix}
+	return {"campaign": null, "reason": reason, "recovered": ""}
 
 
 static func load_campaign(content: Content, path: String = DEFAULT_PATH) -> Campaign:
-	if not FileAccess.file_exists(path):
-		return null
-	var parsed: Variant = _parse(path)
-	if not (parsed is Dictionary):
-		parsed = _parse(path + ".bak1")
-	if not (parsed is Dictionary):
-		parsed = _parse(path + ".bak2")
-	if not (parsed is Dictionary):
-		return null
-	var d: Dictionary = Content.normalize_json(parsed)
-	return Campaign.from_dict(content, migrate(d))
+	return load_report(content, path)["campaign"]
 
 
 static func _parse(path: String) -> Variant:
@@ -53,12 +87,16 @@ static func _parse(path: String) -> Variant:
 static func migrate(d: Dictionary) -> Dictionary:
 	var out := d.duplicate(true)
 	var version := int(out.get("version", 0))
+	if version > VERSION:
+		return {}
 	while version < VERSION:
 		match version:
 			0:
 				pass
 			1:
 				_fill_run_resolved(out)
+			2:
+				pass # Historical saves restart the unresolved fight node; no lost state can be inferred.
 		version += 1
 		out["version"] = version
 	return out
@@ -84,23 +122,56 @@ static func _fill_run_resolved(d: Dictionary) -> void:
 
 
 static func load_and_catch_up(content: Content, now: int, path: String = DEFAULT_PATH) -> Dictionary:
-	var c := load_campaign(content, path)
+	var report := load_report(content, path)
+	var c: Campaign = report["campaign"]
 	if c == null:
 		return {"campaign": null, "offline": {"elapsed": 0, "counted": 0, "capped": false, "soul": 0.0, "returned": []}}
 	var offline := CampaignEngine.tick(c, now)
 	CampaignEngine.refresh_rate(c)
-	return {"campaign": c, "offline": offline}
+	return {"campaign": c, "offline": offline, "recovered": report["recovered"], "reason": report["reason"]}
 
 
-static func _rotate(path: String) -> void:
-	var da := DirAccess.open(path.get_base_dir())
-	if da == null:
-		return
-	var file := path.get_file()
-	for i in range(BACKUPS, 0, -1):
-		var newer := file if i == 1 else "%s.bak%d" % [file, i - 1]
-		var older := "%s.bak%d" % [file, i]
-		if da.file_exists(newer):
-			if da.file_exists(older):
-				da.remove(older)
-			da.rename(newer, older)
+static func slot_path(slot: String) -> String:
+	return "user://saves/" + slot + ".json" if slot.is_valid_identifier() else DEFAULT_PATH
+
+
+static func slots(content: Content, directory: String = "user://saves") -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var dir := DirAccess.open(directory)
+	if dir == null:
+		return out
+	var names: Dictionary = {}
+	for file in dir.get_files():
+		var base := String(file).trim_suffix(".bak1").trim_suffix(".bak2")
+		if base.ends_with(".json"):
+			names[base] = true
+	var sorted: Array = names.keys()
+	sorted.sort()
+	for file in sorted:
+		var path := directory.path_join(file)
+		var report := load_report(content, path)
+		var c: Campaign = report["campaign"]
+		out.append({"slot": String(file).get_basename(), "path": path,
+			"name": c.hero.name if c != null else String(file), "reason": report["reason"],
+			"seed": c.campaign_seed if c != null else 0, "recovered": report["recovered"]})
+	return out
+
+
+static func import_copy(content: Content, source: String, now: int, directory: String = "user://saves") -> Dictionary:
+	var report := load_report(content, source)
+	var c: Campaign = report["campaign"]
+	if c == null:
+		return {"ok": false, "reason": report["reason"]}
+	var index := 1
+	var destination := directory.path_join("import_%d.json" % index)
+	while exists(destination):
+		index += 1
+		destination = directory.path_join("import_%d.json" % index)
+	var offline := CampaignEngine.tick(c, now)
+	CampaignEngine.refresh_rate(c)
+	var error := save(c, destination)
+	if error != OK:
+		return {"ok": false, "reason": "write"}
+	return {"ok": true, "reason": "", "path": destination,
+		"slot": destination.get_file().get_basename(), "name": c.hero.name,
+		"recovered": report["recovered"], "offline": offline}

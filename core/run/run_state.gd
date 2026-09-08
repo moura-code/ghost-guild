@@ -159,7 +159,6 @@ func hero_snapshot() -> HeroSnapshot:
 
 
 func to_dict() -> Dictionary:
-	var in_fight := phase == "fight"
 	return {
 		"version": 1,
 		"run_seed": run_seed,
@@ -173,8 +172,9 @@ func to_dict() -> Dictionary:
 		"nodes": nodes.duplicate(true),
 		"node_index": node_index,
 		"resolved": resolved.duplicate(),
-		"phase": "node" if in_fight else phase,
-		"fight_counter": fight_counter - 1 if in_fight else fight_counter,
+		"phase": phase,
+		"fight": fight.to_dict() if phase == "fight" and fight != null else {},
+		"fight_counter": fight_counter,
 		"coin": coin,
 		"soul": soul,
 		"stat_bonus": stat_bonus.duplicate(),
@@ -235,4 +235,7 @@ static func from_dict(p_content: Content, d: Dictionary) -> RunState:
 	for key in ["floor", "coin", "hero_hp"]:
 		if run.outcome.has(key):
 			run.outcome[key] = int(run.outcome[key])
+	if run.phase == "fight" and not (d.get("fight", {}) as Dictionary).is_empty():
+		run.fight = FightState.from_dict(p_content, d["fight"])
+		run.fight.hero_trait = run.hero_trait()
 	return run

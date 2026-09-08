@@ -1,0 +1,333 @@
+{
+	"biome_id": "catacombs",
+	"campaign_seed": 73019,
+	"created_at": 1000,
+	"hero": {
+		"camp": 0,
+		"class_id": "sexton",
+		"deck": [
+			{
+				"def_id": "strike",
+				"uid": 1,
+				"upgraded": false
+			},
+			{
+				"def_id": "strike",
+				"uid": 2,
+				"upgraded": false
+			},
+			{
+				"def_id": "strike",
+				"uid": 3,
+				"upgraded": false
+			},
+			{
+				"def_id": "strike",
+				"uid": 4,
+				"upgraded": false
+			},
+			{
+				"def_id": "strike",
+				"uid": 5,
+				"upgraded": false
+			},
+			{
+				"def_id": "brace",
+				"uid": 6,
+				"upgraded": false
+			},
+			{
+				"def_id": "brace",
+				"uid": 7,
+				"upgraded": false
+			},
+			{
+				"def_id": "brace",
+				"uid": 8,
+				"upgraded": false
+			},
+			{
+				"def_id": "brace",
+				"uid": 9,
+				"upgraded": false
+			},
+			{
+				"def_id": "last_rites",
+				"uid": 10,
+				"upgraded": false
+			},
+			{
+				"def_id": "bone_wall",
+				"uid": 11,
+				"upgraded": false
+			},
+			{
+				"def_id": "bone_wall",
+				"uid": 12,
+				"upgraded": false
+			}
+		],
+		"hp": 73,
+		"id": 1,
+		"max_hp": 73,
+		"max_resolve": 1,
+		"name": "Edda",
+		"next_uid": 13,
+		"picks_taken": {
+			"1": true,
+			"2": true
+		},
+		"relics": [
+			"sextons_lantern"
+		],
+		"resolve": 1,
+		"runs": 1,
+		"stats": {
+			"focus": 0,
+			"might": 0,
+			"vigor": 1,
+			"wit": 0
+		}
+	},
+	"hero_counter": 1,
+	"ladder": {
+		"ghosts": [
+			{
+				"cause": "founder",
+				"class_id": "sexton",
+				"created_at": 1000,
+				"deck": [
+					{
+						"def_id": "strike",
+						"uid": 1,
+						"upgraded": false
+					},
+					{
+						"def_id": "strike",
+						"uid": 2,
+						"upgraded": false
+					},
+					{
+						"def_id": "strike",
+						"uid": 3,
+						"upgraded": false
+					},
+					{
+						"def_id": "strike",
+						"uid": 4,
+						"upgraded": false
+					},
+					{
+						"def_id": "strike",
+						"uid": 5,
+						"upgraded": false
+					},
+					{
+						"def_id": "brace",
+						"uid": 6,
+						"upgraded": false
+					},
+					{
+						"def_id": "brace",
+						"uid": 7,
+						"upgraded": false
+					},
+					{
+						"def_id": "brace",
+						"uid": 8,
+						"upgraded": false
+					},
+					{
+						"def_id": "brace",
+						"uid": 9,
+						"upgraded": false
+					},
+					{
+						"def_id": "last_rites",
+						"uid": 10,
+						"upgraded": false
+					}
+				],
+				"epitaph_key": "epitaph.founder",
+				"fixed_strength": true,
+				"floor": 1,
+				"id": 1,
+				"killer": "",
+				"kind": "true",
+				"max_hp": 70,
+				"measured": {
+					"avg_turns": 0.0,
+					"fights": 0,
+					"win_rate": 0.0,
+					"wins": 0
+				},
+				"name": "Ilse",
+				"prepared": false,
+				"relics": [
+					"sextons_lantern"
+				],
+				"restless": false,
+				"source_id": 0,
+				"stats": {
+					"focus": 0,
+					"might": 0,
+					"vigor": 0,
+					"wit": 0
+				},
+				"strength": 40.0
+			}
+		],
+		"next_ghost_id": 2
+	},
+	"last_tick": 1000,
+	"onboarding": {
+		"first_death_seen": false,
+		"founder_seeded": true,
+		"free_tend_available": true,
+		"watch_unlocked": true
+	},
+	"rate_per_hour": 52.0,
+	"record_depth": 3,
+	"run": {
+		"biome_id": "catacombs",
+		"coin": 16,
+		"descent_offers": [],
+		"entry_floor": 3,
+		"event_id": "whispering_well",
+		"fight_counter": 1,
+		"floor": 3,
+		"hero": {
+			"camp": 0,
+			"class_id": "sexton",
+			"deck": [
+				{
+					"def_id": "strike",
+					"uid": 1,
+					"upgraded": false
+				},
+				{
+					"def_id": "strike",
+					"uid": 2,
+					"upgraded": false
+				},
+				{
+					"def_id": "strike",
+					"uid": 3,
+					"upgraded": false
+				},
+				{
+					"def_id": "strike",
+					"uid": 4,
+					"upgraded": false
+				},
+				{
+					"def_id": "strike",
+					"uid": 5,
+					"upgraded": false
+				},
+				{
+					"def_id": "brace",
+					"uid": 6,
+					"upgraded": false
+				},
+				{
+					"def_id": "brace",
+					"uid": 7,
+					"upgraded": false
+				},
+				{
+					"def_id": "brace",
+					"uid": 8,
+					"upgraded": false
+				},
+				{
+					"def_id": "brace",
+					"uid": 9,
+					"upgraded": false
+				},
+				{
+					"def_id": "last_rites",
+					"uid": 10,
+					"upgraded": false
+				},
+				{
+					"def_id": "bone_wall",
+					"uid": 11,
+					"upgraded": false
+				},
+				{
+					"def_id": "bone_wall",
+					"uid": 12,
+					"upgraded": false
+				}
+			],
+			"hp": 73,
+			"id": 1,
+			"max_hp": 73,
+			"max_resolve": 1,
+			"name": "Edda",
+			"next_uid": 13,
+			"picks_taken": {
+				"1": true,
+				"2": true
+			},
+			"relics": [
+				"sextons_lantern"
+			],
+			"resolve": 1,
+			"runs": 1,
+			"stats": {
+				"focus": 0,
+				"might": 0,
+				"vigor": 1,
+				"wit": 0
+			}
+		},
+		"node_index": 1,
+		"nodes": [
+			{
+				"enemies": [
+					"bone_rat"
+				],
+				"kind": "fight"
+			},
+			{
+				"event": "whispering_well",
+				"kind": "event"
+			},
+			{
+				"kind": "shop"
+			},
+			{
+				"kind": "rest"
+			}
+		],
+		"outcome": {},
+		"phase": "event",
+		"reward": {},
+		"run_seed": 354192221,
+		"shop": {},
+		"soul": 2.197,
+		"stat_bonus": {},
+		"stats": {
+			"3": {
+				"fights": 1,
+				"turns": 2,
+				"wins": 1
+			}
+		},
+		"used_events": [
+			"collapsed_crypt"
+		],
+		"version": 1,
+		"watch_unlocked": true
+	},
+	"run_counter": 1,
+	"soul": 1214.5,
+	"upgrades": {
+		"levels": {
+			"vigor": 1
+		}
+	},
+	"version": 1
+}
