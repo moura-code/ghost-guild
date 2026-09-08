@@ -1,6 +1,6 @@
 # Ghost Guild: integrate the 2D interface and 3D world
 
-Date: 2026-09-06. Updated: 2026-09-08. Status: M0–M6 implemented; final integration validation in progress.
+Date: 2026-09-06. Updated: 2026-09-08. Status: implemented and validated; hybrid promoted to local main.
 
 Build one game with first-person exploration, visible enemies and ghosts, and a clear 2D interface for cards and management. Preserve the playable 2D edition as a reference. Use the newer combat, economy, content and progression on `3d-pivot` as the foundation.
 
@@ -221,13 +221,13 @@ Acceptance: no new route obstructions or invisible targets; each enemy and stati
 
 ### M7 — Validate the complete loop and promote the hybrid
 
-- [ ] Complete the end-to-end scenarios in section 6 on fresh, migrated and current 3D campaigns, using isolated data directories.
-- [ ] Run the full core and game suites after the final substantive changes, plus content validation and the headless demos/balance checks required by repository guidance. Keep RNG and timestamps fixed for comparisons.
-- [ ] Review final native captures alongside the M0 baseline. Include the newest biome and deep progression; a successful first-floor fight alone is insufficient.
-- [ ] Update the pivot design, controls documentation, art brief and outdated deferred entries to describe the delivered hybrid. Document launching the preserved 2D edition with separate saves.
-- [ ] Ensure new `.gd` files have tracked `.gd.uid` sidecars and loader-read CSVs keep their existing `keep` imports. Exclude generated translation and cache files.
-- [ ] Integrate the completed branch into `3d-pivot` with ordinary reviewed commits. Then prepare promotion to `main` while retaining the legacy refs and commit history.
-- [ ] Resolve main/3D divergence explicitly: preserve the newer core, content, Forward+ settings and `crawl.tscn` entry point; account for each legacy-only change through the reuse matrix. Validate the resulting merge tree before pushing it. Avoid branch resets or force pushes.
+- [x] Complete the end-to-end scenarios in section 6 on fresh, migrated and current 3D campaigns, using isolated data directories.
+- [x] Run the full core and game suites after the final substantive changes, plus content validation and the headless demos/balance checks required by repository guidance. Keep RNG and timestamps fixed for comparisons.
+- [x] Review final native captures alongside the M0 baseline. Include the newest biome and deep progression; a successful first-floor fight alone is insufficient.
+- [x] Update the pivot design, controls documentation, art brief and outdated deferred entries to describe the delivered hybrid. Document launching the preserved 2D edition with separate saves.
+- [x] Ensure new `.gd` files have tracked `.gd.uid` sidecars and loader-read CSVs keep their existing `keep` imports. Exclude generated translation and cache files.
+- [x] Integrate the completed branch into `3d-pivot` with ordinary reviewed commits. Then prepare promotion to `main` while retaining the legacy refs and commit history.
+- [x] Resolve main/3D divergence explicitly: preserve the newer core, content, Forward+ settings and `crawl.tscn` entry point; account for each legacy-only change through the reuse matrix. Validate the resulting merge tree before pushing it. Avoid branch resets or force pushes.
 
 Acceptance: one tested hybrid becomes the normal development edition; the archived 2D edition remains playable and recoverable; documentation and saves identify which edition is being used.
 
@@ -267,12 +267,12 @@ A test report with passing assertions and a crashing process is recorded as such
 
 Save-fixture work can begin after M0; complete it before anyone uses the hybrid with their real legacy campaign. Art refinement can proceed once the shared preview/model boundaries exist. Neither changes the first playable target of M0–M2.
 
-- [ ] All milestone acceptance checks have evidence, and completed checkboxes correspond to delivered behavior.
-- [ ] The hybrid retains the newer progression and the useful 2D navigation/preview ideas without duplicate gameplay state.
-- [ ] Guild management, combat, exploration and inspection have consistent controls and readable UI.
-- [ ] The selected hero/ghost looks and identifies consistently in 2D panels and 3D views.
-- [ ] New, migrated and existing 3D campaigns complete the full loop without loss or duplication.
-- [ ] Art and performance changes have native captures and measurements, with any remaining limits recorded.
-- [ ] The 2D edition is preserved; the final branch history and launch documentation make both editions recoverable.
+- [x] All milestone acceptance checks have evidence, and completed checkboxes correspond to delivered behavior.
+- [x] The hybrid retains the newer progression and the useful 2D navigation/preview ideas without duplicate gameplay state.
+- [x] Guild management, combat, exploration and inspection have consistent controls and readable UI.
+- [x] The selected hero/ghost looks and identifies consistently in 2D panels and 3D views.
+- [x] New, migrated and existing 3D campaigns complete the full loop without loss or duplication.
+- [x] Art and performance changes have native captures and measurements, with any remaining limits recorded.
+- [x] The 2D edition is preserved; the final branch history and launch documentation make both editions recoverable.
 
 Follow-ups after this integration: complete key rebinding/controller navigation, a full creature compendium, additional authored model detail, and any broader 2D-only or lower-renderer mode. Scope those from playtest findings after the hybrid loop is complete.

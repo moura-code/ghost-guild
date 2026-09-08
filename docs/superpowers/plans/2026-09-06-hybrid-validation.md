@@ -198,5 +198,45 @@ Generated translations, reports and engine/cache files are excluded.
 
 ### Final delivery checks
 
-Promotion and final merge-tree results are pending. Both preserved archive
-commits remain unchanged; no remote push is part of this local implementation.
+Completed 2026-09-08. Feature commits `68830f2` (save preservation), `50a0171`
+(hybrid presentation) and `a31536d` (documentation) were integrated normally
+into `3d-pivot`. Merge `db11ac0` has parents `5200eda` and `a31536d` and
+explicitly resolves the legacy divergence above. `main` was fast-forwarded
+to that merge; subsequent delivery-record changes are documentation only.
+The original `/home/usuario/Escritorio/ghost-guild` checkout is on `2d-legacy`
+with its untracked user plan intact. Both archive commits remain unchanged.
+No branch resets, force pushes or remote pushes were used.
+
+- The final merge tree passed **1,298 tests in 121 suites**, zero errors,
+  failures, flaky/skipped tests or orphans; **process exit 0**. This includes
+  content validation, migration, complete-loop and scaled-focus regressions.
+  GdUnit execution time was 1m34s; import plus runner took 104 seconds.
+- Fight, run and campaign demos and the 14-run/48-fight balance simulation
+  all exited 0. The three asserted balance invariants passed. Commands use
+  the same fixed arguments listed above and disposable user-data directories.
+- Final compact Spanish upgrades, hero, ladder, offline and ghost captures
+  all exited 0 without script errors and were reviewed after the shared focus
+  fix. The 2560×1080 floor-42 capture and tall Kiln boss also exited 0.
+- UID, plain-CSV import, generated-file exclusion, unresolved-conflict and
+  whitespace checks passed. The merged `core/`, `data/`, `game/` and renderer
+  settings match the reviewed integration branch.
+
+Retained logs: `merged-full-suite.log`, `merged-*-demo.log`,
+`merged-balance-sim.log`, `merged-benchmark.log`, `merged-compact-*.log/png`
+and `merged-results.json`. The final benchmark used the same hardware,
+renderer, resolution, warmup and sample count as the September 7 measurement:
+
+| Scene | Frame median / p95 (ms) | Render CPU / GPU mean (ms) | Draw calls |
+| --- | --- | --- | --- |
+| Guild | 13.433 / 17.397 | 0.543 / 2.941 | 57 |
+| Hero preview | 13.993 / 16.937 | 0.579 / 2.993 | 152 |
+| Floor-31 fight | 10.410 / 17.368 | 2.189 / 3.081 | 527 |
+
+Preview cost averaged 0.223 ms CPU / 0.062 ms GPU. Fifty repeated cycles
+kept exactly 615 nodes, 14 lights, three viewports and 3,850 objects, with
+zero orphans and zero active hidden previews. Video memory remained
+267.2 / 282.7 / 390.0 MiB across the three scenes. This run exited 0 and
+emitted one X11 `ERROR: NO GRAB` diagnostic during startup cursor capture;
+sample collection and teardown completed. Final UI captures did not emit
+that diagnostic. Frame-time variation and p95 values still prevent a stable
+60-FPS claim, and lower-spec hardware remains outside the measured evidence.
