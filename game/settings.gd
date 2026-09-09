@@ -33,6 +33,7 @@ static var motion_reduced: bool = false
 ## language is a property of the person reading, not of the campaign.
 var locale: String = "en"
 var active_slot: String = "slot1"
+var dismissed_lessons: Array[String] = []
 
 
 static func defaults() -> Settings:
@@ -50,6 +51,7 @@ func to_dict() -> Dictionary:
 		"reduced_motion": reduced_motion,
 		"locale": locale,
 		"active_slot": active_slot,
+		"dismissed_lessons": dismissed_lessons.duplicate(),
 	}
 
 
@@ -67,6 +69,11 @@ func from_dict(d: Dictionary) -> void:
 	locale = wanted if LOCALES.has(wanted) else "en"
 	var slot := String(d.get("active_slot", "slot1"))
 	active_slot = slot if slot.is_valid_identifier() else "slot1"
+	dismissed_lessons.clear()
+	if d.get("dismissed_lessons", []) is Array:
+		for id in d.get("dismissed_lessons", []):
+			if id in ["combat", "upgrade", "rooms", "ghost"] and not dismissed_lessons.has(id):
+				dismissed_lessons.append(String(id))
 
 
 func save(path: String = PATH) -> Error:

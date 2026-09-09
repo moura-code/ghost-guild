@@ -41,6 +41,9 @@ func bind(g: GameRoot) -> void:
 
 
 func _build() -> void:
+	var scope := UiTheme.body(game.text("help.scope.ghost"))
+	scope.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(scope)
 	add_child(ScreenLayout.centre(UiTheme.title(game.text("ui.seance"))))
 
 	# The rites as a price board of tablets, the same language as the Guild's

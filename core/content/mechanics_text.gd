@@ -104,3 +104,48 @@ static func upgrade(content: Content, hero: Hero, def: UpgradeDef, level: int) -
 	if level >= def.max_level:
 		line += "\n" + content.text("help.capped")
 	return line
+
+
+static func event_choice(run: RunState, choice: Dictionary) -> String:
+	var c := run.content
+	var lines := PackedStringArray([c.text(String(choice.get("text", "")))])
+	var hp := run.hero.hp
+	var maximum := run.hero.max_hp
+	for effect in choice.get("effects", []):
+		var op := String(effect.get("op", ""))
+		var amount := int(effect.get("amount", 0))
+		match op:
+			"heal", "heal_percent":
+				if op == "heal_percent":
+					amount = roundi(maximum * float(effect["amount"]) / 100.0)
+				var healed := mini(maximum - hp, amount)
+				lines.append(c.text("help.event.heal").replace("{n}", str(healed)).replace("{before}", str(hp)).replace("{after}", str(hp + healed)))
+				hp += healed
+			"damage":
+				lines.append(c.text("help.event.damage").replace("{n}", str(amount)).replace("{before}", str(hp)).replace("{after}", str(maxi(0, hp - amount))))
+				hp = maxi(0, hp - amount)
+			"coin", "soul":
+				lines.append(("+" if amount >= 0 else "") + str(effect.get("amount", 0)) + " " + c.text("ui." + op))
+			"add_card":
+				var card := CardInstance.new(-1, String(effect["card"]))
+				lines.append(c.text((c.cards[card.def_id] as CardDef).name_key) + " · " + card_details(c, card, run.hero_snapshot().stats))
+				lines.append(c.text("help.scope.item"))
+			"relic":
+				var relic: RelicDef = c.relics[String(effect["relic"])]
+				lines.append(c.text(relic.name_key) + " · " + c.text(relic.text_key))
+				lines.append(c.text("help.event.owned") if run.hero.relics.has(relic.id) else c.text("help.scope.item"))
+			"stat", "hero_stat":
+				var id := String(effect["stat"])
+				var before := int(run.hero_snapshot().stats.get(id, 0))
+				lines.append(c.text("stat." + id + ".name") + " " + str(before) + " → " + str(before + amount))
+				lines.append(stat(c, id, before + amount))
+				lines.append(c.text("help.scope.item" if op == "hero_stat" else "help.scope.run"))
+			"max_hp":
+				lines.append(c.text("help.event.max_hp").replace("{before}", str(maximum)).replace("{after}", str(maximum + amount)))
+				maximum += amount
+				hp = clampi(hp + amount, 0, maximum)
+	if hp <= 0:
+		lines.append(c.text("help.event.lethal"))
+	if not RunEffects.can_apply(run, choice.get("effects", [])):
+		lines.append(c.text("help.event.unaffordable"))
+	return "\n".join(lines)

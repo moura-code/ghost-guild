@@ -167,6 +167,20 @@ func _init() -> void:
 			crawl._open_options()
 		"ghost":
 			crawl.inspect_ghost(game.campaign.ladder.ghosts[0].id)
+		"rest", "upgrade", "shop", "event":
+			_descend(game, crawl)
+			var run := game.campaign.run
+			run.nodes = [{"kind": "rest" if mode == "upgrade" else mode, "event": "whispering_well"}]
+			run.node_index = 0
+			run.phase = "node"
+			run.hero.hp -= 7
+			run.coin = 25
+			crawl.build_floor()
+			game.run_action({"kind": "enter", "index": 0})
+			await process_frame
+			await process_frame
+			if mode == "upgrade":
+				crawl.choice.select_action({"kind": "rest_upgrade", "uid": run.hero.deck[0].uid})
 		"map":
 			_descend(game, crawl, 31)
 			crawl.floor_map.bind(crawl.layout, game.campaign.run, crawl.player.global_position, crawl.player.rotation.y)

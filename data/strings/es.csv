@@ -85,18 +85,18 @@ relic.grave_coin.name,Moneda de Tumba
 relic.grave_coin.text,Gana 10 de Moneda tras cada combate.
 event.whispering_well.name,El Pozo que Susurra
 event.whispering_well.text,Un pozo respira aire frío. Algo abajo sabe tu nombre.
-event.whispering_well.drink,Beber. Cura 12.
-event.whispering_well.offer,Ofrecer sangre. Pierde 7 de Vida. Gana 1 de Ingenio en esta expedición.
+event.whispering_well.drink,Beber del pozo.
+event.whispering_well.offer,Ofrecer sangre por sabiduría duradera.
 event.whispering_well.leave,Seguir andando.
 event.collapsed_crypt.name,Cripta Derrumbada
 event.collapsed_crypt.text,La piedra caída tapa un pasillo lateral. Brillan huesos entre los escombros.
-event.collapsed_crypt.dig,Cavar. Pierde 8 de Vida. Gana una Lanza de Hueso.
-event.collapsed_crypt.pray,Decir los ritos. Cura 5. Gana 2 de Alma.
+event.collapsed_crypt.dig,Desenterrar la Lanza de Hueso.
+event.collapsed_crypt.pray,Recitar los ritos.
 event.collapsed_crypt.leave,Dejarlo enterrado.
 event.lost_lantern.name,Farol Perdido
 event.lost_lantern.text,Un farol sigue ardiendo junto a un sepulturero muerto. Tiene el vidrio rajado.
-event.lost_lantern.take,Cogerlo. Gana el Reloj Rajado.
-event.lost_lantern.sell,Arrancar el latón. Gana 40 de Moneda.
+event.lost_lantern.take,Conservar el Reloj Rajado.
+event.lost_lantern.sell,Vender el latón para una tienda posterior.
 upgrade.might.name,Fuerza de Sepulturero
 upgrade.might.text,Tus héroes ganan +1 de Fuerza.
 upgrade.wit.name,Ritos Antiguos
@@ -634,3 +634,19 @@ room.stairs.locked,Escaleras cerradas · faltan {n} encuentros obligatorios
 room.map,Mapa · M
 room.engage,E · {room}
 room.legend,Tipos revelados · ✓ completado · ○ sin visitar · puedes volver a las tiendas. Selecciona un destino para marcar la brújula.
+help.event.heal,Cura {n} de Vida: {before} → {after}.
+help.event.damage,Paga {n} de Vida: {before} → {after}.
+help.event.max_hp,Vida máxima: {before} → {after}.
+help.event.owned,Ya la tienes: no recibes una segunda copia de esta reliquia.
+help.event.lethal,Este coste matará a este héroe.
+help.event.unaffordable,No tienes suficiente moneda para esta elección.
+help.scope.run,Bonificación solo para esta expedición; termina al finalizarla.
+help.recap.title,Resumen de expedición
+help.recap.earnings,Planta {floor} alcanzada · {soul} Almas guardadas (incluye las Monedas sobrantes).
+help.recap.ghost,{name} aporta ahora {strength} bajas/hora base a la producción espectral del gremio.
+help.recap.retreat,"Tu héroe vivo regresa con su mazo, reliquias y cartas afiladas."
+help.recap.next,Una mejora asequible: {name} · {price} Almas. Visita las Mejoras del gremio cuando quieras.
+help.lesson.combat.short,Lee las intenciones y elige ataques y Bloqueo. Inspecciona la escala de las cartas.
+help.lesson.rooms.short,Mapa · M muestra los tipos de sala. Lee los letreros antes de entrar.
+help.lesson.upgrade.short,Afila una copia elegida o cúrate aquí. Inspecciona antes de confirmar.
+help.lesson.ghost.short,Tu fantasma gana Almas para mejorar el gremio. Consulta muerte y Guardia en Ayuda.

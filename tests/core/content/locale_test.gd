@@ -58,6 +58,7 @@ func test_a_missing_row_falls_back_to_english_rather_than_to_its_own_key() -> vo
 ## into a test failure -- the coverage check below is only worth anything
 ## because this list is closed.
 const SAME_IN_BOTH := {
+	"room.engage": "key binding and placeholder",
 	"ghost.founder.name": "a person's name",
 	"ui.menu.title": "the game's title",
 	"ui.upgraded": "a plus sign",

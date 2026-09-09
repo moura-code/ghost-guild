@@ -83,7 +83,7 @@ func test_an_event_shows_its_authored_text_and_choices() -> void:
 	assert_str(s._context.text).is_equal(g.text(def.text_key))
 	assert_str(s._context.text).is_not_equal(def.text_key)
 	assert_int(s._actions.size()).is_equal(def.choices.size())
-	assert_str(s._buttons[0].text).is_equal(g.text(String(def.choices[0]["text"])))
+	assert_str(s._buttons[0].text).contains(g.text(String(def.choices[0]["text"])))
 
 
 func test_choosing_an_event_option_resolves_it() -> void:
@@ -109,15 +109,21 @@ func test_the_shop_shows_the_purse_and_prices_every_item() -> void:
 	assert_str(buy).contains(str(int(run.shop["card_price"])))
 
 
-func test_a_shop_you_cannot_afford_only_offers_the_door() -> void:
+func test_unaffordable_inventory_is_visible_but_cannot_be_bought() -> void:
 	var g := _game()
 	var run := _at(g, {"kind": "shop"})
 	run.coin = 0
 	var s := _screen(g, run)
 	s.refresh()
 	await await_idle_frame()
-	assert_int(s._actions.size()).is_equal(1)
-	assert_str(s._buttons[0].text).is_equal(g.text("ui.choice.leave"))
+	assert_int(_visible_cards(s)).is_equal(run.shop["cards"].size())
+	assert_bool(s._cards[0].playable).is_false()
+	var before := run.to_dict()
+	s.take(_index_of(s, "buy_card"))
+	assert_bool(s._commit.disabled).is_true()
+	assert_str(s._comparison.text).contains(g.text("help.need_coin").replace("{n}", str(run.shop["card_price"])))
+	s.commit_selection()
+	assert_dict(run.to_dict()).is_equal(before)
 
 
 func test_leaving_the_shop_moves_the_run_on() -> void:
@@ -127,7 +133,7 @@ func test_leaving_the_shop_moves_the_run_on() -> void:
 	var s := _screen(g, run)
 	s.refresh()
 	await await_idle_frame()
-	s._buttons[0].emit_signal("pressed")
+	s.take(_index_of(s, "leave"))
 	await await_idle_frame()
 	assert_str(run.phase).is_not_equal("shop")
 
@@ -252,3 +258,38 @@ func test_a_shop_still_uses_its_phase_heading() -> void:
 	var s := _screen(g, run)
 	await await_idle_frame()
 	assert_str(s._title.text).is_equal(g.text("ui.run.phase.shop"))
+
+
+func test_comparison_cancel_and_double_commit_preserve_the_selected_copy() -> void:
+	var g := _game()
+	var run := _at(g, {"kind": "rest"})
+	run.hero.deck[0].upgraded = true
+	var card := run.hero.deck[1]
+	var s := _screen(g, run)
+	var before := run.to_dict()
+	var action := {"kind": "rest_upgrade", "uid": card.uid}
+	s.select_action(action)
+	assert_str(s._comparison.text).contains("#" + str(card.uid))
+	assert_dict(run.to_dict()).is_equal(before)
+	s.cancel_selection()
+	s.commit_selection()
+	assert_dict(run.to_dict()).is_equal(before)
+	s.select_action(action)
+	s.commit_selection()
+	assert_bool(card.upgraded).is_true()
+	assert_bool(run.hero.deck[2].upgraded).is_false()
+	var after := run.to_dict()
+	s.commit_selection()
+	assert_dict(run.to_dict()).is_equal(after)
+
+
+func test_a_selection_from_another_room_cannot_spend() -> void:
+	var g := _game()
+	var run := _at(g, {"kind": "shop"})
+	run.coin = 500
+	var s := _screen(g, run)
+	s.take(_index_of(s, "buy_card"))
+	RunEngine.apply(run, {"kind": "leave"})
+	var before := run.to_dict()
+	s.commit_selection()
+	assert_dict(run.to_dict()).is_equal(before)

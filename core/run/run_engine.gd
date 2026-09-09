@@ -54,7 +54,8 @@ static func legal_actions(run: RunState) -> Array:
 		"event":
 			var ev: EventDef = run.content.events[run.event_id]
 			for i in ev.choices.size():
-				out.append({"kind": "choose", "index": i})
+				if RunEffects.can_apply(run, ev.choices[i].get("effects", [])):
+					out.append({"kind": "choose", "index": i})
 		"rest":
 			out.append({"kind": "rest_heal"})
 			for card in run.hero.deck:

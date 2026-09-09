@@ -334,7 +334,7 @@ static func _run_effects(c: Content, where: String, effects: Array, errors: Arra
 			"relic":
 				if not c.relics.has(String(e.get("relic", ""))):
 					errors.append("%s: relic references missing relic '%s'" % [where, String(e.get("relic", ""))])
-			"stat":
+			"stat", "hero_stat":
 				if not STATS.has(String(e.get("stat", ""))):
 					errors.append("%s: unknown stat '%s'" % [where, String(e.get("stat", ""))])
 				if not _number(e.get("amount")):

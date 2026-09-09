@@ -31,6 +31,9 @@ var _comparison: Label
 var _commit: Button
 var _cancel: Button
 var _bound_context: Dictionary = {}
+var lesson: TeachingMoment
+var lesson_settings: Settings
+var lesson_settings_path: String = Settings.PATH
 var _title: Label
 var _decor: HBoxContainer
 var _context: Label
@@ -61,6 +64,16 @@ func bind(g: GameRoot, p_run: RunState) -> void:
 
 func _build() -> void:
 	alignment = BoxContainer.ALIGNMENT_CENTER
+	lesson = TeachingMoment.new()
+	lesson.dismissed.connect(func(id: String) -> void:
+		if lesson_settings != null and not lesson_settings.dismissed_lessons.has(id):
+			lesson_settings.dismissed_lessons.append(id)
+			lesson_settings.save(lesson_settings_path)
+		lesson.hide())
+	lesson.details_requested.connect(func() -> void:
+		_context.text = game.text("help.lesson.upgrade")
+		(_context_plate.get_parent() as Control).show())
+	add_child(lesson)
 	_title = ScreenLayout.centre(UiTheme.title(""))
 	add_child(_title)
 	_resources = Button.new()
@@ -105,14 +118,18 @@ func _build() -> void:
 	_comparison = UiTheme.body("")
 	_comparison.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_selection.add_child(_comparison)
+	var controls := HBoxContainer.new()
+	_selection.add_child(controls)
 	_commit = Button.new()
+	_commit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_commit.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_commit.pressed.connect(commit_selection)
-	_selection.add_child(_commit)
+	controls.add_child(_commit)
 	_cancel = Button.new()
+	_cancel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_cancel.text = game.text("help.cancel")
 	_cancel.pressed.connect(cancel_selection)
-	_selection.add_child(_cancel)
+	controls.add_child(_cancel)
 	_selection.hide()
 
 	# Candles either side of the choice. These screens are a title, a line of
@@ -133,6 +150,9 @@ func _build() -> void:
 func refresh() -> void:
 	if game == null or run == null or not handles(run.phase):
 		return
+	lesson.hide()
+	if run.phase == "rest" and lesson_settings != null and not lesson_settings.dismissed_lessons.has("upgrade"):
+		lesson.present(game.content, "upgrade")
 	_title.text = _title_text()
 	_resources.text = resources_text(game.content, run)
 	_context.text = _context_text()
@@ -146,10 +166,8 @@ func refresh() -> void:
 	_rebuild_options()
 
 
-## The shop offers one remove_card action per card in the deck, so a starter
-## deck with five Strikes produced five identical "Burn Strike" buttons and a
-## list that ran off the bottom of the screen. Collapsing by label keeps the
-## first of each: removing any one copy is the same move to the player.
+## Preserve individual copy identities for upgrades and removal. Only
+## genuinely identical actions (such as duplicate stock offers) collapse.
 func _collapse(actions: Array) -> Array:
 	var out: Array = []
 	var seen := {}
@@ -251,7 +269,7 @@ func _rebuild_options() -> void:
 		var instance := CardInstance.new()
 		instance.uid = -1 - index
 		instance.def_id = _card_of(_actions[index])
-		_cards[i].bind(game.content, instance, index, true)
+		_cards[i].bind(game.content, instance, index, affordability(_actions[index]) == "")
 		_cards[i].tooltip_text = label_for(_actions[index]) + "\n" + affordability(_actions[index])
 
 	while _buttons.size() < rows.size():
@@ -266,6 +284,7 @@ func _rebuild_options() -> void:
 		var at: int = rows[i]
 		_buttons[i].text = label_for(_actions[at])
 		_buttons[i].tooltip_text = affordability(_actions[at])
+		_buttons[i].disabled = run.phase == "event" and not RunEffects.can_apply(run, (game.content.events[run.event_id] as EventDef).choices[int(_actions[at]["index"])].get("effects", []))
 		_buttons[i].autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		# Rebound every refresh: which action sits in which row moves as the
 		# list shrinks, and a lambda captured at creation would go stale.
@@ -317,7 +336,7 @@ func label_for(action: Dictionary) -> String:
 		"choose":
 			var def: EventDef = game.content.events[run.event_id]
 			var choice: Dictionary = def.choices[int(action["index"])]
-			return game.text(String(choice.get("text", "")))
+			return MechanicsText.event_choice(run, choice)
 		"rest_heal":
 			return game.text("ui.choice.rest_heal").replace("{amount}", str(_rest_heal_amount()))
 		"rest_upgrade":
@@ -383,6 +402,12 @@ func _choose(index: int) -> void:
 
 
 func display_actions() -> Array:
+	if run.phase == "event":
+		var out: Array = []
+		var ev: EventDef = game.content.events[run.event_id]
+		for i in ev.choices.size():
+			out.append({"kind": "choose", "index": i})
+		return out
 	if run.phase != "shop":
 		return RunEngine.legal_actions(run)
 	var out: Array = []
@@ -434,6 +459,11 @@ func select_action(action: Dictionary) -> void:
 	if _commit.disabled:
 		_comparison.text += "\n" + affordability(action)
 	_selection.show()
+	(_options.get_parent() as Control).hide()
+	(_context_plate.get_parent() as Control).hide()
+	_fan.hide()
+	_decor.hide()
+	lesson.hide()
 	_commit.grab_focus() if not _commit.disabled else _cancel.grab_focus()
 
 
@@ -441,6 +471,10 @@ func cancel_selection() -> void:
 	selected = {}
 	if _selection != null:
 		_selection.hide()
+		(_options.get_parent() as Control).show()
+		(_context_plate.get_parent() as Control).visible = _context.text != ""
+		_fan.show()
+		_decor.show()
 
 
 func _context_matches() -> bool:

@@ -68,3 +68,12 @@ func test_applying_reaches_the_body_that_has_to_obey_it() -> void:
 func test_applying_with_no_player_does_not_crash() -> void:
 	Settings.defaults().apply(null)
 	assert_bool(true).is_true()
+
+
+func test_dismissed_lessons_persist_separately_from_campaign_unlocks() -> void:
+	var settings := Settings.defaults()
+	settings.dismissed_lessons = ["combat", "upgrade"]
+	assert_int(settings.save(TMP)).is_equal(OK)
+	assert_array(Settings.load_from(TMP).dismissed_lessons).contains_exactly(["combat", "upgrade"])
+	var campaign := TestFixtures.campaign()
+	assert_bool(campaign.onboarding.first_death_seen).is_false()

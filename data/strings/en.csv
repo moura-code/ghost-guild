@@ -85,18 +85,18 @@ relic.grave_coin.name,Grave Coin
 relic.grave_coin.text,Gain 10 Coin after each fight.
 event.whispering_well.name,Whispering Well
 event.whispering_well.text,A well breathes cold air. Something below knows your name.
-event.whispering_well.drink,Drink. Heal 12.
-event.whispering_well.offer,Offer blood. Lose 7 HP. Gain 1 Wit this run.
+event.whispering_well.drink,Drink from the well.
+event.whispering_well.offer,Offer blood for lasting insight.
 event.whispering_well.leave,Walk on.
 event.collapsed_crypt.name,Collapsed Crypt
 event.collapsed_crypt.text,Fallen stone blocks a side passage. Bones glint in the rubble.
-event.collapsed_crypt.dig,Dig through. Lose 8 HP. Gain a Bone Spear.
-event.collapsed_crypt.pray,Say the rites. Heal 5. Gain 2 Soul.
+event.collapsed_crypt.dig,Dig out the Bone Spear.
+event.collapsed_crypt.pray,Say the rites.
 event.collapsed_crypt.leave,Leave it buried.
 event.lost_lantern.name,Lost Lantern
 event.lost_lantern.text,A lantern still burns beside a dead gravedigger. Its glass is cracked.
-event.lost_lantern.take,Take it. Gain the Cracked Hourglass.
-event.lost_lantern.sell,Strip the brass. Gain 40 Coin.
+event.lost_lantern.take,Keep the Cracked Hourglass.
+event.lost_lantern.sell,Sell the brass for a later shop.
 upgrade.might.name,Grave Strength
 upgrade.might.text,Your heroes gain +1 Might.
 upgrade.wit.name,Old Rites
@@ -635,3 +635,19 @@ room.stairs.locked,Stairs locked · {n} required encounters remain
 room.map,Map · M
 room.engage,E · {room}
 room.legend,Room types revealed · ✓ completed · ○ unvisited · shops can be revisited. Select a destination to mark the compass.
+help.event.heal,Heal {n} HP: {before} → {after}.
+help.event.damage,Pay {n} HP: {before} → {after}.
+help.event.max_hp,Maximum HP: {before} → {after}.
+help.event.owned,Already owned: no second copy of this relic.
+help.event.lethal,This cost will kill this hero.
+help.event.unaffordable,Insufficient currency for this choice.
+help.scope.run,Bonus for this run only; expires when the run ends.
+help.recap.title,Run recap
+help.recap.earnings,Reached Floor {floor} · {soul} Soul banked (including remaining Coin).
+help.recap.ghost,{name} now contributes {strength} base kills/hour to the guild’s ghost production.
+help.recap.retreat,"Your living hero returns with their deck, relics and sharpened cards."
+help.recap.next,An affordable next step: {name} · {price} Soul. Visit Guild Upgrades whenever you choose.
+help.lesson.combat.short,"Read intents, then choose attacks and Block. Inspect cards to see scaling."
+help.lesson.rooms.short,Map · M shows room types. Match doorway signs before committing.
+help.lesson.upgrade.short,"Sharpen one chosen copy, or heal here. Inspect before committing."
+help.lesson.ghost.short,Your ghost earns Soul. Soul buys lasting guild improvements. Read about death and Watch in Help.

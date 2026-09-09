@@ -77,6 +77,9 @@ var _had_save: bool = false
 var context := UiContext.new()
 var nav: GuildNav
 var help: HelpPanel
+var teaching: TeachingMoment
+var recap: RunRecap
+var _recap_result: Dictionary = {}
 var _panel_focus: Dictionary = {}
 var _frames: Dictionary = {}
 var campaign_menu: CampaignMenu
@@ -245,6 +248,16 @@ func _build_hud() -> void:
 	help = HelpPanel.new()
 	help.closed.connect(close_panel)
 	_host(help)
+	teaching = TeachingMoment.new()
+	teaching.position = Vector2(8, 76)
+	teaching.dismissed.connect(_dismiss_lesson)
+	teaching.details_requested.connect(func() -> void:
+		help.build(game.content, place == Place.GUILD, _exploring())
+		overlay(help))
+	hud.ui.add_child(teaching)
+	recap = RunRecap.new()
+	recap.closed.connect(close_panel)
+	_host(recap)
 	campaign_menu = CampaignMenu.new()
 	campaign_menu.selected.connect(_continue_campaign)
 	campaign_menu.import_requested.connect(_import_campaign)
@@ -366,6 +379,7 @@ func _apply_input_context() -> void:
 	crosshair.visible = panel == null and not fighting
 	compass.visible = panel == null and not fighting
 	_map_button.visible = _exploring() and place == Place.DUNGEON
+	_refresh_teaching()
 
 
 func _restore_focus(screen: Control, previous: Variant = null) -> void:
@@ -475,6 +489,8 @@ func _enter_dungeon(run: RunState) -> void:
 	if ChoiceScreen.handles(run.phase):
 		# Includes "descent", which happens before there is a floor to stand
 		# in: start_run leaves `nodes` empty until the last offer is taken.
+		choice.lesson_settings = settings
+		choice.lesson_settings_path = settings_path
 		choice.bind(game, run)
 		if context.callers.is_empty():
 			open(choice)
@@ -850,6 +866,7 @@ func _end_run() -> void:
 		director.queue_free()
 		director = null
 	var result := game.finish_run()
+	_recap_result = result.duplicate(true)
 	if EpitaphScreen.should_show(result):
 		_raise_the_dead()
 		epitaph.bind(game, result)
@@ -857,6 +874,7 @@ func _end_run() -> void:
 		return
 	_mourning = false
 	_enter_guild()
+	_show_recap()
 
 
 ## The hero rises where it fell, and the epitaph fades up over it. This is the
@@ -889,6 +907,7 @@ func _on_epitaph_dismissed() -> void:
 	_mourning = false
 	open(null)
 	_enter_guild()
+	_show_recap()
 
 
 # ------------------------------------------------------------------ plumbing
@@ -1003,11 +1022,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_echo() or game == null or hud == null:
 		return
 	var handled := true
-	if event.is_action_pressed("ui_cancel"):
+	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_F2 and teaching.visible:
+		_dismiss_lesson(teaching.lesson)
+	elif event.is_action_pressed("ui_cancel"):
 		if panel == title:
 			pass
 		elif panel == null and director != null and director.cancel_selection():
 			pass
+		elif panel == choice and not choice.selected.is_empty():
+			choice.cancel_selection()
 		elif panel == choice and game.campaign.run != null and game.campaign.run.phase == "shop":
 			game.run_action({"kind": "leave", "context": game.campaign.run.action_context()})
 		elif panel == null or not _can_close(panel):
@@ -1310,3 +1333,35 @@ func _focus_room() -> void:
 				prompts.show_prompt(RoomPresentation.describe(game.campaign.run, int(sign.get_meta("node_index"))))
 				_room_hint = true
 				return
+
+
+func _refresh_teaching() -> void:
+	if teaching == null or settings == null or game == null or game.campaign == null:
+		return
+	teaching.hide()
+	if panel != null:
+		return
+	var id := ""
+	if director != null:
+		id = "combat"
+	elif place == Place.DUNGEON and game.campaign.run != null and game.campaign.run.floor == 1:
+		id = "rooms"
+	elif place == Place.GUILD and game.campaign.onboarding.first_death_seen:
+		id = "ghost"
+	if id != "" and not settings.dismissed_lessons.has(id):
+		teaching.present(game.content, id)
+
+
+func _dismiss_lesson(id: String) -> void:
+	if not settings.dismissed_lessons.has(id):
+		settings.dismissed_lessons.append(id)
+		settings.save(settings_path)
+	teaching.hide()
+
+
+func _show_recap() -> void:
+	if _recap_result.is_empty():
+		return
+	recap.build(game.campaign, _recap_result)
+	_recap_result = {}
+	overlay(recap)
