@@ -17,6 +17,11 @@ const GLOW := Color(0.42, 0.72, 0.95)
 
 var index: int = -1
 var resolved: bool = false
+var deliberate: bool = false
+var reusable: bool = false
+var available: bool = true
+var nearby: bool = false
+var kind: String = "fight"
 
 var _fired: bool = false
 
@@ -35,7 +40,7 @@ static func create(node_index: int, room: Dictionary) -> EncounterMarker:
 	var shape := CollisionShape3D.new()
 	shape.name = "Shape"
 	var box := BoxShape3D.new()
-	box.size = Vector3(w * Kit.CELL, Kit.WALL_H, h * Kit.CELL)
+	box.size = Vector3(w * Kit.CELL - 1.0, Kit.WALL_H, h * Kit.CELL - 1.0)
 	shape.shape = box
 	shape.position = Vector3(0.0, Kit.WALL_H * 0.5, 0.0)
 	m.add_child(shape)
@@ -52,6 +57,7 @@ static func create(node_index: int, room: Dictionary) -> EncounterMarker:
 	m.add_child(light)
 
 	m.body_entered.connect(m.report)
+	m.body_exited.connect(func(_body: Node3D) -> void: m.nearby = false)
 	return m
 
 
@@ -59,7 +65,10 @@ static func create(node_index: int, room: Dictionary) -> EncounterMarker:
 ## physics step: an Area3D only reports overlaps on its own schedule, and a
 ## test that has to wait for one is a test that fails on a slow machine.
 func report(_body: Node3D) -> void:
-	if resolved or _fired:
+	if not _body is Player:
+		return
+	nearby = true
+	if deliberate or not available or resolved or _fired:
 		return
 	_fired = true
 	entered.emit(index)
@@ -69,3 +78,22 @@ func resolve() -> void:
 	resolved = true
 	monitoring = false
 	visible = false
+
+
+func engage() -> void:
+	if nearby and available and (reusable or not resolved):
+		entered.emit(index)
+
+
+func observe(run: RunState) -> void:
+	kind = String(run.nodes[index]["kind"])
+	deliberate = RoomPresentation.deliberate(kind)
+	reusable = kind == "shop"
+	resolved = run.is_resolved(index)
+	available = run.can_enter(index)
+	# Geometry stays present for signs; only automatic entry is switched off.
+	monitoring = available
+	var glow := get_node_or_null("Glow") as OmniLight3D
+	if glow != null:
+		glow.light_color = RoomPresentation.accent(kind)
+		glow.light_energy = 0.5 if resolved else 0.9

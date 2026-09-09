@@ -17,6 +17,9 @@ var _class_row: HBoxContainer
 var _class: Label
 var _vitals: Label
 var _stats: Dictionary = {}
+var _stat_buttons: Dictionary = {}
+var _explanation: Label
+var _selected_stat: String = "wit"
 var _deck: HFlowContainer
 var _relics: Label
 var _relic_row: HBoxContainer
@@ -96,10 +99,20 @@ func _build() -> void:
 		box.custom_minimum_size = Vector2(42.0, 0.0)
 		box.add_child(value)
 		box.add_child(ScreenLayout.centre(UiTheme.small(game.text("stat.%s.name" % stat))))
-		var chip := PanelContainer.new()
+		var chip := Button.new()
+		chip.pressed.connect(_explain_stat.bind(String(stat)))
+		chip.focus_entered.connect(_explain_stat.bind(String(stat)))
+		chip.mouse_entered.connect(_explain_stat.bind(String(stat)))
+		_stat_buttons[stat] = chip
+		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		for child in box.get_children():
+			(child as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 		chip.add_child(box)
 		stat_row.add_child(chip)
 	identity.add_child(stat_row)
+	_explanation = UiTheme.body("")
+	_explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(_explanation)
 
 	add_child(ScreenLayout.centre(UiTheme.small(game.text("ui.relics"))))
 	# Relics are objects you carry, so they are shown as objects. A relic
@@ -141,6 +154,7 @@ func refresh() -> void:
 	]
 	for stat in STAT_IDS:
 		(_stats[stat] as Label).text = str(int(hero.stats.get(stat, 0)))
+	_explain_stat(_selected_stat)
 	_refresh_classes(hero)
 	_refresh_relics(hero)
 	_refresh_deck(hero)
@@ -299,3 +313,15 @@ func _card_name_key(def_id: String) -> String:
 		var def: CardDef = game.content.cards[def_id]
 		return def.name_key
 	return def_id
+
+
+func _explain_stat(id: String) -> void:
+	_selected_stat = id
+	if game == null or _explanation == null:
+		return
+	var stats := game.campaign.hero.stats
+	if game.campaign.run != null:
+		stats = game.campaign.run.hero_snapshot().stats
+	_explanation.text = MechanicsText.stat(game.content, id, int(stats.get(id, 0)))
+	for stat_id in _stat_buttons:
+		(_stat_buttons[stat_id] as Button).tooltip_text = MechanicsText.stat(game.content, stat_id, int(stats.get(stat_id, 0)))

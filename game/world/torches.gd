@@ -128,5 +128,9 @@ static func _loop_seconds(stream: AudioStreamWAV) -> float:
 
 func _process(delta: float) -> void:
 	_t += delta
+	var camera := get_viewport().get_camera_3d()
 	for i in _lights.size():
-		Flame.drive(_lights[i], _rest[i], _t)
+		if Settings.motion_reduced:
+			_lights[i].light_energy = _rest[i]
+		elif camera == null or camera.global_position.distance_squared_to(_lights[i].global_position) <= REACH * REACH:
+			Flame.drive(_lights[i], _rest[i], _t)

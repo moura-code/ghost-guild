@@ -97,7 +97,7 @@
       [
         "fight",
         "fight",
-        "elite"
+        "rest"
       ],
       [
         "fight",
@@ -112,17 +112,7 @@
       [
         "fight",
         "fight",
-        "rest"
-      ],
-      [
-        "fight",
-        "elite",
-        "shop"
-      ],
-      [
-        "event",
-        "fight",
-        "fight"
+        "elite"
       ]
     ]
   }

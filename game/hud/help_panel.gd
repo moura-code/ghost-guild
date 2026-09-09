@@ -34,6 +34,23 @@ func build(content: Content, guild: bool, exploring: bool) -> void:
 	var keyboard := UiTheme.body(content.text("ui.help.keyboard"))
 	keyboard.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(keyboard)
+	add_child(ScreenLayout.centre(UiTheme.title(content.text("help.glossary"))))
+	for stat_id in ["might", "wit", "vigor", "focus"]:
+		var explanation := UiTheme.body(MechanicsText.stat(content, stat_id, 0))
+		explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		add_child(explanation)
+	for lesson in ["combat", "upgrade", "rooms", "ghost"]:
+		var text := UiTheme.body(content.text("help.lesson." + lesson))
+		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		add_child(text)
+	for keyword in ["exhaust", "retain"]:
+		var text := UiTheme.body(content.text("help.keyword." + keyword))
+		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		add_child(text)
+	for status_id in ContentValidator.STATUSES:
+		var text := UiTheme.body(MechanicsText.status(content, status_id))
+		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		add_child(text)
 	var close := Button.new()
 	close.text = content.text("ui.close")
 	close.pressed.connect(func() -> void: closed.emit())

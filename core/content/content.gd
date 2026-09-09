@@ -21,6 +21,7 @@ var traits: Dictionary = {}
 var chapters: Dictionary = {}
 var affinity: Dictionary = {}
 var balance: Dictionary = {}
+var room_presets: Dictionary = {}
 var strings: Dictionary = {}
 ## Which language is loaded on top of English. "en" means none.
 var locale: String = "en"
@@ -43,6 +44,8 @@ static func load_from(root: String, locale: String = "en") -> Content:
 	c._load_dir(root.path_join("mutations"), func(d: Dictionary) -> void: c.mutations[d["id"]] = MutationDef.from_dict(d))
 	c._load_dir(root.path_join("traits"), func(d: Dictionary) -> void: c.traits[d["id"]] = TraitDef.from_dict(d))
 	c._load_dir(root.path_join("chapters"), func(d: Dictionary) -> void: c.chapters[d["id"]] = ChapterDef.from_dict(d))
+	if DirAccess.dir_exists_absolute(root.path_join("room_presets")):
+		c._load_dir(root.path_join("room_presets"), func(d: Dictionary) -> void: c.room_presets[d["id"]] = d.duplicate(true))
 	c.affinity = c._load_object(root.path_join("affinity.json"))
 	c.balance = c._load_object(root.path_join("balance.json"))
 	# English first, always, then the chosen locale on top of it. A partial

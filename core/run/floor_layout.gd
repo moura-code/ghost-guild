@@ -21,6 +21,8 @@ var stairs_room: int = -1
 var node_rooms: Array = []
 var torch_anchors: Array = []
 var ghost_anchors: Array = []
+var presets: Array = []
+var generator_version: int = 1
 
 
 static func create(p_width: int, p_height: int) -> FloorLayout:
@@ -89,3 +91,32 @@ func reachable_from(start: Vector2i) -> Dictionary:
 			seen[next] = true
 			queue.append(next)
 	return seen
+
+
+func to_dict() -> Dictionary:
+	var torches: Array = []
+	var ghosts: Array = []
+	for cell in torch_anchors:
+		torches.append([cell.x, cell.y])
+	for cell in ghost_anchors:
+		ghosts.append([cell.x, cell.y])
+	return {"generator_version": generator_version, "width": width, "height": height,
+		"cells": Array(cells), "rooms": rooms.duplicate(true), "node_rooms": node_rooms.duplicate(),
+		"entry_room": entry_room, "stairs_room": stairs_room, "torch_anchors": torches,
+		"ghost_anchors": ghosts, "presets": presets.duplicate()}
+
+
+static func from_dict(d: Dictionary) -> FloorLayout:
+	var layout := create(int(d["width"]), int(d["height"]))
+	layout.generator_version = int(d.get("generator_version", 1))
+	layout.cells = PackedByteArray(d["cells"])
+	layout.rooms = (d["rooms"] as Array).duplicate(true)
+	layout.node_rooms = (d["node_rooms"] as Array).duplicate()
+	layout.entry_room = int(d["entry_room"])
+	layout.stairs_room = int(d["stairs_room"])
+	layout.presets = (d.get("presets", []) as Array).duplicate()
+	for cell in d.get("torch_anchors", []):
+		layout.torch_anchors.append(Vector2i(int(cell[0]), int(cell[1])))
+	for cell in d.get("ghost_anchors", []):
+		layout.ghost_anchors.append(Vector2i(int(cell[0]), int(cell[1])))
+	return layout

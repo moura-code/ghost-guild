@@ -5,9 +5,8 @@ extends VBoxContainer
 ## of things you may do — so they share one screen rather than five
 ## near-identical ones.
 ##
-## The options come straight from RunEngine.legal_actions, which means the
-## screen cannot offer a move the engine would refuse, and a shop item the
-## player cannot afford simply is not listed.
+## Inventory remains visible when unaffordable. Selecting an item is read-only;
+## the separate commit button submits the captured room context.
 
 const PHASES := ["reward", "event", "rest", "shop", "descent"]
 ## Tall enough that a choice reads as something you press rather than as a
@@ -26,6 +25,12 @@ var run: RunState
 ## as a grey list row while the game already owned a drawn card face.
 const CARD_ACTIONS := ["take_card", "draft_pick", "buy_card"]
 
+var selected: Dictionary = {}
+var _selection: VBoxContainer
+var _comparison: Label
+var _commit: Button
+var _cancel: Button
+var _bound_context: Dictionary = {}
 var _title: Label
 var _decor: HBoxContainer
 var _context: Label
@@ -94,6 +99,22 @@ func _build() -> void:
 	_options.add_theme_constant_override("separation", 6)
 	add_child(ScreenLayout.centred(_options))
 
+	_selection = VBoxContainer.new()
+	_selection.add_theme_constant_override("separation", 6)
+	add_child(_selection)
+	_comparison = UiTheme.body("")
+	_comparison.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_selection.add_child(_comparison)
+	_commit = Button.new()
+	_commit.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_commit.pressed.connect(commit_selection)
+	_selection.add_child(_commit)
+	_cancel = Button.new()
+	_cancel.text = game.text("help.cancel")
+	_cancel.pressed.connect(cancel_selection)
+	_selection.add_child(_cancel)
+	_selection.hide()
+
 	# Candles either side of the choice. These screens are a title, a line of
 	# text and some rows in the middle of an empty frame; a pair of flames
 	# gives the light somewhere to come from and the eye something to sit on.
@@ -119,7 +140,9 @@ func refresh() -> void:
 		# A rest or a card pick says nothing here, and an empty plate is
 		# worse than no plate.
 		(_context_plate.get_parent() as Control).visible = _context.text != ""
-	_actions = _collapse(RunEngine.legal_actions(run))
+	_bound_context = run.action_context()
+	_actions = _collapse(display_actions())
+	cancel_selection()
 	_rebuild_options()
 
 
@@ -131,7 +154,7 @@ func _collapse(actions: Array) -> Array:
 	var out: Array = []
 	var seen := {}
 	for action in actions:
-		var label := label_for(action)
+		var label := label_for(action) + (str(action["uid"]) if action.has("uid") else "")
 		if seen.has(label):
 			continue
 		seen[label] = true
@@ -162,6 +185,8 @@ func _context_text() -> String:
 		"event":
 			var def: EventDef = game.content.events[run.event_id]
 			return game.text(def.text_key)
+		"rest":
+			return game.text("help.select_card")
 		"descent":
 			# One pick per floor skipped on the way down (spec §3.2).
 			var offer: Dictionary = run.descent_offers[0]
@@ -227,7 +252,7 @@ func _rebuild_options() -> void:
 		instance.uid = -1 - index
 		instance.def_id = _card_of(_actions[index])
 		_cards[i].bind(game.content, instance, index, true)
-		_cards[i].tooltip_text = label_for(_actions[index])
+		_cards[i].tooltip_text = label_for(_actions[index]) + "\n" + affordability(_actions[index])
 
 	while _buttons.size() < rows.size():
 		var button := Button.new()
@@ -240,6 +265,7 @@ func _rebuild_options() -> void:
 			continue
 		var at: int = rows[i]
 		_buttons[i].text = label_for(_actions[at])
+		_buttons[i].tooltip_text = affordability(_actions[at])
 		_buttons[i].autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		# Rebound every refresh: which action sits in which row moves as the
 		# list shrinks, and a lambda captured at creation would go stale.
@@ -295,14 +321,14 @@ func label_for(action: Dictionary) -> String:
 		"rest_heal":
 			return game.text("ui.choice.rest_heal").replace("{amount}", str(_rest_heal_amount()))
 		"rest_upgrade":
-			return game.text("ui.choice.rest_upgrade").replace("{card}", _uid_name(int(action["uid"])))
+			return game.text("ui.choice.rest_upgrade").replace("{card}", _uid_name(int(action["uid"]))) + " · #" + str(action["uid"])
 		"buy_card":
-			return "%s — %d" % [_card_name(String(action["card"])), int(run.shop["card_price"])]
+			return "%s — %d %s" % [_card_name(String(action["card"])), int(run.shop["card_price"]), game.text("ui.coin")]
 		"buy_relic":
 			return "%s — %d" % [_relic_name(String(run.shop["relic"])), int(run.shop["relic_price"])]
 		"remove_card":
 			return game.text("ui.choice.remove").replace("{card}", _uid_name(int(action["uid"]))) \
-				+ " — %d" % int(run.shop["removal_price"])
+				+ " · #%d — %d" % [int(action["uid"]), int(run.shop["removal_price"])]
 		"leave":
 			return game.text("ui.choice.leave")
 	return kind
@@ -345,4 +371,87 @@ func _uid_name(uid: int) -> String:
 func _choose(index: int) -> void:
 	if index < 0 or index >= _actions.size():
 		return
-	game.run_action(_actions[index])
+	if not _context_matches():
+		return
+	var action: Dictionary = _actions[index]
+	if action.get("kind") in ["rest_upgrade", "remove_card", "buy_card", "buy_relic"]:
+		select_action(action)
+		return
+	action = action.duplicate(true)
+	action["context"] = _bound_context.duplicate()
+	game.run_action(action)
+
+
+func display_actions() -> Array:
+	if run.phase != "shop":
+		return RunEngine.legal_actions(run)
+	var out: Array = []
+	for id in run.shop.get("cards", []):
+		out.append({"kind": "buy_card", "card": id})
+	if run.shop.get("relic", "") != "":
+		out.append({"kind": "buy_relic"})
+	if not bool(run.shop.get("removed", false)):
+		for card in run.hero.deck:
+			out.append({"kind": "remove_card", "uid": card.uid})
+	out.append({"kind": "leave"})
+	return out
+
+
+func price_for(action: Dictionary) -> int:
+	match action.get("kind", ""):
+		"buy_card": return int(run.shop.get("card_price", 0))
+		"buy_relic": return int(run.shop.get("relic_price", 0))
+		"remove_card": return int(run.shop.get("removal_price", 0))
+	return 0
+
+
+func affordability(action: Dictionary) -> String:
+	var missing := price_for(action) - run.coin
+	return game.text("help.need_coin").replace("{n}", str(missing)) if missing > 0 else ""
+
+
+func select_action(action: Dictionary) -> void:
+	selected = action.duplicate(true)
+	selected["context"] = _bound_context.duplicate()
+	var kind := String(action["kind"])
+	var stats := run.hero_snapshot().stats
+	if kind == "rest_upgrade":
+		_comparison.text = MechanicsText.comparison(game.content, run.hero, int(action["uid"]), stats)
+		_commit.text = game.text("help.commit_upgrade").replace("{uid}", str(action["uid"]))
+	elif kind == "remove_card":
+		_comparison.text = _uid_name(int(action["uid"])) + "\n" + MechanicsText.card_details(game.content, run.hero.find_card(int(action["uid"])), stats) + "\n" + game.text("help.remove")
+		_commit.text = game.text("help.commit_remove").replace("{uid}", str(action["uid"]))
+	elif kind == "buy_card":
+		var card := CardInstance.new(-1, String(action["card"]), false)
+		_comparison.text = _card_name(card.def_id) + "\n" + MechanicsText.card_details(game.content, card, stats) + "\n" + game.text("help.scope.item")
+		_commit.text = game.text("help.commit_buy")
+	elif kind == "buy_relic":
+		var relic: RelicDef = game.content.relics[String(run.shop["relic"])]
+		_comparison.text = game.text(relic.name_key) + "\n" + game.text(relic.text_key) + "\n" + game.text("help.scope.item")
+		_commit.text = game.text("help.commit_buy")
+	_commit.text = _commit.text.replace("{price}", str(price_for(action)))
+	_commit.disabled = affordability(action) != ""
+	if _commit.disabled:
+		_comparison.text += "\n" + affordability(action)
+	_selection.show()
+	_commit.grab_focus() if not _commit.disabled else _cancel.grab_focus()
+
+
+func cancel_selection() -> void:
+	selected = {}
+	if _selection != null:
+		_selection.hide()
+
+
+func _context_matches() -> bool:
+	return game != null and game.campaign.run == run and run != null \
+		and run.run_seed == _bound_context.get("run_seed") and run.floor == _bound_context.get("floor") \
+		and run.action_context() == _bound_context
+
+
+func commit_selection() -> void:
+	if selected.is_empty() or not _context_matches() or affordability(selected) != "":
+		return
+	var action := selected.duplicate(true)
+	cancel_selection()
+	game.run_action(action)

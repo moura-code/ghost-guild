@@ -43,6 +43,7 @@ var selected: bool = false
 var managed_hover: bool = false
 var hover_scale: float = HOVER_SCALE
 
+var _scaling: Label
 var _cost: Label
 var _name: Label
 var _text: Label
@@ -126,6 +127,8 @@ func _build() -> void:
 	bubble.add_theme_stylebox_override("panel", UiTheme.pip_box(Palette.STONE, Palette.SOUL))
 	bubble.add_child(_cost)
 	head.add_child(bubble)
+	_scaling = UiTheme.small("")
+	head.add_child(_scaling)
 	_type_icon = Icons.make_rect(null, 10.0, Palette.BONE_DIM)
 	_type_icon.size_flags_horizontal = Control.SIZE_SHRINK_END | Control.SIZE_EXPAND
 	head.add_child(_type_icon)
@@ -227,6 +230,13 @@ func bind(content: Content, card: CardInstance, index: int, is_playable: bool) -
 	# The card's own numbers, and the upgraded ones when it is upgraded. See
 	# CardText: an upgraded card used to read out its base numbers.
 	_text.text = CardText.of(content, def, card.upgraded)
+	var scales := PackedStringArray()
+	for effect in def.effects_for(card.upgraded):
+		var stat_id := String(effect.get("scale", ""))
+		if stat_id != "" and not scales.has(content.text("stat." + stat_id + ".name")):
+			scales.append(content.text("stat." + stat_id + ".name"))
+	_scaling.text = "/".join(scales)
+	tooltip_text = MechanicsText.card_details(content, card)
 	_type_icon.texture = Icons.card_type(def.type)
 	# Real card art would load here; until then the type icon stands in it,
 	# at the size and aspect the illustration will occupy.

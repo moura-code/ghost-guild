@@ -2,7 +2,7 @@
   {"id": "whispering_well", "name": "event.whispering_well.name", "text": "event.whispering_well.text", "biome": "catacombs",
    "choices": [
      {"id": "drink", "text": "event.whispering_well.drink", "effects": [{"op": "heal", "amount": 12}]},
-     {"id": "offer", "text": "event.whispering_well.offer", "effects": [{"op": "damage", "amount": 7}, {"op": "stat", "stat": "wit", "amount": 1}]},
+     {"id": "offer", "text": "event.whispering_well.offer", "effects": [{"op": "damage", "amount": 7}, {"op": "hero_stat", "stat": "wit", "amount": 1}]},
      {"id": "leave", "text": "event.whispering_well.leave", "effects": []}
    ]},
   {"id": "collapsed_crypt", "name": "event.collapsed_crypt.name", "text": "event.collapsed_crypt.text", "biome": "catacombs",

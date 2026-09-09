@@ -43,7 +43,7 @@ static func legal_actions(run: RunState) -> Array:
 			out.append({"kind": "draft_skip", "floor": int(offer["floor"])})
 		"node":
 			for i in run.nodes.size():
-				if not run.is_resolved(i):
+				if run.can_enter(i):
 					out.append({"kind": "enter", "index": i})
 		"fight":
 			out = CombatEngine.legal_actions(run.fight)
@@ -64,13 +64,16 @@ static func legal_actions(run: RunState) -> Array:
 			for card_id in run.shop.get("cards", []):
 				if run.coin >= int(run.shop["card_price"]):
 					out.append({"kind": "buy_card", "card": card_id})
-			if String(run.shop.get("relic", "")) != "" and run.coin >= int(run.shop["relic_price"]):
+			if String(run.shop.get("relic", "")) != "" and run.coin >= int(run.shop["relic_price"]) and not run.hero.relics.has(String(run.shop["relic"])):
 				out.append({"kind": "buy_relic"})
 			if not bool(run.shop.get("removed", false)) and run.coin >= int(run.shop["removal_price"]):
 				for card in run.hero.deck:
 					out.append({"kind": "remove_card", "uid": card.uid})
 			out.append({"kind": "leave"})
 		"exit":
+			for i in run.nodes.size():
+				if run.can_enter(i):
+					out.append({"kind": "enter", "index": i})
 			if can_push(run):
 				out.append({"kind": "push"})
 			if run.hero.resolve > 0:
@@ -83,6 +86,12 @@ static func legal_actions(run: RunState) -> Array:
 static func apply(run: RunState, action: Dictionary) -> Array:
 	if run.is_over():
 		return []
+	if action.has("context") and action["context"] != run.action_context():
+		return []
+	if String(action.get("kind", "")) == "enter" and run.phase in ["node", "exit"]:
+		var index := int(action.get("index", run.next_unresolved()))
+		if not run.can_enter(index):
+			return []
 	var start := run.events.size()
 	var kind := String(action.get("kind", ""))
 	var combat_events: Array = []
@@ -125,11 +134,16 @@ static func apply(run: RunState, action: Dictionary) -> Array:
 		"shop":
 			_apply_shop(run, kind, action)
 		"exit":
-			_apply_exit(run, kind, action)
+			if kind == "enter":
+				_enter_node(run, int(action.get("index", -1)))
+			else:
+				_apply_exit(run, kind, action)
 		_:
 			push_error("run: no handler for phase " + run.phase)
 	var out: Array = combat_events.duplicate()
 	out.append_array(run.events.slice(start))
+	if not out.is_empty():
+		run.action_revision += 1
 	return out
 
 
@@ -174,6 +188,7 @@ static func _apply_descent(run: RunState, kind: String, action: Dictionary) -> v
 
 
 static func _enter_floor(run: RunState) -> void:
+	run.legacy_floor = false
 	run.nodes = FloorGenerator.generate(run.content, run.biome(), run.floor, run.sub_rng("floor", run.floor), run.used_events)
 	var kinds: Array = []
 	for node in run.nodes:
@@ -182,15 +197,20 @@ static func _enter_floor(run: RunState) -> void:
 			run.used_events.append(String(node["event"]))
 	run.node_index = 0
 	run.resolved = []
+	var layout := LayoutGenerator.generate_current(run.nodes, run.sub_rng("layout", run.floor))
+	layout.presets = RoomPresets.choose(run.content, layout, run.nodes, run.biome().id, run.sub_rng("presets", run.floor), run.previous_presets)
+	run.previous_presets = layout.presets.duplicate()
+	run.layout_snapshot = layout.to_dict()
 	run.phase = "node"
 	run.emit({"type": "floor_enter", "floor": run.floor, "nodes": kinds})
 
 
 static func _enter_node(run: RunState, index: int) -> void:
-	if index < 0 or index >= run.nodes.size() or run.is_resolved(index):
+	if not run.can_enter(index):
 		push_error("enter: cannot enter node %d" % index)
 		return
 	run.node_index = index
+	run.visit(index)
 	var node := run.current_node()
 	var kind := String(node.get("kind", ""))
 	run.emit({"type": "node_enter", "index": run.node_index, "kind": kind})
@@ -273,20 +293,19 @@ static func _apply_reward(run: RunState, kind: String, action: Dictionary) -> vo
 	_advance(run)
 
 
-## The floor exits only when every node is behind you. Keeping the count of
-## encounters per floor fixed is what lets the balance invariants of spec
-## §12 stand unchanged through the pivot -- you choose the order, not the
-## number.
+## Optional rooms never relock stairs, even while their panel is open.
+## Completion emits once; the resolved record is the reward boundary.
 static func _advance(run: RunState) -> void:
 	run.resolve(run.node_index)
-	if run.next_unresolved() >= 0:
-		run.phase = "node"
-	else:
-		run.phase = "exit"
+	run.phase = "exit" if run.exit_ready() else "node"
+	if run.exit_ready() and not run.floor_clear_emitted:
+		run.floor_clear_emitted = true
 		run.emit({"type": "floor_cleared", "floor": run.floor})
 
 
 static func _end_run(run: RunState, kind: String, killer: String = "", cause: String = "") -> void:
+	if run.phase == "fight" and run.fight != null and kind == "retreat":
+		run.hero.hp = run.fight.hero_hp
 	var bonus := run.stat_bonus.duplicate()
 	run.stat_bonus.clear()
 	var rate := float(run.content.balance.get("coin_to_soul", 0.1))
@@ -321,9 +340,15 @@ static func _apply_event(run: RunState, kind: String, action: Dictionary) -> voi
 		push_error("choose: bad index %d" % index)
 		return
 	var choice: Dictionary = ev.choices[index]
+	if not RunEffects.can_apply(run, choice.get("effects", [])):
+		return
 	run.emit({"type": "event_choice", "event": run.event_id, "choice": String(choice.get("id", ""))})
 	RunEffects.apply(run, choice.get("effects", []))
 	run.event_id = ""
+	if run.hero.hp <= 0:
+		run.resolve(run.node_index)
+		_end_run(run, "death", "event", "event_cost")
+		return
 	_advance(run)
 
 
@@ -345,19 +370,19 @@ static func _apply_rest(run: RunState, kind: String, action: Dictionary) -> void
 
 
 static func _open_shop(run: RunState) -> void:
-	var balance := run.content.balance
-	var rng := run.sub_rng("shop", run.floor)
-	var cards := Rewards.card_offer(run.content, pools(run), rng, balance, int(balance.get("shop_card_count", 3)))
-	run.shop = {
-		"cards": cards.duplicate(),
-		"relic": Rewards.relic_offer(run.content, run.hero.relics, rng),
-		"card_price": int(balance.get("shop_card_price", 50)),
-		"relic_price": int(balance.get("shop_relic_price", 150)),
-		"removal_price": int(balance.get("shop_removal_price", 75)),
-		"removed": false,
-	}
 	run.phase = "shop"
-	run.emit({"type": "shop_open", "cards": cards.duplicate(), "relic": run.shop["relic"]})
+	if run.shop.is_empty():
+		var balance := run.content.balance
+		var rng := run.sub_rng("shop:" + run.room_id(run.node_index), run.floor)
+		var cards := Rewards.card_offer(run.content, pools(run), rng, balance, int(balance.get("shop_card_count", 3)))
+		run.shop = {
+			"cards": cards.duplicate(), "relic": Rewards.relic_offer(run.content, run.hero.relics, rng),
+			"card_price": int(balance.get("shop_card_price", 50)),
+			"relic_price": int(balance.get("shop_relic_price", 150)),
+			"removal_price": int(balance.get("shop_removal_price", 75)), "removed": false,
+		}
+	run.emit({"type": "shop_open", "room_id": run.room_id(run.node_index),
+		"cards": (run.shop["cards"] as Array).duplicate(), "relic": run.shop["relic"]})
 
 
 static func _apply_shop(run: RunState, kind: String, action: Dictionary) -> void:
@@ -375,7 +400,7 @@ static func _apply_shop(run: RunState, kind: String, action: Dictionary) -> void
 		"buy_relic":
 			var relic_id := String(run.shop.get("relic", ""))
 			var price := int(run.shop["relic_price"])
-			if relic_id == "" or run.coin < price:
+			if relic_id == "" or run.coin < price or run.hero.relics.has(relic_id):
 				push_error("buy_relic: cannot buy")
 				return
 			run.add_coin(-price)
@@ -393,7 +418,6 @@ static func _apply_shop(run: RunState, kind: String, action: Dictionary) -> void
 			run.shop["removed"] = true
 			run.emit({"type": "shop_buy", "item": "removal", "uid": uid, "price": price})
 		"leave":
-			run.shop = {}
 			run.emit({"type": "shop_leave"})
 			_advance(run)
 		_:
@@ -440,11 +464,11 @@ static func exit_summary(run: RunState, samples: int = -1) -> Dictionary:
 	}
 
 
-## The floor's shape, derived from the run seed rather than stored with it: the
-## same floor of the same run always builds the same crypt, so the layout never
-## goes in the save file and can never disagree with it. Uses its own rng tag,
-## so generating geometry never disturbs the encounter or fight streams.
+## Active floors carry their exact geometry and recipes across content updates.
+## Old saves without a snapshot retain the version-1 generator on that floor.
 static func layout_for(run: RunState) -> FloorLayout:
+	if not run.layout_snapshot.is_empty():
+		return FloorLayout.from_dict(run.layout_snapshot)
 	return LayoutGenerator.generate(run.nodes.size(), run.sub_rng("layout", run.floor))
 
 

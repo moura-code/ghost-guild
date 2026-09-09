@@ -2,8 +2,8 @@ class_name SaveValidation
 extends RefCounted
 ## Validate untrusted JSON before any typed from_dict constructor is called.
 
-const OBJECTS := ["hero", "run", "ladder", "upgrades", "onboarding", "stats", "stat_bonus", "reward", "shop", "outcome", "levels", "measured", "chapters", "picks_taken", "fight", "rng", "streams", "statuses", "ghost"]
-const ARRAYS := ["deck", "relics", "rules", "ghosts", "nodes", "resolved", "descent_offers", "cards", "enemies", "used_events", "claimed_pools", "claimed_biomes", "expeditions", "legends", "epitaphs", "compendium", "draw_pile", "hand", "discard_pile", "exhaust_pile"]
+const OBJECTS := ["hero", "run", "ladder", "upgrades", "onboarding", "stats", "stat_bonus", "reward", "shop", "outcome", "levels", "measured", "chapters", "picks_taken", "fight", "rng", "streams", "statuses", "ghost", "layout_snapshot"]
+const ARRAYS := ["deck", "relics", "rules", "ghosts", "nodes", "resolved", "descent_offers", "cards", "enemies", "used_events", "claimed_pools", "claimed_biomes", "expeditions", "legends", "epitaphs", "compendium", "draw_pile", "hand", "discard_pile", "exhaust_pile", "room_records", "previous_presets"]
 const NUMBERS := ["version", "campaign_seed", "run_seed", "last_tick", "created_at", "soul", "coin", "rate_per_hour", "record_depth", "hero_counter", "run_counter", "expedition_counter", "id", "uid", "floor", "entry_floor", "node_index", "fight_counter", "max_hp", "hp", "strength", "next_uid", "next_ghost_id", "source_id", "resolve", "max_resolve", "camp", "runs", "started_at", "seconds", "survival", "ink", "seal", "blessing", "hero_hp", "hero_max_hp", "hero_block", "energy", "max_energy", "draw_per_turn", "turn", "tier", "pattern_index", "cards_played_this_turn", "pending_x", "block"]
 
 
@@ -68,6 +68,8 @@ static func check(content: Content, raw: Variant) -> String:
 			for enemy in node.get("enemies", []):
 				if not enemy is String:
 					return "invalid"
+		if run.has("room_records") and not _rooms(run):
+			return "invalid"
 		var index := int(run.get("node_index", 0))
 		if index < 0 or (phase not in ["descent", "ended", "exit"] and index >= nodes.size()):
 			return "invalid"
@@ -149,7 +151,7 @@ static func _shape(value: Variant, depth: int = 0) -> bool:
 				return false
 			if key in ["class_id", "def_id", "name", "phase", "kind", "event_id", "epitaph_key", "trait_tag", "cause", "killer", "epitaph", "last_move", "next_move", "relic", "event"] and not item is String:
 				return false
-			if key in ["upgraded", "alive", "prepared", "restless", "fixed_strength", "removed", "watch_unlocked", "first_death_seen", "free_tend_available", "founder_seeded"] and not item is bool:
+			if key in ["upgraded", "alive", "prepared", "restless", "fixed_strength", "removed", "watch_unlocked", "first_death_seen", "free_tend_available", "founder_seeded", "legacy_floor", "floor_clear_emitted", "visited", "encounter_resolved", "required", "available"] and not item is bool:
 				return false
 			if key in ["deck", "ghosts", "nodes", "descent_offers", "expeditions", "legends", "epitaphs", "draw_pile", "hand", "discard_pile", "exhaust_pile"]:
 				for entry in item:
@@ -200,4 +202,34 @@ static func _references(content: Content, value: Variant, category: String = "")
 			"enemies": return content.enemies.has(value)
 			"used_events": return content.events.has(value)
 			"claimed_biomes": return content.biomes.has(value)
+	return true
+
+
+static func _rooms(run: Dictionary) -> bool:
+	var records: Array = run["room_records"]
+	var nodes: Array = run.get("nodes", [])
+	if records.size() != nodes.size():
+		return false
+	for i in records.size():
+		if not records[i] is Dictionary:
+			return false
+		var room: Dictionary = records[i]
+		if room.get("room_id") != "%d:%d" % [int(run.get("floor", 0)), i]:
+			return false
+		for key in ["visited", "encounter_resolved", "required", "available"]:
+			if not room.get(key) is bool:
+				return false
+		if room["encounter_resolved"] and not room["visited"]:
+			return false
+		if room["required"] != bool(nodes[i].get("required", true)) and not bool(run.get("legacy_floor", false)):
+			return false
+		var stock: Dictionary = room.get("shop", {})
+		if not stock.is_empty():
+			if nodes[i].get("kind") != "shop" or not stock.get("cards") is Array or not stock.get("relic") is String or not stock.get("removed") is bool:
+				return false
+			for key in ["card_price", "relic_price", "removal_price"]:
+				if not _numeric(stock.get(key)) or float(stock[key]) < 0 or float(stock[key]) != floorf(float(stock[key])):
+					return false
+		if nodes[i].get("kind") != "shop" and room["available"]:
+			return false
 	return true

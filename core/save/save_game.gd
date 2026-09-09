@@ -5,7 +5,7 @@ extends RefCounted
 ## falls back through the backups before giving up. The only file I/O
 ## in core/.
 
-const VERSION := 3
+const VERSION := 4
 const DEFAULT_PATH := "user://saves/slot1.json"
 const BACKUPS := 2
 
@@ -97,6 +97,8 @@ static func migrate(d: Dictionary) -> Dictionary:
 				_fill_run_resolved(out)
 			2:
 				pass # Historical saves restart the unresolved fight node; no lost state can be inferred.
+			3:
+				_fill_room_records(out)
 		version += 1
 		out["version"] = version
 	return out
@@ -127,6 +129,7 @@ static func load_and_catch_up(content: Content, now: int, path: String = DEFAULT
 	if c == null:
 		return {"campaign": null, "offline": {"elapsed": 0, "counted": 0, "capped": false, "soul": 0.0, "returned": []}}
 	var offline := CampaignEngine.tick(c, now)
+	CampaignEngine.refresh_content_revision(c)
 	CampaignEngine.refresh_rate(c)
 	return {"campaign": c, "offline": offline, "recovered": report["recovered"], "reason": report["reason"]}
 
@@ -168,6 +171,7 @@ static func import_copy(content: Content, source: String, now: int, directory: S
 		index += 1
 		destination = directory.path_join("import_%d.json" % index)
 	var offline := CampaignEngine.tick(c, now)
+	CampaignEngine.refresh_content_revision(c)
 	CampaignEngine.refresh_rate(c)
 	var error := save(c, destination)
 	if error != OK:
@@ -175,3 +179,31 @@ static func import_copy(content: Content, source: String, now: int, directory: S
 	return {"ok": true, "reason": "", "path": destination,
 		"slot": destination.get_file().get_basename(), "name": c.hero.name,
 		"recovered": report["recovered"], "offline": offline}
+
+
+## Active legacy floors retain their original requirements and geometry.
+## Closed shops lost their stock in schema 3: never mint replacements.
+static func _fill_room_records(d: Dictionary) -> void:
+	var run: Dictionary = d.get("run", {})
+	if run.is_empty() or run.has("room_records"):
+		return
+	var records: Array = []
+	var nodes: Array = run.get("nodes", [])
+	var flags: Array = run.get("resolved", [])
+	var phase := String(run.get("phase", "node"))
+	var active := int(run.get("node_index", 0))
+	for i in nodes.size():
+		var done := bool(flags[i]) if i < flags.size() else false
+		var is_shop: bool = nodes[i].get("kind") == "shop"
+		var opened: bool = is_shop and i == active and phase == "shop"
+		records.append({"room_id": "%d:%d" % [int(run.get("floor", 1)), i],
+			"visited": done or (i == active and phase in ["fight", "reward", "event", "rest", "shop"]),
+			"encounter_resolved": done, "required": true,
+			"available": is_shop and (not done or opened),
+			"shop": (run.get("shop", {}) as Dictionary).duplicate(true) if opened else {}})
+	run["room_records"] = records
+	run["legacy_floor"] = true
+	run["floor_clear_emitted"] = phase == "exit"
+	run["action_revision"] = 0
+	run["layout_snapshot"] = {}
+	run["previous_presets"] = []

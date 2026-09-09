@@ -16,7 +16,7 @@ const NODE_KINDS: Array[String] = ["fight", "elite", "event", "rest", "shop"]
 const ENEMY_KINDS: Array[String] = ["regular", "elite", "boss"]
 const PATTERN_KINDS: Array[String] = ["sequence", "weighted"]
 const ADD_CARD_WHERE: Array[String] = ["hand", "discard", "draw"]
-const RUN_OPS: Array[String] = ["heal", "heal_percent", "damage", "coin", "soul", "add_card", "relic", "stat", "max_hp"]
+const RUN_OPS: Array[String] = ["heal", "heal_percent", "damage", "coin", "soul", "add_card", "relic", "stat", "hero_stat", "max_hp"]
 const STATS: Array[String] = ["might", "wit", "vigor", "focus"]
 const UPGRADE_GROUPS: Array[String] = ["hero", "ghosts", "descent", "seance"]
 const UPGRADE_EFFECTS: Array[String] = ["stat", "max_resolve", "mend_discount", "global_strength", "global_spawn", "offline_cap", "restless_penalty",
@@ -26,6 +26,7 @@ const UPGRADE_EFFECTS: Array[String] = ["stat", "max_resolve", "mend_discount", 
 static func validate(c: Content) -> Array[String]:
 	var errors: Array[String] = []
 	errors.append_array(c.load_errors)
+	errors.append_array(RoomPresets.validate(c))
 	for id in c.cards:
 		_card(c, c.cards[id], errors)
 	for id in c.enemies:

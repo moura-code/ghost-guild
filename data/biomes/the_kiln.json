@@ -94,33 +94,23 @@
     "node_patterns": [
       [
         "fight",
+        "fight",
+        "rest"
+      ],
+      [
+        "fight",
+        "event",
+        "fight"
+      ],
+      [
+        "fight",
         "shop",
         "fight"
       ],
       [
         "fight",
         "fight",
-        "rest"
-      ],
-      [
-        "fight",
-        "fight",
         "elite"
-      ],
-      [
-        "fight",
-        "event",
-        "rest"
-      ],
-      [
-        "fight",
-        "elite",
-        "shop"
-      ],
-      [
-        "event",
-        "fight",
-        "shop"
       ]
     ]
   }

@@ -561,3 +561,77 @@ status.thorns.help,An attacker loses {n} HP through Block after an attack hits.
 status.regen.help,"At turn start, heal {n} HP; lose one stack."
 status.vigil.help,"At the hero’s turn start, gain {n} Block."
 status.knell.help,"At the hero’s turn start, deal {n} damage through Block to every living enemy."
+help.stat.might,Might {value}: adds to each effect marked with Might scaling.
+help.stat.wit,Wit {value}: adds to marked Block and status effects. Check each card’s scaling label.
+help.stat.vigor,Vigor {value}: +{hp} maximum HP ({per} per point).
+help.stat.focus,Focus {value}: +{draw} cards drawn and +{energy} Energy each turn.
+help.focus.next,Next at {n} Focus: +1 {benefit}.
+help.focus.capped,All Focus thresholds reached.
+help.effect.damage,damage per hit
+help.effect.block,Block
+help.effect.draw,card drawn
+help.effect.energy,Energy
+help.scaling.rule,{effect} scales with {stat}.
+help.scaling.sum,{effect}: {base} + {bonus} from {stat} = {total} before other modifiers.
+help.target.enemy,Target: one enemy.
+help.target.all_enemies,Target: every living enemy.
+help.target.self,Target: this hero.
+help.target.none,No enemy target needed.
+help.keyword.exhaust,Exhaust: remove this card for the rest of this fight.
+help.keyword.retain,Retain: keep this card in hand at the end of the turn.
+help.type.attack,Attack
+help.type.skill,Skill
+help.type.power,Power
+help.copy,Copy #{uid} · {plain} unupgraded / {upgraded} upgraded copies in this deck.
+help.before,Current
+help.after,After sharpening
+help.scope.card,One copy for {hero}. Keeps it across retreats; their ghost inherits it. Choose this instead of healing here. Future heroes start with their own deck.
+help.scope.item,This living hero keeps the item across retreats; their ghost inherits it.
+help.scope.guild_hero,Permanent guild purchase: benefits the current and future living heroes. Existing ghosts keep their own builds.
+help.scope.guild,Permanent guild purchase. Persists through deaths and new heroes.
+help.scope.ghost,Tending changes only this named ghost and its linked echoes. Living and future heroes keep their own builds.
+help.capped,Maximum level reached; no further purchase.
+help.need_coin,Need {n} more Coin.
+help.need_soul,Need {n} more Soul.
+help.inspect,Details
+help.select_card,Select a copy to compare before sharpening.
+help.commit_upgrade,Sharpen selected copy #{uid}
+help.commit_buy,Buy selected item · {price} Coin
+help.commit_remove,Remove selected copy #{uid} · {price} Coin
+help.cancel,Cancel selection
+help.remove,Permanently remove this copy from this hero’s deck. One removal per shop.
+help.glossary,Builds and mechanics
+help.lesson.combat,Read enemy intents before spending Energy. Block absorbs incoming attacks and clears at the start of your turn. Killing a threat prevents its action. Inspect cards to see scaling.
+help.lesson.upgrade,"At a Rest / Forge choose healing or sharpen one card copy. Select a copy, inspect the comparison, then commit."
+help.lesson.rooms,Map · M reveals this floor. Match its symbols to the doorway signs. Read risk and availability before entering. Elites require E to engage.
+help.lesson.ghost,Coin buys run items. Remaining Coin becomes Soul when a run ends. Soul buys lasting guild improvements. Death leaves a ghost earning Soul; after the first death you may choose a prepared Watch at the stairs. Retreat keeps your living hero.
+help.dismiss,Understood · available again in Help
+room.fight.name,Encounter
+room.fight.risk,"Fight once for a card choice, Coin and Soul."
+room.elite.name,Elite
+room.elite.risk,Stronger fight: extra Coin and a relic if any remain unowned. Press E to commit.
+room.event.name,Event
+room.event.risk,A decision with visible consequences. No surprise combat.
+room.rest.name,Rest / Forge
+room.rest.risk,Heal or sharpen one card copy. One choice here.
+room.shop.name,Shop
+room.shop.risk,Spend run Coin. Finite stock; revisit on this floor.
+room.boss.name,Boss
+room.boss.risk,"Biome milestone: dangerous fight, extra Coin and a relic if available."
+room.entry.name,Entry
+room.entry.risk,Safe arrival.
+room.stairs.name,Stairs
+room.stairs.risk,"Descend, retreat or take the Watch when available."
+room.required,Required
+room.optional,Optional
+room.state.open,Shop available
+room.state.unavailable,Closed on this saved floor
+room.state.sold_out,Sold out
+room.state.completed,Completed
+room.state.visited,Visited
+room.state.unvisited,Unvisited
+room.stairs.ready,Stairs ready · optional rooms remain available
+room.stairs.locked,Stairs locked · {n} required encounters remain
+room.map,Map · M
+room.engage,E · {room}
+room.legend,Room types revealed · ✓ completed · ○ unvisited · shops can be revisited. Select a destination to mark the compass.

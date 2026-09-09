@@ -1,4 +1,5 @@
 {
+  "revision": "clarity-2026-09-09",
   "enemy_hp_growth": 1.06,
   "enemy_damage_growth": 1.04,
   "base_energy": 3,

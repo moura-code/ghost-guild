@@ -50,13 +50,19 @@ func bind(current_layout: FloorLayout, current_run: RunState, at: Vector3, yaw: 
 	player_at = at
 	player_yaw = yaw
 	_title.text = run.content.text("ui.map.title").replace("{floor}", str(run.floor))
-	_legend.text = run.content.text("ui.map.legend")
+	_legend.text = run.content.text("room.legend") + "\n" + RoomPresentation.stairs_text(run)
 	for child in _rooms.get_children():
 		child.free()
 	for i in run.nodes.size():
 		var button := Button.new()
-		button.text = "%d %s" % [i + 1, "✓" if resolved(i) else "○"]
-		button.tooltip_text = run.content.text("ui.map.mark")
+		button.text = "%d · %s · %s" % [i + 1, RoomPresentation.label(run.content, String(run.nodes[i]["kind"])), run.content.text("room.state." + RoomPresentation.availability(run, i))]
+		button.icon = RoomPresentation.icon(String(run.nodes[i]["kind"]))
+		button.expand_icon = true
+		button.add_theme_constant_override("icon_max_width", 14)
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button.tooltip_text = RoomPresentation.describe(run, i)
+		button.focus_entered.connect(func() -> void: _legend.text = RoomPresentation.describe(run, i))
+		button.mouse_entered.connect(func() -> void: _legend.text = RoomPresentation.describe(run, i))
 		button.pressed.connect(func() -> void: select_cell(layout.room_center(layout.room_of_node(i))))
 		_rooms.add_child(button)
 	canvas.queue_redraw()
@@ -64,7 +70,7 @@ func bind(current_layout: FloorLayout, current_run: RunState, at: Vector3, yaw: 
 
 func resolved(index: int) -> bool:
 	# RunState.is_resolved normalizes flags in place; inspection must not.
-	return index >= 0 and index < run.resolved.size() and bool(run.resolved[index])
+	return run.is_resolved(index)
 
 
 func cell_size() -> float:
@@ -106,9 +112,14 @@ func draw_map() -> void:
 				Palette.STONE_EDGE if kind == FloorLayout.Cell.WALL else Palette.STONE_RAISED)
 	for i in run.nodes.size():
 		var cell := layout.room_center(layout.room_of_node(i))
-		_symbol(cell, str(i + 1) + ("✓" if resolved(i) else "○"), Palette.BONE_DIM if resolved(i) else Palette.LANTERN)
+		var kind := String(run.nodes[i]["kind"])
+		var at := zero + (Vector2(cell) + Vector2.ONE * 0.5) * step
+		var texture := RoomPresentation.icon(kind)
+		if texture != null:
+			canvas.draw_texture_rect(texture, Rect2(at - Vector2(7, 12), Vector2(14, 14)), false, RoomPresentation.accent(kind))
+		_symbol(cell, str(i + 1) + ("✓" if resolved(i) else "○"), Palette.BONE_DIM if resolved(i) else RoomPresentation.accent(kind))
 	_symbol(layout.room_center(layout.entry_room), "E", Palette.SOUL)
-	_symbol(layout.room_center(layout.stairs_room), "S" + ("✓" if run.phase == "exit" else "×"), Palette.PREPARED)
+	_symbol(layout.room_center(layout.stairs_room), "S" + ("✓" if run.exit_ready() else "×"), Palette.PREPARED)
 	if marker.x >= 0:
 		var target := zero + (Vector2(marker) + Vector2.ONE * 0.5) * step
 		canvas.draw_circle(target, 5, Palette.LANTERN, false, 1.5)

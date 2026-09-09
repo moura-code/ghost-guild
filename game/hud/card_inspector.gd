@@ -16,7 +16,7 @@ static func composition(source: Array[CardInstance]) -> Array[CardInstance]:
 	return out
 
 
-func build(content: Content, source: Array[CardInstance], title_key: String, fight: FightState = null) -> void:
+func build(content: Content, source: Array[CardInstance], title_key: String, fight: FightState = null, hero_stats: Dictionary = {}) -> void:
 	for child in get_children():
 		child.free()
 	cards = composition(source)
@@ -45,7 +45,7 @@ func build(content: Content, source: Array[CardInstance], title_key: String, fig
 		var cost := def.cost_for(card.upgraded)
 		label += " · " + content.text("ui.inspect.cost").replace("{n}", content.text("ui.card.cost_x") if cost == CardDef.COST_X else str(cost))
 		row.add_child(UiTheme.title(label))
-		var rules := UiTheme.body(CardText.of(content, def, card.upgraded))
+		var rules := UiTheme.body(MechanicsText.card_details(content, card, {"might": fight.might(), "wit": fight.wit()} if fight != null else hero_stats))
 		rules.add_theme_font_size_override("font_size", CardView.RULE_FONT_SIZE)
 		rules.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row.add_child(rules)
@@ -56,20 +56,12 @@ func build(content: Content, source: Array[CardInstance], title_key: String, fig
 			row.add_child(status)
 			if cost > fight.energy:
 				row.add_child(UiTheme.body(content.text("ui.inspect.energy"), Palette.DANGER))
-		for effect in def.effects_for(card.upgraded):
-			if effect.get("op", "") == "apply_status":
-				var explanation := UiTheme.body(status_text(content, String(effect["status"]), int(effect.get("stacks", 0))))
-				explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-				row.add_child(explanation)
 		var plate := ScreenLayout.plate(row)
 		add_child(plate)
 
 
 static func status_text(content: Content, id: String, stacks: int) -> String:
-	return (content.text("status." + id + ".name") + " " + str(stacks) + ": "
-		+ content.text("status." + id + ".help")).replace("{n}", str(stacks)) \
-		.replace("{weak}", Num.percent(float(content.balance.get("weak_multiplier", 0.75)))) \
-		.replace("{vulnerable}", Num.percent(float(content.balance.get("vulnerable_multiplier", 1.5))))
+	return MechanicsText.status(content, id, stacks)
 
 
 static func status_report(content: Content, fight: FightState) -> String:

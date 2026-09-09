@@ -421,6 +421,7 @@ func continue_slot(path: String) -> Dictionary:
 	if path == save_path:
 		next = SaveGame.load_campaign(content, path)
 	var catchup := CampaignEngine.tick(next, now())
+	CampaignEngine.refresh_content_revision(next)
 	CampaignEngine.refresh_rate(next)
 	if SaveGame.save(next, path) != OK:
 		return {"ok": false, "reason": "write"}

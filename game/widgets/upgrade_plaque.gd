@@ -14,6 +14,7 @@ extends PanelContainer
 ## the screen read as a place rather than as a page of settings.
 
 signal buy_pressed(id: String)
+signal inspected(id: String)
 
 ## Sized so a group fits one row and both groups fit one screen with nothing
 ## to scroll -- that is the whole point of the wall, and a tablet ten pixels
@@ -69,6 +70,13 @@ func _build() -> void:
 	# player is actually reaching for -- which is what hovering means.
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
+	var details := Button.new()
+	details.text = "…"
+	details.pressed.connect(func() -> void: inspected.emit(upgrade_id))
+	details.focus_entered.connect(func() -> void: inspected.emit(upgrade_id))
+	column.add_child(details)
+	mouse_entered.connect(func() -> void: inspected.emit(upgrade_id))
+
 	# Levels as pips: a filled row of them says "nearly maxed" at a glance,
 	# where "2/3" has to be read.
 	_pips = Control.new()
@@ -105,6 +113,8 @@ func bind(content: Content, def: UpgradeDef, level: int, cost: float, affordable
 	_name.text = content.text(def.name_key)
 	tooltip_text = "%s
 %s" % [content.text(def.name_key), content.text(def.text_key)]
+	_button.focus_entered.connect(func() -> void: inspected.emit(upgrade_id)) if not _button.has_meta("details_focus") else null
+	_button.set_meta("details_focus", true)
 	_level = level
 	_max_level = maxi(1, def.max_level)
 	(_icon.get_child(0) as TextureRect).texture = Icons.get_icon("upgrade", def.id)

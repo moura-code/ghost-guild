@@ -18,6 +18,8 @@ var survival_samples: int = 8
 ## to push there would deadlock rather than terminate. So the cap steers the
 ## choice and never removes the last option.
 var max_floor: int = 0
+## "all" visits each optional room once; "safe" skips elite detours.
+var optional_policy: String = "all"
 
 
 func play_run(run: RunState) -> Dictionary:
@@ -44,7 +46,7 @@ func choose(run: RunState) -> Dictionary:
 			var offer: Dictionary = run.descent_offers[0]
 			return {"kind": "draft_pick", "floor": int(offer["floor"]), "card": _best_card(run, offer["cards"])}
 		"node":
-			return {"kind": "enter"}
+			return _next_room(run)
 		"reward":
 			var cards: Array = run.reward.get("cards", [])
 			if cards.is_empty():
@@ -63,6 +65,9 @@ func choose(run: RunState) -> Dictionary:
 				return {"kind": "buy_card", "card": _best_card(run, stock)}
 			return {"kind": "leave"}
 		"exit":
+			var optional := _next_room(run)
+			if not optional.is_empty():
+				return optional
 			var summary := RunEngine.exit_summary(run, survival_samples)
 			var capped := max_floor > 0 and run.floor >= max_floor
 			var keen := float(summary["survival"]) >= push_threshold
@@ -99,3 +104,13 @@ func _best_upgrade(run: RunState) -> int:
 			best_value = def.ai_value
 			best = card.uid
 	return best
+
+
+func _next_room(run: RunState) -> Dictionary:
+	for i in run.nodes.size():
+		if run.is_resolved(i) or not run.can_enter(i):
+			continue
+		if optional_policy == "safe" and run.nodes[i].get("kind") == "elite" and not bool(run.room_record(i).get("required", true)):
+			continue
+		return {"kind": "enter", "index": i}
+	return {}

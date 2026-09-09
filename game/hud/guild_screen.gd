@@ -27,6 +27,8 @@ var _group_order: Array[String] = []
 var _band: Control
 var _band_slots: VBoxContainer
 var _wall: VBoxContainer
+var _details: Label
+var _selected_upgrade := "wit"
 
 
 func _init() -> void:
@@ -50,6 +52,9 @@ func bind(g: GameRoot) -> void:
 ## One section per group, in GROUP_ORDER; any group the data introduces that
 ## the order does not name is appended after, so new content still shows up.
 func _build() -> void:
+	_details = UiTheme.body("")
+	_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(_details)
 	_build_band()
 	_wall = VBoxContainer.new()
 	_wall.add_theme_constant_override("separation", 12)
@@ -66,6 +71,7 @@ func _build() -> void:
 		var def2: UpgradeDef = game.content.upgrades[id]
 		var row := UpgradePlaque.new()
 		row.buy_pressed.connect(_on_buy)
+		row.inspected.connect(_inspect_upgrade)
 		var wall: HFlowContainer = _groups[def2.group]
 		wall.add_child(row)
 		rows[def2.id] = row
@@ -118,6 +124,7 @@ func _add_group(group: String) -> void:
 func refresh() -> void:
 	if game == null or game.campaign == null:
 		return
+	_inspect_upgrade(_selected_upgrade)
 	refresh_expeditions()
 	var soul := game.displayed_soul()
 	for id in rows:
@@ -166,9 +173,23 @@ func _on_buy(id: String) -> void:
 ## bar that only moved when something was bought would be worse than no bar.
 func _on_soul_changed(soul: float, _rate_per_hour: float) -> void:
 	refresh_expeditions()
+	_inspect_upgrade(_selected_upgrade)
 	for id in rows:
 		var row: UpgradePlaque = rows[id]
 		var cost := game.campaign.upgrades.cost(game.content, String(id))
 		if cost < 0.0:
 			continue
 		row._button.disabled = soul < cost
+
+
+func _inspect_upgrade(id: String) -> void:
+	if game == null or not game.content.upgrades.has(id):
+		return
+	_selected_upgrade = id
+	var c := game.campaign
+	var cost := c.upgrades.cost(game.content, id)
+	_details.text = MechanicsText.upgrade(game.content, c.hero, game.content.upgrades[id], c.upgrades.level(id))
+	if cost >= 0:
+		_details.text += "\n" + game.text("ui.soul") + " " + Num.short(game.displayed_soul()) + " / " + Num.short(cost)
+		if game.displayed_soul() < cost:
+			_details.text += " · " + game.text("help.need_soul").replace("{n}", Num.short(cost - game.displayed_soul()))

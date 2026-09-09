@@ -8,6 +8,7 @@ extends RefCounted
 static func new_campaign(content: Content, campaign_seed: int, now: int) -> Campaign:
 	var c := Campaign.new()
 	c.content = content
+	c.content_revision = String(content.balance.get("revision", "baseline"))
 	c.campaign_seed = campaign_seed
 	c.created_at = now
 	c.last_tick = now
@@ -367,3 +368,25 @@ static func buy_upgrade(c: Campaign, id: String) -> Dictionary:
 	refresh_rate(c)
 	c.emit({"type": "upgrade_bought", "id": id, "level": c.upgrades.level(id), "cost": price})
 	return {"ok": true, "cost": price, "reason": ""}
+
+
+## Call only after settling the old cached rate. Sources precede linked echoes;
+## founder and expedition promises (including in-flight ghosts) stay fixed.
+static func refresh_content_revision(c: Campaign) -> bool:
+	var revision := String(c.content.balance.get("revision", "baseline"))
+	if c.content_revision == revision:
+		return false
+	for ghost in c.ladder.ghosts:
+		if not ghost.fixed_strength and ghost.kind != "echo":
+			ghost.strength = strength_for(c, ghost)
+	for ghost in c.ladder.ghosts:
+		if not ghost.fixed_strength and ghost.kind == "echo":
+			var source := c.ladder.find(ghost.source_id)
+			if source != null:
+				ghost.strength = Seance.echo_strength(c, source, ghost.floor)
+	var previous := c.content_revision
+	c.content_revision = revision
+	refresh_rate(c)
+	c.emit({"type": "content_revised", "from": previous, "to": revision,
+		"active_fight": c.run != null and c.run.phase == "fight"})
+	return true

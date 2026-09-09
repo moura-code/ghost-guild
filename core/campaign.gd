@@ -5,6 +5,7 @@ extends RefCounted
 ## only by CampaignEngine and Seance.
 
 var content: Content
+var content_revision: String = "baseline"
 var campaign_seed: int = 0
 var ladder: Ladder = Ladder.new()
 var upgrades: Upgrades = Upgrades.new()
@@ -119,6 +120,7 @@ func to_dict() -> Dictionary:
 	return {
 		"version": SaveGame.VERSION,
 		"campaign_seed": campaign_seed,
+		"content_revision": content_revision,
 		"ladder": ladder.to_dict(),
 		"upgrades": upgrades.to_dict(),
 		"onboarding": onboarding.to_dict(),
@@ -146,6 +148,7 @@ func to_dict() -> Dictionary:
 static func from_dict(p_content: Content, d: Dictionary) -> Campaign:
 	var c := Campaign.new()
 	c.content = p_content
+	c.content_revision = String(d.get("content_revision", "baseline"))
 	c.campaign_seed = int(d.get("campaign_seed", 0))
 	c.ladder = Ladder.from_dict(d.get("ladder", {}))
 	c.upgrades = Upgrades.from_dict(d.get("upgrades", {}))

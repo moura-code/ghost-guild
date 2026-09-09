@@ -59,7 +59,7 @@ static func colour_for(kind: String) -> Color:
 		"ghost":
 			return Color(0.55, 0.78, 0.95)
 		_:
-			return Palette.DANGER
+			return RoomPresentation.accent(kind)
 
 
 func _init() -> void:
@@ -110,6 +110,10 @@ func _draw() -> void:
 				Vector2(x - dir * MARK_WIDTH * 0.5, middle - MARK_WIDTH * 0.45),
 				Vector2(x - dir * MARK_WIDTH * 0.5, middle + MARK_WIDTH * 0.45),
 			]), tint)
+			continue
+		var texture := RoomPresentation.icon(String(mark.get("kind", "fight"))) if RoomPresentation.KINDS.has(mark.get("kind")) else null
+		if texture != null:
+			draw_texture_rect(texture, Rect2(Vector2(x - 6, middle - 6), Vector2(12, 12)), false, tint)
 			continue
 		var half := MARK_WIDTH * 0.5
 		draw_colored_polygon(PackedVector2Array([

@@ -50,6 +50,10 @@ var settings_path: String = Settings.PATH
 var show_title: bool = true
 var markers: Array[EncounterMarker] = []
 var stairs: EncounterMarker
+var _map_button: Button
+var _room_focus: EncounterMarker
+var _room_hint: bool = false
+var _signs: Array = []
 ## The station the player is standing in, or null.
 var focused: Interactable
 ## Whichever panel currently owns the screen, or null.
@@ -175,6 +179,11 @@ func _build_hud() -> void:
 	crosshair = Crosshair.new()
 	hud.ui.add_child(crosshair)
 
+	_map_button = Button.new()
+	_map_button.text = game.text("room.map")
+	_map_button.position = Vector2(8, 30)
+	_map_button.pressed.connect(_open_map)
+	hud.ui.add_child(_map_button)
 	compass = Compass.new()
 	hud.ui.add_child(compass)
 
@@ -356,6 +365,7 @@ func _apply_input_context() -> void:
 	hud.set_pointer(panel != null or fighting)
 	crosshair.visible = panel == null and not fighting
 	compass.visible = panel == null and not fighting
+	_map_button.visible = _exploring() and place == Place.DUNGEON
 
 
 func _restore_focus(screen: Control, previous: Variant = null) -> void:
@@ -489,6 +499,8 @@ func build_floor() -> void:
 		_world.name = "OldWorld"
 		_world.queue_free()
 	markers.clear()
+	_signs.clear()
+	_room_focus = null
 	stairs = null
 
 	_world = Node3D.new()
@@ -513,12 +525,12 @@ func build_floor() -> void:
 	_place_ghosts(run)
 
 	for i in run.nodes.size():
-		if run.is_resolved(i):
-			continue
 		var marker := EncounterMarker.create(i, layout.room_rect(layout.room_of_node(i)))
+		marker.observe(run)
 		marker.entered.connect(_on_marker_entered)
 		_world.add_child(marker)
 		markers.append(marker)
+		_signs.append_array(RoomSigns.build(_world, layout, run, i))
 
 	stairs = EncounterMarker.create(-1, layout.room_rect(layout.stairs_room))
 	stairs.name = "Stairs"
@@ -590,6 +602,9 @@ static func grade_depth(content: Content, floor: int) -> float:
 ## good the lighting is.
 func _dress() -> void:
 	var run := game.campaign.run
+	if layout.generator_version >= 2:
+		RoomComposition.build(_world, layout, game.content)
+		return
 	# The entry room's centre is where you spawn, and a stairs room you cannot
 	# cross is a floor you cannot leave.
 	var keep_clear: Array = [layout.room_center(layout.entry_room), layout.room_center(layout.stairs_room)]
@@ -648,9 +663,9 @@ func _place_ghosts(run: RunState) -> void:
 
 func _on_marker_entered(index: int) -> void:
 	var run := game.campaign.run
-	if run == null or run.phase != "node" or panel_open():
+	if run == null or not run.phase in ["node", "exit"] or panel_open():
 		return
-	game.run_action({"kind": "enter", "index": index})
+	game.run_action({"kind": "enter", "index": index, "context": run.action_context()})
 
 
 ## The fight happens where you are standing. The camera does not cut away.
@@ -708,8 +723,9 @@ func _close_room() -> void:
 		return
 	for m in markers:
 		var marker: EncounterMarker = m
-		if run.is_resolved(marker.index):
-			marker.resolve()
+		marker.observe(run)
+	for sign in _signs:
+		RoomSigns.refresh(sign, run)
 	_refresh_stairs()
 	_refresh_marks()
 	_refresh_objective()
@@ -718,9 +734,13 @@ func _close_room() -> void:
 func _refresh_stairs() -> void:
 	if stairs == null:
 		return
-	var open_now := game.campaign.run != null and game.campaign.run.phase == "exit"
-	stairs.visible = open_now
+	var open_now := game.campaign.run != null and game.campaign.run.exit_ready()
+	stairs.visible = true
 	stairs.monitoring = open_now
+	stairs._fired = false
+	var glow := stairs.get_node_or_null("Glow") as OmniLight3D
+	if glow != null:
+		glow.light_energy = 0.8 if open_now else 0.2
 
 
 # ----------------------------------------------------------------- the guild
@@ -769,6 +789,8 @@ func _leave_dungeon() -> void:
 		_world.queue_free()
 		_world = null
 	markers.clear()
+	_signs.clear()
+	_room_focus = null
 	stairs = null
 	layout = null
 	_built_floor = -1
@@ -913,7 +935,9 @@ func _stand_in(room_index: int) -> Vector3:
 ## room you have not cleared, the stairs once they are open.
 func _process(_delta: float) -> void:
 	if _exploring():
-		_focus_ghost()
+		_focus_room()
+		if _room_focus == null and not _room_hint:
+			_focus_ghost()
 	if player != null and compass != null and compass.visible:
 		compass.look(player.global_position, player.rotation.y)
 	if crosshair == null or not crosshair.visible:
@@ -938,10 +962,9 @@ func _refresh_marks() -> void:
 		compass.set_marks([])
 		return
 	for i in run.nodes.size():
-		if not run.is_resolved(i):
-			out.append({"at": Kit.cell_to_world(layout.room_center(layout.room_of_node(i))), "kind": "encounter"})
-	if run.phase == "exit":
-		out.append({"at": Kit.cell_to_world(layout.room_center(layout.stairs_room)), "kind": "stairs"})
+		if run.can_enter(i):
+			out.append({"at": Kit.cell_to_world(layout.room_center(layout.room_of_node(i))), "kind": String(run.nodes[i]["kind"])})
+	out.append({"at": Kit.cell_to_world(layout.room_center(layout.stairs_room)), "kind": "stairs"})
 	if _map_marker.x >= 0:
 		out.append({"at": Kit.cell_to_world(_map_marker), "kind": "marker"})
 	compass.set_marks(out)
@@ -956,19 +979,7 @@ func _refresh_objective() -> void:
 	if run == null:
 		return
 	prompts.show_rule(mutation_line(run))
-	if run.phase == "exit":
-		prompts.show_objective(game.text("ui.run.stairs_open"))
-		return
-	var left := 0
-	for i in run.nodes.size():
-		if not run.is_resolved(i):
-			left += 1
-	if left <= 0:
-		prompts.clear_objective()
-	elif left == 1:
-		prompts.show_objective(game.text("ui.run.one_room_left"))
-	else:
-		prompts.show_objective(game.text("ui.run.rooms_left").replace("{n}", str(left)))
+	prompts.show_objective(RoomPresentation.stairs_text(run))
 
 
 func _looking_at_a_door() -> bool:
@@ -997,6 +1008,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			pass
 		elif panel == null and director != null and director.cancel_selection():
 			pass
+		elif panel == choice and game.campaign.run != null and game.campaign.run.phase == "shop":
+			game.run_action({"kind": "leave", "context": game.campaign.run.action_context()})
 		elif panel == null or not _can_close(panel):
 			_open_pause()
 		else:
@@ -1020,12 +1033,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("floor_map"):
 		if panel == floor_map:
 			close_panel()
-		elif _exploring() and place == Place.DUNGEON and layout != null:
-			floor_map.bind(layout, game.campaign.run, player.global_position, player.rotation.y)
-			overlay(floor_map)
+		else:
+			_open_map()
 	elif event.is_action_pressed("interact"):
 		if _exploring():
-			if _focused_ghost_id > 0:
+			if _room_focus != null:
+				_room_focus.engage()
+			elif _focused_ghost_id > 0:
 				inspect_ghost(_focused_ghost_id)
 			elif focused != null:
 				focused.use()
@@ -1174,14 +1188,14 @@ func _inspect_pile(pile: String) -> void:
 
 
 func inspect_card(card: CardInstance) -> void:
-	inspector.build(game.content, [card] as Array[CardInstance], "ui.inspect.card", director.fight() if director != null else null)
+	inspector.build(game.content, [card] as Array[CardInstance], "ui.inspect.card", director.fight() if director != null else null, game.campaign.run.hero_snapshot().stats if game.campaign.run != null else game.campaign.hero.stats)
 	overlay(inspector)
 
 
 func _inspect_run_deck() -> void:
 	if game.campaign.run == null:
 		return
-	inspector.build(game.content, game.campaign.run.hero.deck, "ui.inspect.deck")
+	inspector.build(game.content, game.campaign.run.hero.deck, "ui.inspect.deck", null, game.campaign.run.hero_snapshot().stats)
 	overlay(inspector)
 
 
@@ -1264,3 +1278,35 @@ func _continue_campaign(path: String) -> void:
 	_sync()
 	settings.apply(player)
 	_maybe_show_offline()
+
+
+func _open_map() -> void:
+	if _exploring() and place == Place.DUNGEON and layout != null:
+		floor_map.bind(layout, game.campaign.run, player.global_position, player.rotation.y)
+		overlay(floor_map)
+
+
+func _focus_room() -> void:
+	_room_focus = null
+	_room_hint = false
+	if place != Place.DUNGEON or game.campaign.run == null:
+		return
+	var nearest := INF
+	for marker in markers:
+		if marker.deliberate and marker.nearby and marker.available:
+			if marker.kind == "shop" and player.global_position.distance_to(Kit.cell_to_world(RoomSigns.service_cell(layout, layout.room_of_node(marker.index)))) > 2.8:
+				continue
+			var distance := player.global_position.distance_to(marker.global_position)
+			if distance < nearest:
+				nearest = distance
+				_room_focus = marker
+	if _room_focus != null:
+		_focused_ghost_id = 0
+		prompts.show_prompt(game.text("room.engage").replace("{room}", RoomPresentation.describe(game.campaign.run, _room_focus.index)))
+	else:
+		# A doorway warning is readable outside the automatic encounter volume.
+		for sign in _signs:
+			if player.global_position.distance_to((sign as Node3D).global_position) < 5.0:
+				prompts.show_prompt(RoomPresentation.describe(game.campaign.run, int(sign.get_meta("node_index"))))
+				_room_hint = true
+				return

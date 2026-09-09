@@ -560,3 +560,77 @@ status.thorns.help,El atacante pierde {n} PV ignorando Bloqueo después de un go
 status.regen.help,"Al empezar el turno, recupera {n} PV; pierde una carga."
 status.vigil.help,"Al empezar el turno del héroe, obtiene {n} Bloqueo."
 status.knell.help,"Al empezar el turno del héroe, inflige {n} de daño ignorando Bloqueo a cada enemigo vivo."
+help.stat.might,Poder {value}: se suma a cada efecto marcado con Poder.
+help.stat.wit,Ingenio {value}: se suma al Bloqueo y los estados marcados. Consulta la escala de cada carta.
+help.stat.vigor,Vigor {value}: +{hp} de vida máxima ({per} por punto).
+help.stat.focus,Enfoque {value}: +{draw} cartas y +{energy} de Energía por turno.
+help.focus.next,Con {n} de Enfoque: +1 {benefit}.
+help.focus.capped,Todos los umbrales de Enfoque alcanzados.
+help.effect.damage,daño por golpe
+help.effect.block,Bloqueo
+help.effect.draw,carta robada
+help.effect.energy,Energía
+help.scaling.rule,{effect} escala con {stat}.
+help.scaling.sum,{effect}: {base} + {bonus} de {stat} = {total} antes de otros modificadores.
+help.target.enemy,Objetivo: un enemigo.
+help.target.all_enemies,Objetivo: todos los enemigos vivos.
+help.target.self,Objetivo: este héroe.
+help.target.none,No requiere un enemigo objetivo.
+help.keyword.exhaust,Agotar: retira esta carta durante el resto del combate.
+help.keyword.retain,Retener: conserva esta carta en la mano al terminar el turno.
+help.type.attack,Ataque
+help.type.skill,Habilidad
+help.type.power,Poder
+help.copy,Copia n.º {uid} · {plain} sin mejorar / {upgraded} mejoradas en este mazo.
+help.before,Actual
+help.after,Tras afilar
+help.scope.card,Una copia para {hero}. La conserva al retirarse; su fantasma la hereda. Sustituye la curación de esta sala. Los futuros héroes reciben su propio mazo.
+help.scope.item,Este héroe conserva el objeto al retirarse; su fantasma lo hereda.
+help.scope.guild_hero,Compra permanente del gremio: beneficia al héroe actual y los futuros. Los fantasmas existentes conservan sus propias mejoras.
+help.scope.guild,Compra permanente del gremio. Persiste tras las muertes y los nuevos héroes.
+help.scope.ghost,Cuidar modifica solo este fantasma y sus ecos vinculados. Los héroes vivos y futuros conservan sus propias mejoras.
+help.capped,Nivel máximo alcanzado; no admite otra compra.
+help.need_coin,Faltan {n} Monedas.
+help.need_soul,Faltan {n} Almas.
+help.inspect,Detalles
+help.select_card,Elige una copia para comparar antes de afilar.
+help.commit_upgrade,Afilar copia n.º {uid}
+help.commit_buy,Comprar selección · {price} Monedas
+help.commit_remove,Eliminar copia n.º {uid} · {price} Monedas
+help.cancel,Cancelar selección
+help.remove,Elimina esta copia del mazo de este héroe. Una eliminación por tienda.
+help.glossary,Mejoras y mecánicas
+help.lesson.combat,Lee las intenciones antes de gastar Energía. El Bloqueo absorbe ataques y se pierde al empezar tu turno. Eliminar una amenaza evita su acción. Inspecciona las cartas para ver su escala.
+help.lesson.upgrade,"En Descanso / Forja elige curarte o afilar una copia. Selecciona la copia, compara y confirma."
+help.lesson.rooms,Mapa · M muestra la planta. Sus símbolos coinciden con los letreros. Lee el riesgo y la disponibilidad antes de entrar. Pulsa E para afrontar una élite.
+help.lesson.ghost,Las Monedas compran objetos durante la expedición. Las sobrantes se convierten en Almas al terminar. Las Almas compran mejoras del gremio. Al morir dejas un fantasma que produce Almas; tras la primera muerte puedes elegir la Guardia preparada en las escaleras. Retirarte conserva al héroe vivo.
+help.dismiss,Entendido · disponible en Ayuda
+room.fight.name,Encuentro
+room.fight.risk,"Combate único con elección de carta, Monedas y Almas."
+room.elite.name,Élite
+room.elite.risk,Combate más fuerte: Monedas extra y una reliquia si queda alguna sin obtener. Pulsa E para afrontar.
+room.event.name,Evento
+room.event.risk,Una decisión con consecuencias visibles. Sin combate sorpresa.
+room.rest.name,Descanso / Forja
+room.rest.risk,Cúrate o afila una copia de carta. Una elección aquí.
+room.shop.name,Tienda
+room.shop.risk,Gasta Monedas de la expedición. Existencias limitadas; vuelve en esta planta.
+room.boss.name,Jefe
+room.boss.risk,"Hito del bioma: combate peligroso, Monedas extra y reliquia si queda alguna."
+room.entry.name,Entrada
+room.entry.risk,Llegada segura.
+room.stairs.name,Escaleras
+room.stairs.risk,"Desciende, retírate o elige la Guardia cuando esté disponible."
+room.required,Obligatorio
+room.optional,Opcional
+room.state.open,Tienda disponible
+room.state.unavailable,Cerrada en esta planta guardada
+room.state.sold_out,Agotado
+room.state.completed,Completado
+room.state.visited,Visitado
+room.state.unvisited,Sin visitar
+room.stairs.ready,Escaleras abiertas · las salas opcionales siguen disponibles
+room.stairs.locked,Escaleras cerradas · faltan {n} encuentros obligatorios
+room.map,Mapa · M
+room.engage,E · {room}
+room.legend,Tipos revelados · ✓ completado · ○ sin visitar · puedes volver a las tiendas. Selecciona un destino para marcar la brújula.

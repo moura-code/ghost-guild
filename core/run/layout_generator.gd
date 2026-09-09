@@ -169,3 +169,63 @@ static func generate(node_count: int, rng: Rng) -> FloorLayout:
 	assign_roles(layout, node_count, rng)
 	place_anchors(layout, rng)
 	return layout
+
+
+## Version 2 keeps the partitioned footprints, but routes corridors outside
+## every other room. Required destinations never force an optional trigger.
+static func generate_current(nodes: Array, rng: Rng) -> FloorLayout:
+	var layout := FloorLayout.create(GRID, GRID)
+	layout.generator_version = 2
+	place_rooms(layout, nodes.size() + 2, rng)
+	assign_roles(layout, nodes.size(), rng)
+	for i in nodes.size():
+		var room: Dictionary = layout.rooms[layout.room_of_node(i)]
+		var minimum := 6 if nodes[i].get("kind") in ["elite", "boss"] else 4
+		room["w"] = maxi(minimum, int(room["w"]))
+		room["h"] = maxi(minimum, int(room["h"]))
+		room["x"] = int(room["x"]) / BLOCK * BLOCK + PAD
+		room["y"] = int(room["y"]) / BLOCK * BLOCK + PAD
+	carve_rooms(layout)
+	for i in range(1, layout.rooms.size()):
+		var path := corridor_path(layout, layout.entry_room, i)
+		for cell in path:
+			layout.set_cell(cell.x, cell.y, FloorLayout.Cell.FLOOR)
+	add_walls(layout)
+	place_anchors(layout, rng)
+	return layout
+
+
+static func corridor_path(layout: FloorLayout, from_room: int, to_room: int) -> Array[Vector2i]:
+	var blocked := {}
+	for i in layout.rooms.size():
+		if i in [from_room, to_room]:
+			continue
+		var room := layout.room_rect(i)
+		for y in range(int(room["y"]), int(room["y"]) + int(room["h"])):
+			for x in range(int(room["x"]), int(room["x"]) + int(room["w"])):
+				blocked[Vector2i(x, y)] = true
+	var start := layout.room_center(from_room)
+	var target := layout.room_center(to_room)
+	var parents := {start: start}
+	var queue: Array[Vector2i] = [start]
+	var cursor := 0
+	while cursor < queue.size():
+		var cell := queue[cursor]
+		cursor += 1
+		if cell == target:
+			break
+		for direction in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var next: Vector2i = cell + direction
+			if next.x < 1 or next.y < 1 or next.x >= layout.width - 1 or next.y >= layout.height - 1 or parents.has(next) or blocked.has(next):
+				continue
+			parents[next] = cell
+			queue.append(next)
+	var out: Array[Vector2i] = []
+	if not parents.has(target):
+		return out
+	var at := target
+	while at != start:
+		out.append(at)
+		at = parents[at]
+	out.append(start)
+	return out

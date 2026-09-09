@@ -1,0 +1,123 @@
+[
+  {
+    "id": "catacombs_burial_aisle",
+    "biome": "catacombs",
+    "roles": [
+      "fight",
+      "boss"
+    ],
+    "min_size": 4,
+    "weight": 4,
+    "repeat_limit": 1,
+    "composition": "aisle",
+    "walking_lane_cells": 1,
+    "combat_radius_cells": 1,
+    "service_anchor": "southeast",
+    "ghost_anchor": "center",
+    "prop_sockets": "wall_only",
+    "doorway_anchors": "perimeter",
+    "light_budget": 0,
+    "ambient_budget": 4
+  },
+  {
+    "id": "catacombs_collapsed_vault",
+    "biome": "catacombs",
+    "roles": [
+      "fight",
+      "elite"
+    ],
+    "min_size": 4,
+    "weight": 4,
+    "repeat_limit": 1,
+    "composition": "vault",
+    "walking_lane_cells": 1,
+    "combat_radius_cells": 1,
+    "service_anchor": "southeast",
+    "ghost_anchor": "center",
+    "prop_sockets": "wall_only",
+    "doorway_anchors": "perimeter",
+    "light_budget": 0,
+    "ambient_budget": 4
+  },
+  {
+    "id": "catacombs_ossuary",
+    "biome": "catacombs",
+    "roles": [
+      "fight",
+      "elite",
+      "boss"
+    ],
+    "min_size": 4,
+    "weight": 4,
+    "repeat_limit": 1,
+    "composition": "ossuary",
+    "walking_lane_cells": 1,
+    "combat_radius_cells": 1,
+    "service_anchor": "southeast",
+    "ghost_anchor": "center",
+    "prop_sockets": "wall_only",
+    "doorway_anchors": "perimeter",
+    "light_budget": 0,
+    "ambient_budget": 4
+  },
+  {
+    "id": "catacombs_ritual_chamber",
+    "biome": "catacombs",
+    "roles": [
+      "event",
+      "elite",
+      "boss"
+    ],
+    "min_size": 4,
+    "weight": 4,
+    "repeat_limit": 1,
+    "composition": "ritual",
+    "walking_lane_cells": 1,
+    "combat_radius_cells": 1,
+    "service_anchor": "southeast",
+    "ghost_anchor": "center",
+    "prop_sockets": "wall_only",
+    "doorway_anchors": "perimeter",
+    "light_budget": 0,
+    "ambient_budget": 4
+  },
+  {
+    "id": "catacombs_abandoned_workroom",
+    "biome": "catacombs",
+    "roles": [
+      "rest",
+      "event"
+    ],
+    "min_size": 4,
+    "weight": 4,
+    "repeat_limit": 1,
+    "composition": "workroom",
+    "walking_lane_cells": 1,
+    "combat_radius_cells": 1,
+    "service_anchor": "southeast",
+    "ghost_anchor": "center",
+    "prop_sockets": "wall_only",
+    "doorway_anchors": "perimeter",
+    "light_budget": 0,
+    "ambient_budget": 4
+  },
+  {
+    "id": "catacombs_merchant_alcove",
+    "biome": "catacombs",
+    "roles": [
+      "shop"
+    ],
+    "min_size": 4,
+    "weight": 4,
+    "repeat_limit": 1,
+    "composition": "merchant",
+    "walking_lane_cells": 1,
+    "combat_radius_cells": 1,
+    "service_anchor": "southeast",
+    "ghost_anchor": "center",
+    "prop_sockets": "wall_only",
+    "doorway_anchors": "perimeter",
+    "light_budget": 0,
+    "ambient_budget": 4
+  }
+]

@@ -17,6 +17,16 @@ extends RefCounted
 static func generate(content: Content, biome: BiomeDef, floor: int, rng: Rng, used_events: Array = []) -> Array:
 	var patterns: Array = biome.node_patterns
 	var pattern: Array = patterns[rng.randi_range("encounter", 0, patterns.size() - 1)]
+	# Controlled first floor; every later pattern authors two required fights
+	# and one optional detour. Boss stays last for historical node identity.
+	if Biomes.in_tier(content, floor) == biome.first_floor and biome.id == "catacombs":
+		pattern = ["fight", "fight", "rest"]
+	if Biomes.in_tier(content, floor) == biome.last_floor:
+		var detour := "rest"
+		for value in pattern:
+			if value not in ["fight", "boss"]:
+				detour = String(value)
+		pattern = ["fight", detour, "boss"]
 	var nodes: Array = []
 	var used: Array = used_events.duplicate()
 	# The floor as its biome authored it: 1..depth, whatever tier we are in.
@@ -41,6 +51,8 @@ static func generate(content: Content, biome: BiomeDef, floor: int, rng: Rng, us
 					nodes.append({"kind": "event", "event": event_id})
 			_:
 				nodes.append({"kind": kind})
+	for i in nodes.size():
+		nodes[i]["required"] = nodes[i]["kind"] in ["fight", "boss"]
 	return nodes
 
 

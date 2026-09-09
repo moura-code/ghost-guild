@@ -1,0 +1,82 @@
+[
+  {
+    "id": "the_kiln_furnace_gallery",
+    "biome": "the_kiln",
+    "roles": [
+      "fight",
+      "boss"
+    ],
+    "min_size": 4,
+    "weight": 4,
+    "repeat_limit": 2,
+    "composition": "furnace",
+    "walking_lane_cells": 1,
+    "combat_radius_cells": 1,
+    "service_anchor": "southeast",
+    "ghost_anchor": "center",
+    "prop_sockets": "wall_only",
+    "doorway_anchors": "perimeter",
+    "light_budget": 0,
+    "ambient_budget": 4
+  },
+  {
+    "id": "the_kiln_chain_gantry",
+    "biome": "the_kiln",
+    "roles": [
+      "fight",
+      "elite",
+      "boss"
+    ],
+    "min_size": 4,
+    "weight": 4,
+    "repeat_limit": 2,
+    "composition": "gantry",
+    "walking_lane_cells": 1,
+    "combat_radius_cells": 1,
+    "service_anchor": "southeast",
+    "ghost_anchor": "center",
+    "prop_sockets": "wall_only",
+    "doorway_anchors": "perimeter",
+    "light_budget": 0,
+    "ambient_budget": 4
+  },
+  {
+    "id": "the_kiln_abandoned_foundry",
+    "biome": "the_kiln",
+    "roles": [
+      "rest",
+      "event"
+    ],
+    "min_size": 4,
+    "weight": 4,
+    "repeat_limit": 2,
+    "composition": "foundry",
+    "walking_lane_cells": 1,
+    "combat_radius_cells": 1,
+    "service_anchor": "southeast",
+    "ghost_anchor": "center",
+    "prop_sockets": "wall_only",
+    "doorway_anchors": "perimeter",
+    "light_budget": 0,
+    "ambient_budget": 4
+  },
+  {
+    "id": "the_kiln_cinder_exchange",
+    "biome": "the_kiln",
+    "roles": [
+      "shop"
+    ],
+    "min_size": 4,
+    "weight": 4,
+    "repeat_limit": 2,
+    "composition": "merchant",
+    "walking_lane_cells": 1,
+    "combat_radius_cells": 1,
+    "service_anchor": "southeast",
+    "ghost_anchor": "center",
+    "prop_sockets": "wall_only",
+    "doorway_anchors": "perimeter",
+    "light_budget": 0,
+    "ambient_budget": 4
+  }
+]
