@@ -299,6 +299,8 @@ static func from_dict(p_content: Content, d: Dictionary) -> RunState:
 	run.floor_clear_emitted = bool(d.get("floor_clear_emitted", d.get("phase") == "exit"))
 	run.action_revision = int(d.get("action_revision", 0))
 	run.layout_snapshot = (d.get("layout_snapshot", {}) as Dictionary).duplicate(true)
+	if not run.layout_snapshot.is_empty() and not run.layout_snapshot.has("preset_recipes"):
+		run.layout_snapshot["preset_recipes"] = RoomPresets.freeze(p_content, run.layout_snapshot.get("presets", []))
 	run.previous_presets = (d.get("previous_presets", []) as Array).duplicate()
 	run.phase = String(d.get("phase", "node"))
 	run.fight_counter = int(d.get("fight_counter", 0))

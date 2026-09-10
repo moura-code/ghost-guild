@@ -22,6 +22,7 @@ var node_rooms: Array = []
 var torch_anchors: Array = []
 var ghost_anchors: Array = []
 var presets: Array = []
+var preset_recipes: Array = []
 var generator_version: int = 1
 
 
@@ -103,7 +104,7 @@ func to_dict() -> Dictionary:
 	return {"generator_version": generator_version, "width": width, "height": height,
 		"cells": Array(cells), "rooms": rooms.duplicate(true), "node_rooms": node_rooms.duplicate(),
 		"entry_room": entry_room, "stairs_room": stairs_room, "torch_anchors": torches,
-		"ghost_anchors": ghosts, "presets": presets.duplicate()}
+		"ghost_anchors": ghosts, "presets": presets.duplicate(), "preset_recipes": preset_recipes.duplicate(true)}
 
 
 static func from_dict(d: Dictionary) -> FloorLayout:
@@ -115,6 +116,7 @@ static func from_dict(d: Dictionary) -> FloorLayout:
 	layout.entry_room = int(d["entry_room"])
 	layout.stairs_room = int(d["stairs_room"])
 	layout.presets = (d.get("presets", []) as Array).duplicate()
+	layout.preset_recipes = (d.get("preset_recipes", []) as Array).duplicate(true)
 	for cell in d.get("torch_anchors", []):
 		layout.torch_anchors.append(Vector2i(int(cell[0]), int(cell[1])))
 	for cell in d.get("ghost_anchors", []):

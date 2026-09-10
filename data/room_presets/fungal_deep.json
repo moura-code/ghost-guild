@@ -17,7 +17,9 @@
     "prop_sockets": "wall_only",
     "doorway_anchors": "perimeter",
     "light_budget": 0,
-    "ambient_budget": 4
+    "ambient_budget": 4,
+    "recipe_version": 1,
+    "max_size": 6
   },
   {
     "id": "fungal_deep_root_cathedral",
@@ -38,7 +40,9 @@
     "prop_sockets": "wall_only",
     "doorway_anchors": "perimeter",
     "light_budget": 0,
-    "ambient_budget": 4
+    "ambient_budget": 4,
+    "recipe_version": 1,
+    "max_size": 6
   },
   {
     "id": "fungal_deep_dripping_cistern",
@@ -58,7 +62,9 @@
     "prop_sockets": "wall_only",
     "doorway_anchors": "perimeter",
     "light_budget": 0,
-    "ambient_budget": 4
+    "ambient_budget": 4,
+    "recipe_version": 1,
+    "max_size": 6
   },
   {
     "id": "fungal_deep_spore_trader",
@@ -77,6 +83,8 @@
     "prop_sockets": "wall_only",
     "doorway_anchors": "perimeter",
     "light_budget": 0,
-    "ambient_budget": 4
+    "ambient_budget": 4,
+    "recipe_version": 1,
+    "max_size": 6
   }
 ]

@@ -5,6 +5,7 @@ extends Node3D
 
 var _animated: Array[Node3D] = []
 var _time: float = 0.0
+var _room_activity: int = 0
 
 
 static func sockets(layout: FloorLayout, room_index: int) -> Array:
@@ -37,13 +38,16 @@ static func build(parent: Node3D, layout: FloorLayout, content: Content) -> Room
 	parent.add_child(root)
 	for i in layout.rooms.size():
 		var id := String(layout.presets[i]) if i < layout.presets.size() else "neutral"
-		var recipe: Dictionary = content.room_presets.get(id, {})
+		var recipe: Dictionary = layout.preset_recipes[i] if i < layout.preset_recipes.size() else content.room_presets.get(id, {})
 		root._room(layout, i, recipe)
 	return root
 
 
 func _room(layout: FloorLayout, index: int, recipe: Dictionary) -> void:
-	var composition := String(recipe.get("composition", "aisle"))
+	if recipe.is_empty():
+		return
+	_room_activity = 0
+	var composition := String(recipe["composition"])
 	var spots := sockets(layout, index)
 	var stone := material(Color(0.35, 0.39, 0.44))
 	var bone := material(Color(0.70, 0.66, 0.53))
@@ -52,8 +56,8 @@ func _room(layout: FloorLayout, index: int, recipe: Dictionary) -> void:
 	var green := material(Color(0.24, 0.52, 0.38), 0.0, 0.12)
 	var ember := material(Color(0.69, 0.20, 0.045), 0.15, 0.35)
 	var spectral := material(Color(0.20, 0.40, 0.64), 0.0, 0.12)
-	for i in mini(spots.size(), 8):
-		var spot: Dictionary = spots[i]
+	for i in mini(spots.size(), 6):
+		var spot: Dictionary = spots[i * spots.size() / mini(spots.size(), 6)]
 		var at: Vector3 = spot["at"]
 		var back: Vector2i = spot["back"]
 		var socket := Node3D.new()
@@ -89,7 +93,9 @@ func _room(layout: FloorLayout, index: int, recipe: Dictionary) -> void:
 				for level in 3:
 					box(socket, "Stock", Vector3(0.8, 0.25, 0.35), Vector3(0, 0.35 + level * 0.52, -0.12), bone)
 				var cloth := box(socket, "Awning", Vector3(1.65, 0.05, 0.75), Vector3(0, 2.5, -0.15), material(Color(0.32, 0.16, 0.21)))
-				_animated.append(cloth)
+				if _room_activity < int(recipe["ambient_budget"]):
+					_animated.append(cloth)
+					_room_activity += 1
 			"garden":
 				for growth in 3:
 					var h := 0.45 + growth * 0.4
@@ -114,6 +120,8 @@ func _room(layout: FloorLayout, index: int, recipe: Dictionary) -> void:
 				box(socket, "SteelPier", Vector3(0.45, 2.95, 0.4), Vector3(0, 1.47, 0), iron, true)
 				for link in 8:
 					sphere(socket, "Chain", Vector3(0.12, 0.22, 0.10), Vector3(0.5, 1.1 + link * 0.23, 0), iron)
+	if _room_activity == 0 and int(recipe["ambient_budget"]) > 0 and not spots.is_empty():
+		_activity(self, spots[0]["at"] + Vector3(0, 1.6, -0.3), ember if composition in ["furnace", "foundry", "gantry"] else spectral, int(recipe["ambient_budget"]))
 	# A crown at the ceiling gives each room a readable architectural rhythm.
 	var room := layout.room_rect(index)
 	var center := Kit.cell_to_world(layout.room_center(index))
@@ -122,8 +130,9 @@ func _room(layout: FloorLayout, index: int, recipe: Dictionary) -> void:
 
 
 func _activity(parent: Node3D, at: Vector3, mat: StandardMaterial3D, budget: int) -> void:
-	if _animated.size() >= budget * 5:
+	if _room_activity >= budget:
 		return
+	_room_activity += 1
 	var mote := sphere(parent, "AmbientMote", Vector3.ONE * 0.07, at, mat)
 	mote.set_meta("rest_y", at.y)
 	_animated.append(mote)
@@ -136,7 +145,13 @@ func _process(delta: float) -> void:
 		return
 	for i in _animated.size():
 		var ornament := _animated[i]
-		if Settings.motion_reduced or camera.global_position.distance_squared_to(ornament.global_position) > 400:
+		if Settings.motion_reduced:
+			if ornament.has_meta("rest_y"):
+				ornament.position.y = float(ornament.get_meta("rest_y"))
+			else:
+				ornament.rotation.z = 0
+			continue
+		if camera.global_position.distance_squared_to(ornament.global_position) > 400:
 			continue
 		if ornament.has_meta("rest_y"):
 			ornament.position.y = float(ornament.get_meta("rest_y")) + sin(_time * 0.8 + i * 1.7) * 0.09

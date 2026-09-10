@@ -200,6 +200,7 @@ static func _enter_floor(run: RunState) -> void:
 	run.resolved = []
 	var layout := LayoutGenerator.generate_current(run.nodes, run.sub_rng("layout", run.floor))
 	layout.presets = RoomPresets.choose(run.content, layout, run.nodes, run.biome().id, run.sub_rng("presets", run.floor), run.previous_presets)
+	layout.preset_recipes = RoomPresets.freeze(run.content, layout.presets)
 	run.previous_presets = layout.presets.duplicate()
 	run.layout_snapshot = layout.to_dict()
 	run.phase = "node"

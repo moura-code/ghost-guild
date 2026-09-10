@@ -140,3 +140,28 @@ floor. The first run plus 20 minutes of founder income yields 60.9 Soul,
 above the cheapest 20-Soul improvement. Class contrast tests now compare
 Deep versus Kiln: Catacombs starter win rates tied under the revised groups,
 so the old assertion that Sexton must strictly win there was not retained.
+
+
+## P5: authored rooms and physical clearance
+
+All 14 room recipes are implemented: six Catacombs, four Deep and four Kiln.
+Role selection reserves scarce elite/boss recipes before normal rooms and
+honors size/repeat limits. A 300-layout selection sweep (100 seeds per biome)
+passed. A separate 100-seed physics sweep across ordinary and boss floors in
+all three biomes checks a player capsule against the actual solid props,
+required routes with optional rooms removed, stairs, combat centers and shop
+approaches. It found no blocked destination. This checks the shipped props,
+not just the original logical grid.
+
+Active floors save geometry, IDs and complete versioned recipes. A content
+update test changes every catalogue composition and verifies that the saved
+floor and combat RNG/state remain identical. Recipe validation rejects
+unsupported anchors, dimensions, light budgets and activity budgets. Neutral
+entry/stairs fallback has no authored props. One sign labels each continuous
+door opening, avoiding overlapping repeated labels along wider openings.
+
+Native captures cover every recipe at 1280×720 and short/tall production
+enemies in each biome. Six wall sockets per room, zero extra room lights,
+per-room activity limits, reduced-motion rest poses and 20 m update culling
+bound the cost. Existing spatial torch sound remains on the Ambience bus.
+Motion and sound use presentation state, never gameplay RNG.

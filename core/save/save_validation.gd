@@ -291,6 +291,12 @@ static func _layout(d: Dictionary, node_count: int) -> bool:
 				return false
 	if not d.get("presets") is Array or d["presets"].size() != d["rooms"].size():
 		return false
+	if d.has("preset_recipes"):
+		if not d["preset_recipes"] is Array or d["preset_recipes"].size() != d["presets"].size():
+			return false
+		for recipe in d["preset_recipes"]:
+			if not recipe is Dictionary or not RoomPresets.valid_recipe(recipe):
+				return false
 	for id in d["presets"]:
 		if not id is String:
 			return false

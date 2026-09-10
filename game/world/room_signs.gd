@@ -16,6 +16,26 @@ static func doors(layout: FloorLayout, room_index: int) -> Array:
 	return out
 
 
+## One sign per continuous opening, even when a corridor joins along a wall.
+static func sign_doors(layout: FloorLayout, room_index: int) -> Array:
+	var remaining := doors(layout, room_index)
+	var out := []
+	while not remaining.is_empty():
+		var group: Array = [remaining.pop_front()]
+		var cursor := 0
+		while cursor < group.size():
+			var at: Dictionary = group[cursor]
+			cursor += 1
+			for i in range(remaining.size() - 1, -1, -1):
+				var other: Dictionary = remaining[i]
+				if other["direction"] == at["direction"] and (other["cell"] as Vector2i).distance_squared_to(at["cell"]) == 1:
+					group.append(other)
+					remaining.remove_at(i)
+		group.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return (a["cell"] as Vector2i) < (b["cell"] as Vector2i))
+		out.append(group[group.size() / 2])
+	return out
+
+
 static func service_cell(layout: FloorLayout, room_index: int) -> Vector2i:
 	var room := layout.room_rect(room_index)
 	return Vector2i(int(room["x"]) + int(room["w"]) - 1, int(room["y"]) + int(room["h"]) - 1)
@@ -24,7 +44,7 @@ static func service_cell(layout: FloorLayout, room_index: int) -> Vector2i:
 static func build(parent: Node3D, layout: FloorLayout, run: RunState, index: int) -> Array:
 	var out: Array = []
 	var kind := String(run.nodes[index]["kind"])
-	for door in doors(layout, layout.room_of_node(index)):
+	for door in sign_doors(layout, layout.room_of_node(index)):
 		var root := Node3D.new()
 		root.name = "RoomSign%d" % index
 		root.set_meta("node_index", index)

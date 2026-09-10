@@ -17,7 +17,9 @@
     "prop_sockets": "wall_only",
     "doorway_anchors": "perimeter",
     "light_budget": 0,
-    "ambient_budget": 4
+    "ambient_budget": 4,
+    "recipe_version": 1,
+    "max_size": 6
   },
   {
     "id": "catacombs_collapsed_vault",
@@ -37,7 +39,9 @@
     "prop_sockets": "wall_only",
     "doorway_anchors": "perimeter",
     "light_budget": 0,
-    "ambient_budget": 4
+    "ambient_budget": 4,
+    "recipe_version": 1,
+    "max_size": 6
   },
   {
     "id": "catacombs_ossuary",
@@ -58,7 +62,9 @@
     "prop_sockets": "wall_only",
     "doorway_anchors": "perimeter",
     "light_budget": 0,
-    "ambient_budget": 4
+    "ambient_budget": 4,
+    "recipe_version": 1,
+    "max_size": 6
   },
   {
     "id": "catacombs_ritual_chamber",
@@ -79,7 +85,9 @@
     "prop_sockets": "wall_only",
     "doorway_anchors": "perimeter",
     "light_budget": 0,
-    "ambient_budget": 4
+    "ambient_budget": 4,
+    "recipe_version": 1,
+    "max_size": 6
   },
   {
     "id": "catacombs_abandoned_workroom",
@@ -99,7 +107,9 @@
     "prop_sockets": "wall_only",
     "doorway_anchors": "perimeter",
     "light_budget": 0,
-    "ambient_budget": 4
+    "ambient_budget": 4,
+    "recipe_version": 1,
+    "max_size": 6
   },
   {
     "id": "catacombs_merchant_alcove",
@@ -118,6 +128,8 @@
     "prop_sockets": "wall_only",
     "doorway_anchors": "perimeter",
     "light_budget": 0,
-    "ambient_budget": 4
+    "ambient_budget": 4,
+    "recipe_version": 1,
+    "max_size": 6
   }
 ]
