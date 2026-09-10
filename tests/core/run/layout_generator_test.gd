@@ -205,5 +205,9 @@ func test_a_run_asks_its_floor_for_a_shape() -> void:
 	var twice := RunEngine.layout_for(run)
 	assert_array(once.rooms).is_equal(twice.rooms)
 	assert_array(once.node_rooms).has_size(run.nodes.size())
-	run.floor = 2
+	for i in run.nodes.size():
+		run.resolve(i)
+	run.phase = "exit"
+	RunEngine.apply(run, {"kind": "push"})
+	assert_int(run.floor).is_equal(2)
 	assert_bool(RunEngine.layout_for(run).rooms == once.rooms).is_false()

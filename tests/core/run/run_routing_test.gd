@@ -19,13 +19,13 @@ func test_resolving_moves_the_next_unresolved_forward() -> void:
 	assert_int(run.next_unresolved()).is_equal(-1)
 
 
-func test_flags_resize_to_whoever_wrote_the_nodes_last() -> void:
+func test_new_nodes_start_with_new_room_records() -> void:
 	var run := TestFixtures.new_run(1, 1)
 	run.resolve(0)
 	run.nodes = [{"kind": "rest"}, {"kind": "rest"}, {"kind": "rest"}, {"kind": "rest"}]
-	assert_bool(run.is_resolved(0)).is_true()
+	assert_bool(run.is_resolved(0)).is_false()
 	assert_bool(run.is_resolved(3)).is_false()
-	assert_int(run.next_unresolved()).is_equal(1)
+	assert_int(run.next_unresolved()).is_equal(0)
 
 
 func test_out_of_range_flags_are_ignored() -> void:

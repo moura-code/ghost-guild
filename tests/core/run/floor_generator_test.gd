@@ -18,7 +18,7 @@ func test_floor_has_three_nodes_from_a_known_pattern() -> void:
 func test_fight_nodes_draw_from_the_floor_bucket() -> void:
 	for seed in 12:
 		var group := FloorGenerator.encounter_for(_biome(), 2, Rng.new(seed))
-		assert_bool([["bone_rat"], ["bone_rat", "bone_rat"], ["grave_wisp"], ["shambler"]].has(group)).is_true()
+		assert_bool([["shambler", "bone_rat"], ["grave_wisp", "shambler"], ["bone_rat", "bone_rat"]].has(group)).is_true()
 	var deep := FloorGenerator.encounter_for(_biome(), 9, Rng.new(1))
 	assert_bool([["hollow_knight"], ["plague_bearer", "bone_archer"], ["skull_stack", "crypt_spider"], ["shambler", "shambler", "bone_rat"]].has(deep)).is_true()
 

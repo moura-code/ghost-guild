@@ -68,7 +68,11 @@ static func check(content: Content, raw: Variant) -> String:
 			for enemy in node.get("enemies", []):
 				if not enemy is String:
 					return "invalid"
-		if run.has("room_records") and not _rooms(run):
+		if (int(d.get("version", 0)) >= 4 or run.has("room_records")) and not _rooms(run):
+			return "invalid"
+		if not _layout(run.get("layout_snapshot", {}), nodes.size()):
+			return "invalid"
+		if not _integer(run.get("action_revision", 0), 0, 2147483647):
 			return "invalid"
 		var index := int(run.get("node_index", 0))
 		if index < 0 or (phase not in ["descent", "ended", "exit"] and index >= nodes.size()):
@@ -206,7 +210,7 @@ static func _references(content: Content, value: Variant, category: String = "")
 
 
 static func _rooms(run: Dictionary) -> bool:
-	var records: Array = run["room_records"]
+	var records: Array = run.get("room_records", [])
 	var nodes: Array = run.get("nodes", [])
 	if records.size() != nodes.size():
 		return false
@@ -231,5 +235,63 @@ static func _rooms(run: Dictionary) -> bool:
 				if not _numeric(stock.get(key)) or float(stock[key]) < 0 or float(stock[key]) != floorf(float(stock[key])):
 					return false
 		if nodes[i].get("kind") != "shop" and room["available"]:
+			return false
+	return true
+
+
+static func _integer(value: Variant, low: int, high: int) -> bool:
+	return _numeric(value) and float(value) == floorf(float(value)) and float(value) >= low and float(value) <= high
+
+
+static func _layout(d: Dictionary, node_count: int) -> bool:
+	if d.is_empty():
+		return true # Legacy floors retain their original deterministic generator.
+	for key in ["width", "height"]:
+		if not _integer(d.get(key), 3, 128):
+			return false
+	if not _integer(d.get("generator_version"), 1, 2):
+		return false
+	var w := int(d["width"])
+	var h := int(d["height"])
+	if not d.get("cells") is Array or d["cells"].size() != w * h:
+		return false
+	for cell in d["cells"]:
+		if not _integer(cell, 0, 2):
+			return false
+	if not d.get("rooms") is Array or d["rooms"].size() != node_count + 2:
+		return false
+	for room in d["rooms"]:
+		if not room is Dictionary:
+			return false
+		for key in ["x", "y", "w", "h"]:
+			if not _integer(room.get(key), 1, 128):
+				return false
+		if room["x"] + room["w"] >= w or room["y"] + room["h"] >= h:
+			return false
+		for y in range(int(room["y"]), int(room["y"] + room["h"])):
+			for x in range(int(room["x"]), int(room["x"] + room["w"])):
+				if int(d["cells"][y * w + x]) != FloorLayout.Cell.FLOOR:
+					return false
+	var used := {}
+	for key in ["entry_room", "stairs_room"]:
+		if not _integer(d.get(key), 0, node_count + 1) or used.has(int(d[key])):
+			return false
+		used[int(d[key])] = true
+	if not d.get("node_rooms") is Array or d["node_rooms"].size() != node_count:
+		return false
+	for room in d["node_rooms"]:
+		if not _integer(room, 0, node_count + 1) or used.has(int(room)):
+			return false
+		used[int(room)] = true
+	for key in ["torch_anchors", "ghost_anchors"]:
+		if not d.get(key) is Array:
+			return false
+		for cell in d[key]:
+			if not cell is Array or cell.size() != 2 or not _integer(cell[0], 0, w - 1) or not _integer(cell[1], 0, h - 1):
+				return false
+	if not d.get("presets") is Array or d["presets"].size() != d["rooms"].size():
+		return false
+	for id in d["presets"]:
+		if not id is String:
 			return false
 	return true

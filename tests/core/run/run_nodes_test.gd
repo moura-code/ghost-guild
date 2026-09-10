@@ -11,7 +11,7 @@ func test_event_choice_applies_effects_and_advances() -> void:
 	assert_array(RunEngine.legal_actions(run)).has_size(3)
 	RunEngine.apply(run, {"kind": "choose", "index": 1})
 	assert_int(run.hero.hp).is_equal(43)
-	assert_int(run.stat_bonus["wit"]).is_equal(1)
+	assert_int(run.hero.stats["wit"]).is_equal(1)
 	assert_int(run.hero_snapshot().stats["wit"]).is_equal(1)
 	assert_str(run.phase).is_equal("node")
 	assert_bool(run.is_resolved(0)).is_true()

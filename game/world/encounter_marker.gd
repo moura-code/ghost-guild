@@ -42,7 +42,7 @@ static func create(node_index: int, room: Dictionary) -> EncounterMarker:
 	var box := BoxShape3D.new()
 	box.size = Vector3(w * Kit.CELL - 1.0, Kit.WALL_H, h * Kit.CELL - 1.0)
 	shape.shape = box
-	shape.position = Vector3(0.0, Kit.WALL_H * 0.5, 0.0)
+	shape.position = Vector3(-0.5 * Kit.CELL if w % 2 == 0 else 0.0, Kit.WALL_H * 0.5, -0.5 * Kit.CELL if h % 2 == 0 else 0.0)
 	m.add_child(shape)
 
 	# Stage 2 stand-in for the enemy that will be standing here in stage 3: a

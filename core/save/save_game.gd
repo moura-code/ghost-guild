@@ -69,8 +69,11 @@ static func load_report(content: Content, path: String = DEFAULT_PATH) -> Dictio
 		if invalid != "":
 			reason = invalid
 			continue
-		var d: Dictionary = Content.normalize_json(raw)
-		return {"campaign": Campaign.from_dict(content, migrate(d)), "reason": "", "recovered": suffix}
+		var d: Dictionary = migrate(Content.normalize_json(raw))
+		if SaveValidation.check(content, d) != "":
+			reason = "invalid"
+			continue
+		return {"campaign": Campaign.from_dict(content, d), "reason": "", "recovered": suffix}
 	return {"campaign": null, "reason": reason, "recovered": ""}
 
 

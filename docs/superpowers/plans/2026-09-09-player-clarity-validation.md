@@ -59,3 +59,34 @@ Core migration and layout sweeps, final difficulty/economy comparisons,
 Main Hall completion and native performance review are in progress.
 Five novice playtests have not been conducted. No novice success rate,
 lower-spec performance or locked-60-FPS claim is made.
+
+
+## P3–P4: room identity, persistent services and compatibility
+
+39 focused world/map/marker tests passed, zero errors/failures/orphans,
+exit 0 (`reports/clarity/p3-tests.log`). Signs, map and compass use the room
+presentation mapping. Signs require line of sight, and prompts clear on
+leaving. Even-width encounter volumes now fit inside their room footprint.
+Elite, event, rest and shop engagement is deliberate; stairs remain visible
+with their unmet requirements. Map marking remains read-only.
+
+320 focused core tests passed, zero errors/failures/orphans, exit 0
+(`reports/clarity/p2-p4-tests.log`). They include active fight HP/deck/RNG,
+source-before-echo repricing, once-only offline income, fixed founder and
+in-flight/returned expedition promises, schema-3 node/fight/reward/event/rest/
+shop/exit migration, malformed records/layout rejection, multiple shops,
+sold-out stock, removal limits, stale/double purchases and optional services
+after stairs unlock. Saved JSON is validated again after migration.
+
+Old active floors retain all old requirements. Their closed shops are
+unavailable, because schema 3 discarded that stock. An old active shop keeps
+its exact stock. New floors get two required encounters and one optional
+room. Shops remain accessible on that floor after the requirements resolve;
+no completion reward repeats. A lethal event cost ends the run once.
+
+Content revisions settle income at the previously cached rate before
+recomputing non-fixed source ghosts and then linked echoes. Saved combat
+HP, deck, piles, energy, intents and RNG are retained. Revised move/effect
+values apply to subsequent actions; revised spawn HP applies to new enemies.
+The revision marker is saved by the game after catch-up. Fixed expedition
+results, including already-launched expeditions, are never repriced.

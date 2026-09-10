@@ -102,6 +102,8 @@ func test_walking_into_a_room_enters_that_node_and_only_that_node() -> void:
 	var marker: EncounterMarker = c.markers[c.markers.size() - 1]
 	var chosen := marker.index
 	marker.report(c.player)
+	if marker.deliberate:
+		marker.engage()
 	var entries := TestFixtures.run_events_of(run, "node_enter")
 	assert_array(entries).has_size(1)
 	assert_int(int(entries[0]["index"])).is_equal(chosen)
@@ -119,6 +121,8 @@ func test_walking_into_a_room_enters_that_node_and_only_that_node() -> void:
 ## has to actually play the room.
 func _clear(c: Crawl, marker: EncounterMarker) -> void:
 	marker.report(c.player)
+	if marker.deliberate:
+		marker.engage()
 	var run := c.game.campaign.run
 	var guard := 0
 	while not run.is_over() and run.phase != "node" and run.phase != "exit" and guard < 40:
@@ -129,6 +133,8 @@ func _clear(c: Crawl, marker: EncounterMarker) -> void:
 				c.director.check_over()
 		elif ChoiceScreen.handles(run.phase):
 			c.choice.take(0)
+			if not c.choice.selected.is_empty():
+				c.choice.commit_selection()
 		else:
 			break
 
@@ -136,7 +142,8 @@ func _clear(c: Crawl, marker: EncounterMarker) -> void:
 func test_clearing_every_room_unlocks_the_stairs() -> void:
 	var c := _crawl()
 	var run := c.game.campaign.run
-	assert_bool(c.stairs.visible).is_false()
+	assert_bool(c.stairs.visible).is_true()
+	assert_bool(c.stairs.monitoring).is_false()
 	for m in c.markers.duplicate():
 		var marker: EncounterMarker = m
 		if run.is_over():
@@ -227,6 +234,8 @@ func test_walking_into_a_fight_room_stages_it_instead_of_skipping_it() -> void:
 	if marker == null:
 		return  # This floor drew no fight; the other tests cover the rest.
 	marker.report(c.player)
+	if marker.deliberate:
+		marker.engage()
 	assert_object(c.director).is_not_null()
 	assert_str(c.game.campaign.run.phase).is_equal("fight")
 	assert_array(c.director.bodies).is_not_empty()
@@ -246,6 +255,8 @@ func test_the_staged_fight_stands_its_enemies_in_the_room_you_walked_into() -> v
 		return
 	var room := c.layout.room_of_node(marker.index)
 	marker.report(c.player)
+	if marker.deliberate:
+		marker.engage()
 	var centre := Kit.cell_to_world(c.layout.room_center(room))
 	for b in c.director.bodies:
 		var body: EnemyBody = b
@@ -285,9 +296,9 @@ func test_the_compass_points_at_every_room_that_still_wants_something() -> void:
 	# grid and no way to know where any of them were.
 	var c := _crawl()
 	var run := c.game.campaign.run
-	assert_array(c.compass.marks).has_size(run.nodes.size())
-	for m in c.compass.marks:
-		assert_str(String((m as Dictionary)["kind"])).is_equal("encounter")
+	assert_array(c.compass.marks).has_size(run.nodes.size() + 1)
+	for i in run.nodes.size():
+		assert_str(c.compass.marks[i]["kind"]).is_equal(run.nodes[i]["kind"])
 
 
 func test_a_cleared_room_stops_being_pointed_at() -> void:
@@ -299,12 +310,11 @@ func test_a_cleared_room_stops_being_pointed_at() -> void:
 	assert_int(c.compass.marks.size()).is_less(before)
 
 
-func test_the_stairs_are_only_pointed_at_once_they_open() -> void:
-	# A mark pointing at a locked door is a mark that lies.
+func test_stairs_are_visible_before_unlocking_and_remain_afterward() -> void:
+	# Readiness is explained at the visible stairs and on the map.
 	var c := _crawl()
 	var run := c.game.campaign.run
-	for m in c.compass.marks:
-		assert_str(String((m as Dictionary)["kind"])).is_not_equal("stairs")
+	assert_str(c.compass.marks.back()["kind"]).is_equal("stairs")
 	for m in c.markers.duplicate():
 		if run.is_over():
 			return

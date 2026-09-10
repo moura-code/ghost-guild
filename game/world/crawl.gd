@@ -1310,6 +1310,9 @@ func _open_map() -> void:
 
 
 func _focus_room() -> void:
+	if _room_hint or _room_focus != null:
+		_refresh_prompt()
+		_focused_ghost_id = -1
 	_room_focus = null
 	_room_hint = false
 	if place != Place.DUNGEON or game.campaign.run == null:
@@ -1330,6 +1333,10 @@ func _focus_room() -> void:
 		# A doorway warning is readable outside the automatic encounter volume.
 		for sign in _signs:
 			if player.global_position.distance_to((sign as Node3D).global_position) < 5.0:
+				var ray := PhysicsRayQueryParameters3D.create(player.camera.global_position, (sign as Node3D).global_position)
+				ray.collision_mask = DungeonBuilder.LAYER_WORLD
+				if not get_world_3d().direct_space_state.intersect_ray(ray).is_empty():
+					continue
 				prompts.show_prompt(RoomPresentation.describe(game.campaign.run, int(sign.get_meta("node_index"))))
 				_room_hint = true
 				return
