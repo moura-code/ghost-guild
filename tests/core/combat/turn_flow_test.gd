@@ -65,7 +65,7 @@ func test_play_card_costs_energy_and_discards() -> void:
 	assert_int(s.energy).is_equal(2)
 	assert_array(s.hand).has_size(1)
 	assert_array(s.discard_pile).has_size(1)
-	assert_int(s.enemies[0].hp).is_equal(8)
+	assert_int(s.enemies[0].hp).is_equal(12)
 	assert_str(events[0]["type"]).is_equal("card_played")
 	assert_int(s.cards_played_this_turn).is_equal(1)
 
@@ -196,7 +196,7 @@ func test_dead_target_falls_back_to_living_enemy() -> void:
 	TestFixtures.give_hand(s, ["strike"])
 	s.enemies[0].alive = false
 	_play(s, "strike", 0)
-	assert_int(s.enemies[1].hp).is_equal(8)
+	assert_int(s.enemies[1].hp).is_equal(12)
 
 
 func test_fight_start_is_the_first_event() -> void:

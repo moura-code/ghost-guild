@@ -100,14 +100,13 @@ func test_poison_stops_working_down_here() -> void:
 func test_every_class_is_the_best_one_somewhere() -> void:
 	# The claim that makes a dungeon a journey rather than a list of floors,
 	# and the one that fails loudly if a biome is merely harder. The Sexton
-	# owns the Catacombs and the Kiln; the Hexer owns the Deep.
+	# wins against Constructs in the Kiln; the Hexer wins in the Deep.
 	var c := _content()
 	var starting := Classes.starting(c)
 	# The floor in each biome where a *starting* deck is still alive enough for
 	# the comparison to mean anything. By floor 24 neither class clears a fight
 	# with ten cards, and two zeroes are not a contrast.
 	var rows := {
-		"catacombs": {"floor": 8, "winner": starting},
 		"fungal_deep": {"floor": 14, "winner": "hexer"},
 		"the_kiln": {"floor": 21, "winner": starting},
 	}

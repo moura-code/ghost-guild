@@ -90,3 +90,53 @@ HP, deck, piles, energy, intents and RNG are retained. Revised move/effect
 values apply to subsequent actions; revised spawn HP applies to new enemies.
 The revision marker is saved by the game after catch-up. Fixed expedition
 results, including already-launched expeditions, are never repriced.
+
+
+## P2: final early curve and economy
+
+Against the roadmap baseline, Bone Rat HP is 14 → 18 and Bite is 5 → 6;
+Shambler HP is 24 → 30; Grave Wisp HP is 12 → 18. Lurch and Flicker retain
+their original 7 and 4 damage after the development batch showed excessive
+attrition with 8 and 5. Move schedules, starter cards/relics, stat prices and
+economy formulas are unchanged. Early encounter buckets replace single weak
+enemies with durable targets and combinations; all floors retain two required
+encounters. There is no scaling tied to purchases or player performance.
+Content revision `clarity-2026-09-09-r2` reprices existing non-fixed production
+once, including campaigns that saved the initial clarity implementation.
+
+Both 30-seed development routes and both 100-seed held-out routes completed
+for all four builds and three combat policies. The committed
+[difficulty summary](2026-09-09-difficulty-summary.csv) retains all distributions;
+raw events and choices remain under `reports/clarity/`. Safe skips optional
+elites; all visits each optional room once. These are forced-push diagnostics
+through Floor 10 (31–40 for the later profile), not player retreat decisions.
+
+| Held-out build / policy | Route | Reach F4 | Median F4 net HP loss | Mean F2–4 normal-win turns | Mean ending depth |
+| --- | --- | --- | --- | --- | --- |
+| Baseline fresh / defense | old required route | 100/100 | 25.7% | 2.11 | 8.13 |
+| Fresh / attack-first | safe | 51/100 | 74.3% | 3.21 | 4.70 |
+| Fresh / defense | safe | 100/100 | 44.3% | 4.60 | 6.70 |
+| Fresh / lookahead | safe | 100/100 | 34.3% | 3.81 | 7.59 |
+| Early purchases / defense | safe | 100/100 | 27.4% | 3.90 | 7.66 |
+| Early purchases / lookahead | safe | 100/100 | 26.0% | 3.11 | 8.62 |
+| Fresh / defense | all | 95/100 | 45.7% | 4.57 | 6.27 |
+| Early purchases / defense | all | 100/100 | 28.8% | 3.86 | 7.53 |
+
+At equal seeds/depth, the 70-Soul early purchases reduce mean safe-route F4
+net loss by 38.7% for defense and 28.0% for lookahead, and reduce normal turns
+by 15.2% / 18.3%. Safer routes improve fresh survival; elite victories add the
+existing extra Coin and relic reward. No shop repricing was justified by this
+batch. The simple defensive policy misses the provisional 15–35% median
+loss target; that is recorded as a player-review question, not claimed as a
+passed target. The synthetic level-3 Floor-31 profile dies on that floor
+with every policy, exposing its insufficient preparation rather than proving
+a viable later-cycle build. Late-biome tuning remains outside this first pass.
+
+All 14-run / 48-simulation economy invariants pass, process exit 0
+(`reports/clarity/final-balance-r2.log`). BalanceSim explicitly visits each
+optional room once before sampling/pushing. Prepared Watch yield rises on
+floors 1–9 from 53.91 to 764.33, and beats corpse-plus-echo at every sampled
+floor. The first run plus 20 minutes of founder income yields 60.9 Soul,
+above the cheapest 20-Soul improvement. Class contrast tests now compare
+Deep versus Kiln: Catacombs starter win rates tied under the revised groups,
+so the old assertion that Sexton must strictly win there was not retained.

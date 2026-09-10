@@ -38,12 +38,12 @@ func test_blend_ignores_measured_turns_without_wins() -> void:
 
 func test_groups_for_reads_the_right_bucket() -> void:
 	var biome: BiomeDef = TestFixtures.content().biomes["catacombs"]
-	assert_array(FloorGenerator.groups_for(biome, 2)).has_size(4)
-	assert_array(FloorGenerator.groups_for(biome, 5)[1]).is_equal(["skull_stack"])
+	assert_array(FloorGenerator.groups_for(biome, 2)).has_size(3)
+	assert_array(FloorGenerator.groups_for(biome, 5)[1]).is_equal(["skull_stack", "bone_rat"])
 	assert_array(FloorGenerator.groups_for(biome, 12)[0]).is_equal(["hollow_knight"])
 	var groups := FloorGenerator.groups_for(biome, 1)
 	groups[0].append("ghoul")
-	assert_array(FloorGenerator.groups_for(biome, 1)[0]).is_equal(["bone_rat"])
+	assert_array(FloorGenerator.groups_for(biome, 1)[0]).is_equal(["shambler"])
 
 
 func test_simulate_is_deterministic_and_sane() -> void:

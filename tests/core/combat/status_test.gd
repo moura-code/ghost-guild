@@ -13,8 +13,8 @@ func test_hero_turn_start_order_and_block_reset() -> void:
 	assert_int(s.hero_status("poison")).is_equal(3)
 	assert_int(s.hero_status("vigil")).is_equal(3)
 	assert_int(s.hero_status("knell")).is_equal(5)
-	assert_int(s.enemies[0].hp).is_equal(9)
-	assert_int(s.enemies[1].hp).is_equal(9)
+	assert_int(s.enemies[0].hp).is_equal(13)
+	assert_int(s.enemies[1].hp).is_equal(13)
 
 
 func test_hero_turn_start_can_keep_block() -> void:
@@ -76,7 +76,7 @@ func test_enemy_turn_end_burn_and_decays() -> void:
 	var e := s.enemies[0]
 	e.statuses = {"burn": 2, "weak": 2, "vulnerable": 1, "bleed": 3, "might_buff": 1}
 	StatusSystem.enemy_turn_end(s, 0)
-	assert_int(e.hp).is_equal(22)
+	assert_int(e.hp).is_equal(28)
 	assert_int(e.status("burn")).is_equal(1)
 	assert_int(e.status("weak")).is_equal(1)
 	assert_int(e.status("vulnerable")).is_equal(0)

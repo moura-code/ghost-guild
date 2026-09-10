@@ -70,16 +70,15 @@ func test_its_pool_leans_the_way_the_class_does() -> void:
 # ------------------------------------------------------------ the contrast
 
 func test_each_class_is_the_better_one_somewhere() -> void:
-	# The whole argument for a second class, measured. The Sexton hits Undead
-	# and blocks, so the Catacombs are its floor; the Hexer poisons Flesh, so
-	# the Deep is. If one class won both, the other would be a strictly worse
+	# The Hexer poisons Flesh in the Deep; the Sexton can face Constructs
+	# in the Kiln. The revised Catacombs have tied starter win rates. If one class won both, the other would be a strictly worse
 	# way to play and the unlock would be an upgrade rather than a choice.
 	var c := _content()
 	var starting := Classes.starting(c)
-	var upstairs := _rate(c, starting, 8) - _rate(c, "hexer", 8)
+	var upstairs := _rate(c, starting, 21) - _rate(c, "hexer", 21)
 	var downstairs := _rate(c, "hexer", 14) - _rate(c, starting, 14)
 	assert_float(upstairs).override_failure_message(
-		"the Hexer is at least as good as the %s in the Catacombs (%+.2f)" \
+		"the Hexer is at least as good as the %s in the Kiln (%+.2f)" \
 		% [starting, upstairs]).is_greater(0.0)
 	assert_float(downstairs).override_failure_message(
 		"the %s is at least as good as the Hexer in the Deep (%+.2f)" \

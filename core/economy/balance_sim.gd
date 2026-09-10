@@ -46,6 +46,10 @@ func sample_runs() -> Dictionary:
 						break
 					RunEngine.apply(run, action)
 			elif run.phase == "exit":
+				var optional := ap._next_room(run)
+				if not optional.is_empty():
+					RunEngine.apply(run, optional)
+					continue
 				var snap := run.hero_snapshot()
 				snap.hp = snap.max_hp
 				samples.append({"run": i, "floor": run.floor, "snapshot": snap, "measured": run.stats.measured(run.floor)})
@@ -120,6 +124,7 @@ func report() -> Dictionary:
 	var first_ok := twenty_minutes >= cheapest
 	var first_detail := "Soul after 20 min: founder %.1f + first run %.1f = %.1f vs cheapest upgrade %.1f" % [founder_rate / 3.0, first_soul, twenty_minutes, cheapest]
 	return {
+		"optional_policy": "all (each room once)",
 		"floors": floors,
 		"per_run": sampled["per_run"],
 		"invariants": {

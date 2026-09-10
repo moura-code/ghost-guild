@@ -206,7 +206,7 @@ func test_a_ghost_left_under_a_seal_is_worth_more_for_ever() -> void:
 	# And keeps the seal, so a later tend re-prices it with the seal still on
 	# rather than washing it off.
 	var c := TestFixtures.campaign()
-	var hero := Hero.create(c.content, Classes.starting(c.content), "Sealed", {}, 1)
+	var hero := Hero.create(c.content, Classes.starting(c.content), "Sealed", {"might": 4, "wit": 4, "vigor": 2}, 1)
 	var plain := Ghost.from_expedition(hero, 4, 1000)
 	plain.kind = "true"
 	plain.fixed_strength = false

@@ -155,10 +155,11 @@ func test_tending_the_source_reaches_its_echoes() -> void:
 	var made := Seance.create_echo(c, g.id, 2, 1000)
 	assert_bool(made["ok"]).override_failure_message(String(made["reason"])).is_true()
 	var echo := c.ladder.find(int(made["ghost_id"])) if made.has("ghost_id") else _last_echo(c)
-	var was := echo.strength
+	var before: Array = echo.to_dict()["deck"]
 	Seance.tend_upgrade(c, g.id)
-	assert_float(echo.strength).override_failure_message(
-		"the echo did not hear about it").is_not_equal(was)
+	assert_array(echo.to_dict()["deck"]).is_not_equal(before)
+	assert_array(echo.to_dict()["deck"]).is_equal(g.to_dict()["deck"])
+	assert_float(echo.strength).is_equal(Seance.echo_strength(c, g, echo.floor))
 	assert_bool(echo.deck.size() == g.deck.size()).is_true()
 
 

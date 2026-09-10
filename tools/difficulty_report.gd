@@ -12,6 +12,11 @@ const POLICIES := ["attack_first", "defense_aware", "lookahead"]
 
 
 func _init() -> void:
+	var engine := Engine.get_version_info()
+	if engine.major != 4 or engine.minor != 7 or engine.patch != 2:
+		push_error("Difficulty comparisons require Godot 4.7.2")
+		quit(1)
+		return
 	var args := OS.get_cmdline_user_args()
 	var destination := String(args[0]) if args.size() > 0 else "user://difficulty.json"
 	var count := int(args[1]) if args.size() > 1 else 30
@@ -32,6 +37,7 @@ func _init() -> void:
 	var report := {"engine": Engine.get_version_info()["string"], "seed_set": seed_set,
 		"samples_per_profile_policy": count, "optional_policy": route, "profiles": PROFILES,
 		"clock": 1000, "max_floor": limit, "rows": [], "summaries": []}
+	var terminated := true
 	for profile in profiles:
 		if not PROFILES.has(profile):
 			push_error("Unknown profile: " + str(profile))
@@ -43,6 +49,7 @@ func _init() -> void:
 				# Disjoint, versioned arithmetic sets; no engine-global RNG.
 				var seed_value := (73019 if seed_set == "development" else 970003) + i * 7919
 				var row := sample(content, String(profile), String(policy), route, seed_value, limit)
+				terminated = terminated and row["terminated"]
 				rows.append(row)
 				report["rows"].append(row)
 			var summary := summarize(rows)
@@ -56,7 +63,7 @@ func _init() -> void:
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
 	print("difficulty_report -> " + destination)
-	quit(0)
+	quit(0 if terminated else 1)
 
 
 static func sample(content: Content, profile: String, policy: String, route: String, seed_value: int, limit: int) -> Dictionary:
