@@ -40,9 +40,12 @@ var _context: Label
 var _context_plate: PanelContainer
 var _fan: HFlowContainer
 var _resources: Button
+var _close_shop: Button
+var _lift_room: Control
 var _options: VBoxContainer
 var _buttons: Array[Button] = []
 var _cards: Array[CardView] = []
+var _card_prices: Array[Label] = []
 var _actions: Array = []
 
 
@@ -78,7 +81,14 @@ func _build() -> void:
 	add_child(_title)
 	_resources = Button.new()
 	_resources.pressed.connect(func() -> void: deck_requested.emit())
-	add_child(_resources)
+	var resource_row := HBoxContainer.new()
+	_resources.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	resource_row.add_child(_resources)
+	_close_shop = Button.new()
+	_close_shop.text = "Esc · " + game.text("ui.choice.leave")
+	_close_shop.pressed.connect(func() -> void: _choose(_actions.size() - 1))
+	resource_row.add_child(_close_shop)
+	add_child(resource_row)
 
 	# An authored encounter's text sits on something, the way a notice nailed
 	# to a wall does. Floating a single grey line in the middle of an empty
@@ -96,10 +106,10 @@ func _build() -> void:
 	# A card lifts under the cursor, and the top row of a reward is close
 	# enough to the heading that the lift printed the card over it. The gap is
 	# the lift, named as the lift, so the two cannot drift apart.
-	var lift_room := Control.new()
-	lift_room.custom_minimum_size = Vector2(0.0, CardView.hover_headroom())
-	lift_room.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(lift_room)
+	_lift_room = Control.new()
+	_lift_room.custom_minimum_size = Vector2(0.0, CardView.hover_headroom())
+	_lift_room.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_lift_room)
 
 	# The prizes, laid out as cards; then everything else as a list.
 	_fan = HFlowContainer.new()
@@ -154,6 +164,8 @@ func refresh() -> void:
 	if run.phase == "rest" and lesson_settings != null and not lesson_settings.dismissed_lessons.has("upgrade"):
 		lesson.present(game.content, "upgrade")
 	_title.text = _title_text()
+	_close_shop.visible = run.phase == "shop"
+	_lift_room.custom_minimum_size.y = CardView.hover_headroom() if run.phase in ["reward", "descent"] else (8.0 if run.phase == "shop" else 0.0)
 	_resources.text = resources_text(game.content, run)
 	_context.text = _context_text()
 	if _context_plate != null:
@@ -199,7 +211,7 @@ func _title_text() -> String:
 func _context_text() -> String:
 	match run.phase:
 		"shop":
-			return "%s %d" % [game.text("ui.coin"), run.coin]
+			return "" # The persistent resource button already shows the purse.
 		"event":
 			var def: EventDef = game.content.events[run.event_id]
 			return game.text(def.text_key)
@@ -258,11 +270,19 @@ func _rebuild_options() -> void:
 		var card := CardView.new()
 		card.pressed.connect(_on_card_pressed)
 		card.inspected.connect(func(value: CardInstance) -> void: card_inspected.emit(value))
-		_fan.add_child(card)
+		var slot := VBoxContainer.new()
+		slot.add_theme_constant_override("separation", 3)
+		slot.add_child(card)
+		var price := ScreenLayout.centre(UiTheme.body("", Palette.LANTERN))
+		slot.add_child(price)
+		slot.move_child(price, 0)
+		_fan.add_child(slot)
 		_cards.append(card)
+		_card_prices.append(price)
 	for i in _cards.size():
 		var shown := i < offers.size()
 		_cards[i].visible = shown
+		(_cards[i].get_parent() as Control).visible = shown
 		if not shown:
 			continue
 		var index: int = offers[i]
@@ -271,6 +291,8 @@ func _rebuild_options() -> void:
 		instance.def_id = _card_of(_actions[index])
 		_cards[i].bind(game.content, instance, index, affordability(_actions[index]) == "")
 		_cards[i].tooltip_text = label_for(_actions[index]) + "\n" + affordability(_actions[index])
+		_card_prices[i].visible = run.phase == "shop"
+		_card_prices[i].text = "%d %s" % [price_for(_actions[index]), game.text("ui.coin")]
 
 	while _buttons.size() < rows.size():
 		var button := Button.new()
@@ -459,6 +481,7 @@ func select_action(action: Dictionary) -> void:
 	if _commit.disabled:
 		_comparison.text += "\n" + affordability(action)
 	_selection.show()
+	_lift_room.hide()
 	(_options.get_parent() as Control).hide()
 	(_context_plate.get_parent() as Control).hide()
 	_fan.hide()
@@ -471,6 +494,7 @@ func cancel_selection() -> void:
 	selected = {}
 	if _selection != null:
 		_selection.hide()
+		_lift_room.show()
 		(_options.get_parent() as Control).show()
 		(_context_plate.get_parent() as Control).visible = _context.text != ""
 		_fan.show()

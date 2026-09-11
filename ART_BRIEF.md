@@ -111,3 +111,20 @@ GG_PROFILE=review tools/launch.sh -s tools/hybrid_bench.gd
 See the hybrid validation record for the full 30-enemy review, UI captures and
 measured hardware/renderer conditions. No lower-spec claim follows from those
 measurements.
+
+
+## Player clarity rooms and Main Hall — 2026-09-09
+
+Room recipes reserve wall sockets, one-cell walking lanes, combat centers and
+service anchors. Six Catacombs and four compositions in each later biome use
+original procedural sarcophagi, shelving, ritual pillars, workbenches, fungal
+growth and ironwork. Active floors save their geometry and complete recipes.
+At most six sockets per room, no additional room shadow lights, bounded
+ambient motion, reduced-motion rest poses and 20 m activity culling apply.
+Spatial torch ambience uses the existing Ambience bus and volume settings.
+
+The guild frames its well with a canopy and borders. Station inlays, tools,
+books and spirit vessels distinguish the destinations. Existing biome claims,
+Legends and commissioned expedition counts produce earned banners and
+inscriptions; current ghosts remain in the well and change with the ladder.
+No decoration currency, new campaign achievement state or downloaded art.

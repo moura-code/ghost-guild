@@ -55,10 +55,11 @@ focus instead of shrinking text.
 
 ## Remaining release evidence
 
-Core migration and layout sweeps, final difficulty/economy comparisons,
-Main Hall completion and native performance review are in progress.
-Five novice playtests have not been conducted. No novice success rate,
-lower-spec performance or locked-60-FPS claim is made.
+Implementation, migration and layout sweeps, final difficulty/economy
+comparisons and native review are complete. Five novice playtests have not
+been conducted. The defensive-policy tuning deviation and insufficient
+later-cycle profile are recorded under P2. No novice success rate, lower-spec
+performance or locked-60-FPS claim is made.
 
 
 ## P3–P4: room identity, persistent services and compatibility
@@ -165,3 +166,34 @@ enemies in each biome. Six wall sockets per room, zero extra room lights,
 per-room activity limits, reduced-motion rest poses and 20 m update culling
 bound the cost. Existing spatial torch sound remains on the Ambience bus.
 Motion and sound use presentation state, never gameplay RNG.
+
+## P6: authored Main Hall and earned history
+
+The arrival view frames the cold well with four pillars, a canopy and brass
+borders. Warm station areas have signs, tools, embers, books and spirit
+vessels. One additional unshadowed light illuminates the overlook; the new
+room recipes add no lights. The existing well barriers and five station
+interactions remain usable, including G navigation.
+
+`GuildHistory` derives banners, biome trophies, the three latest Legend
+memorials and an expedition keepsake from existing campaign state. Captions
+explain what earned each display and its permanence. The Founder already
+earns the fresh guild's Catacombs banner. Biome claims and the commissioned
+expedition count survive prestige; the current ghost population changes in
+the well. History reads are tested against the complete campaign snapshot
+and do not mutate it. A physical player-capsule flood reaches every station
+and the well approach after decoration.
+
+Native 1080p captures `07-guild-en-1.png`, `08-guild_progressed-en-1.png` and
+`09-guild_prestige-en-1.png` under `reports/clarity/native/` show all three
+states. The new geometry is original project work using existing materials,
+fonts and audio; attribution and the art brief are updated. Banner motion
+respects reduced motion and a 20 m update limit.
+
+Final compact-screen review also corrected stat-button bounds, reduced the
+hero portrait before text, and moved shop prices and Leave above the card
+inventory. Upgrade inspection hides the unused choice area and retains
+separate confirm/cancel actions. The compact combat lesson stays beside the
+fight instead of covering the hand, and F2 dismisses the rest lesson too.
+The final Spanish 150% shop and upgrade captures were repeated after these
+changes; scrollable inventory retains full card rules and primary actions.

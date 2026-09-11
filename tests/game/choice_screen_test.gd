@@ -104,7 +104,8 @@ func test_the_shop_shows_the_purse_and_prices_every_item() -> void:
 	s.refresh()
 	await await_idle_frame()
 	assert_str(run.phase).is_equal("shop")
-	assert_str(s._context.text).contains("500")
+	assert_str(s._resources.text).contains("500")
+	assert_str(s._card_prices[0].text).contains(str(run.shop["card_price"]))
 	var buy := s.label_for({"kind": "buy_card", "card": String(run.shop["cards"][0])})
 	assert_str(buy).contains(str(int(run.shop["card_price"])))
 

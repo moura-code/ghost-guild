@@ -11,7 +11,9 @@ extends SceneTree
 ## Modes: walk, fight, reward, guild, panel, expedition, offline, exit, watch,
 ## deep, kiln, tier2, tier2fight, creatures, ladder, ladderdeep, seance, hero,
 ## hexer, hall, title, help, options, ghost, map, death, watch_result, inspector,
-## pause, hover, roster. Roster additionally takes [entry_floor] [enemy_id ...].
+## pause, hover, rest, upgrade, shop, event, guild_progressed, guild_prestige,
+## room:<preset_id>, roster. Roster additionally takes [entry_floor] [enemy_id ...].
+## Other modes accept [reduced] after locale for reduced-motion captures.
 ##
 ## Runs against a throwaway save, so it never touches the player's campaign.
 
@@ -49,6 +51,9 @@ func _init() -> void:
 	var shot_settings := Settings.new()
 	shot_settings.ui_scale = float(args[5]) if args.size() > 5 else 1.0
 	shot_settings.locale = String(args[6]) if args.size() > 6 else "en"
+	shot_settings.reduced_motion = args.size() > 7 and String(args[7]) == "reduced"
+	if mode.begins_with("room:"):
+		shot_settings.dismissed_lessons = ["combat", "upgrade", "rooms", "ghost"]
 	shot_settings.save(crawl.settings_path)
 	win.add_child(crawl)
 	crawl.bind(game)
@@ -61,6 +66,18 @@ func _init() -> void:
 				return
 
 	match mode:
+		"guild_progressed", "guild_prestige":
+			for depth in [4, 14, 24]:
+				var ghost := Ghost.from_expedition(game.campaign.hero, depth, 1000)
+				ghost.strength = 180
+				ghost.fixed_strength = true
+				game.campaign.ladder.add(ghost)
+			game.campaign.record_depth = 24
+			game.campaign.expedition_counter = 7
+			if mode == "guild_prestige":
+				game.prestige()
+			crawl.guild.well.refresh(game.campaign)
+			crawl.guild.refresh_history(game.campaign)
 		"guild", "title":
 			pass
 		"offline":
@@ -175,6 +192,7 @@ func _init() -> void:
 			run.phase = "node"
 			run.hero.hp -= 7
 			run.coin = 25
+			_snapshot_layout(run)
 			crawl.build_floor()
 			game.run_action({"kind": "enter", "index": 0})
 			await process_frame
@@ -213,7 +231,28 @@ func _init() -> void:
 				entry = 24
 			elif mode == "tier2" or mode == "tier2fight":
 				entry = Biomes.depth(game.content) + 4
+			if mode.begins_with("room:"):
+				var recipe: Dictionary = game.content.room_presets[mode.trim_prefix("room:")]
+				entry = 11 if recipe["biome"] == "fungal_deep" else (21 if recipe["biome"] == "the_kiln" else 1)
 			_descend(game, crawl, entry)
+			if mode.begins_with("room:"):
+				var id := mode.trim_prefix("room:")
+				var recipe: Dictionary = game.content.room_presets[id]
+				var run := game.campaign.run
+				run.nodes = [{"kind": recipe["roles"][0], "enemies": ["bone_rat"], "required": true, "event": "whispering_well"}]
+				run.phase = "node"
+				var layout := LayoutGenerator.generate_current(run.nodes, Rng.new(701))
+				layout.presets = ["neutral", "neutral", "neutral"]
+				layout.presets[layout.room_of_node(0)] = id
+				layout.preset_recipes = RoomPresets.freeze(game.content, layout.presets)
+				run.layout_snapshot = layout.to_dict()
+				crawl.build_floor()
+				for marker in crawl.markers:
+					marker.monitoring = false
+				var room := layout.room_rect(layout.room_of_node(0))
+				var center := Kit.cell_to_world(layout.room_center(layout.room_of_node(0)))
+				crawl.player.place_at(center + Vector3(0, 0, room["h"] * Kit.CELL * 0.5 - 2.6), 0)
+				crawl.player.camera.rotation.x = -0.03
 			if mode in ["fight", "tier2fight", "creatures", "inspector", "pause", "roster", "hover"]:
 				await _pick_a_fight(game, crawl)
 				if mode == "inspector":
@@ -283,6 +322,7 @@ func _to_the_exit(game: GameRoot, crawl: Crawl) -> void:
 	run.resolved = []
 	run.node_index = 0
 	run.phase = "node"
+	_snapshot_layout(run)
 	crawl.build_floor()
 	await process_frame
 	# Through run_action, not RunEngine: the panel opens on `run_changed`, and
@@ -306,10 +346,15 @@ func _pick_a_fight(game: GameRoot, crawl: Crawl) -> void:
 		cast = crawl.get_meta("shot_cast")
 	if String(crawl.get_meta("shot_mode", "")) == "creatures":
 		cast = ["bone_rat", "skull_stack", "grave_wisp", "ossuary_warden"]
-	run.nodes = [{"kind": "fight", "enemies": cast}]
+	var kind := "fight"
+	for id in cast:
+		if (game.content.enemies[id] as EnemyDef).kind in ["elite", "boss"]:
+			kind = (game.content.enemies[id] as EnemyDef).kind
+	run.nodes = [{"kind": kind, "enemies": cast}]
 	run.resolved = []
 	run.node_index = 0
 	run.phase = "node"
+	_snapshot_layout(run)
 	crawl.build_floor()
 	await process_frame
 	# Stand where the player would be standing: they walk IN, so they are just
@@ -320,6 +365,8 @@ func _pick_a_fight(game: GameRoot, crawl: Crawl) -> void:
 	crawl.player.place_at(centre - Vector3(0.0, 0.0, Kit.CELL * 1.4), 0.0)
 	await process_frame
 	(crawl.markers[0] as EncounterMarker).report(crawl.player)
+	if (crawl.markers[0] as EncounterMarker).deliberate:
+		(crawl.markers[0] as EncounterMarker).engage()
 	await process_frame
 
 
@@ -333,3 +380,10 @@ func TestFixtures_autofight(run: RunState) -> void:
 			if run.phase != "fight":
 				break
 			RunEngine.apply(run, action)
+
+
+func _snapshot_layout(run: RunState) -> void:
+	var layout := LayoutGenerator.generate_current(run.nodes, run.sub_rng("layout", run.floor))
+	layout.presets = RoomPresets.choose(run.content, layout, run.nodes, run.biome().id, run.sub_rng("presets", run.floor))
+	layout.preset_recipes = RoomPresets.freeze(run.content, layout.presets)
+	run.layout_snapshot = layout.to_dict()

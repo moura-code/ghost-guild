@@ -35,6 +35,9 @@ var stations: Array[Interactable] = []
 var well: WellView
 
 var _by_id: Dictionary = {}
+var history: Node3D
+var _banners: Array[Node3D] = []
+var _ambient_time: float = 0.0
 
 
 ## The guild's floor plan, as the same FloorLayout a dungeon uses -- so the
@@ -94,16 +97,7 @@ func build(campaign: Campaign) -> void:
 		if id != WELL:
 			add_child(_plinth(Kit.cell_to_world(cells[id]), String(id)))
 
-	# The guild gets the same dressing the crypt does, from a fixed seed: it is
-	# one room the player comes home to a thousand times, so it should look the
-	# same every time.
-	var keep_clear: Array = [spawn_cell(), WELL_CELL]
-	for id in cells:
-		keep_clear.append(cells[id])
-	for entry in Dressing.plan(layout, Rng.new(20260829), keep_clear):
-		var prop := Dressing.spawn(entry)
-		if prop != null:
-			add_child(prop)
+	_architecture(campaign)
 
 	_build_well_head()
 	_patch_ceiling_over_the_well()
@@ -113,6 +107,7 @@ func build(campaign: Campaign) -> void:
 	well.position = Kit.cell_to_world(WELL_CELL)
 	add_child(well)
 	well.build(campaign)
+	refresh_history(campaign)
 
 
 ## A waist-high ring of stone around the hole. It is what makes the well a
@@ -238,3 +233,121 @@ func _box(parent: Node3D, name: String, size: Vector3, at: Vector3, material: St
 	var box := BoxMesh.new()
 	box.size = size
 	BoneMesh._part(parent, name, box, material, at)
+
+
+func _architecture(campaign: Campaign) -> void:
+	var stone := RoomComposition.material(Color("514d4d"))
+	var brass := RoomComposition.material(Color("9b7947"), 0.65)
+	var cold := RoomComposition.material(Color("4c8eaf"), 0.2, 0.25)
+	var wood := RoomComposition.material(Color("493226"))
+	var center := Kit.cell_to_world(WELL_CELL)
+	# A canopy frames the arrival view and protects the overlook. Columns sit
+	# outside the well rim; the approach and all five station lanes stay open.
+	for x in [-2.3, 2.3]:
+		for z in [-2.3, 2.3]:
+			var at := center + Vector3(x, 0, z)
+			RoomComposition.box(self, "WellPillar", Vector3(0.34, 2.8, 0.34), at + Vector3.UP * 1.4, stone, true)
+			_box(self, "Capital", Vector3(0.62, 0.2, 0.62), at + Vector3.UP * 2.82, brass)
+	for z in [-2.3, 2.3]:
+		_box(self, "WellArch", Vector3(5.1, 0.20, 0.44), center + Vector3(0, 2.97, z), stone)
+		for x in [-1.0, 1.0]:
+			var brace := RoomComposition.box(self, "ArchShoulder", Vector3(1.2, 0.22, 0.38), center + Vector3(x * 1.85, 2.73, z), brass)
+			brace.rotation.z = x * 0.35
+	var shaft_light := OmniLight3D.new()
+	shaft_light.name = "WellOverlookLight"
+	shaft_light.position = center + Vector3.UP * 1.7
+	shaft_light.light_color = Color("69b8dd")
+	shaft_light.light_energy = 1.8
+	shaft_light.omni_range = 7.0
+	shaft_light.shadow_enabled = false
+	add_child(shaft_light)
+	# Inlaid edges and ribs turn the hall into four purposeful bays.
+	for x in [1.4, 9.1]:
+		_box(self, "FloorBorder", Vector3(0.12, 0.018, 24), Vector3(x * Kit.CELL, 0.018, 15), brass)
+	for z in [1.4, 9.1]:
+		_box(self, "FloorBorder", Vector3(23.2, 0.018, 0.12), Vector3(15, 0.018, z * Kit.CELL), brass)
+	for z in [8.5, 20.5]:
+		_box(self, "CeilingRib", Vector3(26, 0.15, 0.36), Vector3(15, Kit.WALL_H - 0.09, z), stone)
+	for x in [3.0, 27.0]:
+		for z in [12.0, 18.0]:
+			RoomComposition.box(self, "WallPilaster", Vector3(0.5, 2.85, 0.55), Vector3(x, 1.42, z), stone, true)
+	var cells := station_cells()
+	for id in [TABLE, DESK, CIRCLE, HALL]:
+		var at := Kit.cell_to_world(cells[id])
+		var carpet := RoomComposition.material(Color("343c50") if id == CIRCLE else Color("443039"))
+		_box(self, "StationInlay", Vector3(3.4, 0.012, 2.8), at + Vector3.UP * 0.016, carpet)
+		var title := _caption(campaign.content.text("guild.station." + id), at + Vector3(0, 2.5, 0), 0.007)
+		title.modulate = Palette.SOUL if id == CIRCLE else Palette.LANTERN
+		if id == TABLE:
+			_box(self, "CoalHearth", Vector3(1.2, 0.35, 0.6), at + Vector3(-1.4, 0.18, -0.35), stone)
+			_box(self, "Embers", Vector3(0.85, 0.04, 0.4), at + Vector3(-1.4, 0.38, -0.35), RoomComposition.material(Color("c56735"), 0, 0.4))
+		elif id == DESK:
+			for i in 5:
+				_box(self, "ClassBooks", Vector3(0.4, 0.08, 0.3), at + Vector3(-0.4, 1.0 + 0.08 * i, -0.1), brass if i % 2 == 0 else wood)
+		elif id == CIRCLE:
+			for x in [-1.15, 1.15]:
+				RoomComposition.box(self, "RitualPedestal", Vector3(0.28, 0.8, 0.28), at + Vector3(x, 0.4, 0), stone, true)
+				RoomComposition.sphere(self, "SpiritVessel", Vector3(0.26, 0.42, 0.26), at + Vector3(x, 1.0, 0), cold)
+	_caption(campaign.content.text("guild.station.well"), center + Vector3(0, 1.35, 0), 0.007)
+
+
+func _caption(text: String, at: Vector3, pixels: float, parent: Node3D = null) -> Label3D:
+	var label := Label3D.new()
+	label.text = text
+	label.font = UiTheme.body_font()
+	label.font_size = 42
+	label.pixel_size = pixels
+	label.outline_size = 10
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.position = at
+	label.modulate = Palette.BONE
+	(self if parent == null else parent).add_child(label)
+	return label
+
+
+func refresh_history(campaign: Campaign) -> void:
+	if history != null:
+		history.free()
+	_banners.clear()
+	history = Node3D.new()
+	history.name = "GuildHistory"
+	add_child(history)
+	var entries := GuildHistory.entries(campaign)
+	# A kept welcome inscription is present before anything has been earned.
+	_caption(campaign.content.text("guild.history.welcome"), Vector3(15, 2.35, 3.4), 0.009, history)
+	var brass := RoomComposition.material(Color("9b7947"), 0.6)
+	for i in entries.size():
+		var entry: Dictionary = entries[i]
+		var at := Vector3(4.5 + i * 3.2, 0, 4.1)
+		var colour := Color("364c67") if entry["kind"] == "legend" else Color("553541")
+		var banner := RoomComposition.box(history, "EarnedBanner", Vector3(1.55, 1.6, 0.035), at + Vector3.UP * 1.7, RoomComposition.material(colour))
+		banner.set_meta("achievement", entry.duplicate(true))
+		_banners.append(banner)
+		_box(history, "BannerRail", Vector3(1.85, 0.06, 0.10), at + Vector3.UP * 2.52, brass)
+		if entry["kind"] == "biome":
+			if entry["key"] == "fungal_deep":
+				_box(history, "TrophyStem", Vector3(0.10, 0.38, 0.12), at + Vector3(0, 1.82, 0.12), brass)
+				RoomComposition.sphere(history, "TrophyCap", Vector3(0.58, 0.22, 0.30), at + Vector3(0, 2.0, 0.12), RoomComposition.material(Color("668460")))
+			elif entry["key"] == "the_kiln":
+				_box(history, "TrophyHammer", Vector3(0.54, 0.22, 0.20), at + Vector3(0, 2.0, 0.12), brass)
+				_box(history, "TrophyHandle", Vector3(0.10, 0.45, 0.10), at + Vector3(0, 1.78, 0.12), brass)
+			else:
+				RoomComposition.sphere(history, "TrophySkull", Vector3(0.42, 0.48, 0.30), at + Vector3(0, 1.9, 0.10), brass)
+				for x in [-0.09, 0.09]:
+					RoomComposition.sphere(history, "TrophyEye", Vector3(0.08, 0.09, 0.04), at + Vector3(x, 1.94, 0.25), RoomComposition.material(Color("15191d")))
+		elif entry["kind"] == "expedition":
+			_box(history, "ExpeditionCompass", Vector3(0.40, 0.40, 0.12), at + Vector3(0, 1.9, 0.10), brass)
+		var inscription := _caption(entry["title"] + "\n" + entry["reason"], at + Vector3(0, 1.2, 0.12), 0.0022, history)
+		inscription.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		inscription.width = 650
+
+
+func _process(delta: float) -> void:
+	_ambient_time += delta
+	var camera := get_viewport().get_camera_3d()
+	for i in _banners.size():
+		var banner := _banners[i]
+		if Settings.motion_reduced:
+			banner.rotation.z = 0
+		elif camera != null and camera.global_position.distance_squared_to(banner.global_position) < 400:
+			banner.rotation.z = sin(_ambient_time * 0.55 + i) * 0.012

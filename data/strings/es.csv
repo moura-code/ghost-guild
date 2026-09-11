@@ -650,3 +650,14 @@ help.lesson.combat.short,Lee las intenciones y elige ataques y Bloqueo. Inspecci
 help.lesson.rooms.short,Mapa · M muestra los tipos de sala. Lee los letreros antes de entrar.
 help.lesson.upgrade.short,Afila una copia elegida o cúrate aquí. Inspecciona antes de confirmar.
 help.lesson.ghost.short,Tu fantasma gana Almas para mejorar el gremio. Consulta muerte y Guardia en Ayuda.
+guild.station.table,Mejoras
+guild.station.desk,Libro del héroe
+guild.station.circle,Sesión espiritista
+guild.station.hall,Salón de Leyendas
+guild.station.well,El pozo · Descenso
+guild.history.welcome,GHOST GUILD · GUARDAMOS SUS NOMBRES
+guild.history.biome,Reclamado por un fantasma · perdura tras los ritos
+guild.history.legend,Memorial del ciclo {n} · permanente
+guild.history.expedition,Recuerdo de expedición
+guild.history.commissioned,{n} expediciones encargadas · permanente
+help.lesson.combat.compact,"Energía, Bloqueo e intenciones · F1"

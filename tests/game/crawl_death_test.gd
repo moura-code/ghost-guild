@@ -91,6 +91,9 @@ func test_dismissing_the_epitaph_brings_you_home() -> void:
 	c._on_epitaph_dismissed()
 	assert_int(c.place).is_equal(Crawl.Place.GUILD)
 	assert_object(c.guild).is_not_null()
+	assert_bool(c.panel_open()).is_true()
+	assert_object(c.panel).is_same(c.recap)
+	c.close_panel()
 	assert_bool(c.panel_open()).is_false()
 
 

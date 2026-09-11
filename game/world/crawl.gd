@@ -1024,6 +1024,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	var handled := true
 	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_F2 and teaching.visible:
 		_dismiss_lesson(teaching.lesson)
+	elif event is InputEventKey and event.pressed and event.physical_keycode == KEY_F2 and panel == choice and choice.lesson != null and choice.lesson.visible:
+		choice.lesson.dismissed.emit(choice.lesson.lesson)
 	elif event.is_action_pressed("ui_cancel"):
 		if panel == title:
 			pass
@@ -1243,6 +1245,7 @@ func _select_floor(floor: int) -> void:
 func _refresh_ghosts() -> void:
 	if guild != null:
 		guild.well.refresh(game.campaign)
+		guild.refresh_history(game.campaign)
 	if panel == ghost_detail:
 		ghost_detail.refresh()
 	if place == Place.DUNGEON and game.campaign.run != null and is_instance_valid(_world):
@@ -1356,7 +1359,9 @@ func _refresh_teaching() -> void:
 	elif place == Place.GUILD and game.campaign.onboarding.first_death_seen:
 		id = "ghost"
 	if id != "" and not settings.dismissed_lessons.has(id):
-		teaching.present(game.content, id)
+		var compact := id == "combat" and hud.ui.size.y < 300
+		teaching.position = Vector2(hud.ui.size.x - 80, 62) if compact else Vector2(8, 76)
+		teaching.present(game.content, id, compact)
 
 
 func _dismiss_lesson(id: String) -> void:

@@ -307,3 +307,11 @@ monument in `GuildRoom` are also authored in code. Preview lighting and the
 floor schematic add no third-party assets. Existing font, icon, texture and
 audio credits above remain applicable. No new generated bitmap assets were
 added for this integration.
+
+
+## Room presets and Main Hall — original project geometry
+
+`RoomComposition` and the authored `GuildRoom` architecture, tools, banners,
+biome trophies and memorials are original procedural geometry. They reuse the
+existing material, font, icon and spatial torch-audio assets credited above.
+No third-party model, generated bitmap or new audio asset was added.

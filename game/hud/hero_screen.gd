@@ -33,6 +33,7 @@ var _relic_identity: String = ""
 func _init() -> void:
 	add_theme_constant_override("separation", 5)
 	alignment = BoxContainer.ALIGNMENT_CENTER
+	resized.connect(_fit_preview)
 
 
 func bind(g: GameRoot) -> void:
@@ -86,9 +87,10 @@ func _build() -> void:
 	_vitals = ScreenLayout.centre(UiTheme.body(""))
 	identity.add_child(_vitals)
 
-	var stat_row := HBoxContainer.new()
-	stat_row.add_theme_constant_override("separation", 12)
-	stat_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	var stat_row := HFlowContainer.new()
+	stat_row.add_theme_constant_override("h_separation", 8)
+	stat_row.add_theme_constant_override("v_separation", 5)
+	stat_row.alignment = FlowContainer.ALIGNMENT_CENTER
 	for stat in STAT_IDS:
 		# Each stat in its own chip, so the four read as a set of readings
 		# rather than as four loose numbers on a page.
@@ -100,6 +102,7 @@ func _build() -> void:
 		box.add_child(value)
 		box.add_child(ScreenLayout.centre(UiTheme.small(game.text("stat.%s.name" % stat))))
 		var chip := Button.new()
+		chip.custom_minimum_size = Vector2(58, 36)
 		chip.pressed.connect(_explain_stat.bind(String(stat)))
 		chip.focus_entered.connect(_explain_stat.bind(String(stat)))
 		chip.mouse_entered.connect(_explain_stat.bind(String(stat)))
@@ -108,8 +111,9 @@ func _build() -> void:
 		for child in box.get_children():
 			(child as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 		chip.add_child(box)
+		box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		stat_row.add_child(chip)
-	identity.add_child(stat_row)
+	add_child(stat_row)
 	_explanation = UiTheme.body("")
 	_explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_explanation)
@@ -153,11 +157,12 @@ func refresh() -> void:
 		game.text("ui.camp"), hero.camp,
 	]
 	for stat in STAT_IDS:
-		(_stats[stat] as Label).text = str(int(hero.stats.get(stat, 0)))
+		(_stats[stat] as Label).text = str(int((game.campaign.run.hero_snapshot().stats if game.campaign.run != null else hero.stats).get(stat, 0)))
 	_explain_stat(_selected_stat)
 	_refresh_classes(hero)
 	_refresh_relics(hero)
 	_refresh_deck(hero)
+	_fit_preview()
 
 
 ## Which classes this hero could still become.
@@ -325,3 +330,10 @@ func _explain_stat(id: String) -> void:
 	_explanation.text = MechanicsText.stat(game.content, id, int(stats.get(id, 0)))
 	for stat_id in _stat_buttons:
 		(_stat_buttons[stat_id] as Button).tooltip_text = MechanicsText.stat(game.content, stat_id, int(stats.get(stat_id, 0)))
+
+
+func _fit_preview() -> void:
+	if _figure == null or not is_inside_tree():
+		return
+	var logical_height := get_viewport().get_visible_rect().size.y / maxf(1, get_global_transform().get_scale().y)
+	_figure.custom_minimum_size = Vector2(80, 96) if logical_height < 300 else Vector2(145, 170)

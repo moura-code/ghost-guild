@@ -651,3 +651,14 @@ help.lesson.combat.short,"Read intents, then choose attacks and Block. Inspect c
 help.lesson.rooms.short,Map · M shows room types. Match doorway signs before committing.
 help.lesson.upgrade.short,"Sharpen one chosen copy, or heal here. Inspect before committing."
 help.lesson.ghost.short,Your ghost earns Soul. Soul buys lasting guild improvements. Read about death and Watch in Help.
+guild.station.table,Upgrades
+guild.station.desk,Hero ledger
+guild.station.circle,Séance
+guild.station.hall,Hall of Legends
+guild.station.well,The well · Descent
+guild.history.welcome,GHOST GUILD · WE KEEP THEIR NAMES
+guild.history.biome,Claimed by a guild ghost · kept across rites
+guild.history.legend,Memorial of cycle {n} · permanent
+guild.history.expedition,Expedition keepsake
+guild.history.commissioned,{n} expeditions commissioned · permanent
+help.lesson.combat.compact,"Energy, Block and intents · F1"
