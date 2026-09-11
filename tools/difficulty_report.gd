@@ -1,12 +1,17 @@
 extends SceneTree
 ## Local diagnostics, deliberately separate from RunStats and ghost strength.
-## godot --headless --path . -s tools/difficulty_report.gd -- out.json [30|100] [development|held_out] [safe|all] [max_floor] [profiles_csv]
+## godot --headless --path . -s tools/difficulty_report.gd -- out.json [30|100] [development|held_out|validation] [safe|all] [floor_span] [profiles_csv]
+
+const SEED_BASES := {"development": 73019, "held_out": 970003, "validation": 1900001}
+const SEED_STRIDE := 7919
 
 const PROFILES := {
 	"fresh_sexton": {"class": "sexton", "upgrades": {}, "entry": 1, "blessing": 1.0},
 	"early_purchases": {"class": "sexton", "upgrades": {"might": 1, "wit": 1, "vigor": 1}, "entry": 1, "blessing": 1.0},
 	"unlocked_hexer": {"class": "hexer", "upgrades": {"might": 1, "wit": 1, "vigor": 1}, "entry": 1, "blessing": 1.0},
 	"later_cycle": {"class": "sexton", "upgrades": {"might": 3, "wit": 3, "vigor": 3, "focus": 3}, "entry": 31, "blessing": 1.25},
+	"prepared_cycle": {"class": "sexton", "upgrades": {"might": 3, "wit": 3, "vigor": 3, "focus": 3}, "entry": 31,
+		"legend_masses": [1600.0, 1600.0], "claimed_pools": ["catacombs", "fungal_deep", "the_kiln"]},
 }
 const POLICIES := ["attack_first", "defense_aware", "lookahead"]
 
@@ -24,7 +29,7 @@ func _init() -> void:
 	var route := String(args[3]) if args.size() > 3 else "all"
 	var limit := int(args[4]) if args.size() > 4 else 10
 	var profiles: Array = Array(String(args[5]).split(",")) if args.size() > 5 else PROFILES.keys()
-	if count <= 0 or not seed_set in ["development", "held_out"] or not route in ["safe", "all"] or limit < 1:
+	if count <= 0 or not SEED_BASES.has(seed_set) or not route in ["safe", "all"] or limit < 1:
 		push_error("Invalid difficulty-report arguments")
 		quit(1)
 		return
@@ -34,21 +39,26 @@ func _init() -> void:
 		print(errors)
 		quit(1)
 		return
-	var report := {"engine": Engine.get_version_info()["string"], "seed_set": seed_set,
-		"samples_per_profile_policy": count, "optional_policy": route, "profiles": PROFILES,
-		"clock": 1000, "max_floor": limit, "rows": [], "summaries": []}
-	var terminated := true
+	var definitions := {}
 	for profile in profiles:
 		if not PROFILES.has(profile):
 			push_error("Unknown profile: " + str(profile))
 			quit(1)
 			return
+		definitions[profile] = profile_definition(content, String(profile))
+	var report := {"engine": engine["string"], "engine_hash": engine["hash"],
+		"content_revision": content.balance.get("revision", "baseline"), "seed_set": seed_set,
+		"seed_base": SEED_BASES[seed_set], "seed_stride": SEED_STRIDE,
+		"samples_per_profile_policy": count, "optional_policy": route, "profiles": definitions,
+		"clock": 1000, "max_floor": limit, "rows": [], "summaries": []}
+	var terminated := true
+	for profile in profiles:
 		for policy in POLICIES:
 			var rows: Array = []
 			for i in count:
 				# Disjoint, versioned arithmetic sets; no engine-global RNG.
-				var seed_value := (73019 if seed_set == "development" else 970003) + i * 7919
-				var row := sample(content, String(profile), String(policy), route, seed_value, limit)
+				var seed_value := int(SEED_BASES[seed_set]) + i * SEED_STRIDE
+				var row := sample(content, String(profile), String(policy), route, seed_value, limit, definitions[profile])
 				terminated = terminated and row["terminated"]
 				rows.append(row)
 				report["rows"].append(row)
@@ -66,13 +76,24 @@ func _init() -> void:
 	quit(0 if terminated else 1)
 
 
-static func sample(content: Content, profile: String, policy: String, route: String, seed_value: int, limit: int) -> Dictionary:
-	var definition: Dictionary = PROFILES[profile]
+static func profile_definition(content: Content, profile: String) -> Dictionary:
+	var definition: Dictionary = PROFILES[profile].duplicate(true)
+	if definition.has("legend_masses"):
+		definition["blessing"] = 1.0
+		for mass in definition["legend_masses"]:
+			definition["blessing"] *= Legends.multiplier(content, float(mass))
+	return definition
+
+
+static func sample(content: Content, profile: String, policy: String, route: String, seed_value: int, limit: int, definition: Dictionary = {}) -> Dictionary:
+	if definition.is_empty():
+		definition = profile_definition(content, profile)
 	var upgrades := Upgrades.from_dict({"levels": definition["upgrades"]})
 	var hero := Hero.create(content, definition["class"], profile, upgrades.modifiers(content)["stats"])
 	var entry := int(definition["entry"])
-	var run := RunEngine.start_run(content, hero, entry, seed_value, false, [], float(definition["blessing"]))
-	var row := {"profile": profile, "policy": policy, "route": route, "seed": seed_value,
+	var run := RunEngine.start_run(content, hero, entry, seed_value, false, definition.get("claimed_pools", []), float(definition["blessing"]))
+	var row := {"profile": profile, "policy": policy, "route": route, "seed": seed_value, "entry_floor": entry,
+		"blessing": run.blessing, "claimed_pools": run.claimed_pools.duplicate(),
 		"upgrades": definition["upgrades"].duplicate(), "starting_hero": hero.to_dict(),
 		"starting_hp": hero.hp, "ending_hp": hero.hp, "gross_damage": 0, "blocked": 0,
 		"healing": 0, "turns": 0, "enemy_actions": 0, "coin_spent": 0,
@@ -94,7 +115,8 @@ static func sample(content: Content, profile: String, policy: String, route: Str
 					RunEngine.apply(run, action)
 			var measured := fight_metrics(fight)
 			measured.merge({"floor": floor_value, "kind": kind, "starting_hp": before,
-				"ending_hp": fight.hero_hp, "won": fight.phase == "won", "turns": fight.turn})
+				"ending_hp": fight.hero_hp, "won": fight.phase == "won", "turns": fight.turn,
+				"enemies": run.current_node().get("enemies", []).duplicate()})
 			row["fights"].append(measured)
 			for key in ["gross_damage", "blocked", "healing", "enemy_actions", "turns"]:
 				row[key] += measured[key]
@@ -214,20 +236,34 @@ static func distribution(values: Array) -> Dictionary:
 
 static func summarize(rows: Array) -> Dictionary:
 	var summary := {"profile": rows[0]["profile"], "policy": rows[0]["policy"], "route": rows[0]["route"], "n": rows.size(), "deaths": 0}
+	var entry := int(rows[0].get("entry_floor", 1))
+	summary["entry_floor"] = entry
+	summary["checkpoint_floor"] = entry + 3
 	for metric in ["gross_damage", "blocked", "healing", "turns", "enemy_actions", "depth", "coin_spent"]:
 		summary[metric] = distribution(rows.map(func(row: Dictionary) -> Variant: return row[metric]))
 	var losses: Array = []
 	var ordinary_turns: Array = []
+	var checkpoint_losses: Array = []
+	var opening_turns: Array = []
+	var first_wins := 0
 	for row in rows:
 		if row["outcome"].get("kind") == "death":
 			summary["deaths"] += 1
 		for floor_exit in row["floor_exits"]:
 			if floor_exit["floor"] == 4:
 				losses.append(1.0 - float(floor_exit["hp"]) / float(floor_exit["max_hp"]))
-				break
+			if floor_exit["floor"] == entry + 3:
+				checkpoint_losses.append(1.0 - float(floor_exit["hp"]) / float(floor_exit["max_hp"]))
+		if not row["fights"].is_empty() and row["fights"][0]["won"]:
+			first_wins += 1
 		for fight in row["fights"]:
 			if fight["kind"] == "fight" and int(fight["floor"]) in [2, 3, 4] and fight["won"]:
 				ordinary_turns.append(fight["turns"])
+			if fight["kind"] == "fight" and int(fight["floor"]) in [entry + 1, entry + 2, entry + 3] and fight["won"]:
+				opening_turns.append(fight["turns"])
 	summary["floor4_exit_net_loss_survivors"] = distribution(losses)
 	summary["floor2_4_normal_win_turns"] = distribution(ordinary_turns)
+	summary["checkpoint_exit_net_loss_survivors"] = distribution(checkpoint_losses)
+	summary["opening_normal_win_turns"] = distribution(opening_turns)
+	summary["first_fight_wins"] = first_wins
 	return summary
