@@ -15,7 +15,7 @@ func test_it_offers_the_five_things_worth_offering() -> void:
 	var m := _options()
 	for id in ["sensitivity", "fov", "master_volume"]:
 		assert_bool(m.sliders.has(id)).override_failure_message("no slider for %s" % id).is_true()
-	for id in ["invert_y", "fullscreen"]:
+	for id in ["invert_y", "fullscreen", "minimap"]:
 		assert_bool(m.checks.has(id)).override_failure_message("no toggle for %s" % id).is_true()
 
 
@@ -60,3 +60,12 @@ func test_back_says_so() -> void:
 		if (child as Button).text == TestFixtures.content().text("ui.menu.back"):
 			(child as Button).emit_signal("pressed")
 	assert_int(int(closed[0])).is_equal(1)
+
+
+func test_minimap_toggle_is_a_live_preference() -> void:
+	var s := Settings.defaults()
+	var m := _options(s)
+	(m.checks["minimap"] as CheckBox).button_pressed = true
+	assert_bool(s.minimap).is_true()
+	var rebuilt := _options(s)
+	assert_bool((rebuilt.checks["minimap"] as CheckBox).button_pressed).is_true()

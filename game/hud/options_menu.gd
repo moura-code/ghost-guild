@@ -62,6 +62,7 @@ func build(content: Content, s: Settings) -> void:
 	_check(content, "fullscreen", "ui.options.fullscreen", s.fullscreen)
 	_slider(content, "ui_scale", "ui.options.ui_scale", 1.0, 1.5, 0.25, s.ui_scale)
 	_check(content, "reduced_motion", "ui.options.reduced_motion", s.reduced_motion)
+	_check(content, "minimap", "ui.options.minimap", s.minimap)
 	_language(content, s)
 
 	_column.add_child(HSeparator.new())
@@ -106,6 +107,7 @@ func commit() -> void:
 	settings.fov = float((sliders["fov"] as HSlider).value)
 	settings.master_volume = float((sliders["master_volume"] as HSlider).value)
 	settings.ui_scale = float((sliders["ui_scale"] as HSlider).value)
+	settings.minimap = (checks["minimap"] as CheckBox).button_pressed
 	settings.reduced_motion = (checks["reduced_motion"] as CheckBox).button_pressed
 	settings.invert_y = (checks["invert_y"] as CheckBox).button_pressed
 	settings.fullscreen = (checks["fullscreen"] as CheckBox).button_pressed

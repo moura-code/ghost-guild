@@ -661,3 +661,4 @@ guild.history.legend,Memorial del ciclo {n} · permanente
 guild.history.expedition,Recuerdo de expedición
 guild.history.commissioned,{n} expediciones encargadas · permanente
 help.lesson.combat.compact,"Energía, Bloqueo e intenciones · F1"
+ui.options.minimap,"Mostrar minimapa al explorar"

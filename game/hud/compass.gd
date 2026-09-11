@@ -8,9 +8,7 @@ extends Control
 ## near-identical corridors hoping to bump into a glow. A crawler is allowed to
 ## make you walk; it is not allowed to make you guess.
 ##
-## Deliberately not a minimap. A minimap tells you the shape of the floor and
-## turns exploring into reading a diagram; a bearing tells you the direction
-## and leaves the walking to you.
+## The optional minimap complements bearings with the floor schematic.
 
 const HEIGHT := 16.0
 const TOP := 8.0

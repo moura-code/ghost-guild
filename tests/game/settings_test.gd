@@ -19,6 +19,7 @@ func test_a_fresh_install_gets_playable_defaults() -> void:
 	var s := Settings.defaults()
 	assert_float(s.sensitivity).is_equal(1.0)
 	assert_bool(s.invert_y).is_false()
+	assert_bool(s.minimap).is_false()
 	assert_float(s.fov).is_between(Settings.FOV_MIN, Settings.FOV_MAX)
 	assert_float(s.master_volume).is_greater(0.0)
 
@@ -30,6 +31,7 @@ func test_what_you_choose_survives_a_restart() -> void:
 	s.fov = 95.0
 	s.master_volume = 0.3
 	s.fullscreen = true
+	s.minimap = true
 	assert_int(s.save(TMP)).is_equal(OK)
 	var back := Settings.load_from(TMP)
 	assert_float(back.sensitivity).is_equal_approx(1.9, 0.001)
@@ -37,6 +39,7 @@ func test_what_you_choose_survives_a_restart() -> void:
 	assert_float(back.fov).is_equal_approx(95.0, 0.001)
 	assert_float(back.master_volume).is_equal_approx(0.3, 0.001)
 	assert_bool(back.fullscreen).is_true()
+	assert_bool(back.minimap).is_true()
 
 
 func test_a_missing_file_is_defaults_and_not_a_crash() -> void:

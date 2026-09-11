@@ -84,6 +84,8 @@ var _panel_focus: Dictionary = {}
 var _frames: Dictionary = {}
 var campaign_menu: CampaignMenu
 var floor_map: FloorMap
+var minimap: FloorSchematic
+var _minimap_elapsed := 0.0
 var _focused_ghost_id: int = 0
 var _map_marker := Vector2i(-1, -1)
 var ghost_detail: GhostDetail
@@ -187,6 +189,14 @@ func _build_hud() -> void:
 	_map_button.position = Vector2(8, 30)
 	_map_button.pressed.connect(_open_map)
 	hud.ui.add_child(_map_button)
+	minimap = FloorSchematic.new()
+	minimap.compact = true
+	minimap.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	minimap.offset_left = -140
+	minimap.offset_right = -8
+	minimap.offset_top = 94
+	minimap.offset_bottom = 202
+	hud.ui.add_child(minimap)
 	compass = Compass.new()
 	hud.ui.add_child(compass)
 
@@ -379,6 +389,9 @@ func _apply_input_context() -> void:
 	crosshair.visible = panel == null and not fighting
 	compass.visible = panel == null and not fighting
 	_map_button.visible = _exploring() and place == Place.DUNGEON
+	minimap.visible = _map_button.visible and settings != null and settings.minimap
+	if minimap.visible:
+		minimap.bind(layout, game.campaign.run, player.global_position, player.rotation.y, _map_marker)
 	_refresh_teaching()
 
 
@@ -953,6 +966,11 @@ func _stand_in(room_index: int) -> Vector3:
 ## The reticle opens on anything you could act on: a station in the guild, a
 ## room you have not cleared, the stairs once they are open.
 func _process(_delta: float) -> void:
+	if minimap != null and minimap.visible and player != null:
+		_minimap_elapsed += _delta
+		if _minimap_elapsed >= 0.1:
+			_minimap_elapsed = 0.0
+			minimap.bind(layout, game.campaign.run, player.global_position, player.rotation.y, _map_marker)
 	if _exploring():
 		_focus_room()
 		if _room_focus == null and not _room_hint:

@@ -8,7 +8,7 @@ extends SceneTree
 ##   godot --path . --rendering-method forward_plus --resolution 1280x720 \
 ##         -s tools/hud_shot.gd -- <out.png> <mode> [frames] [width height] [ui_scale] [locale]
 ##
-## Modes: walk, fight, reward, guild, panel, expedition, offline, exit, watch,
+## Modes: walk, minimap, fight, reward, guild, panel, expedition, offline, exit, watch,
 ## deep, kiln, tier2, tier2fight, creatures, ladder, ladderdeep, seance, hero,
 ## hexer, hall, title, help, options, ghost, map, death, watch_result, inspector,
 ## pause, hover, rest, upgrade, shop, event, hero_crowded, panel_wealthy,
@@ -52,6 +52,7 @@ func _init() -> void:
 	var shot_settings := Settings.new()
 	shot_settings.ui_scale = float(args[5]) if args.size() > 5 else 1.0
 	shot_settings.locale = String(args[6]) if args.size() > 6 else "en"
+	shot_settings.minimap = mode == "minimap"
 	shot_settings.reduced_motion = args.size() > 7 and String(args[7]) == "reduced"
 	if mode.begins_with("room:"):
 		shot_settings.dismissed_lessons = ["combat", "upgrade", "rooms", "ghost"]

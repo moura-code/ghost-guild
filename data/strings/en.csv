@@ -662,3 +662,4 @@ guild.history.legend,Memorial of cycle {n} · permanent
 guild.history.expedition,Expedition keepsake
 guild.history.commissioned,{n} expeditions commissioned · permanent
 help.lesson.combat.compact,"Energy, Block and intents · F1"
+ui.options.minimap,"Show minimap while exploring"

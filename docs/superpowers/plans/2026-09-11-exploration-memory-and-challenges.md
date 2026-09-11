@@ -29,12 +29,12 @@ is implemented, checked, committed and pushed before the next part begins.
 
 ## D1 — Optional live minimap
 
-- [ ] Add a saved Options preference, off by default, and a compact live
+- [x] Add a saved Options preference, off by default, and a compact live
   dungeon schematic that does not capture input or pause exploration.
-- [ ] Reuse the full map's geometry, room icons, completion/service state,
+- [x] Reuse the full map's geometry, room icons, completion/service state,
   stairs, player heading and selected destination. Hide it in the guild,
   combat and modal panels; keep it within the scaled HUD at compact sizes.
-- [ ] Verify preference persistence, visibility, heading/marker updates and
+- [x] Verify preference persistence, visibility, heading/marker updates and
   read-only behavior. Review compact EN/ES Options and exploration.
 
 Files: `game/settings.gd`, `game/hud/options_menu.gd`, `floor_map.gd`, a shared
@@ -112,3 +112,19 @@ strings, demos/reports and relevant tests.
 This section is updated with each delivered part. Record test assertions and
 process exit status separately; do not imply novice testing or lower-spec
 performance certification from automated/native development checks.
+
+
+### D1 delivered
+
+The shared `FloorSchematic` draws full and compact maps from the same live
+room records. The off-by-default preference persists in `settings.cfg`;
+exploration updates run at 10 Hz and stop while hidden. Map selection, player
+heading and shop availability use existing authoritative state.
+
+Validation: 43 cases across settings, Options, hybrid context and crawl-loop
+suites passed, with zero errors/failures/skips/orphans; process exit 0.
+Native Forward+ captures at 960×540, Spanish 150%, reduced motion show the
+minimap and scrolled Options without clipped controls (both exit 0).
+The capture harness logged X11 `NO GRAB` while attempting initial mouse
+capture; framebuffer output succeeded. This does not establish native input
+capture behavior. Local logs/captures: `reports/exploration/d1-*`.

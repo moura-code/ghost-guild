@@ -27,6 +27,7 @@ var master_volume: float = 0.8
 var fullscreen: bool = false
 var ui_scale: float = 1.0
 var reduced_motion: bool = false
+var minimap: bool = false
 static var motion_reduced: bool = false
 ## Which `data/strings/<locale>.csv` is loaded over the English one.
 ## Beside the save rather than in it, like everything else here: a
@@ -49,6 +50,7 @@ func to_dict() -> Dictionary:
 		"fullscreen": fullscreen,
 		"ui_scale": ui_scale,
 		"reduced_motion": reduced_motion,
+		"minimap": minimap,
 		"locale": locale,
 		"active_slot": active_slot,
 		"dismissed_lessons": dismissed_lessons.duplicate(),
@@ -65,6 +67,7 @@ func from_dict(d: Dictionary) -> void:
 	fullscreen = bool(d.get("fullscreen", fullscreen))
 	ui_scale = clampf(float(d.get("ui_scale", ui_scale)), 1.0, 1.5)
 	reduced_motion = bool(d.get("reduced_motion", reduced_motion))
+	minimap = bool(d.get("minimap", minimap))
 	var wanted := String(d.get("locale", locale))
 	locale = wanted if LOCALES.has(wanted) else "en"
 	var slot := String(d.get("active_slot", "slot1"))

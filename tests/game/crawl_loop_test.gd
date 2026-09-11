@@ -178,3 +178,40 @@ func test_the_stairs_open_the_exit_decision_and_pushing_builds_the_next_floor() 
 	assert_int(g.campaign.run.floor).is_equal(started + 1)
 	assert_bool(c.panel_open()).is_false()
 	assert_str(g.campaign.run.phase).is_equal("node")
+
+
+func test_minimap_tracks_exploration_without_mutating_the_run() -> void:
+	var g := _game()
+	var c := _on_floor(g)
+	assert_bool(c.minimap.visible).is_false()
+	c.settings.minimap = true
+	c._apply_input_context()
+	var before := JSON.stringify(g.campaign.run.to_dict())
+	var at := Kit.cell_to_world(c.layout.room_center(c.layout.entry_room))
+	c.player.position = at
+	c.player.rotation.y = 0.6
+	c._process(0.11)
+	assert_bool(c.minimap.visible).is_true()
+	assert_int(c.minimap.mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
+	assert_object(c.minimap.layout).is_same(c.layout)
+	assert_vector(c.minimap.player_at).is_equal(at)
+	assert_float(c.minimap.player_yaw).is_equal_approx(0.6, 0.001)
+	c._open_map()
+	assert_bool(c.minimap.visible).is_false()
+	var target := c.layout.room_center(c.layout.stairs_room)
+	c.floor_map.select_cell(target)
+	c.close_panel()
+	assert_bool(c.minimap.visible).is_true()
+	assert_vector(c.minimap.marker).is_equal(target)
+	assert_str(JSON.stringify(g.campaign.run.to_dict())).is_equal(before)
+	c._open_pause()
+	assert_bool(c.minimap.visible).is_false()
+	c.close_panel()
+	var fight_index := -1
+	for i in g.campaign.run.nodes.size():
+		if g.campaign.run.nodes[i]["kind"] in ["fight", "elite", "boss"]:
+			fight_index = i
+			break
+	assert_int(fight_index).is_greater_equal(0)
+	g.run_action({"kind": "enter", "index": fight_index})
+	assert_bool(c.minimap.visible).is_false()
