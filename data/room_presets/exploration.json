@@ -1,0 +1,71 @@
+[
+  {
+    "id": "catacombs_sealed_archive",
+    "biome": "catacombs",
+    "roles": [
+      "fight",
+      "event",
+      "rest"
+    ],
+    "min_size": 4,
+    "weight": 4,
+    "repeat_limit": 1,
+    "composition": "archive",
+    "walking_lane_cells": 1,
+    "combat_radius_cells": 1,
+    "service_anchor": "southeast",
+    "ghost_anchor": "center",
+    "prop_sockets": "wall_only",
+    "doorway_anchors": "perimeter",
+    "light_budget": 0,
+    "ambient_budget": 2,
+    "recipe_version": 1,
+    "max_size": 6
+  },
+  {
+    "id": "fungal_deep_hanging_nursery",
+    "biome": "fungal_deep",
+    "roles": [
+      "fight",
+      "event",
+      "elite"
+    ],
+    "min_size": 4,
+    "weight": 4,
+    "repeat_limit": 1,
+    "composition": "nursery",
+    "walking_lane_cells": 1,
+    "combat_radius_cells": 1,
+    "service_anchor": "southeast",
+    "ghost_anchor": "center",
+    "prop_sockets": "wall_only",
+    "doorway_anchors": "perimeter",
+    "light_budget": 0,
+    "ambient_budget": 2,
+    "recipe_version": 1,
+    "max_size": 6
+  },
+  {
+    "id": "the_kiln_cooling_gallery",
+    "biome": "the_kiln",
+    "roles": [
+      "fight",
+      "rest",
+      "event"
+    ],
+    "min_size": 4,
+    "weight": 4,
+    "repeat_limit": 1,
+    "composition": "cooling",
+    "walking_lane_cells": 1,
+    "combat_radius_cells": 1,
+    "service_anchor": "southeast",
+    "ghost_anchor": "center",
+    "prop_sockets": "wall_only",
+    "doorway_anchors": "perimeter",
+    "light_budget": 0,
+    "ambient_budget": 2,
+    "recipe_version": 1,
+    "max_size": 6
+  }
+]

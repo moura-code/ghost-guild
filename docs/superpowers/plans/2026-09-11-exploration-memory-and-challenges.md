@@ -42,13 +42,13 @@ schematic control, `game/world/crawl.gd`, EN/ES strings and focused game tests.
 
 ## D2 — Three new events and three room compositions
 
-- [ ] Author one event per biome, each with two meaningful alternatives and
+- [x] Author one event per biome, each with two meaningful alternatives and
   a free leave option. Reuse previewable existing effects; show exact costs
   and benefit duration. No surprise combat or repeatable rewards.
-- [ ] Add one recognizable composition per biome using existing procedural
+- [x] Add one recognizable composition per biome using existing procedural
   props/materials, wall sockets, staging clearance and zero extra lights.
   Preserve frozen recipes on active floors and isolated presentation RNG.
-- [ ] Validate content and translations, event affordability/once-only
+- [x] Validate content and translations, event affordability/once-only
   outcomes, preset selection and a 100-seed physical-clearance sweep.
 
 Files: `data/events/`, `data/room_presets/`, `core/run/room_presets.gd`,
@@ -128,3 +128,25 @@ minimap and scrolled Options without clipped controls (both exit 0).
 The capture harness logged X11 `NO GRAB` while attempting initial mouse
 capture; framebuffer output succeeded. This does not establish native input
 capture behavior. Local logs/captures: `reports/exploration/d1-*`.
+
+
+### D2 delivered
+
+Added the Silent Bell (20 Coin for up to 10 HP, or 6 HP for 30 Coin),
+Spore Press (30 Coin for Spore Cloud, or 15% maximum-HP healing) and Cooling
+Trough (25 Coin for 20% healing, or 8 HP for +1 Might for this hero). All three
+have free leave choices and EN/ES effect previews. New event IDs enter only
+future-generated floors. No enemy/card/reward/production values changed.
+The autopilot now takes the first affordable event choice; the old unconditional
+index-zero policy would loop at a trade it could not pay for.
+
+The sealed archive, hanging nursery and cooling gallery add distinct wall
+silhouettes with two ambient effects and no added lights per room. Frozen
+active recipes retain their previous geometry after content updates.
+
+Validation: 273 core content/run and focused game cases passed, zero
+errors/failures/skips/orphans, process exit 0. This includes 100 seeds for
+physical clearance and 300 biome/seed combinations for preset selection.
+Native captures of all three compositions at 1280×720 and the Silent Bell
+at 960×540 Spanish 150% completed with exit 0; compact choices use the existing
+scroll surface. Local evidence: `reports/exploration/d2-*`.

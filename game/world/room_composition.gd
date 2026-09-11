@@ -66,6 +66,27 @@ func _room(layout: FloorLayout, index: int, recipe: Dictionary) -> void:
 		socket.rotation.y = atan2(float(back.x), float(back.y))
 		add_child(socket)
 		match composition:
+			"archive":
+				box(socket, "ArchiveCase", Vector3(1.5, 2.2, 0.35), Vector3(0, 1.1, 0.1), wood, true)
+				for level in 3:
+					box(socket, "ReadingShelf", Vector3(1.55, 0.08, 0.55), Vector3(0, 0.5 + level * 0.6, -0.06), iron)
+					for book in 4:
+						box(socket, "Ledger", Vector3(0.18, 0.3 + (book % 2) * 0.12, 0.22), Vector3(-0.5 + book * 0.32, 0.72 + level * 0.6, -0.16), bone if book % 2 == 0 else wood)
+			"nursery":
+				box(socket, "HangingFrame", Vector3(1.5, 0.16, 0.45), Vector3(0, 2.75, 0), wood)
+				for pod in 3:
+					var height := 1.3 + pod * 0.3
+					box(socket, "Tendril", Vector3(0.05, 2.7 - height, 0.05), Vector3((pod - 1) * 0.5, (2.7 + height) * 0.5, 0), wood)
+					sphere(socket, "SeedPod", Vector3(0.4, 0.65, 0.4), Vector3((pod - 1) * 0.5, height, 0), green)
+				box(socket, "SeedTray", Vector3(1.5, 0.35, 0.6), Vector3(0, 0.175, 0), stone, true)
+				_activity(socket, Vector3(0, 1.6, -0.3), green, int(recipe["ambient_budget"]))
+			"cooling":
+				box(socket, "QuenchTrough", Vector3(1.55, 0.65, 0.6), Vector3(0, 0.325, 0), iron, true)
+				box(socket, "CoolingWater", Vector3(1.35, 0.03, 0.48), Vector3(0, 0.66, 0), spectral)
+				for blade in 4:
+					box(socket, "CoolingBlade", Vector3(0.14, 1.1 + (blade % 2) * 0.3, 0.10), Vector3(-0.55 + blade * 0.35, 1.15, 0.1), bone)
+				box(socket, "BladeRack", Vector3(1.6, 0.13, 0.2), Vector3(0, 1.6, 0.12), iron)
+				_activity(socket, Vector3(0, 0.9, -0.18), spectral, int(recipe["ambient_budget"]))
 			"aisle":
 				box(socket, "Sarcophagus", Vector3(1.5, 0.65, 0.6), Vector3(0, 0.325, 0), stone, true)
 				box(socket, "Lid", Vector3(1.65, 0.10, 0.68), Vector3(0, 0.71, 0), bone)

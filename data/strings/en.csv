@@ -663,3 +663,18 @@ guild.history.expedition,Expedition keepsake
 guild.history.commissioned,{n} expeditions commissioned · permanent
 help.lesson.combat.compact,"Energy, Block and intents · F1"
 ui.options.minimap,"Show minimap while exploring"
+event.silent_bell.name,The Silent Bell
+event.silent_bell.text,A bell keeper offers clean bandages. A cracked bell above the offering bowl will release its coins if you pull the barbed rope.
+event.silent_bell.mend,Buy the bandages
+event.silent_bell.ring,Pull the rope
+event.silent_bell.leave,Leave the bell in silence
+event.spore_press.name,The Spore Press
+event.spore_press.text,A sealed press turns ripe caps into a bottled weapon. A basket of tender caps beside it could instead help you recover.
+event.spore_press.bottle,Bottle a Spore Cloud
+event.spore_press.distill,Eat the tender caps
+event.spore_press.leave,Leave the press untouched
+event.cooling_trough.name,The Cooling Trough
+event.cooling_trough.text,The last clean water in the foundry can cool your wounds. The smith also offers to temper your grip on a hot iron bar.
+event.cooling_trough.quench,Buy the clean water
+event.cooling_trough.temper,Temper your grip
+event.cooling_trough.leave,Leave the iron to cool

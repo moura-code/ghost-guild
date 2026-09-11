@@ -18,7 +18,7 @@ func test_slice_content_volume() -> void:
 	assert_int(c.relics.size()).is_greater_equal(6)
 	assert_int(c.classes.size()).is_greater_equal(1)
 	assert_int(c.biomes.size()).is_greater_equal(1)
-	assert_int(c.events.size()).is_equal(3)
+	assert_int(c.events.size()).is_greater_equal(6)
 	# The M1 slice shipped ten upgrade nodes (spec §7). M2 is growing toward
 	# the forty at launch, so this is a floor rather than an equality: it
 	# still catches a data file that failed to load, which is what it was

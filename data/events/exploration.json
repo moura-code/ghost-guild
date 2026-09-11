@@ -1,0 +1,122 @@
+[
+  {
+    "id": "silent_bell",
+    "name": "event.silent_bell.name",
+    "text": "event.silent_bell.text",
+    "biome": "catacombs",
+    "choices": [
+      {
+        "id": "mend",
+        "text": "event.silent_bell.mend",
+        "effects": [
+          {
+            "op": "coin",
+            "amount": -20
+          },
+          {
+            "op": "heal",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "id": "ring",
+        "text": "event.silent_bell.ring",
+        "effects": [
+          {
+            "op": "damage",
+            "amount": 6
+          },
+          {
+            "op": "coin",
+            "amount": 30
+          }
+        ]
+      },
+      {
+        "id": "leave",
+        "text": "event.silent_bell.leave",
+        "effects": []
+      }
+    ]
+  },
+  {
+    "id": "spore_press",
+    "name": "event.spore_press.name",
+    "text": "event.spore_press.text",
+    "biome": "fungal_deep",
+    "choices": [
+      {
+        "id": "bottle",
+        "text": "event.spore_press.bottle",
+        "effects": [
+          {
+            "op": "coin",
+            "amount": -30
+          },
+          {
+            "op": "add_card",
+            "card": "spore_cloud"
+          }
+        ]
+      },
+      {
+        "id": "distill",
+        "text": "event.spore_press.distill",
+        "effects": [
+          {
+            "op": "heal_percent",
+            "amount": 15
+          }
+        ]
+      },
+      {
+        "id": "leave",
+        "text": "event.spore_press.leave",
+        "effects": []
+      }
+    ]
+  },
+  {
+    "id": "cooling_trough",
+    "name": "event.cooling_trough.name",
+    "text": "event.cooling_trough.text",
+    "biome": "the_kiln",
+    "choices": [
+      {
+        "id": "quench",
+        "text": "event.cooling_trough.quench",
+        "effects": [
+          {
+            "op": "coin",
+            "amount": -25
+          },
+          {
+            "op": "heal_percent",
+            "amount": 20
+          }
+        ]
+      },
+      {
+        "id": "temper",
+        "text": "event.cooling_trough.temper",
+        "effects": [
+          {
+            "op": "damage",
+            "amount": 8
+          },
+          {
+            "op": "hero_stat",
+            "stat": "might",
+            "amount": 1
+          }
+        ]
+      },
+      {
+        "id": "leave",
+        "text": "event.cooling_trough.leave",
+        "effects": []
+      }
+    ]
+  }
+]

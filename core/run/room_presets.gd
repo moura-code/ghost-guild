@@ -73,7 +73,7 @@ static func valid_recipe(recipe: Dictionary) -> bool:
 	for role in recipe["roles"]:
 		if not role in ["fight", "elite", "boss", "event", "rest", "shop"]:
 			return false
-	if not recipe.get("composition") in ["aisle", "vault", "ossuary", "ritual", "workroom", "merchant", "garden", "roots", "cistern", "furnace", "gantry", "foundry"]:
+	if not recipe.get("composition") in ["aisle", "vault", "ossuary", "ritual", "workroom", "merchant", "garden", "roots", "cistern", "furnace", "gantry", "foundry", "archive", "nursery", "cooling"]:
 		return false
 	return recipe.get("service_anchor") == "southeast" and recipe.get("ghost_anchor") == "center" \
 		and recipe.get("prop_sockets") == "wall_only" and recipe.get("doorway_anchors") == "perimeter"

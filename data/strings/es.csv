@@ -662,3 +662,18 @@ guild.history.expedition,Recuerdo de expedición
 guild.history.commissioned,{n} expediciones encargadas · permanente
 help.lesson.combat.compact,"Energía, Bloqueo e intenciones · F1"
 ui.options.minimap,"Mostrar minimapa al explorar"
+event.silent_bell.name,La campana muda
+event.silent_bell.text,Un campanero ofrece vendas limpias. La campana agrietada sobre el cuenco soltará sus monedas si tiras de la cuerda espinosa.
+event.silent_bell.mend,Comprar las vendas
+event.silent_bell.ring,Tirar de la cuerda
+event.silent_bell.leave,Dejar la campana en silencio
+event.spore_press.name,La prensa de esporas
+event.spore_press.text,Una prensa sellada convierte hongos maduros en un arma embotellada. Una cesta de brotes tiernos a su lado podría ayudarte a recuperar fuerzas.
+event.spore_press.bottle,Embotellar una Nube de esporas
+event.spore_press.distill,Comer los brotes tiernos
+event.spore_press.leave,Dejar la prensa intacta
+event.cooling_trough.name,La pila de enfriamiento
+event.cooling_trough.text,La última agua limpia de la fundición puede aliviar tus heridas. El herrero también ofrece templar tu agarre con una barra al rojo vivo.
+event.cooling_trough.quench,Comprar el agua limpia
+event.cooling_trough.temper,Templar el agarre
+event.cooling_trough.leave,Dejar que el hierro se enfríe

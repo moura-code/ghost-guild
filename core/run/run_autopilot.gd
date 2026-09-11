@@ -53,7 +53,9 @@ func choose(run: RunState) -> Dictionary:
 				return {"kind": "skip_card"}
 			return {"kind": "take_card", "card": _best_card(run, cards)}
 		"event":
-			return {"kind": "choose", "index": 0}
+			# Preserve the first-choice policy, skipping unaffordable trades.
+			var actions := RunEngine.legal_actions(run)
+			return actions[0] if not actions.is_empty() else {}
 		"rest":
 			if run.hero.hp * 2 < run.hero.max_hp:
 				return {"kind": "rest_heal"}

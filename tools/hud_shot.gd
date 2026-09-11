@@ -11,7 +11,7 @@ extends SceneTree
 ## Modes: walk, minimap, fight, reward, guild, panel, expedition, offline, exit, watch,
 ## deep, kiln, tier2, tier2fight, creatures, ladder, ladderdeep, seance, hero,
 ## hexer, hall, title, help, options, ghost, map, death, watch_result, inspector,
-## pause, hover, rest, upgrade, shop, event, hero_crowded, panel_wealthy,
+## pause, hover, rest, upgrade, shop, event, new_event, hero_crowded, panel_wealthy,
 ## guild_progressed, guild_prestige,
 ## room:<preset_id>, roster. Roster additionally takes [entry_floor] [enemy_id ...].
 ## Other modes accept [reduced|normal] [top|bottom] after locale.
@@ -203,10 +203,10 @@ func _init() -> void:
 			crawl._open_options()
 		"ghost":
 			crawl.inspect_ghost(game.campaign.ladder.ghosts[0].id)
-		"rest", "upgrade", "shop", "event":
+		"rest", "upgrade", "shop", "event", "new_event":
 			_descend(game, crawl)
 			var run := game.campaign.run
-			run.nodes = [{"kind": "rest" if mode == "upgrade" else mode, "event": "whispering_well"}]
+			run.nodes = [{"kind": "rest" if mode == "upgrade" else ("event" if mode == "new_event" else mode), "event": "silent_bell" if mode == "new_event" else "whispering_well"}]
 			run.node_index = 0
 			run.phase = "node"
 			run.hero.hp -= 7
