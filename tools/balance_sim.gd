@@ -19,6 +19,7 @@ func _init() -> void:
 	sim.runs = int(args[0]) if args.size() > 0 else sim.runs
 	sim.sim_fights = int(args[1]) if args.size() > 1 else sim.sim_fights
 	var rep := sim.report()
+	print("optional rooms: " + String(rep["optional_policy"]))
 	var keys: Array = rep["floors"].keys()
 	keys.sort()
 	print("floor samples strength yield_watch yield_corpse+echo")

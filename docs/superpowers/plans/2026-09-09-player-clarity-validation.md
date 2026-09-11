@@ -4,6 +4,8 @@ Implementation follows [the roadmap](2026-09-08-player-clarity-progression-and-w
 The initial implementation was saved in `c3aa83a`; completion and verification
 are delivered in subsequent commits. This record distinguishes automated
 results from the new-player release gate, which still needs human participants.
+Final automated/native review: 2026-09-10. Code is implemented; this is not a
+claim that the player release gate has passed.
 
 ## P0: baseline
 
@@ -197,3 +199,142 @@ separate confirm/cancel actions. The compact combat lesson stays beside the
 fight instead of covering the hand, and F2 dismisses the rest lesson too.
 The final Spanish 150% shop and upgrade captures were repeated after these
 changes; scrollable inventory retains full card rules and primary actions.
+
+## P7: connected validation
+
+### Tests and reproducible tools
+
+The full pinned-engine run passed **1,321 cases in 128 suites**, with zero
+errors, failures, skipped cases or orphans; process exit **0**. Evidence:
+`reports/clarity/final-suite-r2.log` and `reports/report_35/results.xml`.
+After the final shop-header, spacing and F2 adjustments, the four affected UI
+suites passed another **56 cases**, zero errors/failures/orphans and exit
+**0** (`reports/clarity/p7-final-ui-tests.log`, `report_36`). Subsequent changes
+are capture/benchmark fixtures, CLI reporting and documentation.
+
+The suites include content validation and cover save/load in node, fight,
+reward, event, rest, shop and exit phases; deterministic active fights;
+death, Watch and retreat; prestige; content revisions and expedition
+promises. Generated-room policy coverage includes floors 1, 4, 10/11,
+20/21, 30/31 and 61. Existing tier tests check repeating biomes and scaling
+beyond the authored dungeon. The saved-room and physics tests described
+above run against the final combined implementation.
+
+The persistent-shop reproduction enters a shop, leaves, fights elsewhere,
+returns, buys, saves and reloads, then returns with the stairs unlocked.
+It asserts remaining stock, exact Coin, removal limits, unlocked exit and
+no duplicate completion. Other cases cover independent shops, empty stock,
+zero Coin, stale callbacks and once-only optional event/rest outcomes.
+
+All three demos completed with exit **0**, using isolated data:
+
+| Tool / arguments | Final observation | Local log |
+| --- | --- | --- |
+| `fight_demo.gd -- shambler bone_rat` | Autopilot wins in 6 turns with 69 HP; 50 simulations complete | `fight-demo.log` |
+| `run_demo.gd -- 1 73019` | Watch on Floor 6, 69.2 Soul, 24 cards and 3 relics | `run-demo.log` |
+| `campaign_demo.gd -- 73019 3` | Three runs, reach 9; save/reload succeeds | `campaign-demo.log` |
+
+Logs are under `reports/clarity/`. The final 14-run / 48-simulation economy
+batch and the 100-seed-per-profile/policy difficulty comparisons are recorded
+under P2. Both optional-route policies terminate. The balance CLI now prints
+its optional-room policy explicitly; it already used that policy for the
+recorded batch. No price, reward or ghost formula was changed after it.
+
+Reproduce using the recorded Godot binary and disposable XDG data. The test
+wrapper performs an import before running scripts and owns its temporary
+data directory. Each difficulty command below produces 1,200 held-out runs:
+
+```sh
+export GODOT_BIN=/home/usuario/.cache/ghost-guild-engine/4.7.2/Godot_v4.7.2-stable_linux.x86_64
+tools/test.sh
+XDG_DATA_HOME=/tmp/ghost-guild-review "$GODOT_BIN" --headless --path . -s tools/difficulty_report.gd -- reports/clarity/review-safe.json 100 held_out safe 10
+XDG_DATA_HOME=/tmp/ghost-guild-review "$GODOT_BIN" --headless --path . -s tools/difficulty_report.gd -- reports/clarity/review-all.json 100 held_out all 10
+XDG_DATA_HOME=/tmp/ghost-guild-review "$GODOT_BIN" --headless --path . -s tools/balance_sim.gd -- 14 48
+```
+
+Raw telemetry and captures remain ignored under `reports/`; the aggregate CSV
+is committed with a `keep` import. New GDScript UID sidecars are committed.
+The final editor import completed with exit **0**, no warnings or errors
+(`reports/clarity/final-import.log`).
+
+### Native UI and world review
+
+The 29-case native matrix produced 29 PNGs with exit **0** each. It covers
+960×540 Spanish at 150% (Hero, upgrade, shop, event, Help, map and combat),
+1080p English guild states, 2560×1080 English Hero at 125%, 720p Spanish
+combat at 150% with reduced motion, and every one of the 14 room recipes.
+Production roster captures pair Bone Rat/Mother of Bones, Spore Hound/The
+Bloom and Cinder Hound/The First Flame at their boss floors.
+
+Three additional native captures passed with exit **0**: a crowded Hero
+inventory at its beginning and end, with all content cards/relics, 9,999-point
+stats and five-digit HP; and an upgrade panel with 987,654,321 Soul and large
+progression values. These are presentation stress fixtures, not obtainable
+balance profiles. The compact views retain bounded scrolling, readable
+numbers and G navigation. Keyboard focus, auto-scroll into view, mouse
+inspection and input ownership are also covered by the game tests.
+
+Captures live in `reports/clarity/native/` (`manifest.json` and numbered PNGs
+00–31). `tools/hud_shot.gd` documents the reproducible modes; for example:
+
+```sh
+XDG_DATA_HOME=/tmp/ghost-guild-review "$GODOT_BIN" --path . --rendering-method forward_plus --resolution 960x540 -s tools/hud_shot.gd -- reports/clarity/review-upgrade.png upgrade 45 960 540 1.5 es
+XDG_DATA_HOME=/tmp/ghost-guild-review "$GODOT_BIN" --path . --rendering-method forward_plus --resolution 960x540 -s tools/hud_shot.gd -- reports/clarity/review-crowded.png hero_crowded 45 960 540 1.5 es reduced bottom
+```
+
+The capture matrix logs X11 `ERROR: NO GRAB` when an unfocused window requests
+mouse capture. Those runs still produced their images and exited 0; there
+were no script errors. This diagnostic is recorded rather than counted as a
+successful interactive mouse session. No novice usability rate follows from
+screenshots or synthetic input tests.
+
+### Native performance
+
+Final `hybrid_bench.gd` run: Godot 4.7.2 `ed1daf0bf`, Vulkan Forward+, NVIDIA
+GeForce RTX 4070 Laptop GPU, Intel Core i7-14700HX, 1920×1080, VSync disabled.
+Each scene warms for three seconds and samples 180 frames. The benchmark now
+includes the complete seven-display history wall and a dense authored
+Floor-31 layout with five rooms, normal/elite/boss encounters and an active
+Ossuary fight. All four measurements completed; process exit **0**, no script
+or window-grab errors in this final run. Log: `final-benchmark-r2.log`.
+
+| Scene | Median frame ms | p95 frame ms | Mean render CPU ms | Mean render GPU ms | Draw calls |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Fresh Main Hall | 10.046 | 15.121 | 1.097 | 3.035 | 227 |
+| Populated history wall | 8.272 | 14.383 | 1.118 | 3.040 | 268 |
+| Hero preview | 9.987 | 15.017 | 1.107 | 3.144 | 345 |
+| Dense Floor-31 combat | 7.919 | 13.604 | 2.236 | 7.201 | 616 |
+
+The periodic process-time monitor reports means of 15.66–17.70 ms and is
+recorded separately from sampled frame intervals. These are short-run
+measurements on one machine, not proof of locked 60 FPS or lower-spec support.
+An earlier three-scene pass ranged from 12.617 to 13.937 ms p95, illustrating
+run-to-run variance; it is retained as `final-benchmark.log`.
+
+After warming the panels, 50 Hero/ghost open-close cycles retained identical
+counts: 717 nodes, 4,073 objects, 15 lights, 3 viewports, zero active previews
+and zero orphans. The dense floor has 1,301 nodes and 38 lights; its new room
+props do not add lights. The hall adds one unshadowed light. No additional
+shadow-density option was needed for these measured fixtures.
+
+```sh
+XDG_DATA_HOME=/tmp/ghost-guild-review "$GODOT_BIN" --path . --rendering-method forward_plus --resolution 1920x1080 -s tools/hybrid_bench.gd
+```
+
+### Open player release gate
+
+**Participants: 0/5.** Recruit five new players, each with an isolated fresh
+save. Record each task as unaided, assisted or incomplete, plus the player's
+explanation and any misunderstanding:
+
+1. Explain which effects Wit changes.
+2. Select one Strike copy, predict its upgrade and say who keeps it.
+3. Identify an elite and an event before committing, using the map and signs.
+4. Leave a shop, resolve another room and return to its remaining stock.
+5. Identify the next affordable permanent improvement after a run.
+
+The roadmap requires at least four of five unaided completions **per task**.
+That gate remains open. Player review must also resolve the defensive-policy
+44.3% median early HP loss against the provisional 15–35% band. A better
+prepared later-cycle profile is needed before making a late-frontier viability
+claim. These limits are not silently treated as passed acceptance criteria.

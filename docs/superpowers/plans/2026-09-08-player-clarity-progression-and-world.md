@@ -1,7 +1,12 @@
 # Ghost Guild: player clarity, progression and a more readable world
 
 Created: 2026-09-08. Finalized: 2026-09-09.
-Status: proposed development roadmap; implementation pending.
+Status (2026-09-10): implementation and automated validation complete;
+new-player release gate pending. See the
+[implementation evidence](2026-09-09-player-clarity-validation.md) and
+[held-out difficulty summary](2026-09-09-difficulty-summary.csv).
+Checked items record delivered code or completed checks, not novice acceptance.
+The P2 defensive-policy HP-loss deviation still needs player review.
 Baseline: hybrid `main` at `a3c72df`. This plan follows the
 [hybrid integration](2026-09-06-hybrid-2d-3d-integration.md) and its
 [validation record](2026-09-06-hybrid-validation.md).
@@ -78,24 +83,25 @@ but expand the visual library only after their playable layouts work.
 
 ## P0 — Establish the progression baseline
 
-- [ ] Record a reproducible fresh Sexton profile: no purchased upgrades,
+- [x] Record a reproducible fresh Sexton profile: no purchased upgrades,
   no Legends, default starting deck/relic, entry Floor 1. Add separate profiles
   for several affordable early purchases, an unlocked Hexer and a later cycle.
   Compare profiles on the same seeds without merging their saves.
-- [ ] Add a local difficulty-report tool, initially reading existing combat
+- [x] Add a local difficulty-report tool, initially reading existing combat
   events. Record starting/ending HP, gross damage taken, blocked damage,
   healing, turns, enemy actions, reward choices, room order, Coin spending,
   death/retreat depth and permanent upgrades. Net HP alone can conceal damage
   restored by healing. Keep diagnostic data separate from ghost-strength
   statistics and avoid changing the production formula to collect telemetry.
-- [ ] Use a fixed development seed set and a separate held-out set. Start
+- [x] Use a fixed development seed set and a separate held-out set. Start
   with 30 seeds per profile for iteration and 100 for release comparisons,
   reporting sample counts and distributions. Keep seeds and the 4.7.2 engine
   fixed; optimize the reporting tool before reducing meaningful samples.
-- [ ] Compare the existing lookahead autopilot with simple attack-first and
-  defense-aware policies. Add human playtests: autopilot success is not a
-  substitute for a new player's understanding or decisions.
-- [ ] Capture the present first-run experience, current upgrade decisions,
+- [x] Compare the existing lookahead autopilot with simple attack-first and
+  defense-aware policies.
+- [ ] Add human playtests: autopilot success is not a substitute for a new
+  player's understanding or decisions. See the pending P7 participant gate.
+- [x] Capture the present first-run experience, current upgrade decisions,
   map discovery, shop leave/re-entry attempt and room/hall appearance.
 
 Files: `tools/balance_sim.gd`, proposed `tools/difficulty_report.gd`,
@@ -107,20 +113,20 @@ build, enemies and seeds, separately from stronger permanent progression.
 
 ## P1 — Explain builds and purchases at the point of use
 
-- [ ] Add a shared explanation source for stats and mechanics, used by the
+- [x] Add a shared explanation source for stats and mechanics, used by the
   hero sheet, upgrade plaques, cards, Forge/rest and a searchable or grouped
   help glossary. Show explanations on keyboard focus as well as mouse hover;
   provide click-to-open details so essential information is not hover-only.
-- [ ] Describe stats accurately. Might adds to effects marked as scaling with
+- [x] Describe stats accurately. Might adds to effects marked as scaling with
   Might. Wit adds to marked Block and status effects, not every Skill or every
   status. Vigor currently gives 3 maximum HP per point. Focus has thresholds:
   draw at 3/9 and Energy at 6/12. Show the current benefit and next threshold;
   read these values from content rather than duplicating constants in UI text.
-- [ ] Annotate affected card effects visibly: for example, `Brace: 5 Block
+- [x] Annotate affected card effects visibly: for example, `Brace: 5 Block
   + 2 from Wit = 7 before other modifiers`. Separate authored rules from
   current modifiers. For conditional or complex cards, show the full rules
   and explain the condition rather than promising an incorrect exact result.
-- [ ] Replace bare `Upgrade Strike`/`Sharpen Strike` choices with a card
+- [x] Replace bare `Upgrade Strike`/`Sharpen Strike` choices with a card
   selection and comparison. Current content provides this example:
 
   > **Strike — Attack · 1 Energy**
@@ -132,19 +138,19 @@ build, enemies and seeds, separately from stronger permanent progression.
   Show how many copies are upgraded/unupgraded, retain the selected UID, and
   use a distinct commit button after inspection. Also compare changes to cost,
   targets, keywords or statuses when those are what an upgrade changes.
-- [ ] Explain persistence: a sharpened card stays with the living hero across
+- [x] Explain persistence: a sharpened card stays with the living hero across
   retreats and becomes part of that hero's ghost; it does not upgrade every
   Strike or every future hero. Permanent guild upgrades and tending a named
   ghost need equally explicit recipient/duration labels.
-- [ ] Keep prices, current currency and affordability reasons visible. Show
+- [x] Keep prices, current currency and affordability reasons visible. Show
   locked requirements and capped upgrades with an explanation. In shops,
   display unaffordable inventory as disabled items instead of making it
   disappear because it is absent from `legal_actions`.
-- [ ] Add short, dismissible teaching moments for Energy/Block/intents, the
+- [x] Add short, dismissible teaching moments for Energy/Block/intents, the
   first card upgrade, room signs and the first ghost. Explain Coin versus
   Soul and the death/Watch loop. Remember dismissed lessons separately from
   authoritative campaign unlocks; make them available again in Help.
-- [ ] Add a compact run recap showing reached depth, rewards banked, ghost
+- [x] Add a compact run recap showing reached depth, rewards banked, ghost
   contribution and one relevant affordable next upgrade. Keep buying voluntary.
 
 Files: `game/hud/hero_screen.gd`, `card_inspector.gd`, `choice_screen.gd`,
@@ -166,26 +172,26 @@ likely contributors to investigate are early single-enemy groups, whether
 they survive to act, their move schedules, starter damage/Block, the Sexton's
 starting Block and the density of healing. These are hypotheses, not findings.
 
-- [ ] Establish the initial experience: Floor 1 teaches attacking and blocking;
+- [x] Establish the initial experience: Floor 1 teaches attacking and blocking;
   Floors 2–4 require target/defense decisions; Floors 5–9 add combinations and
   preparation pressure; Floor 10 tests a coherent build. Keep enemy intent
   understandable before increasing punishment.
-- [ ] Adjust early encounter composition and enemy actions first, then targeted
+- [x] Adjust early encounter composition and enemy actions first, then targeted
   HP/damage values and healing frequency. Avoid solving the entire problem
   with a global multiplier or making every fight last much longer. Use the
   existing enemies before creating new ones.
-- [ ] Make ignored threats matter: combinations such as an attacker plus a
+- [x] Make ignored threats matter: combinations such as an attacker plus a
   support enemy should reward target choice. Teach debuffs before stacking
   them. Optional elites later carry concentrated risk and better rewards.
-- [ ] Compare fresh and upgraded builds at equal depth and on equal seeds.
+- [x] Compare fresh and upgraded builds at equal depth and on equal seeds.
   Purchased power should reduce expected losses/turns and move the viable
   frontier outward. Retain reach, camp and Descent draft so players can move
   past mastered floors instead of repeating a compulsory opening grind.
-- [ ] Recheck early prices and earnings together with combat. Harder starts
+- [x] Recheck early prices and earnings together with combat. Harder starts
   must still produce useful ghost income and a meaningful purchase within
   the existing 20-minute affordability bound. Preserve progression after
   failure and explain the benefit of returning stronger.
-- [ ] Make compatibility a gate for this first balance release. Preserve
+- [x] Make compatibility a gate for this first balance release. Preserve
   banked currency and saved combat HP, deck and RNG state. Record when revised
   rules begin affecting an active saved fight. Settle pending offline income
   once before changing cached production; retain fixed-strength founder and
@@ -204,6 +210,13 @@ Provisional tuning targets, to accept or revise explicitly after P0:
 | First few meaningful purchases | At the same early depth, aim for roughly 20–35% less expected HP loss or a clear turn-count reduction, with a deeper viable frontier. Use purchase-specific expectations rather than requiring every upgrade to improve every metric. |
 | Frontier ordinary fights | Preserve the existing approximate 3–6-turn goal; increasing depth should add pressure without routinely reaching the turn cap. |
 
+Measured result: normal-win turns and the improvement from early purchases
+are supported by the held-out report. Fresh safe-route lookahead reaches a
+34.3% median Floor-4 loss, while the simple defensive policy reaches 44.3%,
+above the provisional band. This deviation remains open for player review;
+it is not an accepted change to the target. The synthetic later-cycle build
+is underprepared and does not establish a viable Floor-31 frontier.
+
 These are aggregate playtest targets, not per-fight rules or assertions that
 punish excellent play. Do not tune only to the development seeds. Keep the
 existing economy invariants and measure the actual manual-play experience.
@@ -219,22 +232,22 @@ the next challenge moves. Record every changed balance value and its reason.
 
 ## P3 — Make the destination readable before commitment
 
-- [ ] Define one room presentation mapping from existing node kinds: label,
+- [x] Define one room presentation mapping from existing node kinds: label,
   icon, accent, risk/reward description and availability. Reuse the existing
   node-icon family; use the same mapping in map, compass, signs and prompts.
-- [ ] Add a visible `Map · M` exploration control and first-floor prompt. Extend
+- [x] Add a visible `Map · M` exploration control and first-floor prompt. Extend
   the existing full-floor map with typed icons, a legend, current room/player,
   stairs, completion and marker selection. Reveal the floor layout and room
   types on entry so players can plan spending and risk; mark visited rooms
   separately. Keep event choices and shuffled rewards for their encounters.
   A minimap toggle is a later option if playtests still show frequent
   navigation interruptions.
-- [ ] Place readable signs before each trigger boundary and match their
+- [x] Place readable signs before each trigger boundary and match their
   symbols to compass markers. A nearby prompt names the destination and its
   risk. Signs must be legible before automatic normal-combat entry occurs.
   Use explicit E engagement for elites, with a clear in-world commitment
   prompt, so reading an optional challenge cannot accidentally start it.
-- [ ] Represent completed encounters and reusable services separately. A
+- [x] Represent completed encounters and reusable services separately. A
   cleared room gets a completion mark; an accessible shop remains on the map.
   Locked stairs explain remaining requirements rather than disappearing.
 
@@ -266,55 +279,55 @@ destination remains read-only and consumes no gameplay RNG.
 This milestone changes run state and saves. It must land before room presets
 depend on new interaction anchors, and before final risk/reward tuning.
 
-- [ ] Introduce stable room identities on the current floor and explicit
+- [x] Introduce stable room identities on the current floor and explicit
   distinctions between visited, encounter resolved, required for exit and
   service available. Keep one authoritative record in `RunState`; geometry,
   map and panels observe it. Preserve current logical node identities.
-- [ ] Store shop inventory, remaining relic, prices and removal-used status
+- [x] Store shop inventory, remaining relic, prices and removal-used status
   per room. Generate stock once from a shop RNG derived from run, floor and
   room identity. Two shops must not share inventory or accidentally use an
   identical floor-only stream. Opening or closing never rerolls.
-- [ ] Build a small merchant area with a recognizable counter and E prompt.
+- [x] Build a small merchant area with a recognizable counter and E prompt.
   The player walks in, opens the shop, buys or inspects, closes it, leaves and
   can return. Closing while still in its trigger does not immediately reopen
   the panel. Counter interaction has one input owner.
-- [ ] Make close/leave return to exploration and retain stock. Allow re-entry
+- [x] Make close/leave return to exploration and retain stock. Allow re-entry
   both before and after stairs unlock, from the engine's applicable `node`
   and `exit` contexts. A subsequent visit cannot relock the stairs or emit
   duplicate completion rewards. Leaving the floor or ending the run closes
   that floor's shop permanently; no travel to previous floors is added.
-- [ ] Add complete item descriptions, prices, disabled affordability states,
+- [x] Add complete item descriptions, prices, disabled affordability states,
   card/relic inspection and a deliberate card-removal selection. After any
   purchase, refresh currency and availability across every view once. A
   stale panel from another room/floor cannot apply an action.
-- [ ] Introduce explicit required encounters and optional detours in floor
+- [x] Introduce explicit required encounters and optional detours in floor
   patterns. Use two required normal fights on a typical early floor plus
   one optional room; a required boss replaces a main-route fight on boss
   floors. Keep the first floor's teaching pattern controlled. Validate
   reward/room frequencies in P7; do not let a floor become only free services.
-- [ ] Make elites a voluntary risk/reward choice, with better Coin and the
+- [x] Make elites a voluntary risk/reward choice, with better Coin and the
   existing relic reward. Optional events/rest/shops do not prevent exit.
   Once a fight or event choice begins, preserve the current resolution rules.
   Layout generation must provide access to required rooms without forcing
   passage through an optional encounter's trigger volume.
-- [ ] Give early elites a recognizable tactical test using existing moves:
+- [x] Give early elites a recognizable tactical test using existing moves:
   coordinated enemies, a dangerous support target or a clearly signaled
   heavy attack. Preview the threat and reward category before engagement.
   Winning an elite should help prepare the next boss; a damaged or unfinished
   build should have a useful reason to take the safer route.
-- [ ] Rework the existing three Catacombs events around distinct decisions:
+- [x] Rework the existing three Catacombs events around distinct decisions:
   recovery now versus a stat increase for this hero, HP for a build-changing
   card, and keeping an item versus taking Coin for a later shop. Use two or
   three readable choices with effect previews generated from their data,
   including capped healing, exact costs and who keeps the benefit. Provide
   a leave option when every other choice requires a sacrifice; identify a
   potentially lethal HP cost before commitment. No surprise combat.
-- [ ] Connect events to room planning: a visible upcoming shop makes a Coin
+- [x] Connect events to room planning: a visible upcoming shop makes a Coin
   outcome useful, while an elite makes healing or immediate deck strength
   attractive. Check that the same option does not dominate for healthy,
   damaged and different-stat builds. Persist the chosen outcome once and
   prevent reopening, repeated input or reload from granting it twice.
-- [ ] Update autopilot traversal explicitly: it must terminate, never loop
+- [x] Update autopilot traversal explicitly: it must terminate, never loop
   through a reusable shop, and report which optional-room policy it uses.
   Keep human choice and simulation policies distinguishable in comparisons.
 
@@ -342,32 +355,32 @@ callbacks and all migrated/current run phases. Stairs remain reachable.
 
 ## P5 — Room presets with purpose and environmental life
 
-- [ ] Add a data-driven room-preset catalogue with biome/role compatibility,
+- [x] Add a data-driven room-preset catalogue with biome/role compatibility,
   supported dimensions, doorway anchors, clear walking lanes, combat staging
   area, ghost/service anchors, prop sockets and light/ambient budgets.
   Logical layout remains pure; scene/model references stay in presentation.
-- [ ] Start with six recognizable Catacombs compositions: burial aisle,
+- [x] Start with six recognizable Catacombs compositions: burial aisle,
   collapsed vault, ossuary, ritual chamber, abandoned workroom and merchant
   alcove. Pair presets with compatible roles and sizes; keep a neutral fallback.
   Distinct silhouette, focal point and sightline should carry identity, not
   just a different crate position or wall color.
-- [ ] First reuse the existing connected room footprints. Architecture,
+- [x] First reuse the existing connected room footprints. Architecture,
   alcoves, ceilings and props can vary around safe paths. Introduce new
   walkable shapes only after the logical grid/map and encounter volumes can
   represent them accurately. Keep the active renderer and movement rules.
-- [ ] Use weighted selection with repeat limits on a floor and variation
+- [x] Use weighted selection with repeat limits on a floor and variation
   across consecutive floors. Persist/version the active floor's chosen layout
   and presets, or retain its generator version, so loading after an update
   cannot move the room behind a saved logical encounter. Room dressing uses
   isolated RNG; it cannot change fights, offers or ghost production.
-- [ ] Add restrained activity: candle flicker, dust, dripping water, moving
+- [x] Add restrained activity: candle flicker, dust, dripping water, moving
   cloth, distant machinery, fungal pulses and sparse ghost routines. Use
   spatial ambient audio to establish place without masking interaction cues.
   Reduced motion and volume settings apply; distant effects stop updating.
-- [ ] Extend the approved preset format to Fungal Deep and Kiln with at least
+- [x] Extend the approved preset format to Fungal Deep and Kiln with at least
   four recognizable compositions each before calling all-biome variety done.
   Keep elite/boss arenas large enough for their existing production models.
-- [ ] Check the actual walkable space after solid props, not only the original
+- [x] Check the actual walkable space after solid props, not only the original
   floor grid. Door-to-door lanes, shop counters, event anchors and the combat
   camera must remain usable. Fallback placement should be predictable.
 
@@ -384,22 +397,22 @@ Review every biome with its short enemies, tall bosses and UI overlays.
 
 ## P6 — A Main Hall that looks like the player's guild
 
-- [ ] Author the composition around the well: a clear arrival view, readable
+- [x] Author the composition around the well: a clear arrival view, readable
   central landmark, contrasting warm station areas and a cold spectral shaft.
   Improve pillars, arches, floor borders, ceiling detail and depth around the
   hub without obscuring the five destinations.
-- [ ] Give each station a purposeful area: tools and embers for upgrades,
+- [x] Give each station a purposeful area: tools and embers for upgrades,
   books and class belongings for the hero desk, ritual objects for séance,
   named memorials for Legends, and a protected overlook for the well.
-- [ ] Add history through existing achievements: biome trophies, claimed
+- [x] Add history through existing achievements: biome trophies, claimed
   banners, memorial inscriptions and expedition keepsakes. An early guild
   should already look cared for; later decorations make its history visible.
   Explain what earned a display. Keep permanent achievements distinct from
   ghost displays that legitimately change after prestige.
-- [ ] Use restrained ambient movement and sound, consistent materials and
+- [x] Use restrained ambient movement and sound, consistent materials and
   authored light placement. Reuse suitable existing assets, record attribution
   for additions and avoid multiplying shadow-casting lights for decoration.
-- [ ] Preserve a fast route from spawn to every station and the well. Keep
+- [x] Preserve a fast route from spawn to every station and the well. Keep
   signs consistent with P1/P3 language and keep G navigation available.
 
 Files: `game/world/guild_room.gd`, `well_view.gd`, `ghost_figure.gd`,
@@ -417,14 +430,14 @@ Rebalance after optional elites, repeat shops and clearer upgrade decisions
 ship: all three change how much power a player acquires before the frontier.
 The P2 values are an initial improvement, not a reason to skip this pass.
 
-- [ ] Repeat fresh and progressed profiles on held-out seeds. Report HP loss,
+- [x] Repeat fresh and progressed profiles on held-out seeds. Report HP loss,
   healing, deaths, turns, optional-room choices, upgrade cadence and depth.
   Measure both safe and elite-heavy routes; skipping elites should be viable,
   while beating them should earn a worthwhile advantage.
-- [ ] Check that repeat shops permit useful planning without enabling free
+- [x] Check that repeat shops permit useful planning without enabling free
   rerolls or turning early floors into purchase-driven triviality. Adjust
   stock/prices/encounter rewards together when the evidence calls for it.
-- [ ] Re-run the existing economy invariants at their meaningful sample counts.
+- [x] Re-run the existing economy invariants at their meaningful sample counts.
   Repeat P2's compatibility checks: changed combat affects ghost simulations,
   projections, expeditions, tending and cached strength. Verify content
   revision handling, linked echoes and once-only offline accrual under the
@@ -433,16 +446,16 @@ The P2 values are an initial improvement, not a reason to skip this pass.
   Strike upgrade, find an elite/event on the map, return to a shop and identify
   their next permanent improvement. Aim for four of five completing each
   without spoken assistance; record misunderstandings as revision work.
-- [ ] Test save/load at active fight, event, rest and shop boundaries; revisit
+- [x] Test save/load at active fight, event, rest and shop boundaries; revisit
   after stairs unlock; death/Watch/retreat; prestige and floors 10/11, 20/21,
   30/31 and beyond 60. Confirm no reward, shop or offline duplication.
-- [ ] Run core/game suites, content validation, fight/run/campaign demos and
+- [x] Run core/game suites, content validation, fight/run/campaign demos and
   `balance_sim`. Use isolated data, pinned Godot and fixed clocks/seeds. Record
   test assertions and process exit status separately.
-- [ ] Review native UI at 960×540 through 2560×1080, 100–150% scale, EN/ES,
+- [x] Review native UI at 960×540 through 2560×1080, 100–150% scale, EN/ES,
   mouse/keyboard and reduced motion. Test expanded explanations, crowded
   inventories and large progression values without clipped primary actions.
-- [ ] Benchmark dense rooms and the decorated guild at 1080p on the recorded
+- [x] Benchmark dense rooms and the decorated guild at 1080p on the recorded
   development hardware. Current p95 frame times already exceed 16.67 ms in
   some scenes: budget new props/lights/effects and optimize measured costs.
   If needed, add an effects/shadow-density preset with identical gameplay.
@@ -458,15 +471,16 @@ translations, local telemetry and capture caches.
 
 - [ ] A new player can understand the effects, costs and persistence of a
   decision before taking it.
-- [ ] Fresh early floors demand attention; earned upgrades visibly improve
+- [x] Fresh early floors demand attention; earned upgrades visibly improve
   performance at the same depth without hidden difficulty compensation.
-- [ ] The map, signs and compass agree on room type, risk and availability.
-- [ ] Shops behave as persistent places; optional rooms and required encounters
+- [x] The map, signs and compass agree on room type, risk and availability.
+- [x] Shops behave as persistent places; optional rooms and required encounters
   cannot be confused or exploited.
-- [ ] Rooms have recognizable variety and life; the Main Hall reflects the
+- [x] Rooms have recognizable variety and life; the Main Hall reflects the
   guild's purpose and earned history.
 - [ ] The complete manual/idle loop, saves and performance retain evidence
-  after all systems are combined.
+  after all systems are combined. Automated loop/save/performance evidence is
+  recorded; the new-player manual session gate remains open.
 
 Useful later additions: a minimap preference, more event/preset content,
 merchant personalities, a richer encounter journal and explicit optional

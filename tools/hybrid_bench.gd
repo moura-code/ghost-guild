@@ -27,6 +27,19 @@ func _init() -> void:
 	# Performance monitors update periodically; exclude startup samples.
 	await create_timer(3.0).timeout
 	await _measure("guild", crawl)
+	# Fill the earned wall as well: fresh-hall measurements omit its trophies
+	# and the three visible Legend memorials.
+	game.campaign.claimed_biomes = ["catacombs", "fungal_deep", "the_kiln"]
+	game.campaign.expedition_counter = 999
+	for i in 3:
+		var legend := Legend.new()
+		legend.id = i + 1
+		legend.cycle = i + 1
+		legend.name = "Remembered %d" % (i + 1)
+		game.campaign.legends.append(legend)
+	crawl.guild.refresh_history(game.campaign)
+	await create_timer(3.0).timeout
+	await _measure("guild_progressed", crawl)
 	crawl.open_guild(GuildRoom.DESK)
 	# Performance monitors update periodically; exclude startup samples.
 	await create_timer(3.0).timeout
@@ -51,10 +64,15 @@ func _init() -> void:
 	game.start_run(1)
 	var run := game.campaign.run
 	run.floor = 31
-	run.nodes = [{"kind": "fight", "enemies": ["bone_rat", "hollow_knight", "plague_bearer"]}]
+	run.nodes = [{"kind": "fight", "enemies": ["bone_rat", "hollow_knight", "plague_bearer"]}, {"kind": "boss", "enemies": ["mother_of_bones"]}, {"kind": "elite", "enemies": ["ossuary_warden"]}]
 	run.node_index = 0
 	run.resolved = [false]
 	run.phase = "node"
+	var layout := LayoutGenerator.generate_current(run.nodes, run.sub_rng("layout", run.floor))
+	layout.presets = RoomPresets.choose(game.content, layout, run.nodes, run.biome().id, run.sub_rng("presets", run.floor))
+	layout.presets[layout.room_of_node(0)] = "catacombs_ossuary"
+	layout.preset_recipes = RoomPresets.freeze(game.content, layout.presets)
+	run.layout_snapshot = layout.to_dict()
 	crawl.build_floor()
 	var at := Kit.cell_to_world(crawl.layout.room_center(crawl.layout.room_of_node(0)))
 	crawl.player.place_at(at - Vector3(0, 0, Kit.CELL * 1.4), 0)

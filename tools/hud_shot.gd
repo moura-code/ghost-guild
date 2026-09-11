@@ -11,9 +11,10 @@ extends SceneTree
 ## Modes: walk, fight, reward, guild, panel, expedition, offline, exit, watch,
 ## deep, kiln, tier2, tier2fight, creatures, ladder, ladderdeep, seance, hero,
 ## hexer, hall, title, help, options, ghost, map, death, watch_result, inspector,
-## pause, hover, rest, upgrade, shop, event, guild_progressed, guild_prestige,
+## pause, hover, rest, upgrade, shop, event, hero_crowded, panel_wealthy,
+## guild_progressed, guild_prestige,
 ## room:<preset_id>, roster. Roster additionally takes [entry_floor] [enemy_id ...].
-## Other modes accept [reduced] after locale for reduced-motion captures.
+## Other modes accept [reduced|normal] [top|bottom] after locale.
 ##
 ## Runs against a throwaway save, so it never touches the player's campaign.
 
@@ -138,12 +139,24 @@ func _init() -> void:
 			var circle := crawl.guild.station(GuildRoom.CIRCLE)
 			circle.enter(crawl.player)
 			circle.use()
-		"hero", "hexer":
+		"hero", "hexer", "hero_crowded":
 			# The Deep claimed, so the class row has one open and one taken.
 			var deep := Hero.create(game.content, "sexton", "Deepwalker", {}, 1)
 			game.campaign.ladder.add(Ghost.from_expedition(deep, 14, 0))
 			if mode == "hexer":
 				game.choose_class("hexer")
+			if mode == "hero_crowded":
+				for stat in game.campaign.hero.stats:
+					game.campaign.hero.stats[stat] = 9999
+				game.campaign.hero.hp = 12345
+				game.campaign.hero.max_hp = 30067
+				game.campaign.hero.camp = 999
+				for card_id in game.content.cards:
+					game.campaign.hero.add_card(String(card_id))
+				for relic_id in game.content.relics:
+					if not game.campaign.hero.relics.has(relic_id):
+						game.campaign.hero.relics.append(String(relic_id))
+				crawl.set_meta("shot_scroll", true)
 			var desk := crawl.guild.station(GuildRoom.DESK)
 			desk.enter(crawl.player)
 			desk.use()
@@ -164,7 +177,12 @@ func _init() -> void:
 			well.use()
 			if deep_run:
 				(crawl.panel as LadderScreen).select_floor(42)
-		"panel", "expedition":
+		"panel", "expedition", "panel_wealthy":
+			if mode == "panel_wealthy":
+				game.campaign.soul = 987654321
+				game.campaign.record_depth = 9876
+				for id in ["might", "wit", "focus", "vigor"]:
+					game.campaign.upgrades.levels[id] = 99
 			if mode == "expedition":
 				# One slot in the field and one open, which is the state the
 				# band spends most of its life in.
@@ -269,6 +287,8 @@ func _init() -> void:
 
 	for _i in frames:
 		await process_frame
+	if mode != "roster" and args.size() > 8 and String(args[8]) in ["top", "bottom"]:
+		crawl.set_meta("shot_scroll", String(args[8]) == "bottom")
 	# A scrolling panel has no content height until it has been laid out, so
 	# a shot that wants the bottom of one has to ask after the wait, not
 	# before it -- `scroll_vertical` is clamped to zero until then.
