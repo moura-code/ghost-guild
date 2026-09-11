@@ -1,11 +1,13 @@
 # Ghost Guild: player clarity, progression and a more readable world
 
 Created: 2026-09-08. Finalized: 2026-09-09.
-Status (2026-09-11): implementation and automated validation complete;
-new-player release gate pending. See the
+Status (2026-09-11): complete for the agreed release scope. Implementation
+and automated/native validation are complete. The user waived new-player
+feedback as a release requirement on 2026-09-11. See the
 [implementation evidence](2026-09-09-player-clarity-validation.md) and
 [current difficulty summary](2026-09-10-difficulty-summary.csv).
 Checked items record delivered code or completed checks, not novice acceptance.
+Waived items are labeled separately; no new-player sessions were conducted.
 The [balance follow-up](2026-09-11-player-clarity-balance-follow-up.md) meets
 the safe-route tuning band and adds a prepared later-cycle comparison.
 Baseline: hybrid `main` at `a3c72df`. This plan follows the
@@ -63,8 +65,9 @@ difficulty, shop, room identities and guild should reinforce that same loop.
 
 ## 3. Delivery order
 
-Sizes are relative scope, not calendar estimates. Each milestone ends with a
-playable build, focused evidence and a short playtest before expanding it.
+Sizes are relative scope, not calendar estimates. Each milestone delivers a
+playable build and focused evidence. New-player feedback is optional following
+the user's 2026-09-11 scope decision.
 
 | Milestone | Deliverable | Priority / size | Dependencies |
 | --- | --- | --- | --- |
@@ -100,8 +103,9 @@ but expand the visual library only after their playable layouts work.
   fixed; optimize the reporting tool before reducing meaningful samples.
 - [x] Compare the existing lookahead autopilot with simple attack-first and
   defense-aware policies.
-- [ ] Add human playtests: autopilot success is not a substitute for a new
-  player's understanding or decisions. See the pending P7 participant gate.
+- **Waived (2026-09-11, user request):** Human playtests are no longer a release
+  requirement. Autopilot success does not establish a new player's understanding
+  or decisions. The optional protocol remains under P7.
 - [x] Capture the present first-run experience, current upgrade decisions,
   map discovery, shop leave/re-entry attempt and room/hall appearance.
 
@@ -218,11 +222,11 @@ Normal wins average 4.46 / 3.60 turns. The 70-Soul early purchases reduce mean
 HP loss by 36.0% / 26.8% and turns by 15.7% / 16.6%. Optional-elite routes
 retain higher risk. A prepared two-Legend profile clears Floor 31 in 99/100
 lookahead runs; the original underprepared profile remains a comparator.
-These are simulation results; the new-player release gate remains open.
+These are simulation results; the user waived the new-player release requirement.
 
 These are aggregate playtest targets, not per-fight rules or assertions that
 punish excellent play. Do not tune only to the development seeds. Keep the
-existing economy invariants and measure the actual manual-play experience.
+existing economy invariants. Future human feedback may inform further tuning.
 
 Files: `data/biomes/catacombs.json`, `data/enemies/catacombs.json`,
 `data/balance.json`, starter card/relic data if justified by measurements,
@@ -445,10 +449,12 @@ The P2 values are an initial improvement, not a reason to skip this pass.
   projections, expeditions, tending and cached strength. Verify content
   revision handling, linked echoes and once-only offline accrual under the
   final balance, including a campaign that passed through the earlier release.
-- [ ] Ask at least five new players to explain Wit, choose and describe a
-  Strike upgrade, find an elite/event on the map, return to a shop and identify
-  their next permanent improvement. Aim for four of five completing each
-  without spoken assistance; record misunderstandings as revision work.
+- **Waived (2026-09-11, user request):** The five-player usability requirement
+  no longer blocks this release. For any future sessions, retain the original
+  protocol: explain Wit, choose and describe a Strike upgrade, find an elite/event
+  on the map, return to a shop and identify the next permanent improvement.
+  The original target was four of five completing each without spoken assistance.
+  No participants or successful task completions are recorded.
 - [x] Test save/load at active fight, event, rest and shop boundaries; revisit
   after stairs unlock; death/Watch/retreat; prestige and floors 10/11, 20/21,
   30/31 and beyond 60. Confirm no reward, shop or offline duplication.
@@ -466,14 +472,16 @@ The P2 values are an initial improvement, not a reason to skip this pass.
 
 Release evidence: one before/after difficulty report, a fresh-versus-upgraded
 comparison, a shop revisit/save reproduction, native room/hall captures,
-usability observations, migration results and updated performance limits.
+migration results and updated performance limits. New-player usability
+observations were waived as a release requirement on 2026-09-11.
 Commit new `.gd.uid` sidecars, preserve CSV `keep` imports and exclude generated
 translations, local telemetry and capture caches.
 
 ## 4. Completion and scope boundaries
 
-- [ ] A new player can understand the effects, costs and persistence of a
-  decision before taking it.
+- **Waived (2026-09-11, user request):** New-player confirmation of understanding
+  effects, costs and persistence before deciding. The explanations are delivered;
+  novice comprehension has not been measured.
 - [x] Fresh early floors demand attention; earned upgrades visibly improve
   performance at the same depth without hidden difficulty compensation.
 - [x] The map, signs and compass agree on room type, risk and availability.
@@ -481,9 +489,9 @@ translations, local telemetry and capture caches.
   cannot be confused or exploited.
 - [x] Rooms have recognizable variety and life; the Main Hall reflects the
   guild's purpose and earned history.
-- [ ] The complete manual/idle loop, saves and performance retain evidence
-  after all systems are combined. Automated loop/save/performance evidence is
-  recorded; the new-player manual session gate remains open.
+- [x] Combined loop/save/performance evidence is recorded through automated
+  checks and native review. The user waived additional new-player manual
+  sessions on 2026-09-11.
 
 Useful later additions: a minimap preference, more event/preset content,
 merchant personalities, a richer encounter journal and explicit optional

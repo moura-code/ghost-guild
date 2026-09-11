@@ -3,12 +3,13 @@
 Implementation follows [the roadmap](2026-09-08-player-clarity-progression-and-world.md).
 The initial implementation was saved in `c3aa83a`; completion and verification
 are delivered in subsequent commits. This record distinguishes automated
-results from the new-player release gate, which still needs human participants.
+results from new-player acceptance. The user waived new-player feedback as
+a release requirement on 2026-09-11; no human sessions were conducted.
 Initial automated/native review: 2026-09-10. The
 [2026-09-11 balance follow-up](2026-09-11-player-clarity-balance-follow-up.md)
 records current tuning, 1,327 passing tests and a prepared late-cycle profile.
 The measurements below retain the earlier implementation evidence; the player
-release gate has not passed.
+release requirement is waived, with no novice success rate recorded.
 
 ## P0: baseline
 
@@ -58,12 +59,13 @@ Native 960×540 Spanish at 150% exposed hidden-choice spacing; it was removed.
 comparison and focused commit. Panels retain bounded scrolling and keyboard
 focus instead of shrinking text.
 
-## Remaining release evidence
+## Release evidence status
 
 Implementation, migration and layout sweeps, final difficulty/economy
-comparisons and native review are complete. Five novice playtests have not
-been conducted. The follow-up addresses the safe-route tuning deviation and
-adds the missing prepared later-cycle comparison. The P2 section below
+comparisons and native review are complete. The user waived the five novice
+playtests on 2026-09-11, completing the agreed release scope. The follow-up
+addresses the safe-route tuning deviation and adds the missing prepared
+later-cycle comparison. The P2 section below
 records the earlier revision for comparison. No novice success rate, lower-spec
 performance or locked-60-FPS claim is made.
 
@@ -326,10 +328,12 @@ shadow-density option was needed for these measured fixtures.
 XDG_DATA_HOME=/tmp/ghost-guild-review "$GODOT_BIN" --path . --rendering-method forward_plus --resolution 1920x1080 -s tools/hybrid_bench.gd
 ```
 
-### Open player release gate
+### Waived player release requirement
 
-**Participants: 0/5.** Recruit five new players, each with an isolated fresh
-save. Record each task as unaided, assisted or incomplete, plus the player's
+**Waived on 2026-09-11 at the user's request. Participants: 0/5.** New-player
+feedback no longer blocks this release. The original protocol remains available
+for optional future sessions: use an isolated fresh save for each participant,
+record each task as unaided, assisted or incomplete, and retain the player's
 explanation and any misunderstanding:
 
 1. Explain which effects Wit changes.
@@ -338,8 +342,7 @@ explanation and any misunderstanding:
 4. Leave a shop, resolve another room and return to its remaining stock.
 5. Identify the next affordable permanent improvement after a run.
 
-The roadmap requires at least four of five unaided completions **per task**.
-That gate remains open; the user confirmed on 2026-09-10 that no new-player
-feedback is available. The balance follow-up supersedes the earlier 44.3%
-safe-route loss and adds a prepared late-cycle comparison. It does not replace
-the required human sessions or establish novice comprehension.
+The original target was at least four of five unaided completions **per task**.
+No sessions were conducted or success rate measured. The balance follow-up
+supersedes the earlier 44.3% safe-route loss and adds a prepared late-cycle
+comparison; those measurements do not establish novice comprehension.

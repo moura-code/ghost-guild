@@ -4,8 +4,8 @@ Validated 2026-09-11 against content revision `clarity-2026-09-10-r4` and
 Godot 4.7.2, official `ed1daf0bf001b61586d9930840f2f1394092c079`.
 This follows the [implementation record](2026-09-09-player-clarity-validation.md)
 and addresses its early attrition and underprepared later-profile gaps.
-The five-player usability gate remains open; the user has no new-player
-feedback yet.
+The user waived the five-player usability requirement on 2026-09-11,
+completing the agreed release scope. No new-player sessions were conducted.
 
 ## Final tuning
 
@@ -152,7 +152,7 @@ The final editor import exited **0** without warnings or errors. CSV checks
 confirm 84 rows, 6,300 samples and only the final revision in the committed
 summary (`final-import-r4.log`).
 
-## Reproduction and remaining player check
+## Reproduction and optional player check
 
 Use the pinned binary with isolated data, after an import. Each confirmation
 command runs 1,500 cases; generated reports and captures remain ignored.
@@ -167,7 +167,8 @@ python3 tools/difficulty_summary.py --out reports/clarity/review-summary.csv rep
 XDG_DATA_HOME=/tmp/ghost-guild-review "$GODOT_BIN" --headless --path . -s tools/balance_sim.gd -- 14 48
 ```
 
-New-player participation is still **0/5**. The existing five-task protocol
-for Wit, a specific Strike upgrade, room identification, shop revisits and
-the next permanent improvement still requires at least four unaided successes
-per task. Simulation and native captures do not satisfy that human gate.
+New-player participation remains **0/5**. The user waived these sessions as
+a release requirement on 2026-09-11. The five-task protocol for Wit, a specific
+Strike upgrade, room identification, shop revisits and the next permanent
+improvement remains available for optional future use, with its original
+four-of-five unaided target per task. No novice success rate is claimed.
