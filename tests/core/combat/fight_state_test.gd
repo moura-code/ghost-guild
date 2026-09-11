@@ -42,8 +42,8 @@ func test_scaling_curves() -> void:
 func test_bare_state_spawns_scaled_enemies() -> void:
 	var s := TestFixtures.bare_state(["bone_rat", "shambler"], 10)
 	assert_array(s.enemies).has_size(2)
-	assert_int(s.enemies[0].hp).is_equal(30)
-	assert_int(s.enemies[1].hp).is_equal(51)
+	assert_int(s.enemies[0].hp).is_equal(29)
+	assert_int(s.enemies[1].hp).is_equal(46)
 	assert_array(s.living_enemy_indices()).is_equal([0, 1])
 	assert_bool(s.all_enemies_dead()).is_false()
 
@@ -115,7 +115,7 @@ func test_clone_is_independent() -> void:
 	c.statuses["weak"] = 9
 	c.stats["might"] = 4
 	assert_array(s.hand).has_size(2)
-	assert_int(s.enemies[0].hp).is_equal(18)
+	assert_int(s.enemies[0].hp).is_equal(s.enemies[0].max_hp)
 	assert_int(s.enemies[0].status("vulnerable")).is_equal(0)
 	assert_int(s.hero_status("weak")).is_equal(1)
 	assert_int(s.stats["might"]).is_equal(0)

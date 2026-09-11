@@ -17,7 +17,7 @@ func test_attack_damage_scales_with_might_and_buff() -> void:
 	s.stats["might"] = 2
 	s.statuses["might_buff"] = 1
 	EffectResolver.resolve(s, _card_effects("strike"), HERO, _ctx(0, "enemy", ["bone"]))
-	assert_int(s.enemies[0].hp).is_equal(9)
+	assert_int(s.enemies[0].hp).is_equal(s.enemies[0].max_hp - 9)
 	var ev: Dictionary = TestFixtures.events_of(s, "damage")[0]
 	assert_int(ev["amount"]).is_equal(9)
 	assert_int(ev["blocked"]).is_equal(0)
@@ -26,7 +26,7 @@ func test_attack_damage_scales_with_might_and_buff() -> void:
 func test_multi_hit_and_upgrade() -> void:
 	var s := TestFixtures.bare_state(["shambler"])
 	EffectResolver.resolve(s, _card_effects("reaping", true), HERO, _ctx())
-	assert_int(s.enemies[0].hp).is_equal(30 - 15)
+	assert_int(s.enemies[0].hp).is_equal(s.enemies[0].max_hp - 15)
 	assert_array(TestFixtures.events_of(s, "damage")).has_size(3)
 
 
@@ -34,11 +34,11 @@ func test_weak_hero_deals_less_vulnerable_enemy_takes_more() -> void:
 	var s := TestFixtures.bare_state(["shambler"])
 	s.statuses["weak"] = 1
 	EffectResolver.resolve(s, _card_effects("strike"), HERO, _ctx())
-	assert_int(s.enemies[0].hp).is_equal(30 - 4)
+	assert_int(s.enemies[0].hp).is_equal(s.enemies[0].max_hp - 4)
 	s.statuses.erase("weak")
 	s.enemies[0].statuses["vulnerable"] = 1
 	EffectResolver.resolve(s, _card_effects("strike"), HERO, _ctx())
-	assert_int(s.enemies[0].hp).is_equal(30 - 4 - 9)
+	assert_int(s.enemies[0].hp).is_equal(s.enemies[0].max_hp - 4 - 9)
 
 
 func test_skill_damage_ignores_might_and_weak() -> void:
@@ -46,7 +46,7 @@ func test_skill_damage_ignores_might_and_weak() -> void:
 	s.stats["might"] = 5
 	s.statuses["weak"] = 1
 	EffectResolver.resolve(s, _card_effects("ashes"), HERO, _ctx(0, "all_enemies", ["ember"], false))
-	assert_int(s.enemies[0].hp).is_equal(27)
+	assert_int(s.enemies[0].hp).is_equal(s.enemies[0].max_hp - 3)
 	assert_int(s.enemies[0].status("burn")).is_equal(2)
 
 
@@ -87,7 +87,7 @@ func test_enemy_block_absorbs_hero_damage() -> void:
 	s.enemies[0].block = 4
 	EffectResolver.resolve(s, _card_effects("strike"), HERO, _ctx())
 	assert_int(s.enemies[0].block).is_equal(0)
-	assert_int(s.enemies[0].hp).is_equal(28)
+	assert_int(s.enemies[0].hp).is_equal(s.enemies[0].max_hp - 2)
 
 
 func test_enemy_weak_and_hero_vulnerable() -> void:
@@ -111,7 +111,7 @@ func test_thorns_both_ways_ignore_block() -> void:
 	s.statuses["thorns"] = 2
 	s.enemies[0].block = 5
 	EffectResolver.hit_hero(s, 1, 0, true)
-	assert_int(s.enemies[0].hp).is_equal(18 - 6 - 2)
+	assert_int(s.enemies[0].hp).is_equal(s.enemies[0].max_hp - 6 - 2)
 	assert_int(s.enemies[0].block).is_equal(5)
 
 

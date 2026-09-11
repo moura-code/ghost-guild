@@ -42,7 +42,7 @@ func test_plays_draw_card_to_find_more_damage() -> void:
 	TestFixtures.fill_draw(s, ["strike", "strike"])
 	var ap := Autopilot.new()
 	_run_turn(ap, s)
-	assert_int(s.enemies[0].hp).is_equal(30 - 12)
+	assert_int(s.enemies[0].hp).is_equal(s.enemies[0].max_hp - 12)
 
 
 func test_is_deterministic() -> void:

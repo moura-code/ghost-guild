@@ -1,8 +1,8 @@
 extends SceneTree
 ## Local diagnostics, deliberately separate from RunStats and ghost strength.
-## godot --headless --path . -s tools/difficulty_report.gd -- out.json [30|100] [development|held_out|validation] [safe|all] [floor_span] [profiles_csv]
+## godot --headless --path . -s tools/difficulty_report.gd -- out.json [30|100] [development|held_out|validation|confirmation] [safe|all] [floor_span] [profiles_csv]
 
-const SEED_BASES := {"development": 73019, "held_out": 970003, "validation": 1900001}
+const SEED_BASES := {"development": 73019, "held_out": 970003, "validation": 1900001, "confirmation": 3000001}
 const SEED_STRIDE := 7919
 
 const PROFILES := {

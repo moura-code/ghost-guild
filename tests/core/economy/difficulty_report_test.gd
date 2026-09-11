@@ -59,11 +59,11 @@ func test_checkpoint_and_turn_window_follow_late_entry_without_hiding_deaths() -
 	assert_int(report["floor4_exit_net_loss_survivors"]["n"]).is_zero()
 
 
-func test_validation_seeds_are_separate_from_both_previous_sets() -> void:
+func test_all_four_seed_sets_are_separate() -> void:
 	var seen := {}
 	for set_name in Report.SEED_BASES:
 		for i in 100:
 			var value := int(Report.SEED_BASES[set_name]) + i * Report.SEED_STRIDE
 			assert_bool(seen.has(value)).is_false()
 			seen[value] = set_name
-	assert_int(seen.size()).is_equal(300)
+	assert_int(seen.size()).is_equal(400)

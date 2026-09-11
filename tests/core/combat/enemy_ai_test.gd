@@ -49,12 +49,12 @@ func test_attack_moves_hit_hero() -> void:
 	var s := TestFixtures.bare_state(["bone_rat"])
 	s.enemies[0].next_move = "bite"
 	EnemyAI.execute_move(s, 0)
-	assert_int(s.hero_hp).is_equal(64)
+	assert_int(s.hero_hp).is_equal(65)
 	assert_str(s.enemies[0].last_move).is_equal("bite")
 	assert_str(s.enemies[0].next_move).is_equal("")
 	s.enemies[0].next_move = "gnaw"
 	EnemyAI.execute_move(s, 0)
-	assert_int(s.hero_hp).is_equal(58)
+	assert_int(s.hero_hp).is_equal(59)
 	assert_array(TestFixtures.events_of(s, "enemy_move")).has_size(2)
 
 
@@ -85,7 +85,7 @@ func test_summon_adds_enemy_with_intent_up_to_cap() -> void:
 	EnemyAI.execute_move(s, 0)
 	assert_array(s.enemies).has_size(2)
 	assert_str(s.enemies[1].def_id).is_equal("bone_rat")
-	assert_int(s.enemies[1].hp).is_equal(Scaling.enemy_hp(18, 3, TestFixtures.content().balance))
+	assert_int(s.enemies[1].hp).is_equal(Scaling.enemy_hp(17, 3, TestFixtures.content().balance))
 	assert_str(s.enemies[1].next_move).is_not_equal("")
 	assert_array(TestFixtures.events_of(s, "summon")).has_size(1)
 	for i in 4:
@@ -108,7 +108,7 @@ func test_bleeding_enemy_hurts_itself_when_attacking() -> void:
 	s.enemies[0].statuses["bleed"] = 2
 	s.enemies[0].next_move = "gnaw"
 	EnemyAI.execute_move(s, 0)
-	assert_int(s.enemies[0].hp).is_equal(16)
+	assert_int(s.enemies[0].hp).is_equal(s.enemies[0].max_hp - 2)
 
 
 func test_enemy_move_intent_has_the_same_shape_as_enemy_intent() -> void:

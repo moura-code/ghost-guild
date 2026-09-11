@@ -1,12 +1,13 @@
 # Ghost Guild: player clarity, progression and a more readable world
 
 Created: 2026-09-08. Finalized: 2026-09-09.
-Status (2026-09-10): implementation and automated validation complete;
+Status (2026-09-11): implementation and automated validation complete;
 new-player release gate pending. See the
 [implementation evidence](2026-09-09-player-clarity-validation.md) and
-[held-out difficulty summary](2026-09-09-difficulty-summary.csv).
+[current difficulty summary](2026-09-10-difficulty-summary.csv).
 Checked items record delivered code or completed checks, not novice acceptance.
-The P2 defensive-policy HP-loss deviation still needs player review.
+The [balance follow-up](2026-09-11-player-clarity-balance-follow-up.md) meets
+the safe-route tuning band and adds a prepared later-cycle comparison.
 Baseline: hybrid `main` at `a3c72df`. This plan follows the
 [hybrid integration](2026-09-06-hybrid-2d-3d-integration.md) and its
 [validation record](2026-09-06-hybrid-validation.md).
@@ -210,12 +211,14 @@ Provisional tuning targets, to accept or revise explicitly after P0:
 | First few meaningful purchases | At the same early depth, aim for roughly 20–35% less expected HP loss or a clear turn-count reduction, with a deeper viable frontier. Use purchase-specific expectations rather than requiring every upgrade to improve every metric. |
 | Frontier ordinary fights | Preserve the existing approximate 3–6-turn goal; increasing depth should add pressure without routinely reaching the turn cap. |
 
-Measured result: normal-win turns and the improvement from early purchases
-are supported by the held-out report. Fresh safe-route lookahead reaches a
-34.3% median Floor-4 loss, while the simple defensive policy reaches 44.3%,
-above the provisional band. This deviation remains open for player review;
-it is not an accepted change to the target. The synthetic later-cycle build
-is underprepared and does not establish a viable Floor-31 frontier.
+Measured result after the balance follow-up: fresh safe-route defense-aware
+play reaches a 34.3% median Floor-4 HP loss on both the original reference set
+and a new 100-seed confirmation set. Confirmation-set lookahead reaches 28.6%.
+Normal wins average 4.46 / 3.60 turns. The 70-Soul early purchases reduce mean
+HP loss by 36.0% / 26.8% and turns by 15.7% / 16.6%. Optional-elite routes
+retain higher risk. A prepared two-Legend profile clears Floor 31 in 99/100
+lookahead runs; the original underprepared profile remains a comparator.
+These are simulation results; the new-player release gate remains open.
 
 These are aggregate playtest targets, not per-fight rules or assertions that
 punish excellent play. Do not tune only to the development seeds. Keep the

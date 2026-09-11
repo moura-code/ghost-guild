@@ -1,8 +1,8 @@
 [
-  {"id": "bone_rat", "name": "enemy.bone_rat.name", "biome": "catacombs", "tags": ["undead"], "hp": 18, "kind": "regular",
-   "moves": [{"id": "bite", "intent": "attack", "damage": 6, "hits": 1}, {"id": "gnaw", "intent": "attack", "damage": 3, "hits": 2}],
+  {"id": "bone_rat", "name": "enemy.bone_rat.name", "biome": "catacombs", "tags": ["undead"], "hp": 17, "kind": "regular",
+   "moves": [{"id": "bite", "intent": "attack", "damage": 5, "hits": 1}, {"id": "gnaw", "intent": "attack", "damage": 3, "hits": 2}],
    "pattern": {"kind": "weighted", "moves": [{"move": "bite", "weight": 2}, {"move": "gnaw", "weight": 1}], "no_repeat": false}},
-  {"id": "shambler", "name": "enemy.shambler.name", "biome": "catacombs", "tags": ["undead"], "hp": 30, "kind": "regular",
+  {"id": "shambler", "name": "enemy.shambler.name", "biome": "catacombs", "tags": ["undead"], "hp": 27, "kind": "regular",
    "moves": [{"id": "lurch", "intent": "attack", "damage": 7, "hits": 1}, {"id": "brace", "intent": "block", "block": 6}],
    "pattern": {"kind": "sequence", "moves": ["lurch", "lurch", "brace"]}},
   {"id": "grave_wisp", "name": "enemy.grave_wisp.name", "biome": "catacombs", "tags": ["undead"], "hp": 18, "kind": "regular",

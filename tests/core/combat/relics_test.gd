@@ -46,9 +46,9 @@ func test_on_damage_taken_fires_after_enemy_attack() -> void:
 	s.relics = ["fx_shell"] as Array[String]
 	s.enemies[0].next_move = "bite"
 	EnemyAI.execute_move(s, 0)
-	assert_int(s.hero_hp).is_equal(64)
+	assert_int(s.hero_hp).is_equal(65)
 	assert_int(s.hero_block).is_equal(2)
 	s.hero_block = 50
 	s.enemies[0].next_move = "bite"
 	EnemyAI.execute_move(s, 0)
-	assert_int(s.hero_block).is_equal(44)
+	assert_int(s.hero_block).is_equal(45)

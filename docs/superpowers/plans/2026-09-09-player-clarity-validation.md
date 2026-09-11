@@ -4,8 +4,11 @@ Implementation follows [the roadmap](2026-09-08-player-clarity-progression-and-w
 The initial implementation was saved in `c3aa83a`; completion and verification
 are delivered in subsequent commits. This record distinguishes automated
 results from the new-player release gate, which still needs human participants.
-Final automated/native review: 2026-09-10. Code is implemented; this is not a
-claim that the player release gate has passed.
+Initial automated/native review: 2026-09-10. The
+[2026-09-11 balance follow-up](2026-09-11-player-clarity-balance-follow-up.md)
+records current tuning, 1,327 passing tests and a prepared late-cycle profile.
+The measurements below retain the earlier implementation evidence; the player
+release gate has not passed.
 
 ## P0: baseline
 
@@ -59,8 +62,9 @@ focus instead of shrinking text.
 
 Implementation, migration and layout sweeps, final difficulty/economy
 comparisons and native review are complete. Five novice playtests have not
-been conducted. The defensive-policy tuning deviation and insufficient
-later-cycle profile are recorded under P2. No novice success rate, lower-spec
+been conducted. The follow-up addresses the safe-route tuning deviation and
+adds the missing prepared later-cycle comparison. The P2 section below
+records the earlier revision for comparison. No novice success rate, lower-spec
 performance or locked-60-FPS claim is made.
 
 
@@ -95,7 +99,7 @@ The revision marker is saved by the game after catch-up. Fixed expedition
 results, including already-launched expeditions, are never repriced.
 
 
-## P2: final early curve and economy
+## P2: revision r2 early curve and economy
 
 Against the roadmap baseline, Bone Rat HP is 14 → 18 and Bite is 5 → 6;
 Shambler HP is 24 → 30; Grave Wisp HP is 12 → 18. Lurch and Flicker retain
@@ -242,13 +246,14 @@ recorded batch. No price, reward or ghost formula was changed after it.
 
 Reproduce using the recorded Godot binary and disposable XDG data. The test
 wrapper performs an import before running scripts and owns its temporary
-data directory. Each difficulty command below produces 1,200 held-out runs:
+data directory. Each difficulty command below explicitly selects the original four profiles
+and produces 1,200 held-out runs:
 
 ```sh
 export GODOT_BIN=/home/usuario/.cache/ghost-guild-engine/4.7.2/Godot_v4.7.2-stable_linux.x86_64
 tools/test.sh
-XDG_DATA_HOME=/tmp/ghost-guild-review "$GODOT_BIN" --headless --path . -s tools/difficulty_report.gd -- reports/clarity/review-safe.json 100 held_out safe 10
-XDG_DATA_HOME=/tmp/ghost-guild-review "$GODOT_BIN" --headless --path . -s tools/difficulty_report.gd -- reports/clarity/review-all.json 100 held_out all 10
+XDG_DATA_HOME=/tmp/ghost-guild-review "$GODOT_BIN" --headless --path . -s tools/difficulty_report.gd -- reports/clarity/review-safe.json 100 held_out safe 10 fresh_sexton,early_purchases,unlocked_hexer,later_cycle
+XDG_DATA_HOME=/tmp/ghost-guild-review "$GODOT_BIN" --headless --path . -s tools/difficulty_report.gd -- reports/clarity/review-all.json 100 held_out all 10 fresh_sexton,early_purchases,unlocked_hexer,later_cycle
 XDG_DATA_HOME=/tmp/ghost-guild-review "$GODOT_BIN" --headless --path . -s tools/balance_sim.gd -- 14 48
 ```
 
@@ -334,7 +339,7 @@ explanation and any misunderstanding:
 5. Identify the next affordable permanent improvement after a run.
 
 The roadmap requires at least four of five unaided completions **per task**.
-That gate remains open. Player review must also resolve the defensive-policy
-44.3% median early HP loss against the provisional 15–35% band. A better
-prepared later-cycle profile is needed before making a late-frontier viability
-claim. These limits are not silently treated as passed acceptance criteria.
+That gate remains open; the user confirmed on 2026-09-10 that no new-player
+feedback is available. The balance follow-up supersedes the earlier 44.3%
+safe-route loss and adds a prepared late-cycle comparison. It does not replace
+the required human sessions or establish novice comprehension.
